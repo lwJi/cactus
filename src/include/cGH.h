@@ -31,6 +31,10 @@ typedef struct _cGH
   int cctk_dim;
   int cctk_iteration;
 
+  /* number of maps (coordinate systems) and current map */
+  int cctk_nmaps;
+  int cctk_map;
+
   /* ...[dim]*/
   int *cctk_gsh;
   int *cctk_lsh;
@@ -44,7 +48,7 @@ typedef struct _cGH
   int *cctk_to;
   int *cctk_from;
   
-  /* The grid spacings */
+  /* The grid spacings on the coarsest level */
   CCTK_REAL cctk_delta_time;
   CCTK_REAL *cctk_delta_space;
 
