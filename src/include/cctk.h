@@ -234,29 +234,29 @@ static inline int CCTK_GFINDEX4D (const cGH *GH, int i, int j, int k, int l)
 
 #define _DECLARE_CCTK_ARGUMENTS _DECLARE_CCTK_CARGUMENTS
 #define _DECLARE_CCTK_CARGUMENTS                                              \
-int       const                  cctk_dim         =cctkGH->cctk_dim;          \
-int       const * restrict const cctk_gsh         =cctkGH->cctk_gsh;          \
-int       const * restrict const cctk_lsh         =cctkGH->cctk_lsh;          \
-int       const * restrict const cctk_lbnd        =cctkGH->cctk_lbnd;         \
-int       const * restrict const cctk_ubnd        =cctkGH->cctk_ubnd;         \
-int       const * restrict const cctk_lssh        =cctkGH->cctk_lssh;         \
-int       const * restrict const cctk_from        =cctkGH->cctk_from;         \
-int       const * restrict const cctk_to          =cctkGH->cctk_to;           \
-int       const * restrict const cctk_bbox        =cctkGH->cctk_bbox;         \
-CCTK_REAL const                  cctk_delta_time  =cctkGH->cctk_delta_time;   \
-CCTK_REAL const                  cctk_time        =cctkGH->cctk_time;         \
-CCTK_REAL const * restrict const cctk_delta_space =cctkGH->cctk_delta_space;  \
-CCTK_REAL const * restrict const cctk_origin_space=cctkGH->cctk_origin_space; \
-int       const * restrict const cctk_levfac      =cctkGH->cctk_levfac;       \
-int       const * restrict const cctk_levoff      =cctkGH->cctk_levoff;       \
-int       const * restrict const cctk_levoffdenom =cctkGH->cctk_levoffdenom;  \
-int       const                  cctk_timefac     =cctkGH->cctk_timefac;      \
-int       const                  cctk_convlevel   =cctkGH->cctk_convlevel;    \
-int       const                  cctk_convfac     =cctkGH->cctk_convfac;      \
-int       const * restrict const cctk_nghostzones =cctkGH->cctk_nghostzones;  \
-int       const                  cctk_iteration   =cctkGH->cctk_iteration;    \
-int       const                  cctk_nmaps       =cctkGH->cctk_nmaps;        \
-int       const                  cctk_map         =cctkGH->cctk_map;          \
+int         cctk_dim         =cctkGH->cctk_dim;          \
+int       * cctk_gsh         =cctkGH->cctk_gsh;          \
+int       * cctk_lsh         =cctkGH->cctk_lsh;          \
+int       * cctk_lbnd        =cctkGH->cctk_lbnd;         \
+int       * cctk_ubnd        =cctkGH->cctk_ubnd;         \
+int       * cctk_lssh        =cctkGH->cctk_lssh;         \
+int       * cctk_from        =cctkGH->cctk_from;         \
+int       * cctk_to          =cctkGH->cctk_to;           \
+int       * cctk_bbox        =cctkGH->cctk_bbox;         \
+CCTK_REAL   cctk_delta_time  =cctkGH->cctk_delta_time;   \
+CCTK_REAL   cctk_time        =cctkGH->cctk_time;         \
+CCTK_REAL * cctk_delta_space =cctkGH->cctk_delta_space;  \
+CCTK_REAL * cctk_origin_space=cctkGH->cctk_origin_space; \
+int       * cctk_levfac      =cctkGH->cctk_levfac;       \
+int       * cctk_levoff      =cctkGH->cctk_levoff;       \
+int       * cctk_levoffdenom =cctkGH->cctk_levoffdenom;  \
+int         cctk_timefac     =cctkGH->cctk_timefac;      \
+int         cctk_convlevel   =cctkGH->cctk_convlevel;    \
+int         cctk_convfac     =cctkGH->cctk_convfac;      \
+int       * cctk_nghostzones =cctkGH->cctk_nghostzones;  \
+int         cctk_iteration   =cctkGH->cctk_iteration;    \
+int         cctk_nmaps       =cctkGH->cctk_nmaps;        \
+int         cctk_map         =cctkGH->cctk_map;          \
 void const * restrict cctki_use = (cctki_use = &cctk_dim,          \
                                    cctki_use =  cctk_gsh,          \
                                    cctki_use =  cctk_lsh,          \
