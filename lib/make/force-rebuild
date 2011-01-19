@@ -34,3 +34,4 @@
 21 Nov 2005: Change names of auto-generated capability header files
 08 Apr 2008: Add IF clause to scheduler
 23 Dec 2010: Rename cctki_Capabilities.h to cctk_Capabilities.h
+12 Jan 2011: Add PROVIDES/REQUIRES clauses to scheduler

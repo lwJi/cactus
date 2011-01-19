@@ -113,7 +113,8 @@ sub parse_schedule_ccl
   my($n_statements);
   my($name, $as, $type, $description, $where, $language,
        $mem_groups, $comm_groups, $trigger_groups, $sync_groups,
-       $options, $before_list, $after_list, $while_list, $if_list);
+       $options, $tags, $before_list, $after_list,
+       $provides_list, $requires_list, $while_list, $if_list);
   my($groups);
 
   $buffer       = "";
@@ -127,8 +128,9 @@ sub parse_schedule_ccl
       ($line_number,
        $name, $as, $type, $description, $where, $language,
        $mem_groups, $comm_groups, $trigger_groups, $sync_groups,
-       $options,$before_list, $after_list, $while_list, $if_list)
-          = &ParseScheduleBlock($thorn,$line_number, @data);
+       $options, $tags, $before_list, $after_list,
+       $provides_list, $requires_list, $while_list, $if_list) =
+           &ParseScheduleBlock($thorn,$line_number, @data);
 
       $schedule_db{"\U$thorn\E BLOCK_$n_blocks NAME"}        = $name;
       $schedule_db{"\U$thorn\E BLOCK_$n_blocks AS"}          = $as;
@@ -141,8 +143,11 @@ sub parse_schedule_ccl
       $schedule_db{"\U$thorn\E BLOCK_$n_blocks TRIG"}        = $trigger_groups;
       $schedule_db{"\U$thorn\E BLOCK_$n_blocks SYNC"}        = $sync_groups;
       $schedule_db{"\U$thorn\E BLOCK_$n_blocks OPTIONS"}     = $options;
+      $schedule_db{"\U$thorn\E BLOCK_$n_blocks TAGS"}        = $tags;
       $schedule_db{"\U$thorn\E BLOCK_$n_blocks BEFORE"}      = $before_list;
       $schedule_db{"\U$thorn\E BLOCK_$n_blocks AFTER"}       = $after_list;
+      $schedule_db{"\U$thorn\E BLOCK_$n_blocks PROVIDES"}    = $provides_list;
+      $schedule_db{"\U$thorn\E BLOCK_$n_blocks REQUIRES"}    = $requires_list;
       $schedule_db{"\U$thorn\E BLOCK_$n_blocks WHILE"}       = $while_list;
       $schedule_db{"\U$thorn\E BLOCK_$n_blocks IF"}          = $if_list;
 
@@ -196,11 +201,14 @@ sub ParseScheduleBlock
   my($thorn,$line_number, @data) = @_;
   my($name, $as, $type, $description, $where, $language,
      $mem_groups, $comm_groups, $trigger_groups, $sync_groups,
-     $options, $before_list, $after_list, $while_list, $if_list);
+     $options, $tags, $before_list, $after_list,
+     $provides_list, $requires_list, $while_list, $if_list);
   my(@fields);
   my($field);
   my(@before_list)    = ();
   my(@after_list)     = ();
+  my(@provides_list)  = ();
+  my(@requires_list)  = ();
   my(@while_list)     = ();
   my(@if_list)        = ();
   my(@mem_groups)     = ();
@@ -208,6 +216,7 @@ sub ParseScheduleBlock
   my(@trigger_groups) = ();
   my(@sync_groups)    = ();
   my(@options)        = ();
+  my(@tags)           = ();
   my($keyword) = "";
   my(@current_sched_list) = ();
 
@@ -467,9 +476,21 @@ sub ParseScheduleBlock
       {
         push(@sync_groups, split(/\s+|\s*,\s*/, $1));
       }
+      elsif($data[$line_number] =~ m/^\s*PROVIDES\s*:\s*(.*)$/i)
+      {
+        push(@provides_list, split(/\s+|\s*,\s*/, $1));
+      }
+      elsif($data[$line_number] =~ m/^\s*REQUIRES\s*:\s*(.*)$/i)
+      {
+        push(@requires_list, split(/\s+|\s*,\s*/, $1));
+      }
       elsif($data[$line_number] =~ m/^\s*OPTI[^:]*:\s*(.*)$/i)
       {
         push(@options, split(/\s+|\s*,\s*/, $1));
+      }
+      elsif($data[$line_number] =~ m/^\s*TAGS[^:]*:\s*(.*)$/i)
+      {
+        push(@tags, $1);
       }
       elsif($data[$line_number] =~ m/^\s*LANG[^:]*:\s*(.*)$/i)
       {
@@ -518,8 +539,11 @@ sub ParseScheduleBlock
   $trigger_groups = join(",", @trigger_groups);
   $sync_groups    = join(",", @sync_groups);
   $options        = join(",", @options);
+  $tags           = join(" ", @tags);
   $before_list    = join(",", @before_list);
   $after_list     = join(",", @after_list);
+  $provides_list  = join(",", @provides_list);
+  $requires_list  = join(",", @requires_list);
   $while_list     = join(",", @while_list);
   $if_list        = join(",", @if_list);
 
@@ -527,7 +551,8 @@ sub ParseScheduleBlock
   return ($line_number,
           $name, $as, $type, $description, $where, $language,
           $mem_groups, $comm_groups, $trigger_groups, $sync_groups,
-          $options,$before_list, $after_list, $while_list, $if_list);
+          $options, $tags, $before_list, $after_list,
+          $provides_list, $requires_list, $while_list, $if_list);
 
 }
 
