@@ -292,25 +292,25 @@ static inline int CCTK_VECTGFINDEX4D (const cGH *GH,
 #define _DECLARE_CCTK_CARGUMENTS \
         CCTK_DECLARE_INIT(ptrdiff_t,cctki_dummy_int,0);\
         CCTK_DECLARE_INIT(int,cctk_dim,cctkGH->cctk_dim);\
-        CCTK_DECLARE_INIT(int,*cctk_gsh,cctkGH->cctk_gsh);\
-        CCTK_DECLARE_INIT(int,*cctk_lsh,cctkGH->cctk_lsh);\
-        CCTK_DECLARE_INIT(int,*cctk_lbnd,cctkGH->cctk_lbnd);\
-        CCTK_DECLARE_INIT(int,*cctk_ubnd,cctkGH->cctk_ubnd);\
-        CCTK_DECLARE_INIT(int,*cctk_lssh,cctkGH->cctk_lssh);\
-        CCTK_DECLARE_INIT(int,*cctk_from,cctkGH->cctk_from);\
-        CCTK_DECLARE_INIT(int,*cctk_to,cctkGH->cctk_to);\
-        CCTK_DECLARE_INIT(int,*cctk_bbox,cctkGH->cctk_bbox);\
+        CCTK_DECLARE_INIT(int*,cctk_gsh,cctkGH->cctk_gsh);\
+        CCTK_DECLARE_INIT(int*,cctk_lsh,cctkGH->cctk_lsh);\
+        CCTK_DECLARE_INIT(int*,cctk_lbnd,cctkGH->cctk_lbnd);\
+        CCTK_DECLARE_INIT(int*,cctk_ubnd,cctkGH->cctk_ubnd);\
+        CCTK_DECLARE_INIT(int*,cctk_lssh,cctkGH->cctk_lssh);\
+        CCTK_DECLARE_INIT(int*,cctk_from,cctkGH->cctk_from);\
+        CCTK_DECLARE_INIT(int*,cctk_to,cctkGH->cctk_to);\
+        CCTK_DECLARE_INIT(int*,cctk_bbox,cctkGH->cctk_bbox);\
         CCTK_DECLARE_INIT(CCTK_REAL,cctk_delta_time,cctkGH->cctk_delta_time);\
         CCTK_DECLARE_INIT(CCTK_REAL,cctk_time,cctkGH->cctk_time);\
-        CCTK_DECLARE_INIT(CCTK_REAL,*cctk_delta_space,cctkGH->cctk_delta_space);\
-        CCTK_DECLARE_INIT(CCTK_REAL,*cctk_origin_space,cctkGH->cctk_origin_space);\
-        CCTK_DECLARE_INIT(int,*cctk_levfac,cctkGH->cctk_levfac);\
-        CCTK_DECLARE_INIT(int,*cctk_levoff,cctkGH->cctk_levoff);\
-        CCTK_DECLARE_INIT(int,*cctk_levoffdenom,cctkGH->cctk_levoffdenom);\
+        CCTK_DECLARE_INIT(CCTK_REAL*,cctk_delta_space,cctkGH->cctk_delta_space);\
+        CCTK_DECLARE_INIT(CCTK_REAL*,cctk_origin_space,cctkGH->cctk_origin_space);\
+        CCTK_DECLARE_INIT(int*,cctk_levfac,cctkGH->cctk_levfac);\
+        CCTK_DECLARE_INIT(int*,cctk_levoff,cctkGH->cctk_levoff);\
+        CCTK_DECLARE_INIT(int*,cctk_levoffdenom,cctkGH->cctk_levoffdenom);\
         CCTK_DECLARE_INIT(int,cctk_timefac,cctkGH->cctk_timefac);\
         CCTK_DECLARE_INIT(int,cctk_convlevel,cctkGH->cctk_convlevel);\
         CCTK_DECLARE_INIT(int,cctk_convfac,cctkGH->cctk_convfac);\
-        CCTK_DECLARE_INIT(int,*cctk_nghostzones,cctkGH->cctk_nghostzones);\
+        CCTK_DECLARE_INIT(int*,cctk_nghostzones,cctkGH->cctk_nghostzones);\
         CCTK_DECLARE_INIT(int,cctk_iteration,cctkGH->cctk_iteration);\
 
 #define _INITIALISE_CCTK_C2F

@@ -123,6 +123,8 @@ static t_attribute *CreateAttribute(const char *where,
                                     int n_comm_groups,
                                     int n_trigger_groups,
                                     int n_sync_groups,
+                                    int n_provides,
+                                    int n_requires,
                                     int n_options,
                                     const int *timelevels,
                                     va_list *ap);
@@ -130,6 +132,9 @@ static t_attribute *CreateAttribute(const char *where,
 static int ParseOptionList(int n_items,
                            t_attribute *attribute,
                            va_list *ap);
+
+static int ParseTagsTable(t_attribute *attribute,
+                          va_list *ap);
 
 static int InitialiseOptionList(t_attribute *attribute);
 
@@ -145,6 +150,7 @@ static t_sched_modifier *CreateModifiers(int n_before,
 int ValidateModifiers(t_sched_modifier *modifier);
 
 static int CreateGroupIndexList(int n_items, int *array, va_list *ap);
+static int CreateStringList(int n_items, const char **array, va_list *ap);
 static t_sched_modifier *CreateTypedModifier(t_sched_modifier *modifier,
                                              const char *type,
                                              int n_items,
@@ -371,6 +377,16 @@ int CCTK_CallFunction(void *function,
    @vtype   int
    @vio     in
    @endvar
+   @var     n_provides
+   @vdesc   Number of provides clauses
+   @vtype   int
+   @vio     in
+   @endvar
+   @var     n_requires
+   @vdesc   Number of requires clauses
+   @vtype   int
+   @vio     in
+   @endvar
    @var     n_options
    @vdesc   Number of options for this schedule block
    @vtype   int
@@ -423,6 +439,8 @@ int CCTKi_ScheduleFunction(void *function,
                            int n_comm_groups,
                            int n_trigger_groups,
                            int n_sync_groups,
+                           int n_provides,
+                           int n_requires,
                            int n_options,
                            int n_before,
                            int n_after,
@@ -441,7 +459,8 @@ int CCTKi_ScheduleFunction(void *function,
 
   attribute = CreateAttribute(where,name,description, language, thorn, implementation,
                               n_mem_groups, n_comm_groups, n_trigger_groups,
-                              n_sync_groups, n_options, timelevels, &ap);
+                              n_sync_groups, n_provides, n_requires,
+                              n_options, timelevels, &ap);
   modifier  = CreateModifiers(n_before, n_after, n_while, n_if, &ap);
 
   va_end(ap);
@@ -534,6 +553,16 @@ int CCTKi_ScheduleFunction(void *function,
    @vtype   int
    @vio     in
    @endvar
+   @var     n_provides
+   @vdesc   Number of provides clauses
+   @vtype   int
+   @vio     in
+   @endvar
+   @var     n_requires
+   @vdesc   Number of requires clauses
+   @vtype   int
+   @vio     in
+   @endvar
    @var     n_options
    @vdesc   Number of options for this schedule block
    @vtype   int
@@ -584,6 +613,8 @@ int CCTKi_ScheduleGroup(const char *realname,
                         int n_comm_groups,
                         int n_trigger_groups,
                         int n_sync_groups,
+                        int n_provides,
+                        int n_requires,
                         int n_options,
                         int n_before,
                         int n_after,
@@ -602,7 +633,8 @@ int CCTKi_ScheduleGroup(const char *realname,
 
   attribute = CreateAttribute(where,name,description, NULL, thorn, implementation,
                               n_mem_groups, n_comm_groups, n_trigger_groups,
-                              n_sync_groups, n_options, timelevels, &ap);
+                              n_sync_groups, n_provides, n_requires,
+                              n_options, timelevels, &ap);
   modifier  = CreateModifiers(n_before, n_after, n_while, n_if, &ap);
 
   va_end(ap);
@@ -610,6 +642,7 @@ int CCTKi_ScheduleGroup(const char *realname,
   ValidateModifiers(modifier);
 
   if(attribute && (modifier || (n_before == 0 && n_after == 0 &&
+                                n_provides == 0 && n_requires == 0 &&
                                 n_while == 0 && n_if == 0)))
   {
     retcode = CCTKi_DoScheduleGroup(where, name, realname, modifier, (void *)attribute);
@@ -1338,6 +1371,16 @@ static int ScheduleTraverse(const char *where,
    @vtype   int
    @vio     in
    @endvar
+   @var     n_provides
+   @vdesc   Number of provides clauses
+   @vtype   int
+   @vio     in
+   @endvar
+   @var     n_requires
+   @vdesc   Number of requires clauses
+   @vtype   int
+   @vio     in
+   @endvar
    @var     n_options
    @vdesc   Number of options for this schedule block
    @vtype   int
@@ -1369,6 +1412,8 @@ static t_attribute *CreateAttribute(const char *where,
                                     int n_comm_groups,
                                     int n_trigger_groups,
                                     int n_sync_groups,
+                                    int n_provides,
+                                    int n_requires,
                                     int n_options,
                                     const int *timelevels,
                                     va_list *ap)
@@ -1399,6 +1444,14 @@ static t_attribute *CreateAttribute(const char *where,
     {
       this->FunctionData.SyncGroups = malloc(n_sync_groups*sizeof(int));
     }
+    if (n_provides > 0)
+    {
+      this->FunctionData.ProvidesClauses = malloc(n_provides*sizeof(char*));
+    }
+    if (n_requires > 0)
+    {
+      this->FunctionData.RequiresClauses = malloc(n_requires*sizeof(char*));
+    }
     if (n_comm_groups > 0)
     {
       this->comm_groups    = malloc(n_comm_groups*sizeof(int));
@@ -1415,7 +1468,9 @@ static t_attribute *CreateAttribute(const char *where,
        (this->StorageOnEntry || n_mem_groups==0)         &&
        (this->comm_groups || n_comm_groups==0)       &&
        (this->FunctionData.TriggerGroups || n_trigger_groups==0) &&
-       (this->FunctionData.SyncGroups || n_sync_groups==0))
+       (this->FunctionData.SyncGroups || n_sync_groups==0) &&
+       (this->FunctionData.ProvidesClauses || n_provides==0) &&
+       (this->FunctionData.RequiresClauses || n_requires==0))
     {
       strcpy(this->FunctionData.where,where);
       strcpy(this->FunctionData.routine,name);
@@ -1439,6 +1494,8 @@ static t_attribute *CreateAttribute(const char *where,
       CreateGroupIndexList(n_comm_groups,    this->comm_groups, ap);
       CreateGroupIndexList(n_trigger_groups, this->FunctionData.TriggerGroups, ap);
       CreateGroupIndexList(n_sync_groups,    this->FunctionData.SyncGroups, ap);
+      CreateStringList    (n_provides,       this->FunctionData.ProvidesClauses, ap);
+      CreateStringList    (n_requires,       this->FunctionData.RequiresClauses, ap);
 
       for(i=0; i< n_mem_groups; i++)
       {
@@ -1450,10 +1507,15 @@ static t_attribute *CreateAttribute(const char *where,
       InitialiseOptionList(this);
       ParseOptionList(n_options, this, ap);
 
+      /* Check the tags */
+      ParseTagsTable(this, ap);
+
       this->n_mem_groups     = n_mem_groups;
       this->n_comm_groups    = n_comm_groups;
       this->FunctionData.n_TriggerGroups = n_trigger_groups;
       this->FunctionData.n_SyncGroups = n_sync_groups;
+      this->FunctionData.n_ProvidesClauses = n_provides;
+      this->FunctionData.n_RequiresClauses = n_requires;
 
       this->timers = NULL;
     }
@@ -1465,6 +1527,8 @@ static t_attribute *CreateAttribute(const char *where,
       free(this->comm_groups);
       free(this->FunctionData.TriggerGroups);
       free(this->FunctionData.SyncGroups);
+      free(this->FunctionData.ProvidesClauses);
+      free(this->FunctionData.RequiresClauses);
       free(this);
       this = NULL;
     }
@@ -1639,6 +1703,53 @@ static int CreateGroupIndexList(int n_items, int *array, va_list *ap)
     item = va_arg(*ap, const char *);
 
     array[i] = CCTK_GroupIndex(item);
+  }
+
+  return 0;
+}
+
+
+/*@@
+   @routine    CreateStringList
+   @date       2007-05-24
+   @author     Erik Schnetter
+   @desc
+   Gets the next n_items group names from the variable argument list
+   and converts them to strings.
+   @enddesc
+   @calls
+
+   @var     n_items
+   @vdesc   number of items on the list
+   @vtype   int
+   @vio     in
+   @endvar
+   @var     array
+   @vdesc   array of strings
+   @vtype   char **
+   @vio     out
+   @endvar
+   @var     ap
+   @vdesc   argument list
+   @vtype   va_list of const char *
+   @vio     inout
+   @endvar
+
+   @returntype int
+   @returndesc
+   0 - success
+   @endreturndesc
+@@*/
+static int CreateStringList(int n_items, const char **array, va_list *ap)
+{
+  int i;
+  const char *item;
+
+  for(i=0; i < n_items; i++)
+  {
+    item = va_arg(*ap, const char *);
+
+    array[i] = strdup(item);
   }
 
   return 0;
@@ -1830,6 +1941,50 @@ static int ParseOption(t_attribute *attribute,
   return 0;
 }
 
+
+ /*@@
+   @routine    ParseTagsTable
+   @date       2006-08-03
+   @author     Erik Schnetter
+   @desc
+   Extract the tags table in a schedule group definition.
+   @enddesc
+   @calls
+
+   @var     attribute
+   @vdesc   attribute list
+   @vtype   t_attribute *
+   @vio     inout
+   @endvar
+   @var     ap
+   @vdesc   argument list
+   @vtype   va_list of const char *
+   @vio     inout
+   @endvar
+
+   @returntype int
+   @returndesc
+   0 - success
+   @endreturndesc
+@@*/
+static int ParseTagsTable(t_attribute *attribute,
+                          va_list *ap)
+{
+  const char *item;
+  int table;
+
+  item = va_arg(*ap, const char *);
+  table = Util_TableCreateFromString (item);
+  if (table < 0)
+  {
+    return table;
+  }
+  attribute->FunctionData.tags = table;
+
+  return 0;
+}
+
+
 /*@@
    @routine    CreateTypedModifier
    @date       Fri Sep 17 21:50:59 1999
@@ -1968,7 +2123,7 @@ static cFunctionType TranslateFunctionType(const char *where)
 
    @returntype int
    @returndesc
-   return of DoScheduleTravers or
+   return code of DoScheduleTraverse or
    0 - where is NULL
    @endreturndesc
 @@*/
@@ -2026,7 +2181,7 @@ static int SchedulePrint(const char *where)
 
    @returntype int
    @returndesc
-   return of DoScheduleTravers or
+   return code of DoScheduleTraverse or
    0 - where is NULL
    @endreturndesc
 @@*/
