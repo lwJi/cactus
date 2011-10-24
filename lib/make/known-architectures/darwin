@@ -277,8 +277,15 @@ else
 
       intel_dir="$(dirname $(dirname $(which $F90)))"
 
+      intel_subdir=""
+      if [ ! -d "$intel_dir/lib" -a -d "$(dirname $intel_dir)/lib" ]; then
+          intel_subdir="/$(basename $(dirname $(which $F90)))"
+          intel_dir="$(dirname $intel_dir)"
+      fi
+      intel_libdir="$intel_dir/lib$intel_subdir"
+
       # add the libpath
-      : ${LIBDIRS="$intel_dir/lib"}
+      : ${LIBDIRS="$intel_libdir"}
       : ${LIBS='ifcore imf svml m'}
 
       F77_VERSION="`$F77 -V 2>&1 | grep -i version | head -n1`"

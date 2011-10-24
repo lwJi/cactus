@@ -154,59 +154,50 @@ sub ParseTestConfigs
   {
     my $testdir = $arrangement_dir . $testdata->{"$thorn ARRANGEMENT"} .
                   "${sep}$thorn${sep}test";
-    my $old_config_file = "$testdir${sep}test.ccl";
-    my $new_config_file = "$testdir${sep}config";
-    my $config_file = '';
+    my $config_file     = "$testdir${sep}test.ccl";
+    my $old_config_file = "$testdir${sep}config";
 
-    if (-r $old_config_file and -r $new_config_file)
+    if (-r $old_config_file)
     {
-      print " Thorn $thorn has a test.ccl file and a config file.\n" .
-            " Config files will be deprecated, using test.ccl file.\n";
-      $config_file = $new_config_file;
+      print "  Thorn $thorn has a 'config' file in 'test/'.\n".
+            "    Config files are deprecated. Use test.ccl instead.\n";
     }
-    elsif (-r $new_config_file)
+    if (-r $config_file)
     {
-      $config_file = $new_config_file;
-    }
-    elsif (-r $old_config_file)
-    {
-      $config_file = $old_config_file;
-    }
-    next unless ($config_file);
-
-    my @config = &read_file($config_file);
-    for($line_number = 0; $line_number < @config; $line_number++)
-    {
-      $line = $config[$line_number];
-
-      # Parse tokens
-      if ($line =~ m/^\s*ABSTOL\s*(.*)/i)
+      my @config = &read_file($config_file);
+      for($line_number = 0; $line_number < @config; $line_number++)
       {
+        $line = $config[$line_number];
+
+        # Parse tokens
+        if ($line =~ m/^\s*ABSTOL\s*(.*)/i)
+        {
         $ABSTOL = $rundata->{"$thorn ABSTOL"}=$1;
-      }
-      elsif ($line =~ m/^\s*RELTOL\s*(.*)/i)
-      {
-        $RELTOL = $rundata->{"$thorn RELTOL"}=$1;
-      }
-      elsif ($line =~ m/^\s*NPROCS\s+(\d+)\s*$/i)
-      {
-        $NPROCS = $rundata->{"$thorn NPROCS"} = $1;
-      }
-      elsif ($line =~ m/^\s*EXTENSIONS\s*(.*)/i)
-      {
-        $testdata->{"EXTENSIONS"} .= "$1 ";
-      }
-      elsif ($line =~ m/^\s*TEST\s*(.*)/i)
-      {
-        ($test, $ABSTOL, $RELTOL, $NPROCS, $line_number) =
-          &ParseTestBlock($line_number, \@config);
-        $rundata->{"$thorn $test ABSTOL"} = $ABSTOL;
-        $rundata->{"$thorn $test RELTOL"} = $RELTOL;
-        $rundata->{"$thorn $test NPROCS"} = $NPROCS;
-      }
-      else
-      {
-        print "  Unrecognised token $line in config file for thorn $thorn\n";
+        }
+        elsif ($line =~ m/^\s*RELTOL\s*(.*)/i)
+        {
+          $RELTOL = $rundata->{"$thorn RELTOL"}=$1;
+        }
+        elsif ($line =~ m/^\s*NPROCS\s+(\d+)\s*$/i)
+        {
+          $NPROCS = $rundata->{"$thorn NPROCS"} = $1;
+        }
+        elsif ($line =~ m/^\s*EXTENSIONS\s*(.*)/i)
+        {
+          $testdata->{"EXTENSIONS"} .= "$1 ";
+        }
+        elsif ($line =~ m/^\s*TEST\s*(.*)/i)
+        {
+          ($test, $ABSTOL, $RELTOL, $NPROCS, $line_number) =
+            &ParseTestBlock($line_number, \@config);
+          $rundata->{"$thorn $test ABSTOL"} = $ABSTOL;
+          $rundata->{"$thorn $test RELTOL"} = $RELTOL;
+          $rundata->{"$thorn $test NPROCS"} = $NPROCS;
+        }
+        else
+        {
+          print "  Unrecognised token $line in config file for thorn $thorn\n";
+        }
       }
     }
   }
@@ -262,20 +253,44 @@ sub ParseTestBlock
   return ($Test, $ABSTOL, $RELTOL, $NPROCS, $line_number);
 }
 
+# Find archive files for one particular test
 sub FindTestArchiveFiles
 {
-  my($testdata) = @_;
-  my($thorn,$test);
+  my($test,$thorn,$testdata) = @_;
 
-  foreach $thorn (split(" ",$testdata->{"THORNS"}))
+  my $dir = "$testdata->{\"$thorn TESTSDIR\"}/$test";
+  if ( !-d "$dir")
   {
-    foreach $test (split(" ",$testdata->{"$thorn TESTS"}))
+    my $tarname      = undef;
+    my $unpackoption = undef;
+    if (-f "$dir.tar")     { $tarname ="$dir.tar";     $unpackoption = "";}
+    if (-f "$dir.tar.gz")  { $tarname ="$dir.tar.gz";  $unpackoption = "--gzip";}
+    if (-f "$dir.tgz")     { $tarname ="$dir.tgz";     $unpackoption = "--gzip";}
+    if (-f "$dir.tar.bz2") { $tarname ="$dir.tar.bz2"; $unpackoption = "--bzip";}
+    if (-f "$dir.tbz")     { $tarname ="$dir.tbz";     $unpackoption = "--bzip";}
+    if (-f "$dir.tar.xz")  { $tarname ="$dir.tar.xz";  $unpackoption = "--xz";}
+    if (-f "$dir.txz")     { $tarname ="$dir.txz";     $unpackoption = "--xz";}
+    if (defined($unpackoption))
     {
-      $dir = "$testdata->{\"$thorn TESTSDIR\"}/$test";
-      ($testdata->{"$thorn $test UNKNOWNFILES"},$testdata->{"$thorn $test DATAFILES"}) = &FindFiles($dir,$testdata);
-      $testdata->{"$thorn $test NDATAFILES"} = scalar(split(" ",$testdata->{"$thorn $test DATAFILES"}));
+      my $tar       = `gtar --help > /dev/null 2> /dev/null && echo -n gtar || echo -n tar`;
+      my $supported = `tar --help | grep -- "$unpackoption" > /dev/null 2> /dev/null && echo -n "yes" || echo -n "no"`;
+      if ($supported ne "yes")
+      {
+        print("  $tarname found, but $tar does not support the option $unpackoption.");
+        return $testdata;
+      }
+      print("  Decompressing testsuite data\n");
+      my $basename = `basename $dir`; chomp($basename);
+      my $unpackdir = $config_data->{"TESTS_DIR"}.$sep.$config_data->{"CONFIG"}.$sep.$thorn;
+      system("mkdir -p $unpackdir");
+      system("cd $unpackdir && rm -rf $basename $basename.orig");
+      system("cd $unpackdir && $tar -x $unpackoption -f $tarname && mv $basename $basename.orig");
+      $testdata->{"$thorn $test UNCOMPRESSED"} = "$unpackdir$sep$basename.orig";
+      $dir = "$unpackdir$sep$basename.orig";
     }
   }
+  ($testdata->{"$thorn $test UNKNOWNFILES"},$testdata->{"$thorn $test DATAFILES"}) = &FindFiles($dir,$testdata);
+  $testdata->{"$thorn $test NDATAFILES"} = scalar(split(" ",$testdata->{"$thorn $test DATAFILES"}));
   return $testdata;
 }
 
@@ -332,7 +347,10 @@ sub FindTestParameterFiles
       {
         $file =~ m:^(.*)\.par$:;
         $filedir = $1;
-        if (-d $filedir)
+        if (-d $filedir or -f "$filedir.tar" or
+            -f "$filedir.tar.gz"  or -f "$filedir.tgz" or
+            -f "$filedir.tar.bz2" or -f "$filedir.tbz" or
+            -f "$filedir.tar.xz"  or -f "$filedir.txz")
         {
           $testdata->{"$thorn TESTS"} .= "$filedir ";
           $testdata->{"$thorn NTESTS"}++;
@@ -970,6 +988,8 @@ sub RunTest
   my ($test_dir,$config);
   my ($retcode);
 
+  $testdata = &FindTestArchiveFiles($test,$thorn,$testdata);
+
   my $arrangement = $testdata->{"$thorn ARRANGEMENT"};
 
   $testdata->{"$thorn $test TESTRUNDIR"} = $config_data->{"TESTS_DIR"}.$sep.$config_data->{"CONFIG"}.$sep.$thorn;
@@ -1008,6 +1028,7 @@ sub RunTest
   return $testdata;
 }
 
+# Compares output from one particular testsuite
 sub CompareTestFiles
 {
   my ($test,$thorn,$runconfig,$rundata,$config_data,$testdata) = @_;
@@ -1058,7 +1079,17 @@ sub CompareTestFiles
       my (@maxabsdiff, @absdiff, @valmax) = ();
 
       $newfile = "$test_dir$sep$file";
+      # This is the standard location of test data files
       $oldfile = "$testdata->{\"$thorn TESTSDIR\"}${sep}${test}${sep}$file";
+      # If there is no data in the standard location, see if it got
+      # decompressed to some place else
+      if (!-d "$testdata->{\"$thorn TESTSDIR\"}${sep}${test}")
+      {
+        if (-d "$testdata->{\"$thorn $test UNCOMPRESSED\"}")
+        {
+          $oldfile = "$testdata->{\"$thorn $test UNCOMPRESSED\"}${sep}$file";
+        }
+      }
 
       $rundata->{"$thorn $test $file NINF"}=0;
       $rundata->{"$thorn $test $file NNAN"}=0;
@@ -1201,7 +1232,7 @@ sub CompareTestFiles
       }
       else
       {
-        print "     TESTSUITE ERROR: $newfile not compared\n";
+        print "     TESTSUITE ERROR: $newfile not compared to $oldfile\n";
       }
 
       my $havediffs = 0;
@@ -1241,7 +1272,7 @@ sub CompareTestFiles
   return $rundata;
 }
 
-
+# Reports on one particular test
 sub ReportOnTest
 {
   my($test,$thorn,$rundata,$testdata) = @_;
@@ -1496,6 +1527,7 @@ sub MakeTestRunDir
 
 }
 
+# Views results from one particular test
 sub ViewResults
 {
   my($test,$thorn,$runconfig,$rundata,$testdata) = @_;

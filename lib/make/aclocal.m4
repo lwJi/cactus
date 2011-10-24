@@ -46,6 +46,51 @@ changequote([, ])dnl
 done
 ])
 
+dnl A simplified version of AC_CHECK_MEMBER from autoconf 2.50 and up
+dnl CCTK_CHECK_MEMBER(AGGREGATE, MEMBER,
+dnl                 [ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND],
+dnl                 [INCLUDES])
+dnl ---------------------------------------------------------
+dnl AGGREGATE, MEMBER is for instance `struct passwd pw_gecos', shell
+dnl variables are not a valid argument.
+AC_DEFUN([CCTK_CHECK_MEMBER],
+[dnl Extract the aggregate name, and the member name
+ac_member_var=`echo $1['_']$2 | sed 'y% %_%'`
+AC_MSG_CHECKING([for $1.$2])
+AC_CACHE_VAL(ac_cv_member_$ac_member_var,
+[dnl
+AC_TRY_COMPILE([$5],
+[static $1 ac_aggr;
+if (ac_aggr.$2)
+return 0;],
+		eval "ac_cv_member_$ac_member_var=yes",
+		eval "ac_cv_member_$ac_member_var=no"dnl
+)
+if eval "test \"`echo '$''{'ac_cv_member_$ac_member_var'}'`\" = no"; then
+AC_TRY_COMPILE([$5],
+[static $1 ac_aggr;
+if (sizeof ac_aggr.$2)
+return 0;],
+		eval "ac_cv_member_$ac_member_var=yes",
+		eval "ac_cv_member_$ac_member_var=no"dnl
+)
+fi dnl
+])dnl
+if eval "test \"`echo '$ac_cv_member_'$ac_member_var`\" = yes"; then
+  AC_MSG_RESULT(yes)
+  ifelse([$3], ,
+[ac_tr_member=HAVE_MEMBER`echo $1 | sed -e 'y% %_%' \
+    -e 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/'`
+  AC_DEFINE_UNQUOTED($ac_tr_member)
+], [$3])
+else
+  AC_MSG_RESULT(no)
+ifelse([$4], , , [$4
+])dnl
+fi 
+])
+
+
 dnl A version of AC_TRY_COMPILER(TEST-PROGRAM, WORKING-VAR, CROSS-VAR) which,
 dnl if the TEST-PROGRAM could not be executed, does not throw away the stderr
 dnl but redirects it into the config.log logfile instead.
@@ -377,11 +422,24 @@ AC_DEFUN(CCTK_CHECK_C_RESTRICT,
 [AC_CACHE_CHECK([for C restrict], cctk_cv_c_restrict,
 [cctk_cv_c_restrict=no
 for ac_kw in restrict __restrict__ __restrict; do
-  AC_TRY_COMPILE(, [
-double * $ac_kw foo;
-void bar (void * $ac_kw arr[]);
-struct tux { char * $ac_kw arr[3]; };
-void func (void * arr[$ac_kw]);
+  AC_TRY_COMPILE([
+double * $ac_kw p1;
+double * $ac_kw p2[3];
+struct s1 { char * $ac_kw arr; };
+struct s2 { char * $ac_kw arr[3]; };
+void f1 (void * $ac_kw p);
+void f2 (void * $ac_kw p[]);
+void f3 (void * $ac_kw p[3]);
+/* void f4 (void * $ac_kw p[$ac_kw]); */
+/* void f5 (void * $ac_kw p[$ac_kw 3]); */
+void f1 (void * $ac_kw p) { }
+void f2 (void * $ac_kw p[]) { }
+void f3 (void * $ac_kw p[3]) { }
+/* void f4 (void * $ac_kw p[$ac_kw]) { } */
+/* void f5 (void * $ac_kw p[$ac_kw 3]) { } */
+], [
+double * $ac_kw v1;
+double * $ac_kw v2[3];
 ], [cctk_cv_c_restrict=$ac_kw; break])
 done
 ])
@@ -399,10 +457,24 @@ AC_DEFUN(CCTK_CHECK_CXX_RESTRICT,
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
 for ac_kw in restrict __restrict__ __restrict; do
-  AC_TRY_COMPILE(, [
-double * $ac_kw foo;
-void bar (void * $ac_kw arr[]);
-struct tux { char * $ac_kw arr[3]; };
+  AC_TRY_COMPILE([
+double * $ac_kw p1;
+double * $ac_kw p2[3];
+struct s1 { char * $ac_kw arr; };
+struct s2 { char * $ac_kw arr[3]; };
+void f1 (void * $ac_kw p);
+void f2 (void * $ac_kw p[]);
+void f3 (void * $ac_kw p[3]);
+// void f4 (void * $ac_kw p[$ac_kw]);
+// void f5 (void * $ac_kw p[$ac_kw 3]);
+void f1 (void * $ac_kw p) { }
+void f2 (void * $ac_kw p[]) { }
+void f3 (void * $ac_kw p[3]) { }
+// void f4 (void * $ac_kw p[$ac_kw]) { }
+// void f5 (void * $ac_kw p[$ac_kw 3]) { }
+], [
+double * $ac_kw v1;
+double * $ac_kw v2[3];
 ], [cctk_cv_cxx_restrict=$ac_kw; break])
 done
 AC_LANG_RESTORE
@@ -435,7 +507,8 @@ dnl  AC_TRY_COMPILE(, [} $ac_kw int foo() {], [cctk_cv_c_inline=$ac_kw; break])
 done
 ])
 case "$cctk_cv_c_inline" in
-  inline | yes) ;;
+  inline | yes) 
+      AC_DEFINE(HAVE_CCTK_C_INLINE, 1) ;;
   no) AC_DEFINE(inline, ) ;;
   *)  AC_DEFINE_UNQUOTED(inline, $cctk_cv_c_inline)
       AC_DEFINE(HAVE_CCTK_C_INLINE, 1) ;;
@@ -635,7 +708,7 @@ AC_DEFUN(CCTK_CXX_MEMBER_ATTRIBUTE_CONST,
 [cctk_cv_have_cxx_member_attribute_const=no
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
-AC_TRY_COMPILE(, struct { double foo (double) __attribute__((__const__)); };, cctk_cv_have_cxx_member_attribute_const=yes, cctk_cv_have_cxx_member_attribute_const=no)
+AC_TRY_COMPILE(, struct bar { double foo (double) __attribute__((__const__)); };, cctk_cv_have_cxx_member_attribute_const=yes, cctk_cv_have_cxx_member_attribute_const=no)
 AC_LANG_RESTORE
 ])
 if test "$cctk_cv_have_cxx_member_attribute_const" = "yes" ; then
@@ -673,7 +746,7 @@ AC_DEFUN(CCTK_CXX_MEMBER_ATTRIBUTE_PURE,
 [cctk_cv_have_cxx_member_attribute_pure=no
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
-AC_TRY_COMPILE(, struct { double foo (double) __attribute__((__pure__)); };, cctk_cv_have_cxx_member_attribute_pure=yes, cctk_cv_have_cxx_member_attribute_pure=no)
+AC_TRY_COMPILE(, struct bar { double foo (double) __attribute__((__pure__)); };, cctk_cv_have_cxx_member_attribute_pure=yes, cctk_cv_have_cxx_member_attribute_pure=no)
 AC_LANG_RESTORE
 ])
 if test "$cctk_cv_have_cxx_member_attribute_pure" = "yes" ; then
@@ -711,7 +784,7 @@ AC_DEFUN(CCTK_CXX_MEMBER_ATTRIBUTE_NOINLINE,
 [cctk_cv_have_cxx_member_attribute_noinline=no
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
-AC_TRY_COMPILE(, struct { double foo (double) __attribute__((__noinline__)); };, cctk_cv_have_cxx_member_attribute_noinline=yes, cctk_cv_have_cxx_member_attribute_noinline=no)
+AC_TRY_COMPILE(, struct bar { double foo (double) __attribute__((__noinline__)); };, cctk_cv_have_cxx_member_attribute_noinline=yes, cctk_cv_have_cxx_member_attribute_noinline=no)
 AC_LANG_RESTORE
 ])
 if test "$cctk_cv_have_cxx_member_attribute_noinline" = "yes" ; then
@@ -816,5 +889,30 @@ AC_LANG_RESTORE
 ])
 if test "$cctk_cv_have_cxx_attribute_hot" = "yes" ; then
    AC_DEFINE(HAVE_CCTK_CXX_ATTRIBUTE_HOT)
+fi
+])
+
+
+
+AC_DEFUN(CCTK_C_BUILTIN_EXPECT,
+[AC_CACHE_CHECK([for C __builtin_expect], cctk_cv_have_c_builtin_expect,
+[cctk_cv_have_c_builtin_expect=no
+AC_TRY_COMPILE(, __builtin_expect(0,0);, cctk_cv_have_c_builtin_expect=yes, cctk_cv_have_c_builtin_expect=no)
+])
+if test "$cctk_cv_have_c_builtin_expect" = "yes" ; then
+   AC_DEFINE(HAVE_CCTK_C_BUILTIN_EXPECT)
+fi
+])
+
+AC_DEFUN(CCTK_CXX_BUILTIN_EXPECT,
+[AC_CACHE_CHECK([for CXX __builtin_expect], cctk_cv_have_cxx_builtin_expect,
+[cctk_cv_have_cxx_builtin_expect=no
+AC_LANG_SAVE
+AC_LANG_CPLUSPLUS
+AC_TRY_LINK(, __builtin_expect(0,0);, cctk_cv_have_cxx_builtin_expect=yes, cctk_cv_have_cxx_builtin_expect=no)
+AC_LANG_RESTORE
+])
+if test "$cctk_cv_have_cxx_builtin_expect" = "yes" ; then
+   AC_DEFINE(HAVE_CCTK_CXX_BUILTIN_EXPECT)
 fi
 ])

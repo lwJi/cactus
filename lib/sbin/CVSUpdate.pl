@@ -24,34 +24,34 @@ if ($debug)
   print "DEBUG mode: cvs/svn commands not issued\n\n";
 }
 
-print("Updating Flesh\n");
-$command = "cvs $cvs_ops update $cvs_update_ops $cvs_symbolic_name CONTRIBUTORS COPYRIGHT Makefile lib doc src arrangements/README";
-if ($debug)
-{
-  $this_dir = `pwd`;
-  chop($this_dir);
-  print "\nIn directory $this_dir\n";
-  print "Issuing command\n  $command\n";
-  foreach $file (`ls CVS`)
-  {
-    chop($file);
-    print "Contents of $file\n";
-    open (FILE, "<CVS/$file") || die "Could not open CVS file";
-    while (<FILE>)
-    {
-      print;
-    }
-  }
-}
-if (!$debug)
-{
-  open (CS, "$command |");
-  while (<CS>)
-  {
-    print ;
-  }
-  close (CS);
-}
+print("Not updating Flesh - not in CVS anymore\n");
+#$command = "cvs $cvs_ops update $cvs_update_ops $cvs_symbolic_name CONTRIBUTORS COPYRIGHT Makefile lib doc src arrangements/README";
+#if ($debug)
+#{
+#  $this_dir = `pwd`;
+#  chop($this_dir);
+#  print "\nIn directory $this_dir\n";
+#  print "Issuing command\n  $command\n";
+#  foreach $file (`ls CVS`)
+#  {
+#    chop($file);
+#    print "Contents of $file\n";
+#    open (FILE, "<CVS/$file") || die "Could not open CVS file";
+#    while (<FILE>)
+#    {
+#      print;
+#    }
+#  }
+#}
+#if (!$debug)
+#{
+#  open (CS, "$command |");
+#  while (<CS>)
+#  {
+#    print ;
+#  }
+#  close (CS);
+#}
 
 $home = `pwd`;
 chomp ($home);

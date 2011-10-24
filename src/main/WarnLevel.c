@@ -741,6 +741,8 @@ int CCTK_VParamWarn (const char *thorn,
   highlight_warning_messages =
     ! highlight_warning_messages_ptr || *highlight_warning_messages_ptr;
 
+  fflush (stdout);
+
   /* print to stderr */
   if (highlight_warning_messages)
   {
@@ -760,6 +762,8 @@ int CCTK_VParamWarn (const char *thorn,
     bold_stderr (OFF);
   }
 
+  fflush (stderr);
+
   /* print to stdout */
   if (highlight_warning_messages)
   {
@@ -778,6 +782,8 @@ int CCTK_VParamWarn (const char *thorn,
   {
     bold_stdout (OFF);
   }
+
+  fflush (stdout);
 
   param_errors++;
 

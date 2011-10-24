@@ -78,8 +78,10 @@ cctk_convfac,cctk_nghostzones,cctk_iteration,cctkGH
 #define CCTK_ORIGIN_SPACE(x) (cctk_origin_space(x)+cctk_delta_space(x)/cctk_levfac(x)*cctk_levoff(x)/cctk_levoffdenom(x))
 #define CCTK_DELTA_SPACE(x) (cctk_delta_space(x)/cctk_levfac(x))
 #define CCTK_DELTA_TIME (cctk_delta_time/cctk_timefac)
-#define CCTK_LSSH(stag,dim) cctk_lssh((stag)+CCTK_NSTAGGER*(dim))
-#define CCTK_LSSH_IDX(stag,dim) ((stag)+CCTK_NSTAGGER*(dim))
+/* The "stagger index" stag is zero-based (0,1,...), the direction dim
+   is one-based in Fortran (1,2,3,...) */
+#define CCTK_LSSH(stag,dim) cctk_lssh(CCTK_LSSH_IDX(stag,dim))
+#define CCTK_LSSH_IDX(stag,dim) (1+(stag)+CCTK_NSTAGGER*((dim)-1))
 
 #ifdef F90CODE
 
@@ -156,7 +158,11 @@ cctk_convfac,cctk_nghostzones,cctk_iteration,cctkGH
 #include "cctk_Stagger.h"
 #include "cctk_Sync.h"
 #include "cctk_Timers.h"
+#include "cctk_Termination.h"
 #include "cctk_WarnLevel.h"
+
+/* Include prototypes for scheduled functions */
+#include "cctk_ScheduleFunctions.h"
 
 /* Include definitions provided by capabilities */
 #include "cctk_Capabilities.h"
@@ -171,51 +177,146 @@ cctk_convfac,cctk_nghostzones,cctk_iteration,cctkGH
  */
 
 #ifdef __cplusplus
-#define HAVE_INLINE
+#  define HAVE_INLINE
 #else
-#ifndef inline
-#define HAVE_INLINE
-#endif
+#  ifdef HAVE_CCTK_C_INLINE
+#    define HAVE_INLINE
+#  endif
 #endif
 
 #ifdef HAVE_INLINE
 
 /* The "inline" keyword is supported */
 
+static inline int CCTK_GFINDEX0D (const cGH *GH);
+static inline int CCTK_GFINDEX0D (const cGH *GH)
+{
+  return (0);
+}
+
 static inline int CCTK_GFINDEX1D (const cGH *GH, int i);
 static inline int CCTK_GFINDEX1D (const cGH *GH, int i)
 {
-  GH = GH;
+#ifdef CCTK_DEBUG
+  if (i < 0 || i >= GH->cctk_lsh[0])
+  {
+    CCTK_VWarn (CCTK_WARN_ABORT,
+                __LINE__, __FILE__, CCTK_THORNSTRING,
+                "Grid function index out of bounds.  i=%d cctk_lsh=[%d]",
+                i, GH->cctk_lsh[0]);
+  }
+#endif
   return (i);
 }
 
 static inline int CCTK_GFINDEX2D (const cGH *GH, int i, int j);
 static inline int CCTK_GFINDEX2D (const cGH *GH, int i, int j)
 {
+#ifdef CCTK_DEBUG
+  if (i < 0 || i >= GH->cctk_lsh[0] ||
+      j < 0 || j >= GH->cctk_lsh[1])
+  {
+    CCTK_VWarn (CCTK_WARN_ABORT,
+                __LINE__, __FILE__, CCTK_THORNSTRING,
+                "Grid function index out of bounds.  i=%d j=%d cctk_lsh=[%d,%d]",
+                i, j, GH->cctk_lsh[0], GH->cctk_lsh[1]);
+  }
+#endif
   return (i + GH->cctk_lsh[0]*j);
 }
 
 static inline int CCTK_GFINDEX3D (const cGH *GH, int i, int j, int k);
 static inline int CCTK_GFINDEX3D (const cGH *GH, int i, int j, int k)
 {
+#ifdef CCTK_DEBUG
+  if (i < 0 || i >= GH->cctk_lsh[0] ||
+      j < 0 || j >= GH->cctk_lsh[1] ||
+      k < 0 || k >= GH->cctk_lsh[2])
+  {
+    CCTK_VWarn (CCTK_WARN_ABORT,
+                __LINE__, __FILE__, CCTK_THORNSTRING,
+                "Grid function index out of bounds.  i=%d j=%d k=%d cctk_lsh=[%d,%d,%d]",
+                i, j, k, GH->cctk_lsh[0], GH->cctk_lsh[1], GH->cctk_lsh[2]);
+  }
+#endif
   return (i + GH->cctk_lsh[0]*(j + GH->cctk_lsh[1]*k));
 }
 
 static inline int CCTK_GFINDEX4D (const cGH *GH, int i, int j, int k, int l);
 static inline int CCTK_GFINDEX4D (const cGH *GH, int i, int j, int k, int l)
 {
+#ifdef CCTK_DEBUG
+  if (i < 0 || i >= GH->cctk_lsh[0] ||
+      j < 0 || j >= GH->cctk_lsh[1] ||
+      k < 0 || k >= GH->cctk_lsh[2] ||
+      l < 0 || l >= GH->cctk_lsh[3])
+  {
+    CCTK_VWarn (CCTK_WARN_ABORT,
+                __LINE__, __FILE__, CCTK_THORNSTRING,
+                "Grid function index out of bounds.  i=%d j=%d k=%d l=%d cctk_lsh=[%d,%d,%d,%d]",
+                i, j, k, l, GH->cctk_lsh[0], GH->cctk_lsh[1], GH->cctk_lsh[2], GH->cctk_lsh[3]);
+  }
+#endif
   return (i + GH->cctk_lsh[0]*(j + GH->cctk_lsh[1]*(k + GH->cctk_lsh[2]*l)));
+}
+
+static inline int CCTK_VECTGFINDEX0D (const cGH *GH, int n);
+static inline int CCTK_VECTGFINDEX0D (const cGH *GH, int n)
+{
+#ifdef CCTK_DEBUG
+  if (n < 0)
+  {
+    CCTK_VWarn (CCTK_WARN_ABORT,
+                __LINE__, __FILE__, CCTK_THORNSTRING,
+                "Vector index out of bounds.  n=%d",
+                n);
+  }
+#endif
+  return (n);
 }
 
 static inline int CCTK_VECTGFINDEX1D (const cGH *GH, int i, int n);
 static inline int CCTK_VECTGFINDEX1D (const cGH *GH, int i, int n)
 {
+#ifdef CCTK_DEBUG
+  if (i < 0 || i >= GH->cctk_lsh[0])
+  {
+    CCTK_VWarn (CCTK_WARN_ABORT,
+                __LINE__, __FILE__, CCTK_THORNSTRING,
+                "Grid function index out of bounds.  i=%d cctk_lsh=[%d]",
+                i, GH->cctk_lsh[0]);
+  }
+  if (n < 0)
+  {
+    CCTK_VWarn (CCTK_WARN_ABORT,
+                __LINE__, __FILE__, CCTK_THORNSTRING,
+                "Vector index out of bounds.  n=%d",
+                n);
+  }
+#endif
   return (i + GH->cctk_lsh[0]*n);
 }
 
 static inline int CCTK_VECTGFINDEX2D (const cGH *GH, int i, int j, int n);
 static inline int CCTK_VECTGFINDEX2D (const cGH *GH, int i, int j, int n)
 {
+#ifdef CCTK_DEBUG
+  if (i < 0 || i >= GH->cctk_lsh[0] ||
+      j < 0 || j >= GH->cctk_lsh[1])
+  {
+    CCTK_VWarn (CCTK_WARN_ABORT,
+                __LINE__, __FILE__, CCTK_THORNSTRING,
+                "Grid function index out of bounds.  i=%d j=%d cctk_lsh=[%d,%d]",
+                i, j, GH->cctk_lsh[0], GH->cctk_lsh[1]);
+  }
+  if (n < 0)
+  {
+    CCTK_VWarn (CCTK_WARN_ABORT,
+                __LINE__, __FILE__, CCTK_THORNSTRING,
+                "Vector index out of bounds.  n=%d",
+                n);
+  }
+#endif
   return (i + GH->cctk_lsh[0]*(j + GH->cctk_lsh[1]*n));
 }
 
@@ -224,6 +325,24 @@ static inline int CCTK_VECTGFINDEX3D (const cGH *GH,
 static inline int CCTK_VECTGFINDEX3D (const cGH *GH,
                                       int i, int j, int k, int n)
 {
+#ifdef CCTK_DEBUG
+  if (i < 0 || i >= GH->cctk_lsh[0] ||
+      j < 0 || j >= GH->cctk_lsh[1] ||
+      k < 0 || k >= GH->cctk_lsh[2])
+  {
+    CCTK_VWarn (CCTK_WARN_ABORT,
+                __LINE__, __FILE__, CCTK_THORNSTRING,
+                "Grid function index out of bounds.  i=%d j=%d k=%d cctk_lsh=[%d,%d,%d]",
+                i, j, k, GH->cctk_lsh[0], GH->cctk_lsh[1], GH->cctk_lsh[2]);
+  }
+  if (n < 0)
+  {
+    CCTK_VWarn (CCTK_WARN_ABORT,
+                __LINE__, __FILE__, CCTK_THORNSTRING,
+                "Vector index out of bounds.  n=%d",
+                n);
+  }
+#endif
   return (i + GH->cctk_lsh[0]*(j + GH->cctk_lsh[1]*(k + GH->cctk_lsh[2]*n)));
 }
 
@@ -232,19 +351,40 @@ static inline int CCTK_VECTGFINDEX4D (const cGH *GH,
 static inline int CCTK_VECTGFINDEX4D (const cGH *GH,
                                       int i, int j, int k, int l, int n)
 {
+#ifdef CCTK_DEBUG
+  if (i < 0 || i >= GH->cctk_lsh[0] ||
+      j < 0 || j >= GH->cctk_lsh[1] ||
+      k < 0 || k >= GH->cctk_lsh[2] ||
+      l < 0 || l >= GH->cctk_lsh[3])
+  {
+    CCTK_VWarn (CCTK_WARN_ABORT,
+                __LINE__, __FILE__, CCTK_THORNSTRING,
+                "Grid function index out of bounds.  i=%d j=%d k=%d l=%d cctk_lsh=[%d,%d,%d,%d]",
+                i, j, k, l, GH->cctk_lsh[0], GH->cctk_lsh[1], GH->cctk_lsh[2], GH->cctk_lsh[3]);
+  }
+  if (n < 0)
+  {
+    CCTK_VWarn (CCTK_WARN_ABORT,
+                __LINE__, __FILE__, CCTK_THORNSTRING,
+                "Vector index out of bounds.  n=%d",
+                n);
+  }
+#endif
   return (i + GH->cctk_lsh[0]*(j + GH->cctk_lsh[1]*(k + GH->cctk_lsh[2]*
                                                     (l + GH->cctk_lsh[3]*n))));
 }
 
-#else /* ! defined(__cplusplus) && defined(inline) */
+#else /* ! defined(HAVE_INLINE) */
 
 #ifdef CCTK_DEBUG
 /* The "inline" keyword is not supported, and we want to debug */
 
+#define CCTK_GFINDEX0D CCTK_GFIndex0D
 #define CCTK_GFINDEX1D CCTK_GFIndex1D
 #define CCTK_GFINDEX2D CCTK_GFIndex2D
 #define CCTK_GFINDEX3D CCTK_GFIndex3D
 #define CCTK_GFINDEX4D CCTK_GFIndex4D
+#define CCTK_VECTGFINDEX0D CCTK_VectGFIndex0D
 #define CCTK_VECTGFINDEX1D CCTK_VectGFIndex1D
 #define CCTK_VECTGFINDEX2D CCTK_VectGFIndex2D
 #define CCTK_VECTGFINDEX3D CCTK_VectGFIndex3D
@@ -253,6 +393,8 @@ static inline int CCTK_VECTGFINDEX4D (const cGH *GH,
 #else /* ! defined(CCTK_DEBUG) */
 /* The "inline" keyword is not supported, and we want to optimise */
 
+#define CCTK_GFINDEX0D(GH)                      \
+  (0)
 #define CCTK_GFINDEX1D(GH, i)                   \
   (i)
 #define CCTK_GFINDEX2D(GH, i, j)                \
@@ -265,6 +407,8 @@ static inline int CCTK_VECTGFINDEX4D (const cGH *GH,
    ((j) + (GH)->cctk_lsh[1] *                   \
     ((k) + (GH)->cctk_lsh[2] * (l))))
 
+#define CCTK_VECTGFINDEX0D(GH, n)               \
+  (n)
 #define CCTK_VECTGFINDEX1D(GH, i, n)            \
   ((i) + (GH)->cctk_lsh[0] * (n))
 #define CCTK_VECTGFINDEX2D(GH, i, j, n)         \
@@ -282,7 +426,10 @@ static inline int CCTK_VECTGFINDEX4D (const cGH *GH,
 
 #endif /* ! defined(CCTK_DEBUG) */
 
-#endif /* ! defined(__cplusplus) && defined(inline) */
+#endif /* ! defined(HAVE_INLINE) */
+
+#undef HAVE_INLINE
+
 
 
 #define CCTK_PRINTSEPARATOR \
@@ -355,7 +502,9 @@ static inline int CCTK_VECTGFINDEX4D (const cGH *GH,
 #define CCTK_ORIGIN_SPACE(x) (cctk_origin_space[x]+cctk_delta_space[x]/cctk_levfac[x]*cctk_levoff[x]/cctk_levoffdenom[x])
 #define CCTK_DELTA_SPACE(x) (cctk_delta_space[x]/cctk_levfac[x])
 #define CCTK_DELTA_TIME (cctk_delta_time/cctk_timefac)
-#define CCTK_LSSH(stag,dim) cctk_lssh[(stag)+CCTK_NSTAGGER*(dim)]
+/* The "stagger index" stag is zero-based (0,1,...), the direction dim
+   is zero-based in C (0,1,2,...) */
+#define CCTK_LSSH(stag,dim) cctk_lssh[CCTK_LSSH_IDX(stag,dim)]
 #define CCTK_LSSH_IDX(stag,dim) ((stag)+CCTK_NSTAGGER*(dim))
 
 #define CCTK_WARN(a,b) CCTK_Warn(a,__LINE__,__FILE__,CCTK_THORNSTRING,b)

@@ -51,7 +51,22 @@ sub CreateScheduleBindings
     $rsbuffer = &ScheduleCreateFile($thorn, $rhinterface_db, $rhschedule_db);
     &WriteFile("Schedule$thorn.c",\$rsbuffer);
     $file_list .= " Schedule$thorn.c";
+
+    $rsbuffer = &ScheduleCreateInterfaceFile($thorn, $rhinterface_db, $rhschedule_db);
+    &WriteFile("../include/${thorn}_Schedule.h",\$rsbuffer);
   }
+
+  @data = ();
+  foreach $thorn (split(' ',$rhinterface_db->{'THORNS'}))
+  {
+    push(@data, "#ifdef THORN\_IS\_$thorn");
+    push(@data, "#include \"${thorn}_Schedule.h\"");
+    push(@data, '#endif');
+    push(@data, '');
+  }
+  push(@data, "\n");  # workaround for perl 5.004_04 to add a trailing newline
+  $dataout = join ("\n", @data);
+  &WriteFile('../include/cctk_ScheduleFunctions.h',\$dataout);
 
   $rsbuffer = &ScheduleCreateBindings($rhinterface_db, $rhschedule_db);
   &WriteFile("BindingsSchedule.c", \$rsbuffer);
@@ -66,6 +81,145 @@ sub CreateScheduleBindings
 
   chdir "$start_dir";
 }
+
+#/*@@
+#  @routine    ScheduleCreateInterfaceFile
+#  @date       2006-05-11
+#  @author     Erik Schnetter
+#  @desc
+#              Create a string containing all the data which should go
+#              into a schedule interface file.
+#  @enddesc
+#@@*/
+sub ScheduleCreateInterfaceFile
+{
+  my ($thorn, $rhinterface_db, $rhschedule_db) = @_;
+  
+  # Map groups to one of their block numbers (groups may have several
+  # block numbers)
+  my %group_block = ();
+  
+  for (my $block = 0;
+       $block < $rhschedule_db->{"\U$thorn\E N_BLOCKS"};
+       ++ $block)
+  {
+      if ($rhschedule_db->{"\U$thorn\E BLOCK_$block TYPE"} eq "GROUP")
+      {
+          my $group = $rhschedule_db->{"\U$thorn\E BLOCK_$block NAME"};
+          $group_block{$group} = $block;
+      }
+  }
+  
+  
+  
+  # Process each schedule block
+  
+  my @data = ();
+  push (@data, '#include "cctk_Arguments.h"');
+  
+  for (my $block = 0;
+       $block < $rhschedule_db->{"\U$thorn\E N_BLOCKS"};
+       ++ $block)
+  {
+      if ($rhschedule_db->{"\U$thorn\E BLOCK_$block TYPE"} eq "FUNCTION")
+      {
+          my ($language, $function);
+          if ($rhschedule_db->{"\U$thorn\E BLOCK_$block LANG"} =~ m:^\s*C\s*$:i)
+          {
+              $language = 'C';
+              $function = $rhschedule_db->{"\U$thorn\E BLOCK_$block NAME"};
+          }
+          elsif ($rhschedule_db->{"\U$thorn\E BLOCK_$block LANG"} =~ m:^\s*(F|F77|FORTRAN|F90)\s*$:i)
+          {
+              $language = 'Fortran';
+              $function = "CCTK_FNAME(".$rhschedule_db->{"\U$thorn\E BLOCK_$block NAME"} .")";
+          }
+          
+          my $where = $rhschedule_db->{"\U$thorn\E BLOCK_$block WHERE"};
+          # Find one outermost enclosing group iteratively (there may
+          # be serveral outermost enclosing groups)
+          my %been_there;       # avoid cycles
+          while (! $been_there{$where} && defined $group_block{$where})
+          {
+              $been_there{$where} = defined;
+              my $block1 = $group_block{$where};
+              $where = $rhschedule_db->{"\U$thorn\E BLOCK_$block1 WHERE"};
+          }
+          my $is_special =
+              $where eq 'CCTK_STARTUP' ||
+              $where eq 'CCTK_RECOVER_PARAMETERS' ||
+              $where eq 'CCTK_SHUTDOWN';
+          
+          push (@data, '');
+          if ($language eq 'C')
+          {
+              push (@data, '#ifdef CCODE');
+              push (@data, '#ifdef __cplusplus');
+              push (@data, 'extern "C"');
+              push (@data, '#endif');
+              if ($is_special)
+              {
+                  push (@data, "int $function (void);")
+              }
+              else
+              {
+                  push (@data, "void $function (CCTK_ARGUMENTS);")
+              }
+              push (@data, '#endif /* CCODE */');
+          }
+          elsif ($language eq 'Fortran')
+          {
+# Can't use CCTK_FNAME in header files (which is implicit in $function)
+#              push (@data, '#ifdef CCODE');
+#              push (@data, '#ifdef __cplusplus');
+#              push (@data, 'extern "C"');
+#              push (@data, '#endif');
+#              if ($is_special)
+#              {
+#                  push (@data, "CCTK_FCALL int $function (void);")
+#              }
+#              else
+#              {
+#                  push (@data, "CCTK_FCALL void $function (CCTK_FARGUMENTS);")
+#              }
+#              push (@data, '#endif /* CCODE */');
+# Can't declare functions in Fortran at file scope
+#              push (@data, '#ifdef FCODE');
+#              push (@data, '#ifdef F90CODE');
+#              push (@data, '      interface');
+#              if ($is_special)
+#              {
+#                  push (@data, "      integer function $function ()");
+#                  push (@data, '         implicit none');
+#                  push (@data, "      end function $function");
+#              }
+#              else
+#              {
+#                  push (@data, "      subroutine $function (CCTK_ARGUMENTS)");
+#                  push (@data, '         implicit none');
+#                  push (@data, '         DECLARE_CCTK_ARGUMENTS');
+#                  push (@data, "      end subroutine $function");
+#              }
+#              push (@data, '      end interface');
+#              push (@data, '#else /* ! F90CODE */');
+#              push (@data, "      external $function");
+#              if ($is_special)
+#              {
+#                  push (@data, "      integer $function");
+#              }
+#              push (@data, '#endif /* F90CODE */');
+#              push (@data, '#endif /* FCODE */');
+          }
+          
+      }
+  }
+  
+  push(@data, "\n");   # workaround for perl 5.004_04 to add a trailing newline
+  
+  return join ("\n", @data);
+}
+
+
 
 #/*@@
 #  @routine    ScheduleCreateFile
@@ -144,9 +298,13 @@ sub ScheduleCreateFile
   push(@data, '#include "cctk_Parameters.h"');
   push(@data, '#include "cctki_ScheduleBindings.h"');
   push(@data, '');
-  push(@data, '/* prototypes for schedule bindings functions to be registered */');
+  #push(@data, '/* prototypes for schedule bindings functions to be registered */');
+  #push(@data, '/* Note that this is a cheat, we just need a function pointer. */');
+  #push(@data, $prototypes);
+  #push(@data, '');
+  push(@data, '/* Prototypes for Fortran schedule bindings functions to be registered */');
   push(@data, '/* Note that this is a cheat, we just need a function pointer. */');
-  push(@data, $prototypes);
+  push(@data, join "\n", (grep /CCTK_FNAME/, (split "\n", $prototypes)));
   push(@data, '');
   push(@data, "void CCTKi_BindingsSchedule_$thorn(void);");
   push(@data, "void CCTKi_BindingsSchedule_$thorn(void)");
@@ -421,6 +579,17 @@ sub ScheduleBlock
 
   $buffer .= "0};\n";
 
+  # add check on number of timelevels in case we were using a parameter
+  for($i=0; $i < @$tlist; $i++)
+  {
+    $buffer .= "    if(!($$tlist[$i] > 0 && $$tlist[$i]  <= CCTK_MaxTimeLevels(\"$$mem_groups[$i]\")))\n";
+    $buffer .= "        CCTK_VWarn(0, __LINE__, __FILE__, CCTK_THORNSTRING,\n";
+    $buffer .= "                   \"Tried to schedule %d timelevels for group '%s' in schedule.ccl.\\n\"\n";
+    $buffer .= "                   \"Value must be between 1 and %d (inclusive)\",\n";
+    $buffer .= "                   $$tlist[$i], \"$$mem_groups[$i]\", CCTK_MaxTimeLevels(\"$$mem_groups[$i]\"));\n";
+    $buffer .= "\n";
+  }
+
   # Start writing out the data
   if($rhschedule_db->{"\U$thorn\E BLOCK_$block TYPE"} eq "GROUP")
   {
@@ -552,6 +721,17 @@ sub ScheduleStatement
     $prototype = "";
 
     my $i;
+
+    # add check on number of timelevels in case we were using a parameter
+    for($i=0; $i < @$groups; $i++)
+    {
+      $buffer .= "  if(!($$misc[$i] > 0 && $$misc[$i]  <= CCTK_MaxTimeLevels(\"$$groups[$i]\")))\n";
+      $buffer .= "      CCTK_VWarn(0, __LINE__, __FILE__, CCTK_THORNSTRING,\n";
+      $buffer .= "                 \"Tried to schedule %d timelevels for group '%s' in schedule.ccl.\\n\"\n";
+      $buffer .= "                 \"Value must be between 1 and %d (inclusive)\",\n";
+      $buffer .= "                 $$misc[$i], \"$$groups[$i]\", CCTK_MaxTimeLevels(\"$$groups[$i]\"));\n";
+      $buffer .= "\n";
+    }
 
     for($i=0; $i < @$groups; $i++)
     {
@@ -815,7 +995,7 @@ sub ScheduleValidateTimeLevels
 
 #    print "DEBUG: validate $thorn,$implementation,$group,$timelevels\n";
 
-    if($timelevels !~ /^\d*$/)
+    if($timelevels !~ /^[[:alpha:]_][[:word:]]*$/ && $timelevels !~ /^\d*$/)
     {
       &CST_error(0,"Invalid timelevel specifier '$timelevels' in schedule.ccl of thorn '$thorn'","",__LINE__,__FILE__);
       $return_code++;
@@ -857,7 +1037,7 @@ sub ScheduleValidateTimeLevels
                  ,"",__LINE__,__FILE__);
       $return_code++;
     }
-    elsif($timelevels > 0 && $timelevels  <= $allowed_timelevels)
+    elsif($timelevels =~ /^[[:alpha:]_][[:word:]]*$/ || ($timelevels > 0 && $timelevels  <= $allowed_timelevels))
     {
       next;
     }

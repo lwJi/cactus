@@ -18,6 +18,10 @@
 /* Various library functions */
 #undef HAVE_GETHOSTBYNAME
 #undef HAVE_GETOPT_LONG_ONLY
+#undef HAVE___CXA_DEMANGLE
+#undef HAVE_DLADDR
+#undef HAVE_BACKTRACE
+#undef HAVE_BACKTRACE_SYMBOLS
 #undef HAVE_CRYPT
 #undef HAVE_FINITE
 #undef HAVE_ISNAN
@@ -80,6 +84,9 @@
 #undef HAVE_MALLINFO
 #undef HAVE_MALLOPT
 #undef HAVE_M_MMAP_THRESHOLD_VALUE
+#undef HAVE_SCHED_H
+#undef HAVE_EXECINFO_H
+#undef HAVE_SCHED_GETAFFINITY
 
 #undef TIME_WITH_SYS_TIME
 
@@ -260,6 +267,14 @@ typedef enum {false, true} bool;
 #  define CCTK_ATTRIBUTE_HOT
 #endif
 
+/* Whether __builtin_expect exists. */
+#undef HAVE_CCTK_C_BUILTIN_EXPECT
+#ifdef HAVE_CCTK_C_BUILTIN_EXPECT
+#  define CCTK_BUILTIN_EXPECT(x,y) __builtin_expect(x,y)
+#else
+#  define CCTK_BUILTIN_EXPECT(x,y) (x)
+#endif
+
 #endif /* ! defined __cplusplus */
 /****************************************************************************/
 
@@ -352,6 +367,14 @@ typedef enum {false, true} bool;
 #  define CCTK_ATTRIBUTE_HOT __attribute__((__hot__))
 #else
 #  define CCTK_ATTRIBUTE_HOT
+#endif
+
+/* Whether __builtin_expect exists. */
+#undef HAVE_CCTK_CXX_BUILTIN_EXPECT
+#ifdef HAVE_CCTK_CXX_BUILTIN_EXPECT
+#  define CCTK_BUILTIN_EXPECT(x,y) __builtin_expect(x,y)
+#else
+#  define CCTK_BUILTIN_EXPECT(x,y) (x)
 #endif
 
 /* Some C++ compilers recognise the restrict keyword */

@@ -53,9 +53,6 @@ $testdata = &FindTestParameterFiles($testdata,$config_data);
 # Parse test config files
 $testdata = &ParseTestConfigs($testdata,$config_data,\%runconfig);
 
-# Find the Archive Datafiles
-$testdata = &FindTestArchiveFiles($testdata);
-
 # Parse test parameter files
 $testdata = &ParseAllParameterFiles($testdata,$config_data,\%runconfig);
 
