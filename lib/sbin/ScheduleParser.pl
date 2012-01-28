@@ -114,7 +114,7 @@ sub parse_schedule_ccl
   my($name, $as, $type, $description, $where, $language,
        $mem_groups, $comm_groups, $trigger_groups, $sync_groups,
        $options, $tags, $before_list, $after_list,
-       $provides_list, $requires_list, $while_list, $if_list);
+       $writes_list, $reads_list, $while_list, $if_list);
   my($groups);
 
   $buffer       = "";
@@ -129,7 +129,7 @@ sub parse_schedule_ccl
        $name, $as, $type, $description, $where, $language,
        $mem_groups, $comm_groups, $trigger_groups, $sync_groups,
        $options, $tags, $before_list, $after_list,
-       $provides_list, $requires_list, $while_list, $if_list) =
+       $writes_list, $reads_list, $while_list, $if_list) =
            &ParseScheduleBlock($thorn,$line_number, @data);
 
       $schedule_db{"\U$thorn\E BLOCK_$n_blocks NAME"}        = $name;
@@ -146,8 +146,8 @@ sub parse_schedule_ccl
       $schedule_db{"\U$thorn\E BLOCK_$n_blocks TAGS"}        = $tags;
       $schedule_db{"\U$thorn\E BLOCK_$n_blocks BEFORE"}      = $before_list;
       $schedule_db{"\U$thorn\E BLOCK_$n_blocks AFTER"}       = $after_list;
-      $schedule_db{"\U$thorn\E BLOCK_$n_blocks PROVIDES"}    = $provides_list;
-      $schedule_db{"\U$thorn\E BLOCK_$n_blocks REQUIRES"}    = $requires_list;
+      $schedule_db{"\U$thorn\E BLOCK_$n_blocks WRITES"}      = $writes_list;
+      $schedule_db{"\U$thorn\E BLOCK_$n_blocks READS"}       = $reads_list;
       $schedule_db{"\U$thorn\E BLOCK_$n_blocks WHILE"}       = $while_list;
       $schedule_db{"\U$thorn\E BLOCK_$n_blocks IF"}          = $if_list;
 
@@ -202,13 +202,13 @@ sub ParseScheduleBlock
   my($name, $as, $type, $description, $where, $language,
      $mem_groups, $comm_groups, $trigger_groups, $sync_groups,
      $options, $tags, $before_list, $after_list,
-     $provides_list, $requires_list, $while_list, $if_list);
+     $writes_list, $reads_list, $while_list, $if_list);
   my(@fields);
   my($field);
   my(@before_list)    = ();
   my(@after_list)     = ();
-  my(@provides_list)  = ();
-  my(@requires_list)  = ();
+  my(@writes_list)    = ();
+  my(@reads_list)     = ();
   my(@while_list)     = ();
   my(@if_list)        = ();
   my(@mem_groups)     = ();
@@ -476,13 +476,13 @@ sub ParseScheduleBlock
       {
         push(@sync_groups, split(/\s+|\s*,\s*/, $1));
       }
-      elsif($data[$line_number] =~ m/^\s*PROVIDES\s*:\s*(.*)$/i)
+      elsif($data[$line_number] =~ m/^\s*WRITES\s*:\s*(.*)$/i)
       {
-        push(@provides_list, split(/\s+|\s*,\s*/, $1));
+        push(@writes_list, split(/\s+|\s*,\s*/, $1));
       }
-      elsif($data[$line_number] =~ m/^\s*REQUIRES\s*:\s*(.*)$/i)
+      elsif($data[$line_number] =~ m/^\s*READS\s*:\s*(.*)$/i)
       {
-        push(@requires_list, split(/\s+|\s*,\s*/, $1));
+        push(@reads_list, split(/\s+|\s*,\s*/, $1));
       }
       elsif($data[$line_number] =~ m/^\s*OPTI[^:]*:\s*(.*)$/i)
       {
@@ -542,8 +542,8 @@ sub ParseScheduleBlock
   $tags           = join(" ", @tags);
   $before_list    = join(",", @before_list);
   $after_list     = join(",", @after_list);
-  $provides_list  = join(",", @provides_list);
-  $requires_list  = join(",", @requires_list);
+  $writes_list    = join(",", @writes_list);
+  $reads_list     = join(",", @reads_list);
   $while_list     = join(",", @while_list);
   $if_list        = join(",", @if_list);
 
@@ -552,7 +552,7 @@ sub ParseScheduleBlock
           $name, $as, $type, $description, $where, $language,
           $mem_groups, $comm_groups, $trigger_groups, $sync_groups,
           $options, $tags, $before_list, $after_list,
-          $provides_list, $requires_list, $while_list, $if_list);
+          $writes_list, $reads_list, $while_list, $if_list);
 
 }
 

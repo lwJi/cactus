@@ -123,8 +123,8 @@ static t_attribute *CreateAttribute(const char *where,
                                     int n_comm_groups,
                                     int n_trigger_groups,
                                     int n_sync_groups,
-                                    int n_provides,
-                                    int n_requires,
+                                    int n_writes,
+                                    int n_reads,
                                     int n_options,
                                     const int *timelevels,
                                     va_list *ap);
@@ -377,13 +377,13 @@ int CCTK_CallFunction(void *function,
    @vtype   int
    @vio     in
    @endvar
-   @var     n_provides
-   @vdesc   Number of provides clauses
+   @var     n_writes
+   @vdesc   Number of writes clauses
    @vtype   int
    @vio     in
    @endvar
-   @var     n_requires
-   @vdesc   Number of requires clauses
+   @var     n_reads
+   @vdesc   Number of reads clauses
    @vtype   int
    @vio     in
    @endvar
@@ -439,8 +439,8 @@ int CCTKi_ScheduleFunction(void *function,
                            int n_comm_groups,
                            int n_trigger_groups,
                            int n_sync_groups,
-                           int n_provides,
-                           int n_requires,
+                           int n_writes,
+                           int n_reads,
                            int n_options,
                            int n_before,
                            int n_after,
@@ -459,7 +459,7 @@ int CCTKi_ScheduleFunction(void *function,
 
   attribute = CreateAttribute(where,name,description, language, thorn, implementation,
                               n_mem_groups, n_comm_groups, n_trigger_groups,
-                              n_sync_groups, n_provides, n_requires,
+                              n_sync_groups, n_writes, n_reads,
                               n_options, timelevels, &ap);
   modifier  = CreateModifiers(n_before, n_after, n_while, n_if, &ap);
 
@@ -553,13 +553,13 @@ int CCTKi_ScheduleFunction(void *function,
    @vtype   int
    @vio     in
    @endvar
-   @var     n_provides
-   @vdesc   Number of provides clauses
+   @var     n_writes
+   @vdesc   Number of writes clauses
    @vtype   int
    @vio     in
    @endvar
-   @var     n_requires
-   @vdesc   Number of requires clauses
+   @var     n_reads
+   @vdesc   Number of reads clauses
    @vtype   int
    @vio     in
    @endvar
@@ -613,8 +613,8 @@ int CCTKi_ScheduleGroup(const char *realname,
                         int n_comm_groups,
                         int n_trigger_groups,
                         int n_sync_groups,
-                        int n_provides,
-                        int n_requires,
+                        int n_writes,
+                        int n_reads,
                         int n_options,
                         int n_before,
                         int n_after,
@@ -633,7 +633,7 @@ int CCTKi_ScheduleGroup(const char *realname,
 
   attribute = CreateAttribute(where,name,description, NULL, thorn, implementation,
                               n_mem_groups, n_comm_groups, n_trigger_groups,
-                              n_sync_groups, n_provides, n_requires,
+                              n_sync_groups, n_writes, n_reads,
                               n_options, timelevels, &ap);
   modifier  = CreateModifiers(n_before, n_after, n_while, n_if, &ap);
 
@@ -642,7 +642,7 @@ int CCTKi_ScheduleGroup(const char *realname,
   ValidateModifiers(modifier);
 
   if(attribute && (modifier || (n_before == 0 && n_after == 0 &&
-                                n_provides == 0 && n_requires == 0 &&
+                                n_writes == 0 && n_reads == 0 &&
                                 n_while == 0 && n_if == 0)))
   {
     retcode = CCTKi_DoScheduleGroup(where, name, realname, modifier, (void *)attribute);
@@ -1371,13 +1371,13 @@ static int ScheduleTraverse(const char *where,
    @vtype   int
    @vio     in
    @endvar
-   @var     n_provides
-   @vdesc   Number of provides clauses
+   @var     n_writes
+   @vdesc   Number of writes clauses
    @vtype   int
    @vio     in
    @endvar
-   @var     n_requires
-   @vdesc   Number of requires clauses
+   @var     n_reads
+   @vdesc   Number of reads clauses
    @vtype   int
    @vio     in
    @endvar
@@ -1412,8 +1412,8 @@ static t_attribute *CreateAttribute(const char *where,
                                     int n_comm_groups,
                                     int n_trigger_groups,
                                     int n_sync_groups,
-                                    int n_provides,
-                                    int n_requires,
+                                    int n_writes,
+                                    int n_reads,
                                     int n_options,
                                     const int *timelevels,
                                     va_list *ap)
@@ -1444,13 +1444,13 @@ static t_attribute *CreateAttribute(const char *where,
     {
       this->FunctionData.SyncGroups = malloc(n_sync_groups*sizeof(int));
     }
-    if (n_provides > 0)
+    if (n_writes > 0)
     {
-      this->FunctionData.ProvidesClauses = malloc(n_provides*sizeof(char*));
+      this->FunctionData.WritesClauses = malloc(n_writes*sizeof(char*));
     }
-    if (n_requires > 0)
+    if (n_reads > 0)
     {
-      this->FunctionData.RequiresClauses = malloc(n_requires*sizeof(char*));
+      this->FunctionData.ReadsClauses = malloc(n_reads*sizeof(char*));
     }
     if (n_comm_groups > 0)
     {
@@ -1469,8 +1469,8 @@ static t_attribute *CreateAttribute(const char *where,
        (this->comm_groups || n_comm_groups==0)       &&
        (this->FunctionData.TriggerGroups || n_trigger_groups==0) &&
        (this->FunctionData.SyncGroups || n_sync_groups==0) &&
-       (this->FunctionData.ProvidesClauses || n_provides==0) &&
-       (this->FunctionData.RequiresClauses || n_requires==0))
+       (this->FunctionData.WritesClauses || n_writes==0) &&
+       (this->FunctionData.ReadsClauses || n_reads==0))
     {
       strcpy(this->FunctionData.where,where);
       strcpy(this->FunctionData.routine,name);
@@ -1494,8 +1494,8 @@ static t_attribute *CreateAttribute(const char *where,
       CreateGroupIndexList(n_comm_groups,    this->comm_groups, ap);
       CreateGroupIndexList(n_trigger_groups, this->FunctionData.TriggerGroups, ap);
       CreateGroupIndexList(n_sync_groups,    this->FunctionData.SyncGroups, ap);
-      CreateStringList    (n_provides,       this->FunctionData.ProvidesClauses, ap);
-      CreateStringList    (n_requires,       this->FunctionData.RequiresClauses, ap);
+      CreateStringList    (n_writes,       this->FunctionData.WritesClauses, ap);
+      CreateStringList    (n_reads,       this->FunctionData.ReadsClauses, ap);
 
       for(i=0; i< n_mem_groups; i++)
       {
@@ -1514,8 +1514,8 @@ static t_attribute *CreateAttribute(const char *where,
       this->n_comm_groups    = n_comm_groups;
       this->FunctionData.n_TriggerGroups = n_trigger_groups;
       this->FunctionData.n_SyncGroups = n_sync_groups;
-      this->FunctionData.n_ProvidesClauses = n_provides;
-      this->FunctionData.n_RequiresClauses = n_requires;
+      this->FunctionData.n_WritesClauses = n_writes;
+      this->FunctionData.n_ReadsClauses = n_reads;
 
       this->timers = NULL;
     }
@@ -1527,8 +1527,8 @@ static t_attribute *CreateAttribute(const char *where,
       free(this->comm_groups);
       free(this->FunctionData.TriggerGroups);
       free(this->FunctionData.SyncGroups);
-      free(this->FunctionData.ProvidesClauses);
-      free(this->FunctionData.RequiresClauses);
+      free(this->FunctionData.WritesClauses);
+      free(this->FunctionData.ReadsClauses);
       free(this);
       this = NULL;
     }
