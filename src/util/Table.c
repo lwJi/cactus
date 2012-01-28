@@ -57,6 +57,11 @@
  *   Util_TableItResetToStart
  *   Util_TableItSetToNull
  *   Util_TableItSetToKey
+ * Table and Iterator Dump Routines
+ *   Util_TablePrintAll
+ *   Util_TablePrint
+ *   Util_TablePrintPretty
+ *   Util_TablePrintAllIterators
  * Internal Support Functions
  *   internal_set
  *   internal_get
@@ -69,14 +74,9 @@
  *   get_iterator_ptr
  *   grow_pointer_array
  *   convert_string_to_number
-#ifdef UTIL_TABLE_TEST
- * Table and Iterator Dump Routines
- *   print_all_tables
- *   print_table
- *   print_all_iterators
-#endif
  */
 
+#include <ctype.h>
 #include <math.h>
 #include <limits.h>
 #include <stdio.h>
@@ -384,15 +384,6 @@ static
  */
 static
   void convert_string_to_number(const char *string, struct scalar_value *scalar);
-
-#ifdef UTIL_TABLE_TEST
-/*
- * Print out the table and iterator data structures.
- */
-static void print_all_tables(void);
-static void print_table(int handle);
-static void print_all_iterators(void);
-#endif
 
 /******************************************************************************/
 /***** Main Table API *********************************************************/
@@ -5518,133 +5509,282 @@ static
 /***** Table and Iterator Dump Routines ***************************************/
 /******************************************************************************/
 
-#ifdef UTIL_TABLE_TEST
 /*
 * This function prints out all the tables and their data structures.
 */
-static
-void print_all_tables(void)
+int Util_TablePrintAll(FILE *stream)
 {
   int handle;
 
-  printf("N_tables=%d N_thp_array=%d\n", N_tables, N_thp_array);
+  fprintf(stream, "N_tables=%d N_thp_array=%d\n", N_tables, N_thp_array);
   for (handle = 0 ; handle < N_thp_array ; ++handle)
   {
-    print_table(handle);
+    Util_TablePrint(stream, handle);
   }
+
+  return 0;
 }
-#endif  /* UTIL_TABLE_TEST */
 
 /******************************************************************************/
 
-#ifdef UTIL_TABLE_TEST
 /*
- * This function prints out a table.
+ * This function prints out a table, giving all internal information.
  */
-static
-  void print_table(int handle)
+int Util_TablePrint(FILE *stream, int handle)
 {
-  printf("thp_array[%d]: ", handle);
+  fprintf(stream, "thp_array[%d]: ", handle);
     {
   const struct table_header *const thp = get_table_header_ptr(handle);
   if (thp == NULL)
   {
-    printf("NULL\n");
+    fprintf(stream, "NULL\n");
   }
   else
   {
-    printf("flags=0x%x handle=%d\n", thp->flags, thp->handle);
+    fprintf(stream, "flags=0x%x handle=%d\n", thp->flags, thp->handle);
       {
     const struct table_entry *tep = thp->head;
     for ( ; tep != NULL ; tep = tep->next)
     {
-      printf("    [tep=%p]\n", (const void *) tep);
-      printf("\tkey=\"%s\"\n", tep->key);
-      printf("\ttype_code=%d N_elements=%d\n", tep->type_code, tep->N_elements);
+      fprintf(stream, "    [tep=%p]\n", (const void *) tep);
+      fprintf(stream, "\tkey=\"%s\"\n", tep->key);
+      fprintf(stream, "\ttype_code=%d N_elements=%d\n", tep->type_code, tep->N_elements);
         {
       int i;
       switch  (tep->type_code)
       {
         case CCTK_VARIABLE_BYTE:
-          printf("\t[byte]");
+          fprintf(stream, "\t[byte]");
             {
           const CCTK_BYTE* const value_ptr_byte = (const CCTK_BYTE*) tep->value;
           for (i = 0 ; i < tep->N_elements ; ++i)
           {
-            printf("\t%d", (int) value_ptr_byte[i]);
+            fprintf(stream, "\t%d", (int) value_ptr_byte[i]);
           }
             }
           break;
         case CCTK_VARIABLE_INT:
-          printf("\t[int]");
+          fprintf(stream, "\t[int]");
             {
           const CCTK_INT* const value_ptr_int = (const CCTK_INT*) tep->value;
           for (i = 0 ; i < tep->N_elements ; ++i)
           {
-            printf("\t%d", (int) value_ptr_int[i]);
+            fprintf(stream, "\t%d", (int) value_ptr_int[i]);
           }
             }
           break;
         case CCTK_VARIABLE_REAL:
-          printf("\t[real]");
+          fprintf(stream, "\t[real]");
             {
           const CCTK_REAL* const value_ptr_real = (const CCTK_REAL*) tep->value;
           for (i = 0 ; i < tep->N_elements ; ++i)
           {
-            printf("\t%g", (double) value_ptr_real[i]);
+            fprintf(stream, "\t%g", (double) value_ptr_real[i]);
           }
             }
           break;
         case CCTK_VARIABLE_COMPLEX:
-          printf("\t[complex]");
+          fprintf(stream, "\t[complex]");
             {
           const CCTK_COMPLEX* const value_ptr_complex
                   = (const CCTK_COMPLEX *) tep->value;
           for (i = 0 ; i < tep->N_elements ; ++i)
           {
-            printf("\t(%g,%g)",
+            fprintf(stream, "\t(%g,%g)",
                      (double) value_ptr_complex[i].Re,
                      (double) value_ptr_complex[i].Im);
           }
             }
           break;
+        case CCTK_VARIABLE_CHAR:
+          fprintf(stream, "\t[char]");
+            {
+          const CCTK_CHAR* const value_ptr_char = (const CCTK_CHAR*) tep->value;
+          fprintf(stream, "\t\"");
+          for (i = 0 ; i < tep->N_elements ; ++i)
+          {
+            CCTK_CHAR const c = value_ptr_char[i];
+            if (c == '"')
+              fprintf(stream, "\\\"");
+            else if (isprint(c))
+              fprintf(stream, "%c", (int) c);
+            else
+              fprintf(stream, "\\x%02x", (int) c);
+          }
+          fprintf(stream, "\"");
+            }
+          break;
         default:
-          printf("\t[sorry, don't know how to print this type!]");
+          fprintf(stream, "\t[sorry, don't know how to print this type!]");
           break;
       }
-      printf("\n");
+      fprintf(stream, "\n");
         }
     }
       }
   }
     }
+
+  return 0;
 }
-#endif  /* UTIL_TABLE_TEST */
 
 /******************************************************************************/
 
-#ifdef UTIL_TABLE_TEST
+/*
+ * This function prints out a table into a nice format.
+ */
+int Util_TablePrintPretty(FILE *stream, int handle)
+{
+  const struct table_header *const thp = get_table_header_ptr(handle);
+  if (! thp)
+  {
+    fprintf(stream, "NULL\n");
+    return 0;
+  }
+  
+  for (const struct table_entry *tep = thp->head; tep; tep = tep->next)
+  {
+    if (tep != thp->head)
+    {
+      fprintf(stream, " ");
+    }
+    fprintf(stream, "%s=", tep->key);
+    switch  (tep->type_code)
+    {
+    case CCTK_VARIABLE_BYTE:
+      {
+        const CCTK_BYTE* const value_ptr_byte = (const CCTK_BYTE*)tep->value;
+        if (tep->N_elements != 1)
+        {
+          fprintf(stream, "{");
+        }
+        for (int i = 0; i < tep->N_elements; ++i)
+        {
+          if (i != 0)
+          {
+            fprintf(stream, " ");
+          }
+          fprintf(stream, "0x%02x", (int)value_ptr_byte[i]);
+        }
+        if (tep->N_elements != 1)
+        {
+          fprintf(stream, "}");
+        }
+      }
+      break;
+    case CCTK_VARIABLE_INT:
+      {
+        const CCTK_INT* const value_ptr_int = (const CCTK_INT*)tep->value;
+        if (tep->N_elements != 1)
+        {
+          fprintf(stream, "{");
+        }
+        for (int i = 0; i < tep->N_elements; ++i)
+        {
+          if (i != 0)
+          {
+            fprintf(stream, " ");
+          }
+          fprintf(stream, "%d", (int)value_ptr_int[i]);
+        }
+        if (tep->N_elements != 1)
+        {
+          fprintf(stream, "}");
+        }
+      }
+      break;
+    case CCTK_VARIABLE_REAL:
+      {
+        const CCTK_REAL* const value_ptr_real = (const CCTK_REAL*)tep->value;
+        if (tep->N_elements != 1)
+        {
+          fprintf(stream, "{");
+        }
+        for (int i = 0; i < tep->N_elements; ++i)
+        {
+          if (i != 0)
+          {
+            fprintf(stream, " ");
+          }
+          fprintf(stream, "%#.17g", (double)value_ptr_real[i]);
+        }
+        if (tep->N_elements != 1)
+        {
+          fprintf(stream, "}");
+        }
+      }
+      break;
+    case CCTK_VARIABLE_COMPLEX:
+      {
+        const CCTK_COMPLEX* const value_ptr_complex =
+          (const CCTK_COMPLEX *)tep->value;
+        if (tep->N_elements != 1)
+        {
+          fprintf(stream, "{");
+        }
+        for (int i = 0; i < tep->N_elements; ++i)
+        {
+          if (i != 0)
+          {
+            fprintf(stream, " ");
+          }
+          fprintf(stream, "(%#.17g,%#.17g)",
+                  (double)value_ptr_complex[i].Re,
+                  (double)value_ptr_complex[i].Im);
+        }
+        if (tep->N_elements != 1)
+        {
+          fprintf(stream, "}");
+        }
+      }
+      break;
+    case CCTK_VARIABLE_CHAR:
+      {
+        const CCTK_CHAR* const value_ptr_char = (const CCTK_CHAR*)tep->value;
+        fprintf(stream, "\"");
+        for (int i = 0; i < tep->N_elements; ++i)
+        {
+          CCTK_CHAR const c = value_ptr_char[i];
+          if (c == '"')
+            fprintf(stream, "\\\"");
+          else if (isprint(c))
+            fprintf(stream, "%c", (int)c);
+          else
+            fprintf(stream, "\\x%02x", (int)(unsigned char)c);
+        }
+        fprintf(stream, "\"");
+      }
+      break;
+    default:
+      fprintf(stream, "[unsupported type]");
+    }
+  }
+  return 0;
+}
+
+/******************************************************************************/
+
 /*
  * This function prints out all the iterators and their data structures.
  */
-static
-  void print_all_iterators(void)
+int Util_TablePrintAllIterators(FILE *stream)
 {
   int ihandle;
 
-  printf("N_iterators=%d N_ip_array=%d\n", N_iterators, N_ip_array);
+  fprintf(stream, "N_iterators=%d N_ip_array=%d\n", N_iterators, N_ip_array);
   for (ihandle = 0 ; ihandle < N_ip_array ; ++ihandle)
   {
     const struct iterator *const ip = get_iterator_ptr(ihandle);
-    printf("ip_array[%d]: ", ihandle);
+    fprintf(stream, "ip_array[%d]: ", ihandle);
     if (ip == NULL)
     {
-      printf("NULL\n");
+      fprintf(stream, "NULL\n");
     }
     else
     {
-      printf("thp=%p tep=%p\n", (const void *) ip->thp, (const void *) ip->tep);
+      fprintf(stream, "thp=%p tep=%p\n", (const void *) ip->thp, (const void *) ip->tep);
     }
   }
+
+  return 0;
 }
-#endif  /* UTIL_TABLE_TEST */

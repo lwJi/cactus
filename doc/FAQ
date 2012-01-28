@@ -472,7 +472,7 @@ C1  The make system says "Checking status of libXXX.a" and then just
     sits there.  What can I do ?
 
     The first thing to do whenever a problem arises from the make system
-    is to run with the "SILENT=no" option.
+    is to run with the "VERBOSE=yes" option.
 
     In this case, though, first check that the clocks on the machine on
     which you are editing files and the clock on the machine you are compiling
@@ -700,7 +700,7 @@ C14 When trying to create the Cactus executable I get the error
     before the library containing this function. To test this and/or to get an
     executable, find the link line used by issuing
 
-    gmake origin SILENT=no
+    gmake origin VERBOSE=yes
 
     and add the missing library to the end of the link line.
 
@@ -867,7 +867,7 @@ C22 (MacOS) Compiling with the Absoft F90 compiler I get error messages
 C23 How can I see the commands which Cactus is actually using to build
     the executable?
 
-    Add SILENT=no to the end of the compile command and the actual commands
+    Add VERBOSE=yes to the end of the compile command and the actual commands
     will be echoed to standard output.
 
 
@@ -945,7 +945,7 @@ C28 (Linux IA64) I get a segmentation violation compiling snprintf.c in
 
     The Intel C++ compiler (Version 6.0, Build 20020320) has problems
     dealing with this file, which needs to be compiled without the -ip
-    option. Either run gmake with the option SILENT=no then cut and paste
+    option. Either run gmake with the option VERBOSE=yes then cut and paste
     the compile statement to the command line and remove the -ip option
     before executing it, and then continue to build the executable as normal.
 

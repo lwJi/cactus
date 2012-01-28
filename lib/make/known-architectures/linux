@@ -286,6 +286,13 @@ else
 
      intel_dir="$(dirname $(dirname $(which $F90)))"
 
+     intel_subdir=""
+     if [ ! -d "$intel_dir/lib" -a -d "$(dirname $intel_dir)/lib" ]; then
+         intel_subdir="/$(basename $(dirname $(which $F90)))"
+         intel_dir="$(dirname $intel_dir)"
+     fi
+     intel_libdir="$intel_dir/lib$intel_subdir"
+
      case "$host_cpu" in
        i?86 | x86_64)
          # add the necessary libraries according to the compiler version
@@ -295,10 +302,10 @@ else
            : ${LIBS='intrins IEPCF90 F90 imf svml m irc cxa cprts cxa pthread'}
          fi
          # add the libpath
-         : ${LIBDIRS="$intel_dir/lib"}
+         : ${LIBDIRS="$intel_libdir"}
          # add the linker script if the linker is not Intel
-         if test `basename $LD` != 'icc' -a `basename $LD` != 'icpc' -a -e "$intel_dir/lib/icrt.link" ; then
-           : ${LDFLAGS="-Qy $intel_dir/lib/icrt.link"}
+         if test `basename $LD` != 'icc' -a `basename $LD` != 'icpc' -a -e "$intel_libdir/icrt.link" ; then
+           : ${LDFLAGS="-Qy $intel_libdir/icrt.link"}
          fi
          ;;
 
@@ -311,7 +318,7 @@ else
          fi
 
          if test "$LD" != 'ecc' -a "$LD" != 'ecpc' ; then
-           : ${LIBDIRS="$intel_dir/lib"}
+           : ${LIBDIRS="$intel_libdir"}
          fi
          ;;
 

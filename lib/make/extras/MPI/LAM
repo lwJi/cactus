@@ -60,8 +60,15 @@ if test -z "$LAM_LIB_DIR" -o -z "$LAM_INC_DIR" ; then
   if test -z "$LAM_LIB_DIR" ; then
     : ${lam_libs="$LAM_DIR/lib"}
 
-    # don't add standard library search paths
-    if test "$lam_libs" != '/usr/lib' -a "$lam_libs" != '/usr/local/lib'; then
+    # don't add standard library search paths   \
+    if test                                     \
+        "$lam_libs" != '/lib' -a                \
+        "$lam_libs" != '/lib64' -a              \
+        "$lam_libs" != '/usr/lib' -a            \
+        "$lam_libs" != '/usr/lib64' -a          \
+        "$lam_libs" != '/usr/local/lib' -a      \
+        "$lam_libs" != '/usr/local/lib64';      \
+        then
       LAM_LIB_DIR="$lam_libs"
     fi
   fi

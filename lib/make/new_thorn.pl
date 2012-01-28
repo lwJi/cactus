@@ -94,6 +94,12 @@ print OUT "# Schedule definitions for thorn $thorn_name\n";
 
 close OUT;
 
+open(OUT, ">configuration.ccl") || die "Cannot create configuration.ccl";
+
+print OUT "# Configuration definitions for thorn $thorn_name\n";
+
+close OUT;
+
 open(OUT, ">README") || die "Cannot create README";
 
 print OUT "Cactus Code Thorn $thorn_name\n";

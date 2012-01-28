@@ -1402,7 +1402,7 @@ sub printAliasToWrapper
 
   push(@data,"  if (!${callname})");
   push(@data,"  {");
-  push(@data,"    CCTK_Warn(0, __LINE__, __FILE__, \"Bindings\",\"The function ${Function{\"Name\"}} has not been provided by any thorn in your thornlist\");");
+  push(@data,"    CCTK_Warn(0, __LINE__, __FILE__, \"Bindings\",\"The function ${Function{\"Name\"}} has not been provided by any active thorn.\");");
   push(@data,"  }");
   push(@data,"");
 

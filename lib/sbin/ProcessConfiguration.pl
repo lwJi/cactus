@@ -121,7 +121,7 @@ sub ProcessConfiguration
   # Ok, can now run the configuration scripts.
 
   my %thorns_todo = ();
-  map { $thorns_todo{"\U$_\E"} = 1; } sort keys %thorns;
+  map { $thorns_todo{"\U$_\E"} = 1; } keys %thorns;
   my %requirements_done = ();
 
   my $made_progress = 1;

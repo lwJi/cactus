@@ -57,7 +57,14 @@ if test -z "$OPENMPI_LIB_DIR" -o -z "$OPENMPI_INC_DIR" ; then
     fi
 
     # don't add standard library search paths
-    if test "$openmpi_libs" != '/usr/lib' -a "$openmpi_libs" != '/usr/lib64' -a "$openmpi_libs" != '/usr/local/lib'; then
+    if test                                     \
+        "$openmpi_libs" != '/lib' -a            \
+        "$openmpi_libs" != '/lib64' -a          \
+        "$openmpi_libs" != '/usr/lib' -a        \
+        "$openmpi_libs" != '/usr/lib64' -a      \
+        "$openmpi_libs" != '/usr/local/lib' -a  \
+        "$openmpi_libs" != '/usr/local/lib64';  \
+        then
       OPENMPI_LIB_DIR="$openmpi_libs"
     fi
   fi

@@ -8,7 +8,7 @@
 %   @version   $Header$
 % @@*/
 
-\begin{cactuspart}{Additional notes}{$RCSfile$}{$Revision$}\label{part:Notes}
+\begin{cactuspart}{Additional notes}{}{$Revision$}\label{part:Notes}
 \renewcommand{\thepage}{\Alph{part}\arabic{page}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -44,11 +44,10 @@ in single processor mode. Please refer to the architecture section
 \item[CPP] C Preprocessor. For example, the GNU \texttt{cpp}.  These are
   normally provided on most platforms, and many C compilers have an option
   to just run as a preprocessor.
-\item[CVS] The \textit{Concurrent Versions System} is not needed
+\item[SVN] \textit{Subversion} is not needed
   to run/compile Cactus, but you are strongly encouraged to install
   this software to take advantage of the update procedures. It can be
-  downloaded from your favorite GNU site.  Tar files of each release are
-  also available.
+  downloaded from \url{http://subversion.apache.org}.  
 \end{Lentry}
 
 \noindent
@@ -73,6 +72,17 @@ written in C++ you also need
  should also work.  Note that if a C++ compiler is available, then the
  \text{main()} routine in the flesh is compiled with C++ to allow static
  class initialisations.
+\end{Lentry}
+
+\noindent
+If you are using any thorns containing routines
+written in CUDA (Compute Unified Device Architecture), a parallel 
+computing architecture developed by NVIDIA, you also need
+\begin{Lentry}
+\item[CUCC] CUDA compiler. For example, the NVIDIA C compiler. In many
+cases, you can compile your C and C++ code with a CUDA compiler without 
+encountering any problems, but you are advised to use a CUDA compiler exclusively
+for CUDA code.
 \end{Lentry}
 
 \noindent
@@ -103,12 +113,13 @@ it is useful to install
 
 Cactus runs on many machines, under a large number of operating
 systems.  Here, we list the machines we have compiled and verified
-Cactus on, including some architecture specific notes.  A complete
-list of architectures supported by Cactus, along with more notes, can
-be found at
-\begin{center}
-\url{http://www.cactuscode.org/Documentation/Architectures.html}.
-\end{center}
+Cactus on, including some architecture specific notes.
+%A complete
+%list of architectures supported by Cactus, along with more notes, can
+%be found at
+%\begin{center}
+%\url{http://www.cactuscode.org/Documentation/Architectures.html}.
+%\end{center}
 
 \begin{Lentry}
 \item[\textbf{SGI}] 32 or 64 bit running Irix.
@@ -270,6 +281,7 @@ by * may be specified on the command line.
 
 \begin{Lentry}
 \item [\texttt{CC}]   * The C compiler.
+\item [\texttt{CUCC}] * The CUDA compiler.
 \item [\texttt{CXX}]    The C++ compiler.
 \item [\texttt{F90}]  * The Fortran 90 compiler.
 \item [\texttt{F77}]  * The Fortran 77 compiler.
@@ -291,6 +303,9 @@ Flags which are passed to the compilers and the tools.
 \begin{Lentry}
 \item [\texttt{CFLAGS}]
 Flags for the C compiler.
+
+\item [\texttt{CUCCFLAGS}]
+Flags for the CUDA compiler.
 
 \item [\texttt{CXXFLAGS}]
 Flags for the C++ compiler.
@@ -358,6 +373,10 @@ employs memory tracing (Section \ref{sec:metr}).
 Debug flags for the C compiler, their use depends on the type of
 debugging being used.
 
+\item [\texttt{CUCC\_DEBUG\_FLAGS}]
+Debug flags for the CUDA compiler, their use depends on the type of
+debugging being used.
+
 \item [\texttt{CXX\_DEBUG\_FLAGS}]
 Debug flags for the C++ compiler, their use depends on the type of
 debugging being used.
@@ -380,6 +399,10 @@ will override any setting of the American-spelled \texttt{OPTIMIZE}.
 Optimisation flags for the C compiler, their use depends on the type of
 optimisation being used.
 
+\item [\texttt{CUCC\_OPTIMISE\_FLAGS}]
+Optimisation flags for the C compiler, their use depends on the type of
+optimisation being used.
+
 \item [\texttt{CXX\_OPTIMISE\_FLAGS}]
 Optimisation flags for the C++ compiler, their use depends on the type of
 optimisation being used.
@@ -392,6 +415,18 @@ type of optimisation being used.
 Optimisation flags for the Fortran 77 compiler, their use depends on the
 type of optimisation being used.
 
+\item [\texttt{C\_NO\_OPTIMISE\_FLAGS}]
+
+\item [\texttt{CUCC\_NO\_OPTIMISE\_FLAGS}]
+
+\item [\texttt{CXX\_NO\_OPTIMISE\_FLAGS}]
+
+\item [\texttt{F90\_NO\_OPTIMISE\_FLAGS}]
+
+\item [\texttt{F77\_NO\_OPTIMISE\_FLAGS}]
+Optimisation flags used to indicate that no optimisation should be
+performed.  These are invoked when OPTIMISE=no is used.
+
 \item [\texttt{PROFILE}]
   * Specifies what type of profiling should be used.  The only options
   currently available are \texttt{yes} and \texttt{no}.  The default
@@ -399,6 +434,10 @@ type of optimisation being used.
 
 \item [\texttt{C\_PROFILE\_FLAGS}]
   Profile flags for the C compiler, their use depends on the type of
+  profiling being used.
+
+\item [\texttt{CUCC\_PROFILE\_FLAGS}]
+  Profile flags for the CUDA compiler, their use depends on the type of
   profiling being used.
 
 \item [\texttt{CXX\_PROFILE\_FLAGS}]
@@ -420,6 +459,10 @@ type of optimisation being used.
 
 \item [\texttt{C\_WARN\_FLAGS}]
 Warning flags for the C compiler, their use depends on the type of
+warnings used during compilation (Section \ref{sec:gmopfobuco}).
+
+\item [\texttt{CUCC\_WARN\_FLAGS}]
+Warning flags for the CUCC compiler, their use depends on the type of
 warnings used during compilation (Section \ref{sec:gmopfobuco}).
 
 \item [\texttt{CXX\_WARN\_FLAGS}]
@@ -508,11 +551,15 @@ which should be consulted for the full range of configuration options.
 \item [\texttt{MPI}] * The MPI package to use, if required. Supported values are
         \texttt{CUSTOM}, \texttt{NATIVE}, \texttt{MPICH}, or \texttt{LAM}.
 
-\item [\texttt{HDF5}]
-Supported values are \texttt{yes}, and \texttt{no}. A blank value is taken as \texttt{no}.
+\item [\texttt{HDF5\_DIR}]
+Used in connection with thorn \texttt{ExternalLibraries/HDF5}.
+Supported values are \texttt{BUILD}, or a path pointing to an existing installation. The
+option \texttt{HDF5} is depreciated.
 
-\item [\texttt{LAPACK}]
-Supported values are \texttt{yes}, and \texttt{no}. A blank value is taken as \texttt{no}.
+\item [\texttt{LAPACK\_DIR}]
+Used in connection with thorn \texttt{ExternalLibraries/LAPACK}.
+Supported values are \texttt{BUILD}, or a path pointing to an existing installation. The
+option \texttt{LAPACK} is depreciated.
 
 \item [\texttt{PETSC}]
 Supported values are \texttt{yes}, and \texttt{no}. A blank value is taken as \texttt{no}.
@@ -527,8 +574,9 @@ Supported values are \texttt{yes}, and \texttt{no}. A blank value is taken as \t
 \begin{Lentry}
 \item [\texttt{PROMPT}] Setting this to \texttt{no} turns off all prompts from the
 make system.
-\item [\texttt{SILENT}] Setting this to \texttt{no} instructs \texttt{gmake} to print the
+\item [\texttt{VERBOSE}] Setting this to \texttt{yes} instructs \texttt{gmake} to print the
 commands that it is executing.
+\item [\texttt{SILENT}] Setting this to \texttt{no} is an depreciated way of using \texttt{VERBOSE = yes}.
 \end{Lentry}
 
 \end{itemize}
@@ -654,13 +702,14 @@ locations given in the files in \texttt{lib/make/extras/MPI}.
 \label{subsec:hdf5}
 
 To compile with HDF5 (\url{http://hdf.ncsa.uiuc.edu/whatishdf5.html}),
-the configure options are
+include thorn \texttt{ExternalLibraries/HDF5} in your thornlist, and use
+the configure option
 
-\texttt{HDF5 = yes/no [HDF5\_DIR = <\var{dir}>] [LIBZ\_DIR = <\var{dir}>] [LIBSZ\_DIR = <\var{dir}>]}
+\texttt{HDF5\_DIR = BUILD/<\var{dir}> [LIBZ\_DIR = <\var{dir}>] [LIBSZ\_DIR = <\var{dir}>]}
 
 If \texttt{HDF5\_DIR} is not given, the configuration process will search for an
-installed HDF5 package in some standard places (defined in
-\texttt{lib/make/extras/HDF5}).
+installed HDF5 package in some standard places. If \texttt{HDF5\_DIR} is set to
+\texttt{BUILD} an HDF5 installation will be build.
 If the found HDF5 library was built with the external deflate I/O filter,
 the configuration process also searches for the \texttt{libz} library and adds
 it to the linker flags. You may also point directly to the location of
@@ -669,34 +718,27 @@ If the found HDF5 library was built with the external \texttt{szlib} I/O filter,
 the configuration process also searches for the \texttt{szlib} library and adds
 it to the linker flags. You may also point directly to the location of
 \texttt{libsz.a} by setting \texttt{LIBSZ\_DIR}.
+Note that the option \texttt{HDF5 = yes/no} is depreciated and does not work with
+thorn \texttt{ExternalLibraries/HDF5}.
 
 
 \subsection{LAPACK: Linear Algebra PACKage}
 
 To compile with LAPACK (\url{http://www.netlib.org/lapack/}),
-the configure options are
+include thorn \texttt{ExternalLibraries/LAPACK} in your thornlist, and use
+the configure option
 
 \begin{alltt}
-LAPACK = yes | no | <blank>
-[ LAPACK\_DIR = <\var{dir}> | none ]
+[ LAPACK\_DIR = BUILD | <\var{dir}> ]
 [ LAPACK\_EXTRA\_LIBS\_DIRS = <\var{dir}> ]
 [ LAPACK\_LIBS = <\var{libs}> ]
 [ LAPACK\_EXTRA\_LIBS = <\var{libs}> ]
 \end{alltt}
 
 If \texttt{LAPACK\_DIR} is not given, the configuration process will search for a
-LAPACK library \texttt{liblapack.[\{a,so\}]} in some standard places (defined in
-\texttt{lib/make/extras/LAPACK}). If \texttt{LAPACK\_DIR} is set to \texttt{no}
-the LAPACK library path is assumed to be installed in a standard system location
-(e.g. \texttt{/usr/lib/}), and thus the library path will not be added to the
-linker's command line.
-
-Because LAPACK doesn't come as a standardized system installation, there are
-additional configuration variables to set the name of the LAPACK library
-(\texttt{LAPACK\_LIBS}) as well as the name (\texttt{LAPACK\_EXTRA\_LIBS}) and
-location (\texttt{LAPACK\_EXTRA\_LIBS\_DIRS}) of extra libraries that are
-required by LAPACK itself.
-
+LAPACK library \texttt{liblapack.[\{a,so\}]} in some standard places.
+If \texttt{LAPACK\_DIR} is set to \texttt{BUILD}, a Lapack installation will
+be build.
 
 \subsection{PETSc: Portable, Extensible Toolkit for Scientific Computation}
 
@@ -861,8 +903,8 @@ The configuration options are stored in a file
 \item [\texttt{gmake <\var{config}>-configinfo}] displays the options
 of the configuration (\texttt{cat configs/<\var{config}>/config-info}).
 
-\item[\texttt{gmake <\var{config}>-cvsupdate}] updates the flesh and this
-configuration's thorns from the CVS repositories.
+%% \item[\texttt{gmake <\var{config}>-cvsupdate}] updates the flesh and this
+%% configuration's thorns from the CVS repositories.
 
 \item [\texttt{gmake <\var{config}>-delete}] deletes a configuration
 (\texttt{rm -r configs/<\var{config}>}).
@@ -883,7 +925,7 @@ by configure and the \texttt{ThornList} file remain.
 configuration using its previous configuration options from the file
 \texttt{configs/<\var{config}>/config-info}.
 
-\item [\texttt{gmake <\var{config}>--testsuite}] runs the test programs
+\item [\texttt{gmake <\var{config}>-testsuite}] runs the test programs
 associated with each thorn in the configuration. See section
 \ref{sec:testing} for information about the test suite mechanism.
 
@@ -989,11 +1031,11 @@ arrangements and thorns.  For example, it can checkout all the thorns
 in any thornlist file found in the \texttt{thornlists} subdirectory of
 the Cactus root directory. % (usually \texttt{Cactus}).
 
-\item [\texttt{gmake cvsdiff}] shows differences between the checked out version of Cactus and that in the CVS repositories.
+%% \item [\texttt{gmake cvsdiff}] shows differences between the checked out version of Cactus and that in the CVS repositories.
 
-\item [\texttt{gmake cvsstatus}] shows status of the checked out version of Cactus, reporting which files have been modified or need updating.
+%% \item [\texttt{gmake cvsstatus}] shows status of the checked out version of Cactus, reporting which files have been modified or need updating.
 
-\item [\texttt{gmake cvsupdate}] updates flesh and all thorns from CVS repositories.
+%% \item [\texttt{gmake cvsupdate}] updates flesh and all thorns from CVS repositories.
 
 \item [\texttt{gmake configinfo}] prints configuration options for every
 configuration found in user's \texttt{configs} subdirectory.
@@ -1056,7 +1098,7 @@ Some thorns come with a test suite, consisting of example parameter files
 and the output files generated by running these. To run the test suite
 for the thorns you have compiled use
 
-\texttt{gmake <\var{configuration}>--testsuite}
+\texttt{gmake <\var{configuration}>-testsuite}
 
 These test suite serve the dual purpose of
 

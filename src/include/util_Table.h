@@ -14,16 +14,16 @@
   @version      $Header$
   @@*/
 
+#ifndef _UTIL_TABLE_H_
+#define _UTIL_TABLE_H_  1       /* define to 1 is Cactus standard */
+                                /* n.b. usual standard is empty defn! */
+
 /*
  * Having this file (a "util_*" low-level file) include a "cctk_*" high-level
  * file is an ugly hack, but we need the CCTK_{INT,REAL,COMPLEX}_* types
  * to define the table API.  So...
  */
 #include "cctk_Types.h"
-
-#ifndef _UTIL_TABLE_H_
-#define _UTIL_TABLE_H_  1       /* define to 1 is Cactus standard */
-                                /* n.b. usual standard is empty defn! */
 
 #ifdef __cplusplus
 extern "C"
@@ -127,6 +127,8 @@ extern "C"
 /******************************************************************************/
 
 #ifdef CCODE
+
+#include <stdio.h>
 
 /* create/destroy */
 int Util_TableCreate(int flags);
@@ -508,6 +510,15 @@ int Util_TableItAdvance(int ihandle);
 int Util_TableItResetToStart(int ihandle);
 int Util_TableItSetToNull(int ihandle);
 int Util_TableItSetToKey(int ihandle, const char *key);
+
+/******************************************************************************/
+/***** Table Output API *******************************************************/
+/******************************************************************************/
+
+int Util_TablePrintAll(FILE *stream);
+int Util_TablePrint(FILE *stream, int handle);
+int Util_TablePrintPretty(FILE *stream, int handle);
+int Util_TablePrintAllIterators(FILE *stream);
 
 #endif  /* CCODE */
 

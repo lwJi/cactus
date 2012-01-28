@@ -11,6 +11,8 @@ type -P htlatex &>/dev/null || { echo "htlatex not found.  Aborting." >&2; exit 
 # Selected thorn; process all thorns if this is empty
 selection="$1"
 
+abspath=$PWD
+
 for arr in `cd arrangements; echo *`; do
   if test -d arrangements/$arr; then
     for th in `cd arrangements/$arr; echo *`; do
@@ -23,12 +25,12 @@ for arr in `cd arrangements; echo *`; do
             (
               cd doc/HTML/ThornDoc/$arr/$th
               rm -f documentation.tex documentation.html documentation.css documentation*.png
-              path=../../../../../arrangements/$arr/$th/doc
+              path=$abspath/arrangements/$arr/$th/doc
               < $path/documentation.tex sed -e 's+\(\\includegraphics.*\){ *\(.*\) *}+\1{'"$path"'/\2}+g' |
               sed -e 's+\(\\input *\)\(.*\)+\1'"$path"'/\2+g' | 
               sed -e 's+\\usepackage{../../../../doc/latex/cactus}+\\usepackage{../../../../../doc/latex/cactus}+g' > documentation.tex
 
-              ../../../../../lib/sbin/ConvertFigures $path
+              $abspath/lib/sbin/ConvertFigures $path
 
               echo "  Running htlatex..."
               {

@@ -11,6 +11,8 @@ type -P htlatex &>/dev/null || { echo "htlatex not found.  Aborting." >&2; exit 
 # Selected arrangement; process all arrangements if this is empty
 selection="$1"
 
+abspath=$PWD
+
 for arr in `cd arrangements; echo *`; do
   if test -d arrangements/$arr; then
     if test -z "$selection" || test "$arr" == "$selection"; then
@@ -21,12 +23,12 @@ for arr in `cd arrangements; echo *`; do
         (
           cd doc/HTML/ArrangementDoc/$arr
           rm -f documentation.tex documentation.html documentation.css documentation*.png
-          path=../../../../arrangements/$arr/doc
+          path=$abspath/arrangements/$arr/doc
           < $path/documentation.tex sed -e 's+\(\\includegraphics.*\){ *\(.*\) *}+\1{'"$path"'/\2}+g' |
           sed -e 's+\(\\input *\)\(.*\)+\1'"$path"'/\2+g' |
           sed -e 's+\\usepackage{../../../doc/latex/cactus}+\\usepackage{../../../../doc/latex/cactus}+g' > documentation.tex
 
-          ../../../../lib/sbin/ConvertFigures $path
+          $abspath/lib/sbin/ConvertFigures $path
 
           {
             htlatex documentation   "" "" "" -interaction=nonstopmode > LATEX_MESSAGES 2>&1

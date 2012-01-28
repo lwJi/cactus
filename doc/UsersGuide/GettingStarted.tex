@@ -8,7 +8,7 @@
 %   @version   $Header$
 % @@*/
 
-\begin{cactuspart}{Introduction}{$RCSfile$}{$Revision$}\label{part:Introduction}
+\begin{cactuspart}{Introduction}{}{$Revision$}\label{part:Introduction}
 \renewcommand{\thepage}{\Alph{part}\arabic{page}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -23,16 +23,16 @@
 \section{Obtaining Cactus}
 \label{sec:checkout}
 
-Cactus is distributed, extended, and maintained using the free CVS
-software (\textit{Concurrent Versions System}: \url{http://www.cvshome.org}).
-CVS  allows many people to work on a large software project
+Cactus is distributed, extended, and maintained using the free Subversion
+software (\url{http://subversion.apache.org/docs/})
+SVN allows many people to work on a large software project
 together without getting into a tangle.
 Since Cactus thorns are distributed from several repositories on the
-main CVS site, and from a growing number of user sites, we provide a
-\texttt{GetCactus} script on our website for checking out the flesh 
+main SVN site, and from a growing number of user sites, we provide a
+\texttt{GetComponents} script on our website for checking out the flesh 
 and thorns. The script is available at
 
-\url{http://www.cactuscode.org/download/GetCactus}.
+\url{https://github.com/gridaphobe/CRL/raw/ET_2011_10/GetComponents}.
 
 The
 script takes as an argument the name of a file containing a \textit{ThornList},
@@ -41,33 +41,22 @@ that is a list of thorns with the syntax
 <\var{arrangement name}>/<\var{thorn name}>
 \end{alltt}
 
-If no filename is given, only the flesh is checked out.
-Optional directives in the ThornList indicate which CVS repository to fetch
-thorns from. The default is to take the thorns from the same repository as
-the flesh. A full description of ThornList syntax is provided in Appendix~\ref{chap:th}.
-ThornLists for example applications are provided on the Cactus website at
-
-%%% FIXME: url
+Optional directives in the ThornList indicate which repository to
+fetch thorns from. The ThornList is written in the {\em Component
+  Retrieval Language}, documented at
+\url{https://github.com/gridaphobe/CRL/wiki/Component-Retrieval-Language}.
 
 The same script can be used to checkout additional thorns, or to update 
 existing ones.
 
-The Cactus website also provides a form interface for direct download at:
-
-\url{http://www.cactuscode.org/cactus\_cgi-bin/download.pl}
-
-CVS experts who want to use raw CVS commands are directed to
-Appendix~\ref{sec:Appendix.cvs} for full instructions. For CVS novices,
-we also summarize in the Appendix basic CVS commands.
-
-The space required for an installation depends on the arrangements and
-thorns used. The flesh on its own requires less than 5 MB.
+The components that make up Cactus can also be checked out directly
+using SVN from \url{http://svn.cactuscode.org}.
 
 Another script, \texttt{MakeThornList}, can be used to produce a minimal
 ThornList from a given Cactus par file.  It needs a \emph{master} ThornList
 to be copied into your \texttt{Cactus} directory.
 
-See \url{http://www.cactuscode.org/toolkit/makeThornList/}.
+See \url{http://cactuscode.org/download/thorns/MakeThornList}.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -80,7 +69,7 @@ following subdirectories:
 
 \begin{Lentry}
 
-\item[\texttt{CVS}] the CVS bookkeeping directory, present in every subdirectory
+\item[\texttt{.svn}] the SVN bookkeeping directory, present in every subdirectory
 
 \item[\texttt{doc}] Cactus documentation
 
@@ -91,7 +80,7 @@ following subdirectories:
 \item [\texttt{arrangements}] contains the Cactus arrangements. The arrangements
   (the actual ``physics'') are not supplied by just checking out just Cactus.
   If the arrangements you want to use are standard Cactus arrangements, or
-  reside on our CVS repository (\texttt{cvs.cactuscode.org}),
+  reside on our SVN repository (\texttt{svn.cactuscode.org}),
   they can be checked out in similar way to the flesh.
 \end{Lentry}
 
@@ -355,24 +344,12 @@ your own checkpointing and recovery methods.
 \chapter{Reporting bugs}
 \label{sec:gehe}
 
-For tracking problem reports and bugs, we use GNATS, which is a bug tracking
-system published under the GNU license. We have set up a web interface at
-\url{http://www.cactuscode.org/BugReporting}, which allows easy submission and browsing
-of problem reports.
+For tracking problem reports and bugs, we use the TRAC bug tracking
+system located at \url{http://trac.einsteintoolkit.org} which allows
+easy submission and browsing of problem tickets.
 
-A description of the GNATS categories we use is provided in the Appendix
-\ref{sec:Appendix.gnats}.
-
-% OK, there is NO emacs at the moment, because the GNATS setup is really stupid
-% and sendpr handles like c.... besides the fact, that the user has to go
-% through a make process which installs stuff somewhere on his HD. gerd.
-% BUT, we could distribute our own, either copy cvsbug, or write a perl
-% version.  Tom
-% \begin{itemize}
-% \item \texttt{A web interface}
-% \item \texttt{SendPR}
-% {FIXME: Mention the emacs thing here too...}
-% \end{itemize}
+A description of the TRAC categories we use is provided in the Appendix
+\ref{sec:Appendix.trac}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

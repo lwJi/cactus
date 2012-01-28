@@ -2,25 +2,17 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \NeedsTeXFormat{LaTeX2e}
 
-\def\CA@styledate{\CA@getsvndate $Date$}
-\def\CA@styleversion{\CA@getsvnversion $Revision$}
-
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\def\CA@getsvndate    $#1:#2-#3-#4 #5:#6:#7${#2/#3/#4}
-\def\CA@getsvnversion $#1:#2${#2}
 
 \IfFileExists{../interface.ccl} % Is this the documentation.tex for a thorn?
 {
-  \ProvidesPackage{../../../../doc/latex/cactus}[\CA@styledate \CA@styleversion]
+  \ProvidesPackage{../../../../doc/latex/cactus}
 }
 {
   \IfFileExists{../FAQ} % Is this the UsersGuide or MaintGuide?
   {
-    \ProvidesPackage{../latex/cactus}[\CA@styledate \CA@styleversion]
+    \ProvidesPackage{../latex/cactus}
   }
   {
     \IfFileExists{../../../arrangements/README} % Is this the
@@ -30,7 +22,7 @@
       \ProvidesPackage{../../../doc/latex/cactus}
     }
     {
-      \ProvidesPackage{cactus}[\CA@styledate \CA@styleversion]
+      \ProvidesPackage{cactus}
     }
   }
 }

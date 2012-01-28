@@ -53,9 +53,6 @@ $testdata = &FindTestParameterFiles($testdata,$config_data);
 # Parse test config files
 $testdata = &ParseTestConfigs($testdata,$config_data,\%runconfig);
 
-# Find the Archive Datafiles
-$testdata = &FindTestArchiveFiles($testdata);
-
 # Parse test parameter files
 $testdata = &ParseAllParameterFiles($testdata,$config_data,\%runconfig);
 
@@ -100,6 +97,7 @@ while ($choice !~ /^Q/i)
     
     if ($choice =~ /^[EIO]/i) 
     {
+      print "  Processes: $config_data->{'NPROCS'}\n\n";
 
       # Reset/Initialise Test Statistics
       $rundata = &ResetTestStatistics($rundata,$testdata);

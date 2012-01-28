@@ -74,8 +74,8 @@ typedef struct _cGH
     (used to construct names for output files) */
   const char *identity;
 
-  /* data[var_num][TIMELEVEL][xyz]*/
-  /* TIMELEVEL  I believe, xyz is linear */
+  /* data[variable_index][timelevel][ijk]
+     (ijk is as calculated e.g. by CCTK_GFINDEX3D) */
   void ***data;
 
   /* The extension array */

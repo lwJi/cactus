@@ -89,7 +89,11 @@ if test -d "$MPICH_DIR/build/$MPICH_ARCH" ; then
   MPICH_INC_DIRS="$MPICH_DIR/include $MPICH_DIR/build/$MPICH_ARCH/$MPICH_DEVICE/include"
 else
   # don't explicitely add standard include search paths
-  if test "$MPICH_DIR" != '/usr' -a "$MPICH_DIR" != '/usr/local'; then
+    if test                                     \
+        "$MPICH_DIR" != '/' -a                  \
+        "$MPICH_DIR" != '/usr' -a               \
+        "$MPICH_DIR" != '/usr/local';           \
+        then
     MPICH_LIB_DIR="$MPICH_DIR/lib"
     MPICH_INC_DIRS="$MPICH_DIR/include"
   fi

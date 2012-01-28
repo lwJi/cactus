@@ -11,7 +11,7 @@
 %   @version $Header$
 % @@*/
 
-\begin{cactuspart}{\code{Util\_*} Functions Reference}{$RCSfile$}{$Revision$}
+\begin{cactuspart}{\code{Util\_*} Functions Reference}{}{$Revision$}
 \label{part:UtilReference}
 \renewcommand{\thepage}{\Alph{part}\arabic{page}}
 
@@ -339,6 +339,26 @@ specified array, whose data type is generic
      [\pageref{Util-TableSetString}]
 Sets the value associated with a specified key in a table, to be
 a copy of a specified C-style null-terminated character string
+
+\item[\code{Util\_TablePrint}]
+     [\pageref{Util-TablePrint}]
+Print out a table and its data structures, using a verbose internal
+format meant for debugging
+
+\item[\code{Util\_TablePrintAll}]
+     [\pageref{Util-TablePrintAll}]
+Print out all tables and their data structures, using a verbose
+internal format meant for debugging
+
+\item[\code{Util\_TablePrintAllIterators}]
+     [\pageref{Util-TablePrintAllIterators}]
+Print out all table iterators and their data structures, using a
+verbose internal format meant for debugging
+
+\item[\code{Util\_TablePrintPretty}]
+     [\pageref{Util-TablePrintPretty}]
+Print out a table, using a human-readable format similar to the one
+accepted by Util\_TableCreateFromString
 
 \end{Lentry}
 
@@ -4758,6 +4778,287 @@ Util_TableSetString(handle, "relativity", "Einstein");
 
 /* this produces the same table entry as the Util_TableSetString() */
 Util_TableSetCharArray(handle, N_ARRAY, array, "Einstein");
+\end{verbatim}
+\end{Example}
+\end{ExampleSection}
+\end{FunctionDescription}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{FunctionDescription}{Util\_TablePrint}
+\label{Util-TablePrint}
+Print out a table and its data structures, using a verbose internal
+format meant for debugging
+
+\begin{SynopsisSection}
+\begin{Synopsis}{C}
+\begin{verbatim}
+#include <stdio.h>
+#include "util_ErrorCodes.h"
+#include "util_Table.h"
+int status = Util_TablePrint(FILE *stream,
+                             int handle);
+\end{verbatim}
+\end{Synopsis}
+\end{SynopsisSection}
+
+\begin{ResultSection}
+\begin{Result}{\rm 0}
+ok
+\end{Result}
+\end{ResultSection}
+
+\begin{ParameterSection}
+\begin{Parameter}{stream ($\ne 0$)}
+output stream, e.g.\ \code{stdout}
+\end{Parameter}
+\begin{Parameter}{handle ($\ge 0$)}
+handle to the table
+\end{Parameter}
+\end{ParameterSection}
+
+\begin{Discussion}
+\code{stream} may be any output stream, e.g.\ \code{stdout} or
+\code{stderr}, or a file that has been opened for writing.
+\end{Discussion}
+
+\begin{SeeAlsoSection}
+\begin{SeeAlso2}{Util\_TablePrintAll()}{Util-TablePrintAll}
+Print out all tables and their data structures, using a verbose
+internal format meant for debugging
+\end{SeeAlso2}
+\begin{SeeAlso2}{Util\_TablePrintAllIterators()}{Util-TablePrintAllIterators}
+Print out all table iterators and their data structures, using a
+verbose internal format meant for debugging
+\end{SeeAlso2}
+\begin{SeeAlso2}{Util\_TablePrintPretty()}{Util-TablePrintPretty}
+Print out a table, using a human-readable format similar to the one
+accepted by Util\_TableCreateFromString
+\end{SeeAlso2}
+\end{SeeAlsoSection}
+
+%\begin{ErrorSection}
+%\end{ErrorSection}
+
+\begin{ExampleSection}
+\begin{Example}{C}
+\begin{verbatim}
+#include <stdio.h>
+#include "util_ErrorCodes.h"
+#include "util_Table.h"
+
+int handle = Util_TableCreateFromString("ipar=1 dpar=2.0 spar='three'");
+Util_TablePrint(stdout, handle);
+\end{verbatim}
+\end{Example}
+\end{ExampleSection}
+\end{FunctionDescription}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{FunctionDescription}{Util\_TablePrintAll}
+\label{Util-TablePrintAll}
+Print out all tables and their data structures, using a verbose
+internal format meant for debugging
+
+\begin{SynopsisSection}
+\begin{Synopsis}{C}
+\begin{verbatim}
+#include <stdio.h>
+#include "util_ErrorCodes.h"
+#include "util_Table.h"
+int status = Util_TablePrintAll(FILE *stream);
+\end{verbatim}
+\end{Synopsis}
+\end{SynopsisSection}
+
+\begin{ResultSection}
+\begin{Result}{\rm 0}
+ok
+\end{Result}
+\end{ResultSection}
+
+\begin{ParameterSection}
+\begin{Parameter}{stream ($\ne 0$)}
+output stream, e.g.\ \code{stdout}
+\end{Parameter}
+\end{ParameterSection}
+
+\begin{Discussion}
+\code{stream} may be any output stream, e.g.\ \code{stdout} or
+\code{stderr}, or a file that has been opened for writing.
+\end{Discussion}
+
+\begin{SeeAlsoSection}
+\begin{SeeAlso2}{Util\_TablePrint()}{Util-TablePrint}
+Print out a table and its data structures, using a verbose internal
+format meant for debugging
+\end{SeeAlso2}
+\begin{SeeAlso2}{Util\_TablePrintAllIterators()}{Util-TablePrintAllIterators}
+Print out all table iterators and their data structures, using a
+verbose internal format meant for debugging
+\end{SeeAlso2}
+\begin{SeeAlso2}{Util\_TablePrintPretty()}{Util-TablePrintPretty}
+Print out a table, using a human-readable format similar to the one
+accepted by Util\_TableCreateFromString
+\end{SeeAlso2}
+\end{SeeAlsoSection}
+
+%\begin{ErrorSection}
+%\end{ErrorSection}
+
+\begin{ExampleSection}
+\begin{Example}{C}
+\begin{verbatim}
+#include <stdio.h>
+#include "util_ErrorCodes.h"
+#include "util_Table.h"
+
+int handle = Util_TableCreateFromString("ipar=1 dpar=2.0 spar='three'");
+Util_TablePrintAll(stdout);
+\end{verbatim}
+\end{Example}
+\end{ExampleSection}
+\end{FunctionDescription}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{FunctionDescription}{Util\_TablePrintAllIterators}
+\label{Util-TablePrintAllIterators}
+Print out all table iterators and their data structures, using a
+verbose internal format meant for debugging
+
+\begin{SynopsisSection}
+\begin{Synopsis}{C}
+\begin{verbatim}
+#include <stdio.h>
+#include "util_ErrorCodes.h"
+#include "util_Table.h"
+int status = Util_TablePrintAllIterators(FILE *stream);
+\end{verbatim}
+\end{Synopsis}
+\end{SynopsisSection}
+
+\begin{ResultSection}
+\begin{Result}{\rm 0}
+ok
+\end{Result}
+\end{ResultSection}
+
+\begin{ParameterSection}
+\begin{Parameter}{stream ($\ne 0$)}
+output stream, e.g.\ \code{stdout}
+\end{Parameter}
+\end{ParameterSection}
+
+\begin{Discussion}
+\code{stream} may be any output stream, e.g.\ \code{stdout} or
+\code{stderr}, or a file that has been opened for writing.
+\end{Discussion}
+
+\begin{SeeAlsoSection}
+\begin{SeeAlso2}{Util\_TablePrint()}{Util-TablePrint}
+Print out a table and its data structures, using a verbose internal
+format meant for debugging
+\end{SeeAlso2}
+\begin{SeeAlso2}{Util\_TablePrintAll()}{Util-TablePrintAll}
+Print out all tables and their data structures, using a verbose
+internal format meant for debugging
+\end{SeeAlso2}
+\begin{SeeAlso2}{Util\_TablePrintPretty()}{Util-TablePrintPretty}
+Print out a table, using a human-readable format similar to the one
+accepted by Util\_TableCreateFromString
+\end{SeeAlso2}
+\end{SeeAlsoSection}
+
+%\begin{ErrorSection}
+%\end{ErrorSection}
+
+\begin{ExampleSection}
+\begin{Example}{C}
+\begin{verbatim}
+#include <stdio.h>
+#include "util_ErrorCodes.h"
+#include "util_Table.h"
+
+int handle = Util_TableCreateFromString("ipar=1 dpar=2.0 spar='three'");
+Util_TablePrintAllIterators(stdout);
+\end{verbatim}
+\end{Example}
+\end{ExampleSection}
+\end{FunctionDescription}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{FunctionDescription}{Util\_TablePrintPretty}
+\label{Util-TablePrintPretty}
+Print out a table, using a human-readable format similar to the one
+accepted by Util\_TableCreateFromString
+
+\begin{SynopsisSection}
+\begin{Synopsis}{C}
+\begin{verbatim}
+#include <stdio.h>
+#include "util_ErrorCodes.h"
+#include "util_Table.h"
+int status = Util_TablePrintPretty(FILE *stream,
+                                   int handle);
+\end{verbatim}
+\end{Synopsis}
+\end{SynopsisSection}
+
+\begin{ResultSection}
+\begin{Result}{\rm 0}
+ok
+\end{Result}
+\end{ResultSection}
+
+\begin{ParameterSection}
+\begin{Parameter}{stream ($\ne 0$)}
+output stream, e.g.\ \code{stdout}
+\end{Parameter}
+\begin{Parameter}{handle ($\ge 0$)}
+handle to the table
+\end{Parameter}
+\end{ParameterSection}
+
+\begin{Discussion}
+\code{stream} may be any output stream, e.g.\ \code{stdout} or
+\code{stderr}, or a file that has been opened for writing.
+\end{Discussion}
+
+\begin{SeeAlsoSection}
+\begin{SeeAlso2}{Util\_TableCreateFromString()}{Util-TableCreateFromString}
+Create a new table (with the case-insensitive flag set) and set values
+in it based on a string argument (interpreted with ``parameter-file''
+semantics)
+\end{SeeAlso2}
+\begin{SeeAlso2}{Util\_TablePrint()}{Util-TablePrint}
+Print out a table and its data structures, using a verbose internal
+format meant for debugging
+\end{SeeAlso2}
+\begin{SeeAlso2}{Util\_TablePrintAll()}{Util-TablePrintAll}
+Print out all tables and their data structures, using a verbose
+internal format meant for debugging
+\end{SeeAlso2}
+\begin{SeeAlso2}{Util\_TablePrintAllIterators()}{Util-TablePrintAllIterators}
+Print out all table iterators and their data structures, using a
+verbose internal format meant for debugging
+\end{SeeAlso2}
+\end{SeeAlsoSection}
+
+%\begin{ErrorSection}
+%\end{ErrorSection}
+
+\begin{ExampleSection}
+\begin{Example}{C}
+\begin{verbatim}
+#include <stdio.h>
+#include "util_ErrorCodes.h"
+#include "util_Table.h"
+
+int handle = Util_TableCreateFromString("ipar=1 dpar=2.0 spar='three'");
+Util_TablePrintPretty(stdout, handle);
 \end{verbatim}
 \end{Example}
 \end{ExampleSection}

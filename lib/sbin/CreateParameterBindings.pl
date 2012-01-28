@@ -471,15 +471,15 @@ sub CreateParameterRegistrationStuff
 
     # Set steerable details
     my $steerable = $rhparameter_db->{"\U$thorn $parameter\E steerable"};
-    if ($steerable =~ /never/i || $steerable =~/^$/)
+    if ($steerable =~ /^never$/i || $steerable =~/^$/)
     {
       $steerable_type = 'CCTK_STEERABLE_NEVER';
     }
-    elsif ($steerable =~ /always/i)
+    elsif ($steerable =~ /^always$/i)
     {
       $steerable_type = 'CCTK_STEERABLE_ALWAYS';
     }
-    elsif ($steerable =~ /recover/i)
+    elsif ($steerable =~ /^recover$/i)
     {
       $steerable_type = 'CCTK_STEERABLE_RECOVER';
     }

@@ -729,18 +729,42 @@ int ParseBuffer(char *buffer,
 #ifdef DEBUG
             printf("%c",c);
 #endif
-            value[p++] = (char)c;
-            CheckBuf(p,lineno);
-            if (c == '\n')
+            if (c == '#' && lineno != startline)
             {
+              /* found a comment inside a multi-line string */
+              while ((c = buffer[pos++]) != '\n')
+              {
+                if (c == '\0')
+                {
+                  break;
+                }
+              }
+              if (c == '\0')
+              {
+                value[p++] = (char)c;
+                CheckBuf(p,lineno);
+                break;
+              }
 #ifdef DEBUG
               printf ("LINE %d\n",lineno);
 #endif
               lineno++;
             }
-            else if (c == '\0')
+            else
             {
-              break;
+              value[p++] = (char)c;
+              CheckBuf(p,lineno);
+              if (c == '\n')
+              {
+#ifdef DEBUG
+                printf ("LINE %d\n",lineno);
+#endif
+                lineno++;
+              }
+              else if (c == '\0')
+              {
+                break;
+              }
             }
           }
           /* ignore all extra spaces or a trailing comment in this line */

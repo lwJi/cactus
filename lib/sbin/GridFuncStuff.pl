@@ -40,7 +40,7 @@ sub CreateVariableBindings
   {
     @data = CreateThornArgumentHeaderFile($thorn, $rhinterface_db);
     my $dataout = join ("\n", @data);
-    WriteFile("include/$thorn\_arguments.h",\$dataout);
+    WriteFile("include/$thorn\_Arguments.h",\$dataout);
   }
 
   @data = ();
@@ -98,25 +98,8 @@ sub CreateVariableBindings
   push(@data, '#define PASS_GROUPLEN(thorn, group) CCTKGROUPNUM_##group >= 0 ? \\');
   push(@data, '                                    CCTKi_GroupLengthAsPointer(#thorn "::" #group) : &_cctk_zero');
   push(@data, '');
-  push(@data, '/*');
-  push(@data, ' * References to non-existing or non-allocated variables should be passed');
-  push(@data, ' * as NULL pointers in order to catch any invalid access immediately');
-  push(@data, ' * However, this runtime debugging feature may cause problems');
-  push(@data, ' * with some fortran compilers which require all fortran routine arguments');
-  push(@data, ' * to refer to a valid memory location (eg. to enable the code optimizer');
-  push(@data, ' * to generate conditional load/store instructions if applicable).');
-  push(@data, ' * For this reason, we pass NULL pointers only for debugging configurations,');
-  push(@data, ' * and a pointer to a user-accessable memory location (a local dummy variable)');
-  push(@data, ' * otherwise.');
-  push(@data, ' */');
-  push(@data, '#ifdef CCTK_DEBUG');
   push(@data, '#define PASS_REFERENCE(var, level)  CCTKARGNUM_##var >= 0 ? \\');
   push(@data, '                                    GH->data[CCTKARGNUM_##var][level] : 0');
-  push(@data, '#else');
-  push(@data, '#define PASS_REFERENCE(var, level)  CCTKARGNUM_##var >= 0 && \\');
-  push(@data, '                                    GH->data[CCTKARGNUM_##var][level] ? \\');
-  push(@data, '                                    GH->data[CCTKARGNUM_##var][level] : _cctk_dummy_var');
-  push(@data, '#endif');
   push(@data, '');
 
   push(@data, '#define CCTK_ARGUMENTS CCTK_CARGUMENTS');
@@ -134,7 +117,7 @@ sub CreateVariableBindings
   {
     push(@data, '');
     push(@data, "#ifdef THORN_IS_$thorn");
-    push(@data, "#include \"${thorn}_arguments.h\"");
+    push(@data, "#include \"${thorn}_Arguments.h\"");
     push(@data, "#define CCTK_FARGUMENTS \U$thorn" . '_FARGUMENTS');
     push(@data, "#define DECLARE_CCTK_FARGUMENTS DECLARE_\U$thorn" . '_FARGUMENTS');
     push(@data, "#define CCTK_CARGUMENTS \U$thorn" . '_CARGUMENTS');
@@ -225,16 +208,10 @@ sub CreateVariableBindings
     push(@data, '{');
     push(@data, '  cGH *GH = _GH;');
     push(@data, '  const int _cctk_zero = 0;');
-    push(@data, '#ifndef CCTK_DEBUG');
-    push(@data, '  CCTK_COMPLEX _cctk_dummy_var[4];');
-    push(@data, '#endif');
     push(@data, "  void (*function)(\U$thorn\E_C2F_PROTO);");
     push(@data, "  DECLARE_\U$thorn\E_C2F");
     push(@data, "  INITIALISE_\U$thorn\E_C2F");
     push(@data, '  (void) (_cctk_zero + 0);');
-    push(@data, '#ifndef CCTK_DEBUG');
-    push(@data, '  (void) (_cctk_dummy_var + 0);');
-    push(@data, '#endif');
     push(@data, '');
     push(@data, "  function = (void (*) (\U$thorn\E_C2F_PROTO)) fpointer;");
     push(@data, "  function (PASS_\U$thorn\E_C2F (GH));");
@@ -381,19 +358,37 @@ sub GetThornArguments
         {
 # FIXME: quick hack to shorten argument names
 #          $type .= "${sep}cctkv$dim$group";
-          $type .= "${sep}X$dim$group";
-          $sep = ',';
-          if($block eq 'PRIVATE')
+          if ($gtype ne 'GF')
           {
-# FIXME: quick hack to shorten argument names
-#            $arguments{"cctkv$dim$group"} = "(STORAGESIZE($thorn\::$group, $dim))";
-            $arguments{"X$dim$group"} = "(STORAGESIZE($thorn\::$group, $dim))";
+            $type .= "${sep}X$dim$group";
           }
           else
           {
+            my $dim1=$dim+1;
+            if ($dim<3)
+            {
+              $type .= "${sep}cctk_lsh$dim1";
+            }
+            else
+            {
+              $type .= "${sep}cctk_lsh($dim1)";
+            }
+          }
+          $sep = ',';
+          if ($gtype ne 'GF')
+          {
+            if($block eq 'PRIVATE')
+            {
+# FIXME: quick hack to shorten argument names
+#            $arguments{"cctkv$dim$group"} = "(STORAGESIZE($thorn\::$group, $dim))";
+              $arguments{"X$dim$group"} = "(STORAGESIZE($thorn\::$group, $dim))";
+            }
+            else
+            {
 # FIXME: quick hack to shorten argument names
 #            $arguments{"cctkv$dim$group"} = "(STORAGESIZE($imp\::$group, $dim))";
-            $arguments{"X$dim$group"} = "(STORAGESIZE($imp\::$group, $dim))";
+              $arguments{"X$dim$group"} = "(STORAGESIZE($imp\::$group, $dim))";
+            }
           }
         }
         if(defined($vararraysize) && $compactgroup == 0)
@@ -787,7 +782,7 @@ sub CreateThornArgumentHeaderFile
 
   # Header Data
   push(@returndata, '/*@@');
-  push(@returndata, "   \@header  ${this_thorn}_arguments.h");
+  push(@returndata, "   \@header  ${this_thorn}_Arguments.h");
   push(@returndata, '   @author  Automatically generated by GridFuncStuff.pl');
   push(@returndata, '   @desc');
   push(@returndata, '            Defines macros to declare/define/pass function arguments');

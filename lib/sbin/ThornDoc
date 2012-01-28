@@ -8,6 +8,8 @@ echo "Creating thorn documentations..."
 # Selected thorn; process all thorns if this is empty
 selection="$1"
 
+abspath=$PWD
+
 for arr in `cd arrangements; echo *`; do
     if test -d arrangements/$arr; then
         for th in `cd arrangements/$arr; echo *`; do
@@ -22,7 +24,7 @@ for arr in `cd arrangements; echo *`; do
                         (
                             cd doc/ThornDoc/$arr/$th
                             rm -f documentation.tex documentation.pdf
-                            path=../../../../arrangements/$arr/$th/doc
+                            path=$abspath/arrangements/$arr/$th/doc
                             < $path/documentation.tex sed -e 's+\(\\includegraphics.*\){ *\(.*\) *}+\1{'"$path"'/\2}+g' |
                             sed -e 's+\(\\input *\)\(.*\)+\1'"$path"'/\2+g' > documentation.tex
                             

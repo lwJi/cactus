@@ -4,8 +4,12 @@
 # make THORNS="CactusWave/IDScalarWave,CactusWave/WaveToyF77" ARRANGEMENTS="CactusBase,CactusPUGHIO"
 
 
+# backwards compatibility for VERBOSE=yes (SILENT=no)
+ifeq ($(shell echo $(strip $(SILENT)) | tr '[:upper:]' '[:lower:]'),no)
+VERBOSE = yes
+endif
 # Make quietly unless told not to
-ifneq ($(strip $(SILENT)),no)
+ifneq ($(shell echo $(strip $(VERBOSE)) | tr '[:upper:]' '[:lower:]'),yes)
 .SILENT:
 endif
 

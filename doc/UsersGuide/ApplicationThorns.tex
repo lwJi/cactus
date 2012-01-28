@@ -520,6 +520,12 @@ the number of timelevels of each group for which storage should be activated.
 
  This number can range from one to the maximum number of timelevels for the group, as specified in the group definition in its \texttt{interface.ccl} file. If this maximum number is one, the timelevel specification can be omitted from the
 \texttt{STORAGE} statement.
+Alternatively \var{timelevels} can be the name of a parameter accessible
+to the thorn. The parameter name is the same as used in C routines of the
+thorn, fully qualified parameter names of the form
+\texttt{\var{thorn}::\var{parameter}} are not allowed. In this case 0 (zero)
+\var{timelevels} can be requested, which is equivalent to the {\tt STORAGE}
+statement being absent.
 
 \item[\texttt{TRIGGERS}] \texttt{TRIGGERS} is used when the routine is
 registered at \texttt{ANALYSIS}.  This is a special time bin; a routine
@@ -746,6 +752,7 @@ Extension           & Language   & Format & Preprocess \\
 {\t .f77}           & Fortran 77 & fixed  & no  \\
 {\t .c}             & C          & -      & yes \\
 {\t .cc} or {\t .C} & C++        & -      & yes \\
+{\t .cu}            & CUDA       & -      & yes \\
 \hline
 \end{tabular}
 \end{center}
@@ -851,12 +858,14 @@ and has a working directory of
   \texttt{CC}, and to \texttt{CXX}
 \item \texttt{FPPFLAGS}: Flags which are passed to \texttt{FPP}
 \item \texttt{CC}: The C compiler
+\item \texttt{CUDA}: The CUDA compiler
 \item \texttt{CXX}: The C++ compiler
 \item \texttt{F77}: The Fortran 77 compiler.  This is only used if
   there is no Fortran 90 compiler
 \item \texttt{F90}: The Fortran 90 compiler.  If this variable is
   set, it is also used to compile Fortran 77 files
 \item \texttt{CFLAGS}: Flags which are passed to \texttt{CC}
+\item \texttt{CUDAFLAGS}: Flags which are passed to \texttt{CUDA}
 \item \texttt{CXXFLAGS}: Flags which are passed to \texttt{CXX}
 \item \texttt{F77FLAGS}: Flags which are passed to \texttt{F77}
 \item \texttt{F90FLAGS}: Flags which are passed to \texttt{F90}
@@ -1329,7 +1338,7 @@ Parameters can be \texttt{GLOBAL}, \texttt{RESTRICTED}, or \texttt{PRIVATE}.
 Global parameters are visible to all thorns.  Restricted parameters
 are visible to any thorn which chooses to \texttt{USE} or \texttt{EXTEND}
 it.  A private parameter is only visible to the thorn which declares
-it.
+it.  The default scope is \texttt{PRIVATE}.
 
 \subsection{Steerable}
 \label{sec:Cactus_parameters.steerable}
@@ -1358,7 +1367,7 @@ A usual simple specification for a schedule declaration is
 \begin{alltt}schedule <\var{function name}> AT <\var{schedule bin}>
 \{
   LANG: <\var{language}>
-  [STORAGE:       <\var{group}>,<\var{group}>...]
+  [STORAGE:       <\var{group}>[[\var{timelevels}]],<\var{group}>[[\var{timelevels}]]...]
 \} "\var{Description of function}"
 \end{alltt}
 
@@ -1369,7 +1378,7 @@ The full specification for a schedule declaration is
          [BEFORE|AFTER <\var{item}>|(<\var{item}> <\var{item}> ...)]
 \{
   LANG: <\var{language}>
-  [STORAGE:       <\var{group}>,<\var{group}>...]
+  [STORAGE:       <\var{group}>[[\var{timelevels}]],<\var{group}>[[\var{timelevels}]]...]
   [TRIGGER:       <\var{group}>,<\var{group}>...]
   [SYNC:          <\var{group}>,<\var{group}>...]
   [OPTIONS:       <\var{option}>,<\var{option}>...]
@@ -1491,6 +1500,16 @@ and registered as \texttt{LANG: C}.
 which memory should be allocated for the duration of the routine or
 schedule group.  The storage status reverts to its previous status
 after completion of the routine or schedule group.
+Each group must specify how many timelevels to activate storage for,
+from 1 up to the maximum number for the group as specified in the
+defining {\tt interface.ccl} file. If the maximum is 1 (the default)
+this number may be omitted. Alternatively \var{timelevels} can be the
+name of a parameter accessible to the thorn. The parameter name is the
+same as used in C routines of the thorn, fully qualified parameter names
+of the form \texttt{\var{thorn}::\var{parameter}} are not allowed. In this
+case 0 (zero) \var{timelevels} can be requested, which is equivalent to
+the {\tt STORAGE} statement being absent.
+
 \item[\texttt{TRIGGER}]
 This is only used for items scheduled at timebin \texttt{CCTK\_ANALYSIS}.
 The item will only be executed if output is due for at least one
