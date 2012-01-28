@@ -8,6 +8,9 @@
 #   @version $Id$
 # @@*/
 
+# Silence all but designated output
+#.SILENT:
+
 # Include the main make definitions for this configuration
 include $(CONFIG)/make.config.defn
 

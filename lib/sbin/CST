@@ -331,15 +331,14 @@ sub CreateMakeThornlist
 
   foreach $thorn (sort keys %$thorns)
   {
-    next if $thorn eq 'Cactus';
-
-    if($config->{"\U$thorn\E OPTIONS"} ne 'NO_SOURCE')
+    if($config->{"\U$thorn\E OPTIONS"} ne 'NO_SOURCE' &&
+      $thorn ne 'Cactus')
     {
       $thorns->{$thorn} =~ m:.*/(.*/.*):;
       $thornlist .= " $1";
     }
 
-    if(-r "$thorns->{$thorn}/configuration.ccl")
+    if( -r "$thorns->{$thorn}/configuration.ccl")
     {
       $thorns->{$thorn} =~ m:.*/(.*/.*):;
       $config_thornlist .= " $1";

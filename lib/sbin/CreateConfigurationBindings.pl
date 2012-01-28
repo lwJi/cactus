@@ -136,23 +136,6 @@ sub CreateConfigurationBindings
     }
   }
 
-  # turn optional capabilities into required capabilities, if the
-  # capability is provided
-  foreach $thorn (sort keys %thorns)
-  {
-    if ($cfg->{"\U$thorn\E OPTIONAL"})
-    {
-      foreach $cap (split (' ', $cfg->{"\U$thorn\E OPTIONAL"}))
-      {
-        # TODO: prevent matches of partial words
-        if ($providedcaplist =~ m/$cap/i)
-        {
-          $cfg->{"\U$thorn\E REQUIRES"} .= "$cap ";
-        }
-      }
-    }
-  }
-
   # here we add the files to the thorns that require capabilities
   foreach $thorn (sort keys %thorns)
   {
@@ -173,6 +156,20 @@ sub CreateConfigurationBindings
         $defs .= "include $bindings_dir/Configuration/Capabilities/make.\U$providedcap\E.defn\n";
         $incs .= "#include \"../Capabilities/cctki_\U$providedcap\E.h\"\n";
         $deps .= "include $bindings_dir/Configuration/Capabilities/make.\U$providedcap\E.deps\n";
+      }
+    }
+
+   if ($cfg->{"\U$thorn\E OPTIONAL"})
+    {
+      foreach $providedcap (split (' ', $cfg->{"\U$thorn\E OPTIONAL"}))
+      {
+        if ($providedcaplist =~ m/$providedcap/i)
+        {
+          $defs .= $providedcap . " = 1\n";
+          $defs .= "include $bindings_dir/Configuration/Capabilities/make.\U$providedcap\E.defn\n";
+          $incs .= "#include \"../Capabilities/cctki_\U$providedcap\E.h\"\n";
+          $deps .= "include $bindings_dir/Configuration/Capabilities/make.\U$providedcap\E.deps\n";
+        }
       }
     }
 

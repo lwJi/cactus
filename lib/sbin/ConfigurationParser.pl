@@ -42,8 +42,6 @@ sub CreateConfigurationDatabase
 #        if ($cfg{"\U$thorn\E PROVIDES"});
 #      print "           Requires: ", $cfg{"\U$thorn\E REQUIRES"}, "\n"
 #        if ($cfg{"\U$thorn\E REQUIRES"});
-#      print "           Optional: ", $cfg{"\U$thorn\E OPTIONAL"}, "\n"
-#        if ($cfg{"\U$thorn\E OPTIONAL"});
 #    }
 
     $cfg{"\U$thorn\E USES THORNS"} = '';
@@ -209,7 +207,7 @@ sub ParseConfigurationCCL
     }
     elsif($line =~ m/^\s*OPTIONAL\s*/i)
     {
-      ($optional, $define, $line_number) = &ParseOptionalBlock($filename, $line_number, \@data);
+      ($optional, $define, $line_number) = &ParseOptionalBlock($line_number, \@data);
       $cfg->{"\U$thorn\E OPTIONAL"} .= "$optional ";
       $cfg->{"\U$thorn\E OPTIONAL \U$optional\E DEFINE"} = $define;
     }
@@ -251,13 +249,13 @@ sub ParseProvidesBlock
   $line_number++;
   if($data->[$line_number] !~ m/^\s*\{\s*$/)
   {
-    &CST_error (0, "Error parsing provides block line '$data->[$line_number]' $file_name:$line_number ".
+    &CST_error (0, "Error parsing provides block line '$data->[$line_number]'.".
                    'Missing { at start of block');
-    $line_number++ while(defined($data->[$line_number]) and $data->[$line_number] !~ m:\s*\}\s*:);
+    $line_number++ while($data->[$line_number] !~ m:\s*\}\s*:);
   }
   else
   {
-    while(defined($data->[$line_number]) and $data->[$line_number] !~ m:\s*\}\s*:)
+    while($data->[$line_number] !~ m:\s*\}\s*:)
     {
       $line_number++;
       if($data->[$line_number] =~ m/^\s*SCRIPT\s*(.*)$/i)
@@ -301,7 +299,7 @@ sub ParseProvidesBlock
 #@@*/
 sub ParseOptionalBlock
 {
-  my ($file_name, $line_number, $data) = @_;
+  my ($line_number, $data) = @_;
   my ($optional, $define);
 
   $data->[$line_number] =~ m/^\s*OPTIONAL\s*(.*)/i;
@@ -314,13 +312,13 @@ sub ParseOptionalBlock
 
   if($data->[$line_number] !~ m/^\s*\{\s*$/)
   {
-    &CST_error (0, "Error parsing optional block line '$data->[$line_number]' $file_name:$line_number".
+    &CST_error (0, "Error parsing optional block line '$data->[$line_number]'".
                 ' Missing { at start of block.');
-    $line_number++ while(defined($data->[$line_number]) and $data->[$line_number] !~ m:\s*\}\s*:);
+    $line_number++ while($data->[$line_number] !~ m:\s*\}\s*:);
   }
   else
   {
-    while(defined($data->[$line_number]) and $data->[$line_number] !~ m:\s*\}\s*:)
+    while($data->[$line_number] !~ m:\s*\}\s*:)
     {
       $line_number++;
       if($data->[$line_number] =~ m/^\s*DEFINE\s*(.*)$/i)

@@ -400,8 +400,7 @@ sub CleanForLatex
          $char eq '_' or
          $char eq '^' or
          $char eq '&' or
-         $char eq '%' or
-         $char eq '#')
+         $char eq '%')
      {
        $outval .= '\\' . $char;
      }

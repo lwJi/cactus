@@ -13,9 +13,6 @@ AC_REVISION($Header$)
 
 dnl It looks like older versions of Autoconf don't quite work properly under
 dnl cygwin.
-dnl Please use autoconf-2.13 to generate a configure script. Newer version of autoconf
-dnl won't work.
-
 AC_PREREQ(2.13)
 
 dnl Starts here
@@ -177,10 +174,6 @@ if test "x$CXX" != 'xnone' ; then
   AC_PROG_CXX_GNU
 fi
 
-if test -z "$CUCC" ; then
-  AC_CHECK_PROGS(CUCC, nvcc)
-fi
-
 if test -z "$RANLIB" ; then
   AC_PROG_RANLIB
 fi
@@ -199,22 +192,6 @@ fi
 
 if test -z "$PERL" ; then
   AC_CHECK_PROGS(PERL, perl)
-fi
-
-if test -z "$TAR" ; then
-  AC_CHECK_PROGS(TAR, gtar tar)
-fi
-
-if test -z "$GZIP_CMD" ; then
-  AC_CHECK_PROGS(GZIP_CMD, gzip)
-fi
-
-if test -z "$PATCH" ; then
-  AC_CHECK_PROGS(PATCH, gpatch patch)
-fi
-
-if test -z "$GIT" ; then
-  AC_CHECK_PROGS(GIT, git)
 fi
 
 if test -z "$F90" ; then
@@ -313,10 +290,6 @@ else
   : ${CXX_WARN_FLAGS=''}
 fi
 
-# nvcc itself doesn't have warning flags. warnings will be given by C compilers.
-AC_SUBST(CUCC_WARN_FLAGS)
-  : ${CUCC_WARN_FLAGS=''}
-
 AC_SUBST(F77_WARN_FLAGS)
 if test "$F77" = 'g77' ; then
   : ${F77_WARN_FLAGS='-Wall'}
@@ -330,6 +303,7 @@ if test "$F90" = 'gfortran' ; then
 else
   : ${F90_WARN_FLAGS=''}
 fi
+
 
 AC_SUBST(DEBUG_MODE)
 DEBUG_MODE='no'
@@ -351,14 +325,12 @@ AC_SUBST(C_DEBUG_FLAGS)
 AC_SUBST(CXX_DEBUG_FLAGS)
 : ${CXX_DEBUG_FLAGS='-g'}
 
-AC_SUBST(CUCC_DEBUG_FLAGS)
-: ${CUCC_DEBUG_FLAGS='-g'}
-
 AC_SUBST(F77_DEBUG_FLAGS)
 : ${F77_DEBUG_FLAGS='-g'}
 
 AC_SUBST(F90_DEBUG_FLAGS)
 : ${F90_DEBUG_FLAGS='-g'}
+
 
 # Set the optimization flags if they've not been set by now
 # (using '-O2' as a reasonable default)
@@ -376,9 +348,6 @@ AC_SUBST(C_OPTIMISE_FLAGS)
 AC_SUBST(CXX_OPTIMISE_FLAGS)
 : ${CXX_OPTIMISE_FLAGS='-O2'}
 
-AC_SUBST(CUCC_OPTIMISE_FLAGS)
-: ${CUCC_OPTIMISE_FLAGS='-O2'}
-
 AC_SUBST(F77_OPTIMISE_FLAGS)
 if test -z "$F77_OPTIMISE_FLAGS" -a "$F77" = 'g77' ; then
   F77_OPTIMISE_FLAGS='-O2'
@@ -387,25 +356,8 @@ else
 fi
 
 AC_SUBST(F90_OPTIMISE_FLAGS)
-: ${F90_OPTIMISE_FLAGS='-O2'}
+: ${F90_OPTIMISE_FLAGS=''}
 
-# Set the no-optimization flags if they've not been set by now
-# (using '-O0' as a reasonable default)
-
-AC_SUBST(C_NO_OPTIMISE_FLAGS)
-: ${C_NO_OPTIMISE_FLAGS='-O0'}
-
-AC_SUBST(CXX_NO_OPTIMISE_FLAGS)
-: ${CXX_NO_OPTIMISE_FLAGS='-O0'}
-
-AC_SUBST(CUCC_NO_OPTIMISE_FLAGS)
-: ${CUCC_NO_OPTIMISE_FLAGS='-O0'}
-
-AC_SUBST(F77_NO_OPTIMISE_FLAGS)
-: ${F77_NO_OPTIMISE_FLAGS='-O0'}
-
-AC_SUBST(F90_NO_OPTIMISE_FLAGS)
-: ${F90_NO_OPTIMISE_FLAGS='-O0'}
 
 # Set the profiling flags if they've not been set by now
 # (using '-pg' as a reasonable default)
@@ -423,14 +375,12 @@ AC_SUBST(C_PROFILE_FLAGS)
 AC_SUBST(CXX_PROFILE_FLAGS)
 : ${CXX_PROFILE_FLAGS='-pg'}
 
-AC_SUBST(CUCC_PROFILE_FLAGS)
-: ${CUCC_PROFILE_FLAGS=''}
-
 AC_SUBST(F77_PROFILE_FLAGS)
 : ${F77_PROFILE_FLAGS='-pg'}
 
 AC_SUBST(F90_PROFILE_FLAGS)
 : ${F90_PROFILE_FLAGS='-pg'}
+
 
 # Set the OpenMP flags if they've not been set by now
 AC_SUBST(OPENMP_MODE)
@@ -439,7 +389,6 @@ AC_SUBST(CPP_OPENMP_FLAGS)
 AC_SUBST(FPP_OPENMP_FLAGS)
 AC_SUBST(C_OPENMP_FLAGS)
 AC_SUBST(CXX_OPENMP_FLAGS)
-AC_SUBST(CUCC_OPENMP_FLAGS)
 AC_SUBST(F77_OPENMP_FLAGS)
 AC_SUBST(F90_OPENMP_FLAGS)
 
@@ -595,7 +544,6 @@ AC_SUBST(USE_RANLIB)
 AC_SUBST(RANLIBFLAGS)
 : ${RANLIBFLAGS=-cs}
 
-AC_SUBST(CUCCFLAGS)
 AC_SUBST(F90FLAGS)
 AC_SUBST(F77FLAGS)
 
@@ -605,7 +553,6 @@ AC_SUBST(F77FLAGS)
 AC_SUBST(CPP_VERSION)
 AC_SUBST(CC_VERSION)
 AC_SUBST(CXX_VERSION)
-AC_SUBST(CUCC_VERSION)
 AC_SUBST(FPP_VERSION)
 AC_SUBST(F77_VERSION)
 AC_SUBST(F90_VERSION)
@@ -685,8 +632,6 @@ CCTK_CHECK_HEADERS(crypt.h,[#ifdef HAVE_UNISTD_H
 #endif])
 CCTK_CHECK_HEADERS(signal.h)
 CCTK_CHECK_HEADERS(malloc.h)
-CCTK_CHECK_HEADERS(sched.h)
-CCTK_CHECK_HEADERS(execinfo.h)
 
 AC_HEADER_TIME
 
@@ -785,8 +730,6 @@ else
   AC_MSG_RESULT(no)
 fi
 
-CCTK_CHECK_FUNCS(sched_getaffinity)
-
 
 # Check if we have __int64
 AC_MSG_CHECKING([if __int64 is defined])
@@ -878,17 +821,13 @@ CCTK_CXX_ATTRIBUTE_UNUSED
 CCTK_C_ATTRIBUTE_ALIGNED
 CCTK_CXX_ATTRIBUTE_ALIGNED
 
-# Find out whether the C compiler supports __attribute__((cold))
-CCTK_C_ATTRIBUTE_COLD
-CCTK_CXX_ATTRIBUTE_COLD
-
-# Find out whether the C compiler supports __attribute__((hot))
-CCTK_C_ATTRIBUTE_HOT
-CCTK_CXX_ATTRIBUTE_HOT
-
-# Find out whether the C compiler supports __builtin_expect
-CCTK_C_BUILTIN_EXPECT
-CCTK_CXX_BUILTIN_EXPECT
+## Find out whether the C compiler supports __attribute__((cold))
+#CCTK_C_ATTRIBUTE_COLD
+#CCTK_CXX_ATTRIBUTE_COLD
+#
+## Find out whether the C compiler supports __attribute__((hot))
+#CCTK_C_ATTRIBUTE_HOT
+#CCTK_CXX_ATTRIBUTE_HOT
 
 CCTK_FORTRAN_REAL4
 CCTK_FORTRAN_REAL8
@@ -898,40 +837,8 @@ CCTK_FORTRAN_COMPLEX8
 CCTK_FORTRAN_COMPLEX16
 CCTK_FORTRAN_COMPLEX32
 
-dnl Do we whave __cxa_demangle
-AC_LANG_SAVE
-AC_LANG_CPLUSPLUS
-CCTK_CHECK_HEADERS(cxxabi.h)
-AC_MSG_CHECKING([for __cxa_demangle])
-AC_CACHE_VAL(cctk_cv_have___cxa_demangle,
-[AC_TRY_COMPILE([#include <cxxabi.h>],
-[abi::__cxa_demangle(0,0,0,0)], eval "cctk_cv_have___cxa_demangle=yes",
-eval "cctk_cv_have___cxa_demangle=no")
-])
-if test "x$cctk_cv_have___cxa_demangle" = xyes; then
-  AC_DEFINE(HAVE___CXA_DEMANGLE)
-  AC_MSG_RESULT(yes)
-else
-  AC_MSG_RESULT(no)
-fi
-AC_LANG_RESTORE
-
-dnl Do we have dladdr(3) and the structure it uses?
-CCTK_CHECK_MEMBER(Dl_info, dli_sname,
-  CCTK_CHECK_FUNCS(dladdr, , CCTK_CHECK_LIB_FUNC(dl, dladdr)), 
-  ,
-  [#define _GNU_SOURCE 1
-   #include <dlfcn.h>] )
-
-
-dnl Do we have backtrace(3)
-CCTK_CHECK_FUNCS(backtrace, , )
-
-dnl Do we have backtrace_symbols(3)
-CCTK_CHECK_FUNCS(backtrace_symbols, , )
-
 dnl Do we have crypt(3)
-CCTK_CHECK_FUNCS(crypt, , CCTK_CHECK_LIB_FUNC(crypt, crypt))
+CCTK_CHECK_FUNC(crypt, , CCTK_CHECK_LIB_FUNC(crypt, crypt))
 
 dnl Do we have finite(3)
 CCTK_CHECK_FUNCS(finite, , CCTK_CHECK_LIB_FUNC(m, finite))
@@ -1241,11 +1148,6 @@ AC_SUBST(CXX_DEPEND)
 AC_SUBST(CXX_DEPEND_OUT)
 : ${CXX_DEPEND_OUT=' > $@'}
 
-AC_SUBST(CU_DEPEND)
-: ${CU_DEPEND='$(CUCC) -M'}
-AC_SUBST(CU_DEPEND_OUT)
-: ${CU_DEPEND_OUT=' > $@'}
-
 AC_SUBST(F77_DEPEND)
 : ${F77_DEPEND='$(FPP) -M $(FPPFLAGS)'}
 AC_SUBST(F77_DEPEND_OUT)
@@ -1267,8 +1169,6 @@ AC_SUBST(C_POSTPROCESSING)
 : ${C_POSTPROCESSING=''}
 AC_SUBST(CXX_POSTPROCESSING)
 : ${CXX_POSTPROCESSING=''}
-AC_SUBST(CUCC_POSTPROCESSING)
-: ${CUCC_POSTPROCESSING=''}
 AC_SUBST(F77_POSTPROCESSING)
 : ${F77_POSTPROCESSING=''}
 AC_SUBST(F_POSTPROCESSING)
@@ -1298,14 +1198,10 @@ AC_SUBST(SYS_INC_DIRS)
 : ${SYS_INC_DIRS=' '}
 
 # How to link in the non-Cactus libraries:
-# - Add -L, -R, and -l prefixes, but only for file names (not for
-#   options), and allow arbitrary options in between these.
-# - Sort library directories so that system directories (/opt/local/*)
-#   come last. This increases the probability that the correct library
-#   is used, e.g. if a library exists both in a specific path and in
-#   /opt/local/lib.
+# Add -L and -l prefixes, but only for file names;
+# allow arbitrary options in between
 AC_SUBST(GENERAL_LIBRARIES)
-: ${GENERAL_LIBRARIES='$(patsubst $(LIBDIR_PREFIX)-%,-%,$(addprefix $(LIBDIR_PREFIX),$(filter-out /opt/local/%,$(LIBDIRS)) $(filter /opt/local/%,$(LIBDIRS)))) $(patsubst $(RUNDIR_PREFIX)-%,-%,$(addprefix $(RUNDIR_PREFIX),$(filter-out /opt/local/%,$(LIBDIRS)) $(filter /opt/local/%,$(LIBDIRS)))) $(patsubst $(LIBLINK_PREFIX)-%,-%,$(addprefix $(LIBLINK_PREFIX),$(LIBS)))'}
+: ${GENERAL_LIBRARIES='$(patsubst $(LIBDIR_PREFIX)-%,-%,$(LIBDIRS:%=$(LIBDIR_PREFIX)%)) $(patsubst $(RUNDIR_PREFIX)-%,-%,$(LIBDIRS:%=$(RUNDIR_PREFIX)%)) $(patsubst $(LIBLINK_PREFIX)-%,-%,$(LIBS:%=$(LIBLINK_PREFIX)%))'}
 
 
 # Do we need to make sure Perl makes a backup when editting in place ?
@@ -1334,7 +1230,7 @@ do
     if test -x $srcdir/extras/$extra/setup.sh ; then
         # Put some comment lines in the files.
         CCTK_WriteLine cctk_Extradefs.h ''
-        CCTK_WriteLine cctk_Extradefs.h "/* $extra definitions */"
+        CCTK_WriteLine cctk_Extradefs.h '/* $extra definitions */'
         CCTK_WriteLine make.extra.defn ''
         CCTK_WriteLine make.extra.defn "# $extra definitions"
         # Call the setup script

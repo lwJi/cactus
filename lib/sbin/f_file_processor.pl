@@ -33,11 +33,11 @@ $line_directives = $line_directives eq 'yes';
 # Pick the correct set of comments to remove.
 if ($free_format)
 {
-  $standard_comments = "^\\s*!(?!\\\$(omp|hpf))";
+  $standard_comments = "^\\s*!(?!\$(omp|hpf))";
 }
 else
 {
-  $standard_comments = "^[c!*](?!\\\$(omp|hpf))";
+  $standard_comments = "^[c!*](?!\$(omp|hpf))";
 }
 
 # Maximum line length for free form Fortran
@@ -108,7 +108,7 @@ while (<>)
     # the following code by Fokke Dijkstra also checks for comments
     # on a line with a string
     # Search for possible comment
-    if (/!(?!\$(omp|hpf))/i)
+    if (/!(?!\$(omp|hpf))/)
     {
       # find all ! " and ' and check for strings or comments
       $string = 0;
@@ -237,17 +237,10 @@ sub free_format_splitline
   my $maxlen1 = $max_line_length - 1;
   my $maxlen1i = $max_line_length - $indentation - 1;
   my $maxlen2i = $max_line_length - $indentation - 2;
-  my $sentinel = "";
 
   if ($LINE =~ /^(.{$maxlen1,$maxlen1})../m)
   {
     $OUT = $1;
-    if ($OUT =~ /^\s*(!\$(omp|hpf))/mi)
-    {
-      $sentinel = $1;
-      $maxlen1i = $maxlen1i - length($sentinel);
-      $maxlen2i = $maxlen2i - length($sentinel);
-    }
     # Check if the line already has a continuation mark.
     $OUT = "$OUT&" if (! ($OUT =~ /\&\s*$/m));
     &printline ($OUT);
@@ -257,7 +250,7 @@ sub free_format_splitline
     {
       $LINE =~ /^(.{$maxlen2i,$maxlen2i})/m;
       $OUT = $1;
-      $OUT = "$indent$sentinel&$OUT" if (! ($OUT =~ /^\s*\&/m));
+      $OUT = "$indent&$OUT" if (! ($OUT =~ /^\s*\&/m));
       $OUT = "$OUT&" if (! ($OUT =~ /\&\s*$/m));
       &printline ($OUT);
       $LINE =~ s/.{$maxlen2i,$maxlen2i}//m;
@@ -265,16 +258,16 @@ sub free_format_splitline
 
     if ($LINE =~ /^\&\s*$/m)
     {
-      &printline ("$indent$sentinel& $LINE");
+      &printline ("$indent& $LINE");
     }
     elsif ($LINE =~ /^\s*\&\s*$/m)
     {
-      &printline ("$indent$sentinel&$LINE");
+      &printline ("$indent&$LINE");
     }
     else
     {
       $OUT = $LINE;
-      $OUT = "$indent$sentinel&$OUT" if (! ($LINE =~ /^\s*\&/m));
+      $OUT = "$indent&$OUT" if (! ($LINE =~ /^\s*\&/m));
       &printline ($OUT);
     }
   }

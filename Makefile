@@ -40,12 +40,8 @@ endif
 
 export PROMPT
 
-# backwards compatibility for VERBOSE=yes (SILENT=no)
-ifeq ($(shell echo $(strip $(SILENT)) | tr '[:upper:]' '[:lower:]'),no)
-VERBOSE = yes
-endif
 # Make quietly unless told not to
-ifneq ($(shell echo $(strip $(VERBOSE)) | tr '[:upper:]' '[:lower:]'),yes)
+ifneq ($(shell echo $(strip $(SILENT)) | tr '[:upper:]' '[:lower:]'),no)
 .SILENT:
 endif
 
@@ -195,15 +191,6 @@ BUILD_ACTIVETHORNS = lib/sbin/BuildActiveThorns.pl
 # Dividers to make the screen output slightly nicer
 DIVEL   =  __________________
 DIVIDER =  $(DIVEL)$(DIVEL)$(DIVEL)$(DIVEL)
-ifeq ($(shell echo $(VERBOSE) | tr '[:upper:]' '[:lower:]'),yes)
-define NOTIFY_DIVIDER
-	echo $(DIVIDER)
-endef
-else
-define NOTIFY_DIVIDER
-	:
-endef
-endif
 
 # Work out where we are
 export CCTK_HOME := $(shell pwd)
@@ -228,31 +215,31 @@ CONFIGINFOS = $(wildcard $(CONFIGS_DIR)/*/config-info)
 
 default-target:
 ifeq ($(strip $(CONFIGURATIONS)),)
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo No configurations defined.
 	@echo Please use \'$(MAKE) \<name\>\' to setup a configuration called \<name\>.
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo \'$(MAKE) help\' lists all $(MAKE) options.
 else
 ifeq ($(words $(CONFIGURATIONS)), 1)
 	@echo Please use $(MAKE) $(CONFIGURATIONS)
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo \'$(MAKE) help\' lists all $(MAKE) options.
 else
 	@echo Known configurations are: $(CONFIGURATIONS)
 	@echo Please use $(MAKE) \<configuration\>
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo \'$(MAKE) help\' lists all $(MAKE) options.
 endif
 endif
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 # Target to build a configuration
 .PHONY: $(CONFIGURATIONS)
 
 $(CONFIGURATIONS):
 	if test ! -f "$(CONFIGS_DIR)/$@/config-data/cctk_Config.h" ; then \
-	  $(NOTIFY_DIVIDER);\
+	  echo $(DIVIDER);\
 	  echo "Cactus - version: $(CCTK_VERSION)";\
           if test "x$(PROMPT)" = 'xno'; then\
             if (! $(SETUP_ENV) $(PERL) -s $(SETUP) $(SETUP_OPTIONS) $@) ; then \
@@ -266,12 +253,12 @@ $(CONFIGURATIONS):
 	    echo "Please check the files in $(CONFIGS_DIR)/$@/config-data for error messages.";\
 	    echo "You can try again to configure using $(MAKE) $@-config";\
 	    echo "or delete this configuration with $(MAKE) $@-delete.";\
-	    $(NOTIFY_DIVIDER);\
+	    echo $(DIVIDER);\
 	    exit 1; \
           fi                                                                 \
 	fi
 	if ($(PERL) -e 'exit ((stat shift)[9] > (stat shift)[9])' $(CONFIGS_DIR)/$@/config-info $(CCTK_HOME)/lib/make/force-reconfigure); then    \
-	  $(NOTIFY_DIVIDER);\
+	  echo $(DIVIDER);\
 	  echo "Cactus - version: $(CCTK_VERSION)";\
 	  echo "Error: Configuration $@ is out of date.";\
 	  echo "  Please reconfigure your configuration by running the command"; \
@@ -279,14 +266,14 @@ $(CONFIGURATIONS):
           echo "    $(MAKE) $@-reconfig"; \
           echo ;\
 	  echo "  (It is likely that recent changes to the flesh require this.)";\
-	  $(NOTIFY_DIVIDER);\
+	  echo $(DIVIDER);\
 	  exit 1;\
 	fi
 	if test "x${MAKELEVEL}" = "x0" ; then \
-	  $(NOTIFY_DIVIDER);\
+	  echo $(DIVIDER);\
 	  echo "Cactus - version: $(CCTK_VERSION)"; \
 	  echo "Building configuration $@"; \
-	  $(NOTIFY_DIVIDER);\
+	  echo $(DIVIDER);\
 	fi
 	$(MAKE) -f $(CCTK_HOME)/lib/make/make.configuration TOP=$(CONFIGS_DIR)/$@ CCTK_HOME=$(CCTK_HOME) $(TPARFLAGS) rebuild
 	$(MAKE) -f $(CCTK_HOME)/lib/make/make.configuration TOP=$(CONFIGS_DIR)/$@ CCTK_HOME=$(CCTK_HOME) $(TPARFLAGS)
@@ -295,10 +282,10 @@ $(CONFIGURATIONS):
 .PHONY: distclean
 
 distclean:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Deleting all your configurations !
 	rm -rf $(CONFIGS_DIR)
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 # Targets to make tags files
 
@@ -306,7 +293,7 @@ distclean:
 .PHONY: TAGS tags
 
 TAGS:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Updating the Emacs TAGS file
 	rm -f TAGS ; touch TAGS
 	find src arrangements \( \
@@ -318,10 +305,10 @@ TAGS:
 #          -exec etags --append --regex '/[a-z A-Z \t]*FORTRAN_NAME[^)]*/' {} \;
 	$(PERL) -pi.bak -e 's/(subroutine\s*)([a-zA-Z0-9_]+)/\1\L\2/g;' TAGS
 	rm TAGS.bak
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 tags:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Updating the vi tags file
 	rm -f tags ; touch tags
 	find src arrangements \( \
@@ -332,25 +319,25 @@ tags:
 	$(PERL) -pi.bak -e 's/(subroutine\s*)([a-zA-Z0-9_]+)/\1\L\2/g;' tags
 	rm tags.bak
 	sort tags > sortedtags ; mv sortedtags tags
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 # Make a new configuration with a default name
 .PHONY: default
 
 default:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Running the configuration program
 	$(SETUP_ENV) $(PERL) -s $(SETUP) $(SETUP_OPTIONS)
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo You are now ready to build the CCTK.
 	@echo This is done by $(MAKE) \<configuration\>
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 # The help system.
 .PHONY: help
 
 help:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo "****************************** "
 	@echo "* Welcome to the Cactus Code *"
 	@echo "******************************"
@@ -361,10 +348,10 @@ else
 	@echo The following configurations are currently specified
 	@echo
 	@echo "  $(CONFIGURATIONS)"
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo "To build a configuration: "
 	@echo "  run $(MAKE) followed by the name of a configuration."
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo There is a range of options available to act on a configuration.
 	@echo These are activated by '$(MAKE) \<conf-name\>-\<option\>'
 	@echo Valid options are
@@ -392,7 +379,7 @@ else
 	@echo "  -update        : update the files for a specific configuration from CVS and/or SVN."
 	@echo "  -examples      : copy thorn parameter files to examples directory."
 endif
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo There are options available to act on thorns or arrangements.
 	@echo These are activated by \'$(MAKE) \<thorn-name\>-\<option\>\' or
 	@echo   \'$(MAKE) \<arrangement-name\>-\<option\>\' respectively.
@@ -405,7 +392,7 @@ endif
 	@echo "                        in doc/ArrangementDoc/<arrangement-name>/."
 	@echo "  -ArrangementDocHTML - produce documentation for the arrangement in HTML format"
 	@echo "                        in doc/ArrangementDoc/<arrangement-name>/."
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo $(MAKE) also knows the following targets
 	@echo
 	@echo "  checkout            - checkout public arrangements/thorns."
@@ -442,7 +429,7 @@ endif
 	@echo "  AllDoc              - build all documentation."
 	@echo "  AllDocHTML          - build all documentation in HTML format."
 	@echo "  <anything else>     - prompt to create a configuration with that name."
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 
 # Version information
@@ -456,7 +443,7 @@ version:
 .PHONY: int_version
 
 int_version:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo "Cactus - version: $(CCTK_VERSION)"
 
 
@@ -467,16 +454,16 @@ int_version:
 
 build: int_version
 	@echo Please specify a configuration to build.
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 ifneq ($strip($(CONFIGURATIONS)),)
 .PHONY: $(addsuffix -build, $(CONFIGURATIONS))
 
 $(addsuffix -build, $(CONFIGURATIONS)): int_version
 	if test "x$(BUILDLIST)" = "x"; then \
-	  $(NOTIFY_DIVIDER); \
+	  echo $(DIVIDER); \
 	  echo "Please specify the thorns to build with \"BUILDLIST=<list of thorns>\""; \
-	  $(NOTIFY_DIVIDER); \
+	  echo $(DIVIDER); \
 	else \
 	  echo Building thorns \'$(BUILDLIST)\' of configuration $(@:%-build=%); \
 	  cd $(CONFIGS_DIR)/$(@:%-build=%); \
@@ -485,7 +472,7 @@ $(addsuffix -build, $(CONFIGURATIONS)): int_version
 endif
 
 %-build:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Configuration $(@:%-build=%) does not exist.
 	@echo Build aborted.
 
@@ -496,24 +483,24 @@ endif
 .PHONY: clean
 
 clean:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Please specify a configuration to clean.
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 ifneq ($strip($(CONFIGURATIONS)),)
 .PHONY: $(addsuffix -clean,$(CONFIGURATIONS))
 
 $(addsuffix -clean,$(CONFIGURATIONS)):
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Cleaning configuration $(@:%-clean=%)
 	cd $(CONFIGS_DIR)/$(@:%-clean=%)
 	$(MAKE) -f $(CCTK_HOME)/lib/make/make.configuration TOP=$(CONFIGS_DIR)/$(@:%-clean=%) CCTK_HOME=$(CCTK_HOME) clean
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 endif
 
 %-clean:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Configuration $(@:%-clean=%) does not exist.
 	@echo Cleaning aborted.
 
@@ -524,24 +511,24 @@ endif
 .PHONY: cleandeps
 
 cleandeps:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Please specify a configuration to clean the dependencies of.
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 ifneq ($strip($(CONFIGURATIONS)),)
 .PHONY: $(addsuffix -cleandeps,$(CONFIGURATIONS))
 
 $(addsuffix -cleandeps,$(CONFIGURATIONS)):
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Cleaning configuration $(@:%-cleandeps=%)
 	cd $(CONFIGS_DIR)/$(@:%-cleandeps=%)
 	$(MAKE) -f $(CCTK_HOME)/lib/make/make.configuration TOP=$(CONFIGS_DIR)/$(@:%-cleandeps=%) CCTK_HOME=$(CCTK_HOME) cleandeps
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 endif
 
 %-cleandeps:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Configuration $(@:%-cleandeps=%) does not exist.
 	@echo Cleaning dependencies aborted.
 
@@ -552,25 +539,25 @@ endif
 .PHONY: cleanobjs
 
 cleanobjs:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Please specify a configuration to clean the object files of.
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 
 ifneq ($strip($(CONFIGURATIONS)),)
 .PHONY: $(addsuffix -cleanobjs,$(CONFIGURATIONS))
 
 $(addsuffix -cleanobjs,$(CONFIGURATIONS)):
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Cleaning configuration $(@:%-cleanobjs=%)
 	cd $(CONFIGS_DIR)/$(@:%-cleanobjs=%)
 	$(MAKE) -f $(CCTK_HOME)/lib/make/make.configuration TOP=$(CONFIGS_DIR)/$(@:%-cleanobjs=%) CCTK_HOME=$(CCTK_HOME) cleanobjs
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 endif
 
 %-cleanobjs:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Configuration $(@:%-cleanobjs=%) does not exist.
 	@echo Cleaning object files aborted.
 
@@ -581,25 +568,25 @@ endif
 .PHONY: realclean
 
 realclean:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Please specify a configuration to really clean.
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 
 ifneq ($strip($(CONFIGURATIONS)),)
 .PHONY: $(addsuffix -realclean,$(CONFIGURATIONS))
 
 $(addsuffix -realclean,$(CONFIGURATIONS)):
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Cleaning configuration $(@:%-realclean=%)
 	cd $(CONFIGS_DIR)/$(@:%-realclean=%)
 	$(MAKE) -f $(CCTK_HOME)/lib/make/make.configuration TOP=$(CONFIGS_DIR)/$(@:%-realclean=%) CCTK_HOME=$(CCTK_HOME) realclean
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 endif
 
 %-realclean:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Configuration $(@:%-realclean=%) does not exist.
 	@echo Cleaning aborted.
 
@@ -610,16 +597,16 @@ endif
 .PHONY: delete
 
 delete:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Please specify a configuration to delete.
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 
 ifneq ($strip($(CONFIGURATIONS)),)
 .PHONY: $(addsuffix -delete,$(CONFIGURATIONS))
 
 $(addsuffix -delete,$(CONFIGURATIONS)):
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	if test "x$(DELETE_CONFIRMATION)" = "xyes" ; then          \
 	  echo "Really delete configuration $(@:%-delete=%) (no)?";\
 	  read confirm rest;                                       \
@@ -633,11 +620,11 @@ $(addsuffix -delete,$(CONFIGURATIONS)):
 	  echo Deleting configuration $(@:%-delete=%);             \
 	  cd $(CONFIGS_DIR) ; rm -rf $(@:%-delete=%) ;             \
 	fi
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 endif
 
 %-delete:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Configuration $(@:%-delete=%) does not exist.
 	@echo Deletion aborted.
 
@@ -649,7 +636,7 @@ endif
 
 rebuild: int_version
 	@echo Please specify a configuration to rebuild.
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 ifneq ($strip($(CONFIGURATIONS)),)
 .PHONY: $(addsuffix -rebuild,$(CONFIGURATIONS))
@@ -671,23 +658,23 @@ endif
 .PHONY: thornlist
 
 thornlist:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Please specify a configuration to regenerate the thornlist of.
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 
 ifneq ($strip($(CONFIGURATIONS)),)
 .PHONY: $(addsuffix -thornlist,$(CONFIGURATIONS))
 
 $(addsuffix -thornlist,$(CONFIGURATIONS)):
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Regenerating compiled ThornList $(@:%-thornlist=%)
 	if [ -r $(CONFIGS_DIR)/$(@:%-thornlist=%)/ThornList ] ; then rm $(CONFIGS_DIR)/$(@:%-thornlist=%)/ThornList ; fi
 	$(MAKE) $(@:%-thornlist=%)
 endif
 
 %-thornlist:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Configuration $(@:%-thornlist=%) does not exist.
 	@echo Regeneration of compiled ThornList aborted.
 
@@ -698,22 +685,22 @@ endif
 .PHONY: editthorn
 
 editthorns:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Please specify a configuration to edit the thornlist of.
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 
 ifneq ($strip($(CONFIGURATIONS)),)
 .PHONY: $(addsuffix -editthorns,$(CONFIGURATIONS))
 
 $(addsuffix -editthorns,$(CONFIGURATIONS)):
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Editing compiled ThornList $(@:%-editthorn=%)
 	$(MAKE) -f $(CCTK_HOME)/lib/make/make.configuration TOP=$(CONFIGS_DIR)/$(@:%-editthorns=%) CCTK_HOME=$(CCTK_HOME) editthorns
 endif
 
 %-editthorns:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Configuration $(@:%-editthorns=%) does not exist.
 	@echo Editing of compiled ThornList aborted.
 
@@ -725,7 +712,7 @@ endif
 
 config: int_version
 	@echo Please specify a configuration to configure.
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 ifneq ($strip($(CONFIGURATIONS)),)
 .PHONY: $(addsuffix -config,$(CONFIGURATIONS))
@@ -747,7 +734,7 @@ $(addsuffix -config,$(CONFIGURATIONS)): int_version
           then \
             echo $(THORNS) >> $(CONFIGS_DIR)/$(@:%-config=%)/ThornList ; \
           fi ; \
-	  $(NOTIFY_DIVIDER) ; \
+	  echo $(DIVIDER) ; \
 	  if test "x$(PROMPT)" = "xno" ; then \
 	    $(MAKE) $(@:%-config=%) WARN=$(WARN); \
 	  else \
@@ -757,7 +744,7 @@ $(addsuffix -config,$(CONFIGURATIONS)): int_version
 	  echo "ThornList $(THORNLIST_DIR)/$(THORNLIST) does not exist" ; \
 	  exit 2; \
 	fi
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 endif
 
 %-config:
@@ -788,7 +775,7 @@ endif
 	    if test -n "$(THORNS)" ; then \
 	      echo $(THORNS) >> $(CONFIGS_DIR)/$(@:%-config=%)/ThornList ; \
 	    fi ; \
-	    $(NOTIFY_DIVIDER)   ;  \
+	    echo $(DIVIDER)   ;  \
 	    if test "x$(PROMPT)" = "xno" ; then \
 	      $(MAKE) $(@:%-config=%) WARN=$(WARN); \
 	    else \
@@ -799,7 +786,7 @@ endif
 	    exit 2; \
 	  fi ; \
 	fi
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 
 ################################################################
@@ -809,7 +796,7 @@ endif
 
 reconfig: int_version
 	@echo Please specify a configuration to reconfigure.
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 ifneq ($strip($(CONFIGURATIONS)),)
 .PHONY: $(addsuffix -reconfig,$(CONFIGURATIONS))
@@ -838,17 +825,17 @@ $(addsuffix -reconfig,$(CONFIGURATIONS)): int_version
           rm -f "$(CONFIGS_DIR)/$(@:%-reconfig=%)/config-data/cctk_Config.h";\
           exit 2                                 ;                       \
         fi ;                                                             \
-	$(NOTIFY_DIVIDER) ; \
+	echo $(DIVIDER) ; \
 	if test "x$(PROMPT)" = "xno" ; then \
 	  $(MAKE) $(@:%-reconfig=%) WARN=$(WARN); \
 	else \
 	  echo Use '$(MAKE) $(@:%-reconfig=%)' to build the configuration. ; \
 	fi
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 endif
 
 %-reconfig:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Configuration $(@:%-reconfig=%) does not exist.;
 	@echo Reconfiguration aborted.
 
@@ -859,25 +846,25 @@ endif
 .PHONY: utils
 
 utils:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Please specify a configuration to build the utilities of.
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 
 ifneq ($strip($(CONFIGURATIONS)),)
 .PHONY: $(addsuffix -utils,$(CONFIGURATIONS))
 
 $(addsuffix -utils,$(CONFIGURATIONS)):
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Building utilities for $(@:%-utils=%)
 	cd $(CONFIGS_DIR)/$(@:%-utils=%)
 	$(MAKE) -f $(CCTK_HOME)/lib/make/make.configuration TOP=$(CONFIGS_DIR)/$(@:%-utils=%) CCTK_HOME=$(CCTK_HOME) utils UTILS=$(UTILS) CONFIG_NAME=$(@:%-utils=%)
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 endif
 
 %-utils:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Configuration $(@:%-utils=%) does not exist.
 	@echo Building of utilities aborted.
 
@@ -887,10 +874,10 @@ endif
 ##################
 .PHONY: newthorn
 newthorn:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Creating a new thorn
 	$(PERL) -s $(NEWTHORN);
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 
 ###################
@@ -900,7 +887,7 @@ newthorn:
 
 testsuite: int_version
 	@echo Please specify a configuration to test.
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 
 ifneq ($strip($(CONFIGURATIONS)),)
@@ -926,19 +913,19 @@ ifneq ($strip($(CONFIGURATIONS)),)
 .PHONY: examples
 
 examples:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Please specify a configuration.
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 
 $(addsuffix -examples,$(CONFIGURATIONS)):
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Copying parameter files $(@:%-examples=%)
 	if [ -r $(CONFIGS_DIR)/$(@:%-examples=%)/ThornList ] ; then $(PERL) lib/sbin/CopyParFiles.pl $(@:%-examples=%) ; fi
 endif
 
 %-examples:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Configuration $(@:%-examples=%) does not exist.
 	@echo Parameter file copying aborted.
 
@@ -947,7 +934,7 @@ endif
 
 .PHONY: checkout
 checkout:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Running app/arrangement/thorn checkout script
 	$(PERL) ./lib/sbin/checkout.pl
 
@@ -957,25 +944,25 @@ checkout:
 
 configinfo:
 ifeq ($(strip $(CONFIGURATIONS)),)
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo No configurations defined.
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 else
 	cat $(CONFIGINFOS)
 endif
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 ifneq ($strip($(CONFIGURATIONS)),)
 .PHONY: $(addsuffix -configinfo,$(CONFIGURATIONS))
 
 $(addsuffix -configinfo,$(CONFIGURATIONS)):
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Displaying configuration information
 	cat configs/$(@:%-configinfo=%)/config-info
 endif
 
 %-configinfo:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Configuration $(@:%-configinfo=%) does not exist.
 	@echo Displaying configuration information aborted.
 
@@ -985,21 +972,21 @@ endif
 .PHONY: sysinfo
 
 sysinfo:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Please specify a configuration to run sysinfo with.
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 ifneq ($strip($(CONFIGURATIONS)),)
 .PHONY: $(addsuffix -sysinfo,$(CONFIGURATIONS))
 
 $(addsuffix -sysinfo,$(CONFIGURATIONS)):
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Running SystemInfo
 	$(PERL) ./lib/sbin/SystemInfo.pl $(@:%-sysinfo=%)
 endif
 
 %-sysinfo:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Configuration $(@:%-sysinfo=%) does not exist.
 	@echo Getting system info aborted.
 
@@ -1020,7 +1007,7 @@ $(addsuffix -bugreport,$(CONFIGURATIONS)):
 endif
 
 %-bugreport:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Configuration $(@:%-bugreport=%) does not exist.
 	@echo Bugreport creation aborted.
 
@@ -1043,7 +1030,7 @@ UsersGuide.pdf: UsersGuide
 
 .PHONY: UsersGuide
 UsersGuide:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Creating user documentation UsersGuide.pdf
 	cd doc/UsersGuide;                          \
 	echo "  Running pdflatex....";              \
@@ -1059,7 +1046,7 @@ UsersGuide:
 	mv UsersGuide.pdf $(CCTK_HOME)/doc/UsersGuide.pdf 
 	@echo "  UsersGuide.pdf created in doc directory."
 	@echo "  Done."
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 .PHONY: UsersGuideHTML
 
@@ -1067,7 +1054,7 @@ doc/UsersGuide/bincactus2.ps: doc/UsersGuide/bincactus2.pdf
 	pdf2ps doc/UsersGuide/bincactus2.pdf doc/UsersGuide/bincactus2.ps
 
 UsersGuideHTML: doc/UsersGuide/bincactus2.ps
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo "Creating user documentation (HTML)"
 	cd doc/UsersGuide;                         \
 	$(CCTK_HOME)/lib/sbin/ConvertFigures;      \
@@ -1089,7 +1076,7 @@ UsersGuideHTML: doc/UsersGuide/bincactus2.ps
 	cp UsersGuide.css $(CCTK_HOME)/doc/HTML/UsersGuide/
 	@echo "  Users Guide (HTML) created in doc/HTML/UsersGuide directory."
 	@echo "  Done."
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 # Make the Reference Manual
 
@@ -1098,7 +1085,7 @@ ReferenceManual.pdf: ReferenceManual
 
 .PHONY: ReferenceManual
 ReferenceManual:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Creating user reference manual ReferenceManual.pdf
 	cd doc/ReferenceManual;                     \
 	echo "  Running pdflatex....";              \
@@ -1114,11 +1101,11 @@ ReferenceManual:
 	mv ReferenceManual.pdf $(CCTK_HOME)/doc/ReferenceManual.pdf
 	@echo "  ReferenceManual.pdf created in doc directory."
 	@echo "  Done."
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 .PHONY: ReferenceManualHTML
 ReferenceManualHTML:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo "Creating user reference manual (HTML)"
 	cd doc/ReferenceManual;                    \
 	$(CCTK_HOME)/lib/sbin/ConvertFigures;      \
@@ -1140,7 +1127,7 @@ ReferenceManualHTML:
 	cp ReferenceManual.css  $(CCTK_HOME)/doc/HTML/ReferenceManual
 	@echo "  HTML ReferenceManual created in doc/HTML/ReferenceManual directory."
 	@echo "  Done."
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 # Make the Maintainers' Guide
 
@@ -1149,7 +1136,7 @@ MaintGuide.pdf: MaintGuide
 
 .PHONY: MaintGuide
 MaintGuide:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Creating maintainers documentation MaintGuide.pdf
 	cd doc/MaintGuide;                          \
 	echo "  Running pdflatex....";              \
@@ -1165,11 +1152,11 @@ MaintGuide:
 	mv MaintGuide.pdf $(CCTK_HOME)/doc/MaintGuide.pdf
 	@echo "  MaintGuide.pdf created in doc directory."
 	@echo "  Done."
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 .PHONY: MaintGuideHTML
 MaintGuideHTML:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo "Creating maintainers documentation (HTML)"
 	cd doc/MaintGuide;                          \
 	$(CCTK_HOME)/lib/sbin/ConvertFigures;             \
@@ -1191,7 +1178,7 @@ MaintGuideHTML:
 	cp MaintGuide.css  $(CCTK_HOME)/doc/HTML/MaintGuide
 	@echo "  Maintainers Guide (HTML) created in doc/HTML/MaintGuide directory."
 	@echo "  Done."
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 # Make the ThornGuide
 DOCDIR		= $(CCTK_HOME)/doc
@@ -1202,7 +1189,7 @@ ThornGuide.pdf: ThornGuide
 
 .PHONY: ThornGuide
 ThornGuide:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Creating thorn documentation ThornGuide.pdf
 	rm -rf $(THORNBUILD);
 	mkdir $(THORNBUILD);
@@ -1213,12 +1200,12 @@ ThornGuide:
 	  echo "  ThornGuide.pdf created in doc directory."; \
 	  echo "  Done."; \
 	fi
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 .PHONY: ThornGuideHTML
 
 ThornGuideHTML: doc/UsersGuide/bincactus2.ps
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo "Creating thorn documentation ThornGuide (HTML)"
 	rm -rf $(THORNBUILD);
 	mkdir $(THORNBUILD);
@@ -1233,7 +1220,7 @@ ThornGuideHTML: doc/UsersGuide/bincactus2.ps
 	  echo "  Thorn Guide (HTML) created in doc/HTML/ThornGuide directory."; \
 	  echo "  Done."; \
 	fi
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 # Run ThornGuide on a configuration
 
@@ -1247,7 +1234,7 @@ ifneq ($strip($(CONFIGURATIONS)),)
 .PHONY: $(addsuffix -ThornGuide,$(CONFIGURATIONS))
 
 $(addsuffix -ThornGuide,$(CONFIGURATIONS)):
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Creating ThornGuide for configuration $(CONFIGNAME)
 	cd $(CONFIGDIR); \
 	mkdir -p doc
@@ -1267,7 +1254,7 @@ $(addsuffix -ThornGuide,$(CONFIGURATIONS)):
 endif
 
 %-ThornGuide:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Configuration $(@:%-ThornGuide=%) does not exist.
 	@echo Thorn Guide creation aborted.
 
@@ -1275,39 +1262,39 @@ endif
 
 .PHONY: ThornDoc
 %-ThornDoc:
-	$(NOTIFY_DEVIDER)
+	@echo "$(DIVIDER)"
 	@lib/sbin/ThornDoc $(@:%-ThornDoc=%)
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 ThornDoc:
-	$(NOTIFY_DEVIDER)
+	@echo "$(DIVIDER)"
 	@lib/sbin/ThornDoc
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 %-ArrangementDoc:
-	$(NOTIFY_DEVIDER)
+	@echo "$(DIVIDER)"
 	@lib/sbin/ArrangementDoc $(@:%-ArrangementDoc=%)
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 ArrangementDoc:
-	$(NOTIFY_DEVIDER)
+	@echo "$(DIVIDER)"
 	@lib/sbin/ArrangementDoc
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 .PHONY: ThornDocHTML
 %-ThornDocHTML: doc/UsersGuide/bincactus2.ps
-	$(NOTIFY_DEVIDER)
+	@echo "$(DIVIDER)"
 	@lib/sbin/ThornDocHTML $(@:%-ThornDocHTML=%)
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 ThornDocHTML: doc/UsersGuide/bincactus2.ps
-	$(NOTIFY_DEVIDER)
+	@echo "$(DIVIDER)"
 	@lib/sbin/ThornDocHTML
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 %-ArrangementDocHTML: doc/UsersGuide/bincactus2.ps
-	$(NOTIFY_DEVIDER)
+	@echo "$(DIVIDER)"
 	@lib/sbin/ArrangementDocHTML $(@:%-ArrangementDocHTML=%)
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 ArrangementDocHTML: doc/UsersGuide/bincactus2.ps
-	$(NOTIFY_DEVIDER)
+	@echo "$(DIVIDER)"
 	@lib/sbin/ArrangementDocHTML
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 ###############################################################################
 #                      End of documentation targets
@@ -1317,10 +1304,10 @@ ArrangementDocHTML: doc/UsersGuide/bincactus2.ps
 
 .PHONY: thorninfo
 thorninfo:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Displaying info for all thorns in the arrangements directory
 	$(PERL) -s $(BUILD_ACTIVETHORNS) $(CCTK_HOME)/arrangements | cat;
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 # Processed CVS information
 
@@ -1344,7 +1331,7 @@ ifneq ($strip($(CONFIGURATIONS)),)
 .PHONY $(addsuffix -update,$(CONFIGURATIONS)):
 
 $(addsuffix -cvsupdate,$(CONFIGURATIONS)):
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Updating files for configuration $(@:%-cvsupdate=%)
 	if test -r $(CONFIGS_DIR)/$(@:%-cvsupdate=%)/ThornList ; then \
           $(PERL) -s lib/sbin/CVSUpdate.pl arrangements $(CONFIGS_DIR)/$(@:%-cvsupdate=%)/ThornList; \
@@ -1352,7 +1339,7 @@ $(addsuffix -cvsupdate,$(CONFIGURATIONS)):
 	@echo Done.
 
 $(addsuffix -update,$(CONFIGURATIONS)):
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Updating files for configuration $(@:%-update=%)
 	if test -r $(CONFIGS_DIR)/$(@:%-update=%)/ThornList ; then \
           $(PERL) -s lib/sbin/CVSUpdate.pl arrangements $(CONFIGS_DIR)/$(@:%-update=%)/ThornList; \
@@ -1361,12 +1348,12 @@ $(addsuffix -update,$(CONFIGURATIONS)):
 endif
 
 %-cvsupdate:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Configuration $(@:%-cvsupdate=%) does not exist.
 	@echo CVS Update aborted.
 
 %-update:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Configuration $(@:%-update=%) does not exist.
 	@echo Update aborted.
 
@@ -1379,7 +1366,7 @@ cvsdiff:
 
 .PHONY: downsize
 downsize:
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo Remove flesh and thorn documentation \(\no\)?
 	read yesno rest; \
 	if test $$? -ne 0 ; then \
@@ -1388,7 +1375,7 @@ downsize:
 	if [ "x$$yesno" = "xyes" -o "x$$yesno" = "xy" -o "x$$yesno" = "xYES" -o "x$$yesno" = "xY" ] ;\
 	then  \
 	rm -rf doc; rm -rf arrangements/*/*/doc; \
-	$(NOTIFY_DIVIDER)   ;  \
+	echo $(DIVIDER)   ;  \
 	fi
 	@echo Remove thorn testsuites \(\no\)?
 	read yesno rest; \
@@ -1398,7 +1385,7 @@ downsize:
 	if [ "x$$yesno" = "xyes" -o "x$$yesno" = "xy" -o "x$$yesno" = "xYES" -o "x$$yesno" = "xY" ] ;\
 	then  \
 	rm -rf arrangements/*/*/test; \
-	$(NOTIFY_DIVIDER)   ;  \
+	echo $(DIVIDER)   ;  \
 	fi
 	@echo Remove all configurations \(\no\)?
 	read yesno rest; \
@@ -1408,13 +1395,13 @@ downsize:
 	if [ "x$$yesno" = "xyes" -o "x$$yesno" = "xy" -o "x$$yesno" = "xYES" -o "x$$yesno" = "xY" ] ;\
 	then  \
 	$(MAKE) distclean; \
-	$(NOTIFY_DIVIDER)   ;  \
+	echo $(DIVIDER)   ;  \
 	fi
 
 # Last resort rule.  Assume it is the name of a configuration
 
 %::
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 	@echo "Cactus - version: $(CCTK_VERSION)"
 	if test "x$(PROMPT)" = "xyes" ; then \
 	  echo Setup configuration $@ \(yes\)?; \
@@ -1445,7 +1432,7 @@ downsize:
           then \
             echo $(THORNS) >> $(CONFIGS_DIR)/$@/ThornList ; \
           fi ; \
-	  $(NOTIFY_DIVIDER) ;  \
+	  echo $(DIVIDER) ;  \
 	  if test "x$(PROMPT)" = "xno" ; then \
 	    $(MAKE) $(@:%-config=%) WARN=$(WARN); \
 	  else \
@@ -1456,4 +1443,4 @@ downsize:
 	    exit 2; \
 	  fi ; \
 	fi
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)

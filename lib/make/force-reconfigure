@@ -27,6 +27,3 @@
 23 Nov 2010: Improve handling of unused variables
 21 Dec 2010: Add new options CPP_*_FLAGS and FPP_*_FLAGS
 04 Jan 2011: Add CCTK_ATTRIBUTE_ALIGNED
-30 Mar 2011: Add variables MAKE, TAR, GZIP_CMD, PATCH, GIT
-26 Apr 2011: Add CCTK_BUILTIN_EXPECT
-27 Jun 2011: Add HAVE_SCHED_H

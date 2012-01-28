@@ -8,6 +8,9 @@
 #  @version $Id$
 # @@*/
 
+# Silence all but designated output
+#.SILENT:
+
 # Some configuration variables
 CONFIG = $(TOP)/config-data
 BINDINGS_DIR = $(TOP)/bindings
@@ -45,15 +48,6 @@ CACTUSLIBS = $(FLESHLIB) $(BINDINGSLIB)
 # Dividers to make the screen output slightly nicer
 DIVEL   =  __________________
 DIVIDER =  $(DIVEL)$(DIVEL)$(DIVEL)$(DIVEL)
-ifeq ($(shell echo $(VERBOSE) | tr '[:upper:]' '[:lower:]'),yes)
-define NOTIFY_DIVIDER
-	echo $(DIVIDER)
-endef
-else
-define NOTIFY_DIVIDER
-	:
-endef
-endif
 
 # Include the definitions for this configuration
 include $(CONFIG)/make.config.defn
@@ -69,7 +63,7 @@ export PERLINTERP = $(shell echo $(PERL) | sed 's,^/cygdrive/\(.\)/,\1:/,' | sed
 
 main: $(EXEDIR)$(DIRSEP)$(EXE)
 	@echo All done !
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 
 # Put this in temporarily to make sure that people with existing
@@ -138,7 +132,7 @@ $(EXEDIR)$(DIRSEP)$(EXE): $(CONFIG)/make.thornlist $(CONFIG)/cctki_version.h $(p
 	$(CC) $(CFLAGS) -DCCTK_COMPILE_DATETIME="$$datetime" $(CCOMPILEONLY)$(OPTIONSEP)"$(call TRANSFORM_DIRS,$(TOP)/datestamp.o)" -I"$(call TRANSFORM_DIRS,$(CCTK_HOME)/src/include)" -I"$(call TRANSFORM_DIRS,$(CONFIG))" "$(call TRANSFORM_DIRS,$(DATESTAMP))"
 	if [ ! -d $(EXEDIR) ]; then $(MKDIR) $(MKDIRFLAGS) $(EXEDIR) ; fi
 	$(LD) $(CREATEEXE)$(OPTIONSEP)"$(call TRANSFORM_DIRS,$@)" $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(EXTRAFLAGS) "$(call TRANSFORM_DIRS,$(TOP)/datestamp.o)" $(CACTUSLIBLINKLINE) $(GENERAL_LIBRARIES)
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 # Version file
 $(CONFIG)/cctki_version.h: $(CCTK_HOME)/Makefile
@@ -199,7 +193,7 @@ $(CCTK_LIBDIR)/$(LIBNAME_PREFIX)$(CCTK_LIBNAME_PREFIX)%$(LIBNAME_SUFFIX): update
 		$(MKDIR) $(MKDIRFLAGS) $(BUILD_DIR)/$$thorn_name ; \
 	fi ; \
 	cd $(BUILD_DIR)/$$thorn_name ; \
-	$(NOTIFY_DIVIDER) ; \
+	echo $(DIVIDER) ; \
 	if [ -r "$$src_dir/Makefile" ] ; \
 	then \
 		make_file=$$src_dir/Makefile ; \
@@ -207,7 +201,7 @@ $(CCTK_LIBDIR)/$(LIBNAME_PREFIX)$(CCTK_LIBNAME_PREFIX)%$(LIBNAME_SUFFIX): update
 		make_file=$(MAKE_DIR)/make.thornlib ; \
 	fi ; \
 	$(MAKE) TOP=$(TOP) SRCDIR=$$src_dir CONFIG=$(CONFIG) NAME=$@ THORN=$$thorn_name USESTHORNS="$(USESTHORNS_$(@:$(CCTK_LIBDIR)/$(LIBNAME_PREFIX)$(CCTK_LIBNAME_PREFIX)%$(LIBNAME_SUFFIX)=%))" -f $$make_file $(FPARFLAGS)
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 
 # Include any extra dependencies
@@ -218,7 +212,7 @@ include $(CONFIG)/make.config.deps
 
 rebuild: $(CONFIG)/make.thornlist
 
-$(CONFIG)/make.thornlist: $(TOP)/ThornList $(foreach lib, $(CCTK_HOME)/src $(THORNS:%=$(PACKAGE_DIR)/%), $(lib)/param.ccl $(lib)/interface.ccl $(lib)/schedule.ccl) $(CCTK_HOME)/src/configuration.ccl $(CONFIG_THORNS:%=$(PACKAGE_DIR)/%/configuration.ccl) $(CCTK_HOME)/lib/make/force-rebuild
+$(CONFIG)/make.thornlist: $(TOP)/ThornList $(foreach lib, $(CCTK_HOME)/src $(THORNS:%=$(PACKAGE_DIR)/%), $(lib)/param.ccl $(lib)/interface.ccl $(lib)/schedule.ccl) $(CONFIG_THORNS:%=$(PACKAGE_DIR)/%/configuration.ccl) $(CCTK_HOME)/lib/make/force-rebuild
 	if [ -r $@ ] ; then echo Reconfiguring thorns ; rm $@ ;\
 	else echo Processing CCL files ; fi
 	+$(PERL) -s $(CST) -config_dir=$(CONFIG) -cctk_home=$(CCTK_HOME) -top=$(TOP) $<
@@ -233,16 +227,16 @@ $(TOP)/ThornList:
 	while [ "x$$action" = "xyes" -o "x$$action" = "xy" -o "x$$action" = "xYES" -o "x$$action" = "xY" ] ; \
 	do \
 	echo The thorn list is ; \
-	$(NOTIFY_DIVIDER) ; \
+	echo $(DIVIDER) ; \
 	cat $@ ; \
-	$(NOTIFY_DIVIDER) ; \
+	echo $(DIVIDER) ; \
 	echo Edit this list \(no\) \? ; \
 	read action rest ; \
 	if [ "x$$action" = "xyes" -o "x$$action" = "xy" -o "x$$action" = "xYES" -o "x$$action" = "xY" ] ; \
 	then $$EDITOR $@ ; fi ; \
 	done; \
 	fi
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 # Allow each thorn to include some global dependencies
 ifneq ($(strip $(THORNS)),)
@@ -250,7 +244,7 @@ ifneq ($(strip $(THORNS)),)
 endif
 
 # Catch the special case of a thorn being removed from the disk entirely.
-$(foreach lib, $(CCTK_HOME)/src $(THORNS:%=$(PACKAGE_DIR)/%), $(lib)/param.ccl $(lib)/interface.ccl $(lib)/schedule.ccl) $(CCTK_HOME)/src/configuration.ccl $(CONFIG_THORNS:%=$(PACKAGE_DIR)/%/configuration.ccl):
+$(foreach lib, $(CCTK_HOME)/src $(THORNS:%=$(PACKAGE_DIR)/%), $(lib)/param.ccl $(lib)/interface.ccl $(lib)/schedule.ccl) $(CONFIG_THORNS:%=$(PACKAGE_DIR)/%/configuration.ccl):
 	@echo "Missing file $@"
 	@echo "Possibly from a thorn deleted from an arrangement"
 	@echo "Deleting make.thornlist"
@@ -274,15 +268,15 @@ editthorns:
 	while [ "x$$action" = "xyes" -o "x$$action" = "xy" -o "x$$action" = "xYES" -o "x$$action" = "xY" ] ; \
 	do \
 	echo The thorn list is ; \
-	$(NOTIFY_DIVIDER) ; \
+	echo $(DIVIDER) ; \
 	cat $(TOP)/ThornList ; \
-	$(NOTIFY_DIVIDER) ; \
+	echo $(DIVIDER) ; \
 	echo Edit this list \(no\) \? ; \
 	read action rest ; \
 	if [ "x$$action" = "xyes" -o "x$$action" = "xy" -o "x$$action" = "xYES" -o "x$$action" = "xY" ] ; \
 	then $$EDITOR $(TOP)/ThornList ; fi ; \
 	done
-	$(NOTIFY_DIVIDER)
+	@echo $(DIVIDER)
 
 clean:
 	@echo Deleting all object and dependency files in $(TOP)
@@ -315,7 +309,7 @@ UNKNOWN_THORNS = $(filter-out $(ALLCACTUSLIBS_BASE), $(BUILDLIST))
 build: $(CONFIG)/make.thornlist $(CONFIG)/cctki_version.h $(patsubst %, $(CCTK_LIBDIR)/$(LIBNAME_PREFIX)$(CCTK_LIBNAME_PREFIX)%$(LIBNAME_SUFFIX), $(THORN_BUILDLIST))
 	if test "x$(UNKNOWN_THORNS)" != "x"; then \
 	  echo "WARNING: Don't know anything about '$(UNKNOWN_THORNS)' !"; \
-	  $(NOTIFY_DIVIDER); \
+	  echo $(DIVIDER); \
 	fi
 
 
