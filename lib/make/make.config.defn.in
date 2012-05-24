@@ -179,7 +179,8 @@ export CU_POSTPROCESSING  = @CU_POSTPROCESSING@
 export USE_RANLIB = @USE_RANLIB@
 
 # Exclude some files from the dependency lists
-export DEP_EXCLUDE_FILES = cctk_Functions\.h|CParameterStructNames\.h|cctk_Arguments\.h|cctk_ScheduleFunctions\.h|definethisthorn\.h|FParameters.h|CParameters\.h|cctk_Capabilities\.h
+#export DEP_EXCLUDE_FILES = cctk_Functions\.h|CParameterStructNames\.h|cctk_Arguments\.h|cctk_ScheduleFunctions\.h|definethisthorn\.h|FParameters.h|CParameters\.h|cctk_Capabilities\.h
+#export DEP_EXCLUDE_FILES =
 
 # Command used to get the working directory
 export GET_WD = @GET_WD@

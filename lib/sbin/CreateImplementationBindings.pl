@@ -37,6 +37,21 @@ sub CreateImplementationBindings
   }
 
   @thorns = sort split(' ', $rhinterface_db->{'THORNS'});
+  if(! -d 'include')
+  {
+    mkdir('include', 0755) || die 'Unable to create include directory';
+  }
+  if(! -d 'include/CactusBindings')
+  {
+    mkdir('include/CactusBindings', 0755) || die 'Unable to create include/CactusBindings directory';
+  }
+  my $thorn;
+  foreach $thorn (@thorns) {
+    if(! -d "include/$thorns") {
+      mkdir("include/$thorn",0755) || die "Unable to create include/$thorn directory";
+    }
+  }
+
   @data = map { "void CCTKi_BindingsThorn_$_(void);" } @thorns;
   push(@data, '');
 

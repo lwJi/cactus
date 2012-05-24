@@ -280,6 +280,7 @@ int CCTK_CallFunction(void *function,
   int (*noargsfunc)(void);
 
   int (*oneargfunc)(void *);
+  //printf("SCHEDULE TRACE: %s::%s\n",fdata->thorn,fdata->routine);
 
   if(current_scheduled_function != NULL)
   {

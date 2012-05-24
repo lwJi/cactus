@@ -53,20 +53,11 @@ sub CreateScheduleBindings
     $file_list .= " Schedule$thorn.c";
 
     $rsbuffer = &ScheduleCreateInterfaceFile($thorn, $rhinterface_db, $rhschedule_db);
-    &WriteFile("../include/${thorn}_Schedule.h",\$rsbuffer);
+    &WriteFile("../include/${thorn}/cctk_ScheduleFunctions.h",\$rsbuffer);
+    if($thorn eq "Cactus") {
+        &WriteFile("../include/CactusBindings/cctk_ScheduleFunctions.h",\$rsbuffer);
+    }
   }
-
-  @data = ();
-  foreach $thorn (split(' ',$rhinterface_db->{'THORNS'}))
-  {
-    push(@data, "#ifdef THORN\_IS\_$thorn");
-    push(@data, "#include \"${thorn}_Schedule.h\"");
-    push(@data, '#endif');
-    push(@data, '');
-  }
-  push(@data, "\n");  # workaround for perl 5.004_04 to add a trailing newline
-  $dataout = join ("\n", @data);
-  &WriteFile('../include/cctk_ScheduleFunctions.h',\$dataout);
 
   $rsbuffer = &ScheduleCreateBindings($rhinterface_db, $rhschedule_db);
   &WriteFile("BindingsSchedule.c", \$rsbuffer);
@@ -115,7 +106,7 @@ sub ScheduleCreateInterfaceFile
   # Process each schedule block
   
   my @data = ();
-  push (@data, '#include "cctk_Arguments.h"');
+  push (@data, "#include \"$thorn/cctk_Arguments.h\"");
   
   for (my $block = 0;
        $block < $rhschedule_db->{"\U$thorn\E N_BLOCKS"};
@@ -292,11 +283,13 @@ sub ScheduleCreateFile
   push(@data, '   @enddesc');
   push(@data, '@@*/');
   push(@data, '');
-  push(@data, "#define THORN_IS_$thorn");
+  #push(@data, "#define THORN_IS_$thorn");
+  #push(@data, "#define CCTK_THORNSTRING \"$thorn\"");
   push(@data, '');
-  push(@data, '#include "cctk.h"');
-  push(@data, '#include "cctk_Parameters.h"');
+  push(@data, "#include \"$thorn/cctk.h\"");
+  push(@data, "#include \"$thorn/CParameters.h\"");
   push(@data, '#include "cctki_ScheduleBindings.h"');
+  push(@data, "#include \"$thorn/cctk_ScheduleFunctions.h\"");
   push(@data, '');
   #push(@data, '/* prototypes for schedule bindings functions to be registered */');
   #push(@data, '/* Note that this is a cheat, we just need a function pointer. */');

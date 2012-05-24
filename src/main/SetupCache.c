@@ -8,6 +8,8 @@
    @version   $Id$
  @@*/
 
+#include "definethisthorn.h"
+
 #include "cctk_Config.h"
 #include "cctk_Flesh.h"
 #include "cctk_Parameters.h"

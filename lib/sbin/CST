@@ -142,7 +142,11 @@ print "Creating Thorn-Flesh bindings...\n";
 &CreateThornsHeaders(%source_thorns);
 &WriteFile("$bindings_dir/include/thornlist.h", \$thornsheader);
 &WriteFile("$bindings_dir/include/cctk_DefineThorn.h", \$definethornsheader);
-&WriteFile("$bindings_dir/include/definethisthorn.h", \$definethisthornheader);
+for my $header (@$definethisthornheader) {
+  my $thorn = $header->{thorn};
+  my $body = $header->{body};
+  &WriteFile("$bindings_dir/include/$thorn/definethisthorn.h", \$body);
+}
 
 # Create the header files used by the thorns
 &BuildHeaders($cctk_home,$bindings_dir,%interface_database);
@@ -484,25 +488,31 @@ sub RequiredThorns
 sub CreateThornsHeaders
 {
   my(%thorns) = @_;
-  my($header1,$header2,$header3,$thorn,$nthorns);
+  my($header1,$header2,@header3,$thorn,$nthorns);
 
   $header1 = "\/* List of compiled thorns in the code. *\/\n\n";
   $header1 .= "static char const *const thorn_name[] = {\n";
   $header2 = "\/* Defines for compiled thorns in the code. *\/\n\n";
-  $header3 = "\/* Defines for thorn this file is part of *\/\n\n";
+
+  my @thorns = keys %thorns;
 
   $nthorns = 0;
-  foreach $thorn (sort keys %thorns)
+  foreach $thorn (sort @thorns)
   {
     # Only place package_name/thorn_name in the file.
     $thorns{$thorn} =~ m:.*/(.*)/(.*):;
+    my ($arr,$th) = ($1,$2);
 
-    $header3 .= "#ifdef THORN_IS_$thorn\n" .
-                "#define CCTK_THORN $2\n" .
-                "#define CCTK_THORNSTRING \"$2\"\n" .
-                "#define CCTK_ARRANGEMENT $1\n" .
-                "#define CCTK_ARRANGEMENTSTRING \"$1\"\n" .
-                "#endif\n\n";
+    push @header3, {thorn => $thorn, body=>
+                "\/* Defines for thorn this file is part of *\/\n\n".
+                "#ifndef DEFINE_THIS_THORN_H\n".
+                "#define DEFINE_THIS_THORN_H 1\n".
+                "#define THORN_IS_$thorn 1\n".
+                "#define CCTK_THORN $th\n" .
+                "#define CCTK_THORNSTRING \"$th\"\n" .
+                "#define CCTK_ARRANGEMENT $arr\n" .
+                "#define CCTK_ARRANGEMENTSTRING \"$arr\"\n".
+                "#endif\n\n"};
 
     # Ignore the main sources for the other headers - they may confuse
     next if ($thorn eq 'Cactus');
@@ -515,8 +525,9 @@ sub CreateThornsHeaders
 
   $header1 .= "\"\"};\n\n";
   $header1 .= "static int const nthorns = $nthorns;\n\n";
+  push @header3, {thorn=>"CactusBindings", body=>"#define THORN_IS_CactusBindings\n\n"};
 
-  return ($header1, $header2, $header3);
+  return ($header1, $header2, \@header3);
 }
 
 

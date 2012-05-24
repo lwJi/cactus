@@ -62,12 +62,12 @@ endif
 # Define how to do dependencies
 ifeq ($(strip $(PERL_BACKUP_NECESSARY)),)
 define DEPENDENCY_FIXER
-	$(PERL) -pi -e "s,([^:]*),$(basename $@).o $(basename $@).d, if(m/: /);\
+	#$(PERL) -pi -e "s,([^:]*),$(basename $@).o $(basename $@).d, if(m/: /);\
 	 s:\s+\S*[/\\\]($(DEP_EXCLUDE_FILES))\b::g" $@
 endef
 else
 define DEPENDENCY_FIXER
-	$(PERL) -pi.bak -e "s,([^:]*),$(basename $@).o $(basename $@).d, if(m/: /);\
+	#$(PERL) -pi.bak -e "s,([^:]*),$(basename $@).o $(basename $@).d, if(m/: /);\
 	 s:\s+\S*[/\\\]($(DEP_EXCLUDE_FILES))\b::g" $@
 	rm $@.bak
 endef

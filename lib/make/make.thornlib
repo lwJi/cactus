@@ -35,12 +35,10 @@ endif
 endif
 
 # Add appropriate include lines
-INC_DIRS += $(SYS_INC_DIRS) $(SRCDIR) $(SRCDIR)/include $(CONFIG) $(BINDINGS_DIR)/include $(CCTK_HOME)/src/include $(CCTK_HOME)/arrangements $(BINDINGS_DIR)/Configuration/Thorns
+INC_DIRS += $(SYS_INC_DIRS) $(SRCDIR) $(SRCDIR)/include $(CONFIG) $(BINDINGS_DIR)/include $(CCTK_HOME)/src/include $(CCTK_HOME)/arrangements $(BINDINGS_DIR)/Configuration/Thorns $(BINDINGS_DIR)/include/$(THORN)
 
 # Allow subdirectories to inherit these include directories
 export INC_DIRS
-
-EXTRA_DEFINES += THORN_IS_$(THORN) 
 
 # Define some make variables
 PRE_WRAPPER = make.pre

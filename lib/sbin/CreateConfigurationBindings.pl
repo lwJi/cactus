@@ -244,13 +244,12 @@ sub CreateConfigurationBindings
   {
     if ($cfg->{"\U$thorn\E REQUIRES"} || $cfg->{"\U$thorn\E OPTIONAL"})
     {
-      $temp .= "#ifdef THORN_IS_$thorn\n";
       $temp .= "#include \"../Configuration/Thorns/cctki_$thorn.h\"\n";
-      $temp .= "#endif\n";
       $temp .= "\n";
     }
+    &WriteFile("../include/$thorn/cctk_Capabilities.h",\$temp);
   }
-  &WriteFile("../include/cctk_Capabilities.h",\$temp);
+  &WriteFile("../include/CactusBindings/cctk_Capabilities.h","#include \"../Configuration/Thorns/cctki_Cactus.h\"\n\n");
 }
 
 return 1;
