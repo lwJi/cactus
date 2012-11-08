@@ -35,6 +35,9 @@ if ($retcode > 0)
 {
   print "Fortran compilation failed ...\n";
   print "COMPILATION WILL FAIL WITH ANY FORTRAN SOURCE CODE\n";
+  print " ! Apparently a Fortran compiler was specified (F77/F90), but it does not \n".
+        " ! seem to be working. Either make sure to specify a working Fortran compiler, \n".
+        " ! do not set F77/F90, or set them to 'none'.\n\n"; 
 }
 
 sub test_fortran_name
