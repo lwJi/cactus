@@ -39,7 +39,7 @@ int CCTK_signbit(double x);
 
 
 
-#ifdef __cplusplus
+#if defined __cplusplus && ! defined __CUDACC__
 
 /* If necessary, provide fallback C implementations for C++, using the
    routines declared above. */
@@ -185,8 +185,8 @@ namespace std {
 #define isnormal   Cactus::good_isnormal
 #define signbit    Cactus::good_signbit
 
-#endif
+#endif  /* #if defined __cplusplus && ! defined __CUDACC__ */
 
 
 
-#endif
+#endif  /* #ifndef _CCTK_MATH_H_ */
