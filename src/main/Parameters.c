@@ -2244,6 +2244,7 @@ static int ParameterSetInteger (t_param *param, const char *value)
 
   if (!retval)
   {
+    retval = -1;
     for (range = param->props->range; range; range = range->next)
     {
       if (CCTK_IsThornActive (range->origin) ||
