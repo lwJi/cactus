@@ -67,7 +67,7 @@ bool lookup_var(smart_ptr<Group> gr,std::string& res) {
 
 // Converts a value to a string
 void meval(smart_ptr<Group> gr,std::string& val) {
-	if(gr->getPatternName() == "value") {
+	if(gr->getPatternName() == "value" || gr->getPatternName() == "paren") {
 		meval(gr->group(0),val);
 	} else if(gr->getPatternName() == "quot") {
 		smart_ptr<Group> inquot = gr->group(0);
@@ -122,9 +122,11 @@ void meval(smart_ptr<Group> gr,std::string& val) {
 			} else {
 				v2 /= v3;
 			}
+//			std::cout << "MEXPR: " << v2 << gr->group(i)->substring() << v3 << std::endl;
 		}
-		std::ostringstream ostr(val);
+		std::ostringstream ostr;
 		ostr << v2 << std::flush;
+		val = ostr.str();
 	} else if(gr->getPatternName() == "aexpr") {
 		if(gr->groupCount()==1) {
 			meval(gr->group(0),val);
@@ -142,6 +144,7 @@ void meval(smart_ptr<Group> gr,std::string& val) {
 			} else {
 				v2 -= v3;
 			}
+//			std::cout << "AEXPR: " << v2 << gr->group(i)->substring() << v3 << std::endl;
 		}
 		std::ostringstream ostr;
 		ostr << v2 << std::flush;
@@ -190,7 +193,7 @@ extern "C" int PirahaParser(const char *buffer,unsigned long buffersize,int (*se
 			"mexpr = {value}( {mulop} {value})*\n"
 			"addop = [+-]\n"
 			"aexpr = {mexpr}( {addop} {mexpr})*\n"
-			"paren = \\( {mexpr} \\)\n"
+			"paren = \\( {aexpr} \\)\n"
 			"par = {name} :: {name}\n"
 			"func = {name} \\( {aexpr} \\)\n"
 
@@ -228,7 +231,7 @@ extern "C" int PirahaParser(const char *buffer,unsigned long buffersize,int (*se
     		smart_ptr<Group> gr = m2->group(i);
     		if(gr->getPatternName() != "set")
     			continue;
-    		gr->dump();
+//    		gr->dump();
     		smart_ptr<Group> par = gr->group("par");
     		if(par.valid()) {
     			// add value->quot->inquot
