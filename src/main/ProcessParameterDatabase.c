@@ -69,6 +69,14 @@ void CCTKi_SetParameterSetMask (int mask);
                -1 - unable to open parameter file
    @endreturndesc
 @@*/
+
+
+int debug_set_function(const char *key, const char *value, int line) {
+	int ret = CCTKi_SetParameter(key,value,line);
+	printf("%d=set_function(%s,%s,%d)\n",ret,key,value,line);
+	return ret;
+}
+
 int CCTKi_ProcessParameterDatabase (tFleshConfig *ConfigData)
 {
   int parse_errors;
@@ -155,7 +163,7 @@ int CCTKi_ProcessParameterDatabase (tFleshConfig *ConfigData)
 
   if (parameter_file)
   {
-    parse_errors = ParseFile (parameter_file, CCTKi_SetParameter, ConfigData);
+    parse_errors = ParseFile (parameter_file, debug_set_function, ConfigData);
 
     if (strcmp (ConfigData->parameter_file_name, "-"))
     {

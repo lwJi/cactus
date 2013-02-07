@@ -119,30 +119,46 @@ static int lineno = 1;
    @endreturndesc
 @@*/
 
+int debug_func(const char *key,const char *val,int line) {
+	printf("debug set_function(%s,%s,%d)\n",key,val,line);
+	return 0;
+}
+
+int PirahaParser(const char *buffer,unsigned long buffersize,int (*set_function)(const char *, const char *, int));
+
 int ParseFile(FILE *ifp,
               int (*set_function)(const char *, const char *, int),
               tFleshConfig *ConfigData)
 {
-  int retval;
+  int retval=1;
   unsigned long buffersize;
   char *buffer = ReadFile(ifp, &buffersize);
   if (!buffer)
     return 1;
 
-  /* Ensure Unix line endings */
-  convert_crlf_to_lf(buffer);
-  buffersize = strlen(buffer);
+  int piraha_active = 1;
 
-  buffer = ParseDefines(buffer, &buffersize);
-  /* ParseBuffer can get confused with detecting the end of the buffer
-     (when in a comment or in a string), and may overrun.  Therefore
-     we allocate a buffer that is a bit longer.  */
-  {
-    buffer = realloc (buffer, strlen(buffer) + 10);
-    memset (buffer+strlen(buffer), '\0', 10);
+  if(piraha_active) {
+	  buffersize = strlen(buffer);
+
+	  retval = PirahaParser(buffer,buffersize,set_function);
+  } else {
+	  /* Ensure Unix line endings */
+	  convert_crlf_to_lf(buffer);
+	  buffersize = strlen(buffer);
+
+//	  retval = PirahaParser(buffer,buffersize,debug_func);
+	  buffer = ParseDefines(buffer, &buffersize);
+	  /* ParseBuffer can get confused with detecting the end of the buffer
+ (when in a comment or in a string), and may overrun.  Therefore
+ we allocate a buffer that is a bit longer.  */
+	  {
+		  buffer = realloc (buffer, strlen(buffer) + 10);
+		  memset (buffer+strlen(buffer), '\0', 10);
+	  }
+	  retval = ParseBuffer(buffer, set_function, ConfigData);
+	  free(buffer);
   }
-  retval = ParseBuffer(buffer, set_function, ConfigData);
-  free(buffer);
   return retval;
 }
 
