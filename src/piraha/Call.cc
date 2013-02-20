@@ -260,7 +260,7 @@ extern "C" int PirahaParser(const char *buffer,unsigned long buffersize,int (*se
     				for(int i=0;i<arr->groupCount();i++) {
     					aexpr = arr->group(i);
     					std::ostringstream keyi;
-    					keyi << key << '[' << i << ']';
+    					keyi << key << '[' << (i+1) << ']';
     					meval(aexpr,val);
         				values[thorn][keyi.str()] = val;
         				set_function(
