@@ -67,6 +67,7 @@ bool lookup_var(smart_ptr<Group> gr,std::string& res) {
 
 // Converts a value to a string
 void meval(smart_ptr<Group> gr,std::string& val) {
+	val.clear();
 	if(gr->getPatternName() == "value" || gr->getPatternName() == "paren") {
 		meval(gr->group(0),val);
 	} else if(gr->getPatternName() == "quot") {
@@ -196,13 +197,14 @@ extern "C" int PirahaParser(const char *buffer,unsigned long buffersize,int (*se
 			"paren = \\( {aexpr} \\)\n"
 			"par = {name} :: {name}\n"
 			"func = {name} \\( {aexpr} \\)\n"
+			"array = \\[ {aexpr}( , {aexpr})* \\]\n"
 
 			"value = {func}|{paren}|{num}|{quot}|{par}|{name}|{var}\n"
 
 			"int = [0-9]+\n"
 			"index = \\[ {int} \\]\n"
 			"active = (?i:ActiveThorns)\n"
-			"set = ({active}|{par}( {index}|)) = {aexpr}\n"
+			"set = ({active}|{par}( {index}|)) = ({array}|{aexpr})\n"
 			"file = ( !DESC {quot}|)( ({set} )*)$\n";
 
 	smart_ptr<Grammar> g = new Grammar();
@@ -211,9 +213,6 @@ extern "C" int PirahaParser(const char *buffer,unsigned long buffersize,int (*se
 	std::string active;
     smart_ptr<Matcher> m2 = new Matcher(g,"file",buffer,buffersize);
     if(m2->matches()) {
-    	// Dump parse tree for debugging
-//    	std::cout << "m2 match" << std::endl;
-//    	m2->dump();
     	int line = -1;
     	for(int i=0;i<m2->groupCount();i++) {
     		smart_ptr<Group> gr = m2->group(i);
@@ -225,13 +224,11 @@ extern "C" int PirahaParser(const char *buffer,unsigned long buffersize,int (*se
     			line = gr->line();
     		}
     	}
-//    	std::cout << "Activating(" << active << ")" << std::endl;
     	set_function("ActiveThorns",active.c_str(),line);
     	for(int i=0;i<m2->groupCount();i++) {
     		smart_ptr<Group> gr = m2->group(i);
     		if(gr->getPatternName() != "set")
     			continue;
-//    		gr->dump();
     		smart_ptr<Group> par = gr->group("par");
     		if(par.valid()) {
     			// add value->quot->inquot
@@ -241,7 +238,6 @@ extern "C" int PirahaParser(const char *buffer,unsigned long buffersize,int (*se
     			key += thorn;
     			key += "::";
     			key += name;
-//    			std::cout << "key=" << key << std::endl;
 
     			smart_ptr<Group> index = gr->group("index");
     			if(index.valid()) {
@@ -251,13 +247,28 @@ extern "C" int PirahaParser(const char *buffer,unsigned long buffersize,int (*se
     			}
 
     			std::string val;
-    			meval(gr->group("aexpr"),val);
-    			values[thorn][name] = val;
-//    			std::cout << "piraha set(" << key << "," << val << "," << gr->group(0)->line() << ")" << std::endl;
-    			set_function(
-    					strdup(key.c_str()),
-    					strdup(val.c_str()),
-    					gr->group(0)->line());
+    			smart_ptr<Group> aexpr = gr->group("aexpr");
+    			if(aexpr.valid()) {
+    				meval(aexpr,val);
+    				values[thorn][key] = val;
+    				set_function(
+    						strdup(key.c_str()),
+    						strdup(val.c_str()),
+    						gr->group(0)->line());
+    			} else {
+    				smart_ptr<Group> arr = gr->group("array");
+    				for(int i=0;i<arr->groupCount();i++) {
+    					aexpr = arr->group(i);
+    					std::ostringstream keyi;
+    					keyi << key << '[' << i << ']';
+    					meval(aexpr,val);
+        				values[thorn][keyi.str()] = val;
+        				set_function(
+        						strdup(keyi.str().c_str()),
+        						strdup(val.c_str()),
+        						aexpr->line());
+    				}
+    			}
     		}
     	}
     } else {
