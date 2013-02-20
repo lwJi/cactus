@@ -74,7 +74,9 @@ void compileFile(smart_ptr<Grammar> g,const char *buffer,signed long buffersize)
 	for(int i=0;i<m->groupCount();i++) {
 		smart_ptr<Group> rule = m->group(i);
 		smart_ptr<Pattern> ptmp = ::compile(rule->group(1), false, g);
-		g->patterns.put(rule->group(0)->substring(),ptmp);
+        std::string nm = rule->group(0)->substring();
+		g->patterns.put(nm,ptmp);
+        g->default_rule = nm;
 	}
 }
 
@@ -99,7 +101,7 @@ smart_ptr<Pattern> compile(smart_ptr<Group> g,bool ignCase,smart_ptr<Grammar> gr
         }
         return compile(g->group(0),ignCase,gram);
     } else if("pelems" == pn||"pelems_top" == pn||"pelems_next" == pn) {
-        std::vector<smart_ptr<Pattern> > li;
+        vector<smart_ptr<Pattern> > li;
         for(int i=0;i<g->groupCount();i++) {
             li.push_back(compile(g->group(i),ignCase,gram));
         }
@@ -109,7 +111,7 @@ smart_ptr<Pattern> compile(smart_ptr<Group> g,bool ignCase,smart_ptr<Grammar> gr
     } else if("group_inside" == pn||"group_top" == pn) {
         if(g->groupCount()==1)
             return compile(g->group(0),ignCase,gram);
-        std::vector<smart_ptr<Pattern> > li;
+        vector<smart_ptr<Pattern> > li;
         for(int i=0;i<g->groupCount();i++) {
             li.push_back(compile(g->group(i),ignCase,gram));
         }

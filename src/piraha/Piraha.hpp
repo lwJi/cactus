@@ -9,6 +9,9 @@
 
 const int max_int = 10000;
 
+using std::map;
+using std::vector;
+
 inline char uc_(char a) {
     if(a >= 'a' && a <= 'z')
         return a + 'A' - 'a';
@@ -28,12 +31,12 @@ public:
     std::string pattern;
     const char *input;
     int start_,end_;
-    std::vector<smart_ptr<Group> > children;
+    vector<smart_ptr<Group> > children;
 
     Group(std::string p,const char *input_)
         : pattern(p), input(input_), start_(0), end_(0), children() {}
     Group(std::string p,const char *input_,int s,int e,
-        std::vector<smart_ptr<Group> > ch)
+        vector<smart_ptr<Group> > ch)
         : pattern(p), input(input_), start_(s), end_(e), children(ch) {}
 
     virtual ~Group() {}
@@ -48,7 +51,7 @@ public:
     int groupCount() { return children.size(); }
     smart_ptr<Group> group(int i) { return children[i]; }
     smart_ptr<Group> group(const char *nm,int ix=0) {
-    	for(int i=0;i<children.size();i++) {
+    	for(unsigned int i=0;i<children.size();i++) {
     		if(children[i]->getPatternName() == nm) {
     			if(ix-- == 0)
     				return children[i];
@@ -72,27 +75,31 @@ public:
 };
 
 class JMap {
-    std::map<std::string,smart_ptr<Pattern> > map;
+    map<std::string,smart_ptr<Pattern> > m;
 public:
+    JMap() : m() {}
     smart_ptr<Pattern> get(std::string key) {
-        typedef std::map<std::string,smart_ptr<Pattern> >::iterator mit;
-        mit it = map.find(key);
-        if(it == map.end()) {
+        typedef map<std::string,smart_ptr<Pattern> >::iterator mit;
+        mit it = m.find(key);
+        mit me = m.end();
+        if(it == me) {
             return NULL;
         }
-        smart_ptr<Pattern> res = map[key];
+        smart_ptr<Pattern> res = m[key];
         assert(res.valid());
         return res;
     }
     void put(std::string key,smart_ptr<Pattern> p) {
         assert(p.valid());
-        map[key] = p;
+        m[key] = p;
     }
     friend std::ostream& operator<<(std::ostream&,JMap&);
 };
 inline std::ostream& operator<<(std::ostream& o,JMap& jmap) {
-    typedef std::map<std::string,smart_ptr<Pattern> >::iterator mit;
-	for(mit i = jmap.map.begin(); i != jmap.map.end();++i) {
+    typedef map<std::string,smart_ptr<Pattern> >::iterator mit;
+    mit mb = jmap.m.begin();
+    mit me = jmap.m.begin();
+	for(mit i = mb; i != me;++i) {
 		o << "[" << i->first << "]";
 	}
 	return o;
@@ -110,17 +117,17 @@ public:
 };
 
 class Seq : public Pattern {
-    std::vector<smart_ptr<Pattern> > patterns;
+    vector<smart_ptr<Pattern> > patterns;
 public:
     Seq(Pattern *p,...);
-    Seq(std::vector<smart_ptr<Pattern> > patterns,bool ign,bool show);
+    Seq(vector<smart_ptr<Pattern> > patterns,bool ign,bool show);
     virtual ~Seq() {}
     bool match(Matcher *m);
 };
 
 class Or : public Pattern {
 public:
-    std::vector<smart_ptr<Pattern> > patterns;
+    vector<smart_ptr<Pattern> > patterns;
     bool ignCase, igcShow;
     Or(bool ign,bool show) : ignCase(ign), igcShow(show) {}
     Or(Pattern *p,...);
@@ -212,7 +219,7 @@ public:
 class Bracket : public Pattern {
 public:
     bool neg;
-    std::vector<smart_ptr<Range> > ranges;
+    vector<smart_ptr<Range> > ranges;
     Bracket() : neg(false) {}
     virtual ~Bracket() {}
     Bracket(bool b);

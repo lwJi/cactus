@@ -5,6 +5,7 @@ extern smart_ptr<Pattern> compile(smart_ptr<Group> g,bool ignCase,smart_ptr<Gram
 smart_ptr<Grammar> pegGrammar = AutoGrammar::reparserGenerator();
 
 void Grammar::compile(std::string name,smart_ptr<Group> g) {
+    default_rule = name;
     smart_ptr<Pattern> p = ::compile(g,false,this);
     patterns.put(name,p);
 }

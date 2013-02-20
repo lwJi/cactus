@@ -7,13 +7,44 @@
 #ifndef SMART_PTR_HPP
 #define SMART_PTR_HPP
 #include <assert.h>
-#include <set>
+#include <vector>
+#include <iostream>
 
 #ifndef NULL
 #define NULL ((void*)0)
 #endif
 
-extern std::set<void*> ptrs;
+extern std::vector<void*> ptrs;
+
+#ifndef NDEBUG
+inline void add(std::vector<void*>& v,void *t) {
+    if(t == NULL)
+        return;
+    typedef typename std::vector<void*>::iterator iter;
+    for(iter i=v.begin();i != v.end();++i) {
+        assert(*i != t);
+    }
+    v.push_back(t);
+}
+
+inline void remove(std::vector<void*>& v,void* t) {
+    if(t == NULL)
+        return;
+    typedef typename std::vector<void*>::iterator iter;
+    for(iter i=v.begin();i != v.end();++i) {
+        if(*i == t) {
+            v.erase(i);
+            return;
+        }
+    }
+    assert(false);
+}
+#else
+inline void add(std::vector<void*>& v,void* t) {
+}
+inline void remove(std::vector<void*>& v,void* t) {
+}
+#endif
 
 template<typename T>
 class smart_ptr;
@@ -22,12 +53,21 @@ template<typename T>
 class smart_ptr_guts {
     int ref_count;
     public:
-    T *ptr;
-    smart_ptr_guts(int rc,T *p) : ref_count(rc), ptr(p) {
+    T * const ptr;
+    bool array;
+    smart_ptr_guts(int rc,T *p,bool array_) : ref_count(rc), ptr(p), array(array_) {
+        if(ptr != NULL) {
+            add(ptrs,(void*)ptr);
+        }
     }
     ~smart_ptr_guts() {
-    	//ptrs.erase((void*)ptr);
-        delete ptr;
+        if(ptr != NULL) {
+            remove(ptrs,(void*)ptr);
+            if(array)
+                delete[] ptr;
+            else
+                delete ptr;
+        }
     }
     void inc() {
         ref_count++;
@@ -60,13 +100,11 @@ class smart_ptr {
         if(valid())
             guts->inc();
     }
-    smart_ptr(T *ptr) {
+    smart_ptr(T *ptr,bool array_=false) {
         if(ptr == NULL) {
             guts = NULL;
         } else {
-    		//assert(ptrs.find((void*)ptr) == ptrs.end());
-    		//ptrs.insert(ptr);
-            guts = new smart_ptr_guts<T>(1,ptr);
+            guts = new smart_ptr_guts<T>(1,ptr,array_);
         }
     }
     smart_ptr(const smart_ptr<T> &sm) : guts(sm.guts) {
@@ -82,7 +120,15 @@ class smart_ptr {
         if(t == NULL) {
             guts = NULL;
         } else {
-            guts = new smart_ptr_guts<T>(1,t);
+            guts = new smart_ptr_guts<T>(1,t,false);
+        }
+    }
+    void set(T *t,bool array_) {
+        clean();
+        if(t == NULL) {
+            guts = NULL;
+        } else {
+            guts = new smart_ptr_guts<T>(1,t,array_);
         }
     }
     void operator=(const smart_ptr<T>& s) {
@@ -95,6 +141,11 @@ class smart_ptr {
     T& operator*() {
         assert(guts != NULL);
         return *guts->ptr;
+    }
+    T& operator[](unsigned int n) {
+        assert(guts != NULL);
+        assert(guts->array);
+        return guts->ptr[n];
     }
     T *operator->() const {
         if(guts == NULL)

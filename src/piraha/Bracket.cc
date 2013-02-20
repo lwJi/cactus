@@ -1,6 +1,6 @@
 #include "Piraha.hpp"
 
-    typedef std::vector<smart_ptr<Range> >::iterator range_iter;
+    typedef vector<smart_ptr<Range> >::iterator range_iter;
 
 bool Range::match(Matcher *m) {
     if(m->pos - m->input_size >= 0)
@@ -56,9 +56,9 @@ Bracket *Bracket::addRange(char lo,char hi,bool ign) {
 };
 
 static void fail(Bracket *b,Matcher *m) {
-    typedef std::vector<smart_ptr<Range> >::iterator range_iter;
+    typedef vector<smart_ptr<Range> >::iterator range_iter;
+    Bracket bex;
     if(m->pos == m->max_pos+1) {
-        Bracket bex;
         for(range_iter r = b->ranges.begin();r != b->ranges.end(); ++r) {
         	bex.addRange((*r)->lo,(*r)->hi);
         }

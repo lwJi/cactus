@@ -18,9 +18,9 @@ Or::Or(Pattern *p,...) : patterns() {
 }
 
 bool Or::match(Matcher *m) {
-    typedef std::vector<smart_ptr<Pattern> >::iterator pattern_iter;
+    typedef vector<smart_ptr<Pattern> >::iterator pattern_iter;
     int save = m->pos;
-    std::vector<smart_ptr<Group> > chSave;
+    vector<smart_ptr<Group> > chSave;
     chSave = m->children;
     for(pattern_iter p = patterns.begin();p != patterns.end();++p) {
         m->pos = save;

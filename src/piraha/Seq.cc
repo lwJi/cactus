@@ -15,10 +15,10 @@ Seq::Seq(Pattern *p,...) {
     }
     va_end(ap);
 }
-Seq::Seq(std::vector<smart_ptr<Pattern> > p,bool ign,bool show) : patterns(p) {}
+Seq::Seq(vector<smart_ptr<Pattern> > p,bool ign,bool show) : patterns(p) {}
 
 bool Seq::match(Matcher *m) {
-    typedef std::vector<smart_ptr<Pattern> >::iterator pattern_iter;
+    typedef vector<smart_ptr<Pattern> >::iterator pattern_iter;
     for(pattern_iter p = patterns.begin();p != patterns.end();++p) {
         if(!(*p)->match(m))
             return false;

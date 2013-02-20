@@ -9,7 +9,7 @@ void Group::dump(int indent) {
             std::cout << input[i];
     }
     std::cout << std::endl;
-    typedef std::vector<smart_ptr<Group> >::iterator group_iter;
+    typedef vector<smart_ptr<Group> >::iterator group_iter;
     for(group_iter gi = children.begin();
             gi != children.end();
             ++gi) {

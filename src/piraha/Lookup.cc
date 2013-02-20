@@ -11,7 +11,7 @@ bool Lookup::match(Matcher *m) {
     smart_ptr<Pattern> p = gram->patterns.get(name);
     if(!p.valid()) std::cout << "Lookup of pattern [" << name << "] failed. Jmap = " << gram->patterns << std::endl;
     assert(p.valid());
-    std::vector<smart_ptr<Group> > chSave = m->children;
+    vector<smart_ptr<Group> > chSave = m->children;
     m->children.clear();
     int s = m->pos;
     std::string save_name = m->inrule;

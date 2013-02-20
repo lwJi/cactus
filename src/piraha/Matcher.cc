@@ -26,7 +26,7 @@ bool Matcher::matches() {
 }
 
 void Matcher::fail(Bracket *br) {
-    for(int i=0;i<br->ranges.size();i++) {
+    for(unsigned int i=0;i<br->ranges.size();i++) {
         fail(br->ranges[i]->lo,br->ranges[i]->hi);
     }
 }

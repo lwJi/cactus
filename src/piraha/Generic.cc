@@ -23,7 +23,7 @@ int main(int argc,char **argv) {
     read_file(argv[1],grammar_file);
     read_file(argv[2],input_file);
 
-    smart_ptr<Grammar> g;
+    smart_ptr<Grammar> g = new Grammar();
     compileFile(g,grammar_file.c_str());
     smart_ptr<Matcher> mg = new Matcher (g,g->default_rule.c_str(),input_file.c_str());
     if(mg->matches()) {
