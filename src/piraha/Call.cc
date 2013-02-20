@@ -246,7 +246,7 @@ extern "C" int PirahaParser(const char *buffer,unsigned long buffersize,int (*se
     			smart_ptr<Group> index = gr->group("index");
     			if(index.valid()) {
     				key += '[';
-    				key += index->substring();
+    				key += index->group(0)->substring();
     				key += ']';
     			}
 

@@ -8,8 +8,11 @@ bool Literal::match(Matcher *m) {
         m->pos++;
         return true;
     } else {
-        if(m->pos == m->max_pos+1)
-            m->expected = c;
+        if(m->pos == m->max_pos+1) {
+        	Bracket bex;
+        	bex.addRange(c,c);
+            m->fail(&bex);
+        }
         return false;
     }
 }

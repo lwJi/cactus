@@ -61,20 +61,7 @@ public:
 
 class Grammar;
 
-class Matcher : public Group {
-public:
-    Matcher(smart_ptr<Grammar> g,const char *pat_,const char *input_,int input_size=-1);
-    virtual ~Matcher() {}
-    const char *input;
-    smart_ptr<Grammar> g;
-    int input_size;
-    int pos;
-    int max_pos;
-    const char *pat;
-    bool matches();
-    std::string expected;
-    void showError();
-};
+class Matcher;
 
 class Pattern {
 public:
@@ -119,6 +106,7 @@ public:
     JMap patterns;
     void compile(std::string name,std::string pattern);
     void compile(std::string name,smart_ptr<Group> pattern);
+    std::string default_rule;
 };
 
 class Seq : public Pattern {
@@ -232,6 +220,7 @@ public:
     Bracket *addRange(char lo,char hi,bool ign);
     bool match(Matcher *m);
 };
+extern std::ostream& operator<<(std::ostream&,Bracket&);
 
 class NegLookAhead : public Pattern {
 public:
@@ -269,6 +258,26 @@ class AutoGrammar {
 public:
     static smart_ptr<Grammar> reparserGenerator();
     static smart_ptr<Grammar> fileParserGenerator();
+};
+
+class Matcher : public Group {
+public:
+    Matcher(smart_ptr<Grammar> g,const char *pat_,const char *input_,int input_size=-1);
+    virtual ~Matcher() {}
+    const char *input;
+    smart_ptr<Grammar> g;
+    int input_size;
+    int pos;
+    int max_pos;
+    const char *pat;
+    bool matches();
+    Bracket expected;
+    void showError();
+    std::string inrule;
+    std::string inrule_max;
+    int err_pos;
+    void fail(Bracket *ex);
+    void fail(char lo,char hi);
 };
 
 extern smart_ptr<Grammar> pegGrammar;

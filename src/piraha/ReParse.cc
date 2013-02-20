@@ -66,7 +66,10 @@ void compileFile(smart_ptr<Grammar> g,const char *buffer,signed long buffersize)
 	smart_ptr<Grammar> grammar = AutoGrammar::fileParserGenerator();
 	smart_ptr<Matcher> m = new Matcher(grammar,"file",buffer,buffersize);
 	bool b = m->matches();
-	assert(b);
+    if(!b) {
+        m->showError();
+	    assert(false);
+    }
 
 	for(int i=0;i<m->groupCount();i++) {
 		smart_ptr<Group> rule = m->group(i);

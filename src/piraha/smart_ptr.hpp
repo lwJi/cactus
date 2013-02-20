@@ -26,7 +26,7 @@ class smart_ptr_guts {
     smart_ptr_guts(int rc,T *p) : ref_count(rc), ptr(p) {
     }
     ~smart_ptr_guts() {
-    	ptrs.erase((void*)ptr);
+    	//ptrs.erase((void*)ptr);
         delete ptr;
     }
     void inc() {
@@ -64,8 +64,8 @@ class smart_ptr {
         if(ptr == NULL) {
             guts = NULL;
         } else {
-    		assert(ptrs.find((void*)ptr) == ptrs.end());
-    		ptrs.insert(ptr);
+    		//assert(ptrs.find((void*)ptr) == ptrs.end());
+    		//ptrs.insert(ptr);
             guts = new smart_ptr_guts<T>(1,ptr);
         }
     }

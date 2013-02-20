@@ -4,7 +4,8 @@
 Matcher::Matcher(smart_ptr<Grammar> g_,const char *pat_,const char *input_,int input_size_) :
     Group(pat_,input_),
     input(input_), g(g_), input_size(input_size_),
-    pos(0), max_pos(-1), pat(pat_), expected("") {
+    pos(0), max_pos(-1), pat(pat_), expected(), err_pos(-1) {
+    inrule = pat_;
 	if(input_size < 0)
 		input_size=strlen(input);
 }
@@ -17,10 +18,27 @@ bool Matcher::matches() {
     assert(p.valid());
     pos = 0;
     max_pos = -1;
+    err_pos = -1;
     children.clear();
     bool b = p->match(this);
     end_ = pos;
     return b;
+}
+
+void Matcher::fail(Bracket *br) {
+    for(int i=0;i<br->ranges.size();i++) {
+        fail(br->ranges[i]->lo,br->ranges[i]->hi);
+    }
+}
+
+void Matcher::fail(char lo,char hi) {
+    if(pos == max_pos+1) {
+        if(err_pos < pos)
+            expected.ranges.clear();
+        expected.addRange(lo,hi);
+        inrule_max = inrule;
+        err_pos = pos;
+    }
 }
 
 void Matcher::showError() {
@@ -29,7 +47,8 @@ void Matcher::showError() {
 	int start_of_line = 0;
 	for(int i=0;i<input_size;i++) {
 		if(i == max_pos) {
-			std::cout <<  "Line=" << line << std::endl;
+            std::cout << "In rule '" << inrule_max
+			    <<  "' Line=" << line << std::endl;
 			error_pos = i;
 			break;
 		}
@@ -46,4 +65,5 @@ void Matcher::showError() {
 	for(int i=start_of_line;i<=error_pos;i++)
 		std::cout << ' ';
 	std::cout << "^" << std::endl;
+    std::cout << "Expected character: " << expected << std::endl;
 }

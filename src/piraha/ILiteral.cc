@@ -12,10 +12,10 @@ bool ILiteral::match(Matcher *m) {
         return true;
     } else {
         if(m->pos == m->max_pos+1) {
-            m->expected = '[';
-            m->expected += lc;
-            m->expected += uc;
-            m->expected += ']';
+            Bracket bex;
+            bex.addRange(lc,lc);
+            bex.addRange(uc,uc);
+            m->fail(&bex);
         }
         return false;
     }

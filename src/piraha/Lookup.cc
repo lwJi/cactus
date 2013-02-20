@@ -14,7 +14,11 @@ bool Lookup::match(Matcher *m) {
     std::vector<smart_ptr<Group> > chSave = m->children;
     m->children.clear();
     int s = m->pos;
+    std::string save_name = m->inrule;
+    m->inrule += "::";
+    m->inrule += name;
     bool b = p->match(m);
+    m->inrule = save_name;
     int e = m->pos;
     if(b) {
         smart_ptr<Group> g = new Group(name,m->input,s,e,m->children);
