@@ -1,6 +1,6 @@
 #include "Piraha.hpp"
 
-    typedef vector<smart_ptr<Range> >::iterator range_iter;
+typedef vector<smart_ptr<Range> >::iterator range_iter;
 
 bool Range::match(Matcher *m) {
     if(m->pos - m->input_size >= 0)
@@ -97,6 +97,12 @@ std::ostream& operator<<(std::ostream& o,Bracket& b) {
     	if(lo == hi) {
     		if(lo == '-') {
     			o << "\\-";
+            } else if(lo == '\n') {
+                o << "\\n";
+            } else if(lo == '\r') {
+                o << "\\r";
+            } else if(lo == '\t') {
+                o << "\\t";
     		} else {
     			o << lo;
     		}

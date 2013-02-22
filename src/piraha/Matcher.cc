@@ -44,26 +44,42 @@ void Matcher::fail(char lo,char hi) {
 void Matcher::showError() {
 	int line = 1;
 	int error_pos = -1;
+	const int num_previous_lines = 4;
 	int start_of_line = 0;
+	int start_of_previous_line[num_previous_lines];
+	for(int i=0;i<num_previous_lines;i++)
+		start_of_previous_line[i] = 0;
 	for(int i=0;i<input_size;i++) {
 		if(i == max_pos) {
             std::cout << "In rule '" << inrule_max
 			    <<  "' Line=" << line << std::endl;
 			error_pos = i;
+			while(input[i] == '\n'||input[i] == '\r') {
+				line++;
+				for(int j=1;j<num_previous_lines;j++) {
+					start_of_previous_line[j-1] = start_of_previous_line[j];
+				}
+				start_of_previous_line[num_previous_lines-1] = start_of_line;
+				start_of_line = ++i;
+			}
 			break;
 		}
 		if(input[i] == '\n') {
 			line++;
+			for(int j=1;j<num_previous_lines;j++) {
+				start_of_previous_line[j-1] = start_of_previous_line[j];
+			}
+			start_of_previous_line[num_previous_lines-1] = start_of_line;
 			start_of_line = i+1;
 		}
 	}
-	for(int i=start_of_line;i<input_size;i++) {
+	for(int i=start_of_previous_line[0];i<input_size;i++) {
 		std::cout << input[i];
-		if(input[i] == '\n')
+		if(i > error_pos && input[i] == '\n')
 			break;
 	}
 	for(int i=start_of_line;i<=error_pos;i++)
 		std::cout << ' ';
 	std::cout << "^" << std::endl;
-    std::cout << "Expected character: " << expected << std::endl;
+    std::cout << "Expected one of the following characters: " << expected << std::endl;
 }
