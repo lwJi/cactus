@@ -288,6 +288,10 @@ $(CONFIGURATIONS):
 	  echo "Building configuration $@"; \
 	  $(NOTIFY_DIVIDER);\
 	fi
+	echo "BUILDING PIRAHA"
+	(cd $(CCTK_HOME)/src/piraha; $(MAKE) -f Makefile BIN=$(CONFIGS_DIR)/$@/bin)
+	$(PERL) $(CCTK_HOME)/lib/sbin/piraha-compile.pl $(CCTK_HOME) $(CONFIGS_DIR)/$@
+	$(PERL) $(CCTK_HOME)/lib/sbin/schedule-macros.pl $(CCTK_HOME) $(CONFIGS_DIR)/$@
 	$(MAKE) -f $(CCTK_HOME)/lib/make/make.configuration TOP=$(CONFIGS_DIR)/$@ CCTK_HOME=$(CCTK_HOME) $(TPARFLAGS) rebuild
 	$(MAKE) -f $(CCTK_HOME)/lib/make/make.configuration TOP=$(CONFIGS_DIR)/$@ CCTK_HOME=$(CCTK_HOME) $(TPARFLAGS)
 
