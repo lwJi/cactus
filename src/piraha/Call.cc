@@ -722,7 +722,7 @@ extern "C" int cctk_PirahaParser(const char *buffer,unsigned long buffersize,int
 			"# Note that / occurs in some par files. It is my\n"
 			"# feeling that this should require quote marks.\n"
 
-			"name = [@a-zA-Z_][@/a-zA-Z0-9_-]*\n"
+			"name = [@a-zA-Z_][@a-zA-Z0-9_-]*\n"
 			"dname = [0-9][a-zA-Z_]{2,}\n"
 			"inquot = ({var}|\\\\.|[^\\\\\"])*\n"
 			"fname = \\.?/[-\\./0-9a-zA-Z_]+\n"
