@@ -103,20 +103,24 @@ sub create_schedule_database
     @indata = &read_file("$thorns{$thorn}/schedule.ccl");
     print "SCHEDULE FILE $thorns{$thorn}/schedule.ccl";
 
-    #       Get the schedule stuff from it
-    # indata already has comments removed!!!
-    my %h1 = &parse_schedule_ccl($thorn, @indata);
-    @new_schedule_data2 = %h1;
-    #print "SCHEDULE_DUMP\n";
-    #print Dumper(\@new_schedule_data,\$thorn,\@indata);
+    if($ENV{USE_PIRAHA} eq "False") {
+        #       Get the schedule stuff from it
+        # indata already has comments removed!!!
+        my %h1 = &parse_schedule_ccl($thorn, @indata);
+        @new_schedule_data = %h1;
+    } else {
+        #       Get the schedule stuff from it
+        # indata already has comments removed!!!
+        my %h1 = &parse_schedule_ccl($thorn, @indata);
+        @new_schedule_data2 = %h1;
 
+        #       Add the schedule stuff to the master schedule database
+        push (@schedule_data, @new_schedule_data);
 
-    #       Add the schedule stuff to the master schedule database
-    push (@schedule_data, @new_schedule_data);
-
-    # Version 2
-    my %h2 = &parse_schedule_ccl2($thorn,"$thorns{$thorn}/schedule.ccl");
-    @new_schedule_data = %h2;
+        # Version 2
+        my %h2 = &parse_schedule_ccl2($thorn,"$thorns{$thorn}/schedule.ccl");
+        @new_schedule_data = %h2;
+    }
     
 #	die_compare ($style1, $style2);
 #	die_compare ($buffer1, $buffer2);
