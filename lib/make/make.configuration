@@ -237,8 +237,8 @@ $(CONFIG)/make.thornlist: $(TOP)/ThornList $(foreach lib, $(CCTK_HOME)/src $(THO
 	if [ "x$(USE_PIRAHA)" != "xFalse" ]; then\
 	    echo "BUILDING PIRAHA"; \
 	    $(MAKE) -f $(CCTK_HOME)/src/piraha/Makefile PIRAHA_HOME=$(CCTK_HOME)/src/piraha BIN=$(TOP)/bin; \
-	    +$(PERL) $(CCTK_HOME)/lib/sbin/piraha-compile.pl $(CCTK_HOME) $(TOP); \
-	    +$(PERL) $(CCTK_HOME)/lib/sbin/schedule-macros.pl $(CCTK_HOME) $(TOP); \
+	    $(PERL) $(CCTK_HOME)/lib/sbin/piraha-compile.pl $(CCTK_HOME) $(TOP); \
+	    $(PERL) $(CCTK_HOME)/lib/sbin/schedule-macros.pl $(CCTK_HOME) $(TOP); \
 	fi
 	+$(PERL) -s $(CST) -config_dir=$(CONFIG) -cctk_home=$(CCTK_HOME) -top=$(TOP) $< 
 
