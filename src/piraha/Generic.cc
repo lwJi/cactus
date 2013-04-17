@@ -98,7 +98,10 @@ int main(int argc,char **argv) {
         std::cout << "writing file: " << outFile << std::endl;
         smart_ptr<Group> src_file =
             new Group("annot:src_file",inputArg.c_str());
+        smart_ptr<Group> src_txt =
+            new Group("annot:src_txt",input_file.c_str());
         mg->children.push_back(src_file);
+        mg->children.push_back(src_txt);
     	if(perlFlag) {
     		mg->dumpPerl(o);
     	} else {

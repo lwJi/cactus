@@ -106,7 +106,7 @@ void piraha::insertc(std::ostream& o,char c) {
         o << "\\t";
     } else if(c == '\b') {
         o << "\\b";
-    } else if(strchr("\\\"[]-",c) != 0) {
+    } else if(strchr("\\\"[]-$@%",c) != 0) {
         o << "\\" << c;
     } else {
         o << c;

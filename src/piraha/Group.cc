@@ -53,13 +53,18 @@ void Group::dumpPerl(std::ostream &o,int indent) {
 			o << ' ';
 		o << "children=>[" << std::endl;
 		typedef vector<smart_ptr<Group> >::iterator group_iter;
+        bool first = true;
 		for(group_iter gi = children.begin();
 				gi != children.end();
 				++gi) {
+            if(first) {
+                first = false;
+            } else {
+                for(int i=0;i<indent;i++)
+                    o << ' ';
+                o << "," << std::endl;
+            }
 			(*gi)->dumpPerl(o,indent+2);
-			for(int i=0;i<indent;i++)
-				o << ' ';
-			o << "," << std::endl;
 		}
 		for(int i=0;i<indent;i++)
 			o << ' ';

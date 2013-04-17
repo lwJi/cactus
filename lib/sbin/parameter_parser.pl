@@ -8,10 +8,344 @@
 #  @enddesc
 #  @version $Header$
 #@@*/
+use Data::Dumper;
+use Carp;
+#use warnings;
 
 #%implementations = ("flesh", "flesh", "test1", "test1", "test2", "test2");
 
 #%parameter_database = create_parameter_database(%implementations);
+
+sub incl {
+    my $VAR;
+    my $file = shift;
+    local $/ = undef;
+    my $fd = new FileHandle;
+    unless(-r $file) {
+        carp "File $file isn't readable";
+    }
+    open($fd,$file) or croak "Cannot open $file";
+    my $c = <$fd>;
+    close($fd);
+    eval $c;
+    return $VAR;
+}
+
+sub get_all {
+    my $node = shift;
+    my $tag = shift;
+    
+    if(!defined($node->{children})) {
+    	return [];
+    }
+    
+    my @ch = ();
+    for my $ch (@{$node->{children}}) {
+    	if($ch->{name} eq $tag) {
+    		push @ch, $ch;
+    	} else {
+            push @ch, @{get_all($ch,$tag)};
+        }
+    }
+    return \@ch;
+}
+
+sub dump_pair {
+    my $array = shift;
+    print "dump-pair=[\n";
+    for(my $i=0;$i<=$#$array;$i+=2) {
+        printf("%4d: {%s}{%s}\n",$i,$array->[$i],$array->[$i+1]);
+    }
+    print "]\n";
+}
+
+sub get_raw_text {
+    my $parse_tree = shift;
+    my $node = shift;
+    my $input = undef;
+    for my $ch (@{$parse_tree->{children}}) {
+        if($ch->{name} eq "annot:src_txt") {
+            $input = $ch->{text};
+        }
+    }
+    my $txt = substr $input,$node->{start},$node->{end}-$node->{start};
+    $txt =~ s/\\\s//g;
+    return $txt;
+}
+
+sub get_raw {
+    my $node = shift;
+    my $txt = Dumper($node);
+    $txt =~ s/\s+/ /g;
+    return $txt;
+}
+
+sub get_text {
+    my $node = shift;
+    my $txt = "";
+    if($node->{name} eq "quote") {
+        $txt = $node->{text};
+        $txt =~ s/^"//;
+        $txt =~ s/"$//;
+        $txt =~ s/\\\s//g;
+    } elsif(defined($node->{text})) {
+        $txt = $node->{text};
+        $txt =~ s/\\\s//g;
+    } else {
+        for my $ch (@{$node->{children}}) {
+            $txt .= get_text($ch);
+        }
+    }
+    return $txt;
+}
+
+sub get_param_name {
+    my $namenum = shift;
+    croak unless($namenum->{name} eq "namenum");
+    if($#{$namenum->{children}}==1) {
+        return (
+            $namenum->{children}->[0]->{text},
+            $namenum->{children}->[1]->{text}
+        );
+    } else {
+        return (
+            $namenum->{children}->[0]->{text},
+            undef
+        );
+    }
+}
+
+sub parse_par {
+    my $parse_tree = shift;
+    my $param_vec = shift;
+    my $thorn = shift;
+    my $type = shift;
+    my $pars = get_all($parse_tree,"${type}par");
+    for my $par (@{$pars}) {
+        my $guts = undef;
+        my ($uses,$extends) = (0,0);
+        if($par->{children}->[0]->{name} eq "${type}guts") {
+            $guts = $par->{children}->[0];
+        } elsif($par->{children}->[1]->{name} eq "${type}guts") {
+            if($par->{children}->[0]->{name} eq "uses") {
+                $uses = 1;
+            } else {
+                $extends = 1;
+            }
+            $guts = $par->{children}->[1];
+        } else {
+            croak "No guts ".Dumper($par);
+        }
+        my @ranges = @{get_all($par,"${type}pair")};
+        my ($param_name,$param_num) = get_param_name($guts->{children}->[0]);
+        croak Dumper($guts) unless(defined($param_name));
+        my $pre = uc("$thorn $param_name");
+        my $desc = "";
+        for(my $i=1;$i<=$#{$guts->{children}};$i++) {
+            my $ch = $guts->{children}->[$i];
+            if($ch->{name} eq "steerable") {
+                push @$param_vec, "$pre steerable";
+                push @$param_vec, $ch->{text};
+            } elsif($ch->{name} eq "accname") {
+                push @$param_vec, "$pre accumulator-base";
+                push @$param_vec, $ch->{text};
+            } elsif($ch->{name} eq "accumexpr") {
+                push @$param_vec, "$pre accumulator-expression";
+                push @$param_vec, get_raw_text($parse_tree,$ch);
+            } elsif($ch->{name} eq "quote") {
+                $desc = $guts->{children}->[1]->{text};
+                $desc =~ s/\\\s//g;
+            } elsif($ch->{name} eq "as") {
+                my $as = $ch->{children}->[0]->{text};
+                $pre = uc("$thorn $as");
+            } else {
+                carp "THORN=$thorn";
+                carp Dumper($guts);
+                croak Dumper($ch);
+            }
+        }
+        if(defined($param_num)) {
+            push @$param_vec, "$pre array_size";
+            push @$param_vec, $param_num;
+        }
+        push @$param_vec, "$pre type";
+        if($type eq "bool") {
+            push @$param_vec, "BOOLEAN";
+        } else {
+            push @$param_vec, uc($type);
+        }
+        push @$param_vec, "$pre realname";
+        push @$param_vec, $param_name;
+        push @$param_vec, "$pre ranges";
+        push @$param_vec, 1+$#ranges;
+        push @$param_vec, "$pre description";
+        push @$param_vec, $desc;
+        croak $desc if($desc =~ /\\\s/);
+        if($uses==0 and $extends==0) {
+            push @$param_vec, "$pre default";
+            my $last_child = $#{$par->{children}};
+            my $default_val = get_text($par->{children}->[$last_child]);
+            if($type eq "bool") {
+                $default_val =~ s/^"(.*)"$/$1/;
+            }
+            push @$param_vec, $default_val;
+        }
+        for(my $i=0;$i<=$#ranges;$i++) {
+            my $n = $i+1;
+            push @$param_vec, "$pre range $n range";
+            push @$param_vec, get_text($ranges[$i]->{children}->[0]);
+            push @$param_vec, "$pre range $n description";
+            push @$param_vec, get_raw_text($parse_tree,$ranges[$i]->{children}->[1]);
+            #croak Dumper($ranges[$i]) if($pre eq "CARPET TIME_REFINEMENT_FACTORS" and $n == 2);
+        }
+    }
+}
+
+sub parse_param_ccl2 {
+    my $thorn = shift;
+    my $ccl_pm = $ENV{TOP}."/piraha/params/$thorn.pm";
+    my $parse_tree = incl($ccl_pm);
+    #print "parse_tree=",Dumper($parse_tree);
+    my @param_vec = ();
+
+    my $mode = "PRIVATE";
+    my %mode = ("PRIVATE"=>"");
+    my %shares = ();
+    my $shares = undef;
+    for my $ch (@{$parse_tree->{children}}) {
+        if($ch->{name} eq "access") {
+            $mode = $ch->{children}->[0]->{text};
+            croak Dumper($ch) unless(defined($mode));
+            $mode = uc($mode);
+            if($thorn =~ /testsch/i and $mode =~ /RESTR/i) {
+                print "GOT HERE: $thorn $mode\n";
+            }
+            if($#{$ch->{children}} == 1) {
+                $shares = uc($ch->{children}->[1]->{text});
+                $shares{$shares} = "";
+                croak "[$mode]" unless($mode eq "SHARES");
+            } else {
+                if($mode eq "SHARES") {
+                    $shares{$shares} = "";
+                } else {
+                    $shares = undef;
+                    $mode{$mode} .= "";
+                    if($thorn =~ /testsch/i and $mode =~ /RESTR/i) {
+                        print "GOT HERE2: $thorn $mode\n";
+                    }
+                }
+            }
+        } elsif($ch->{name} =~ /^(string|keyword|real|int|bool)par$/) {
+            my $pre = $1;
+            my $guts = undef;
+            if($ch->{children}->[0]->{name} eq $pre."guts") {
+                $guts = $ch->{children}->[0];
+            } elsif($ch->{children}->[1]->{name} eq $pre."guts") {
+                $guts = $ch->{children}->[1];
+            }
+            my ($name,$num) = get_param_name($guts->{children}->[0]);
+            if($#{$guts->{children}}>=1 and $guts->{children}->[1]->{name} eq "as") {
+                $name = $guts->{children}->[1]->{children}->[0]->{text};
+            }
+            if(defined($shares)) {
+                croak "Bad share" if($shares eq "");
+                $shares{$shares} .= $name . " ";
+            } else {
+                $mode{$mode} .= $name . " ";
+            }
+        } elsif($ch->{name} =~ /annot:/) {
+            ;
+        } else {
+            croak Dumper($ch);
+        }
+    }
+    if($thorn =~ /testsch/i) {
+        print "GOT HERE3: ",join(" ",keys %mode),"\n";
+    }
+    for my $m (keys %mode) {
+        my $key = uc($thorn)." ".$m." variables";
+        push @param_vec, $key;
+        push @param_vec, $mode{$m};
+    }
+
+    push @param_vec, uc($thorn)." SHARES implementations";
+    my @shares = keys %shares;
+    push @param_vec, join(" ",sort @shares);
+    for my $share (keys %shares) {
+        my $impl = uc($share);
+        push @param_vec, uc($thorn)." SHARES $impl variables";
+        push @param_vec, $shares{$share};
+    }
+
+    &parse_par($parse_tree,\@param_vec,$thorn,"string");
+    &parse_par($parse_tree,\@param_vec,$thorn,"int");
+    &parse_par($parse_tree,\@param_vec,$thorn,"real");
+    &parse_par($parse_tree,\@param_vec,$thorn,"keyword");
+    &parse_par($parse_tree,\@param_vec,$thorn,"bool");
+    return @param_vec;
+}
+
+sub scramble {
+    my @args = @_;
+    my $n = ($#args+1)/2;
+    while($n > 0) {
+        my $r = 2*int(rand($n));
+        my @b=($r,$r+1,2*$n-2,2*$n-1);
+        my $a = $args[$r];
+        my $b = $args[$r+1];
+        $args[  $r  ] = $args[2*$n-2];
+        $args[  $r+1] = $args[2*$n-1];
+        $args[2*$n-2] = $a;
+        $args[2*$n-1] = $b;
+        $n--;
+    }
+    return @args;
+}
+
+sub compare_pars {
+    my $par1 = shift;
+    my $par2 = shift;
+    my %par1 = ();
+    my %par2 = ();
+    for(my $i=0;$i<=$#$par1;$i+=2) {
+        my $k = $par1->[$i];
+        my $v = $par1->[$i+1];
+        croak $k unless($k =~ /^([A-Z0-9_]+ [A-Z0-9_\[\]]+) (.*)/);
+        my ($k1,$k2)=($1,$2);
+        $par1{$k1}->{$k2} = $v;
+    }
+    for(my $i=0;$i<=$#$par2;$i+=2) {
+        my $k = $par2->[$i];
+        my $v = $par2->[$i+1];
+        croak $k unless($k =~ /^([A-Z0-9_]+ [A-Z0-9_\[\]]+) (.*)/);
+        my ($k1,$k2)=($1,$2);
+        $par2{$k1}->{$k2} = $v;
+    }
+    for my $k1 (keys %par1) {
+        for my $k2 (keys %{$par1{$k1}}) {
+            if(!defined($par2{$k1}->{$k2})) {
+                $v = $par1{$k1}->{$k2};
+                print "PAR ERROR: Missing key ($k1)($k2)=($v)\n";
+            } else {
+                my $v1 = $par1{$k1}->{$k2};
+                my $v2 = $par2{$k1}->{$k2};
+                $v1 =~ s/^[ \t]*"(.*)"[ \t]*$/$1/;
+                $v2 =~ s/^[ \t]*"(.*)"[ \t]*$/$1/;
+                if($v1 ne $v2) {
+                    print "PAR ERROR: Noteq ($k1)($k2) => ($v1) ne ($v2)\n";
+                }
+            }
+        }
+    }
+    for my $k1 (keys %par2) {
+        for my $k2 (keys %{$par2{$k1}}) {
+            if(!defined($par1{$k1}->{$k2})) {
+                my $v = $par1{$k1}->{$k2};
+                print "PAR ERROR: Extra key ($k1)($k2)=($v)\n";
+            }
+        }
+    }
+}
 
 #/*@@
 #  @routine    create_parameter_database
@@ -27,6 +361,7 @@ sub create_parameter_database
   my(%thorns) = @_;
   my($thorn, @indata);
   my(@new_parameter_data);
+  my(@new_parameter_data2);
   my(@parameter_data);
 
   # Loop through each implementation's parameter file.
@@ -37,7 +372,18 @@ sub create_parameter_database
     @indata = &read_file("$thorns{$thorn}/param.ccl");
 
     # Get the parameters from it
-    @new_parameter_data = &parse_param_ccl($thorn, @indata);
+    if($ENV{USE_PIRAHA} eq "False") {
+        @new_parameter_data = &scramble(&parse_param_ccl($thorn, @indata));
+    } else {
+        @new_parameter_data2 = &scramble(&parse_param_ccl($thorn, @indata));
+        @new_parameter_data = &parse_param_ccl2($thorn);
+
+        &compare_pars(\@new_parameter_data,\@new_parameter_data2);
+    }
+    #print "parameter v1=";
+    #&dump_pair(\@new_parameter_data);
+    #print "parameter v2=";
+    #&dump_pair(\@new_parameter_data2);
 
     &PrintParameterStatistics($thorn, @new_parameter_data);
 

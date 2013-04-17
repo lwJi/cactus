@@ -234,6 +234,7 @@ rebuild: $(CONFIG)/make.thornlist
 $(CONFIG)/make.thornlist: $(TOP)/ThornList $(foreach lib, $(CCTK_HOME)/src $(THORNS:%=$(PACKAGE_DIR)/%), $(lib)/param.ccl $(lib)/interface.ccl $(lib)/schedule.ccl) $(CCTK_HOME)/src/configuration.ccl $(CONFIG_THORNS:%=$(PACKAGE_DIR)/%/configuration.ccl) $(CCTK_HOME)/lib/make/force-rebuild
 	if [ -r $@ ] ; then echo Reconfiguring thorns ; rm $@ ;\
 	else echo Processing CCL files ; fi
+	set -e; \
 	if [ "x$(USE_PIRAHA)" != "xFalse" ]; then\
 	    echo "BUILDING PIRAHA"; \
 	    $(MAKE) -f $(CCTK_HOME)/src/piraha/Makefile PIRAHA_HOME=$(CCTK_HOME)/src/piraha BIN=$(TOP)/bin; \

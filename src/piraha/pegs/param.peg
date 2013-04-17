@@ -1,141 +1,167 @@
-uses = (?i:uses|)
+uses = (?i:uses)
+extends = (?i:extends)
 
 # The skipper is a crucial sub-pattern
 # that is activated by any whitespace in the
 # grammar file
 skipper = \b([\ \t\n\r\b]|\#[^\n]*|\\[\r\n])*
 
-any = [^]
 name = (?i:[a-z_][a-z0-9_]*)
 accname = {-name}(::{-name})*
 steerable = (?i:never|always|recover)
 accumexpr = \( ([^()]+|{accumexpr}) \)
+nothing =
 
-# Note slop on shared
-access = (?i: global : | restricted : | private : | shares :([\ \t]*{name}|) )
-#access = (?i: global : | restricted : | private : | shares : {name} )
+# Note slop on shares
+global = (?i:global)
+restricted = (?i:restricted)
+shares = (?i:shares)
+private = (?i:private)
+access = ( {global} : | {restricted} : | {private} : | {shares} :([\ \t]*{name}|) )
 
-quote = "(\\{any}|[^"])*"
+quote = "(\\.|[^"])*"
+colon = :
 
+lbound = [\[\(]
+rbound = [\]\)]
 num = [+\-]?[0-9]+
-intbound = (\* | {num} | ) 
-intrange = ([\[\(]?{intbound} :(?!:) {intbound}[\]\)]? | {intbound} )
+intbound = \*|{num}
+intrange = ({lbound} )?({intbound} )?{colon}(?!:)( {intbound})?( {rbound})?( {colon}(?!:) {intbound})?|{intbound}|"{intrange}"
+intpair = ({intrange} :: {quote}|{intrange}{nothing}|{nothing}:: {quote})
 
-real = [+\-]?([0-9]+\.[0-9]+|[0-9]+\.|\.[0-9]+|[0-9]+)([eEdD][+\-]?{num}|)
-realbound = (\*|{real}| )
-realrange = [\(\[]?{realbound} :(?!:) {realbound}[\)\]]? | {realbound}
+real = [+\-]?([0-9]+\.[0-9]+|[0-9]+\.|\.[0-9]+|[0-9]+)([eEdD][+\-]?[0-9]+|)
+realbound = (\*|{real})
+realrange = ({lbound} )?({realbound} )?{colon}(?!:)( {realbound})?( {rbound})?|{realbound}|"{realrange}"
+realpair = ({realrange} :: {quote}|{realrange}{nothing}|{nothing}:: {quote})
 
 boolraw = (?i:true|t|yes|y|false|f|no|n|1|0)
 bool = {-boolraw}|"{-boolraw}"
+boolpair = ({colon} :: {quote}|{bool} :: {quote}|{nothing}:: {quote}|{bool}{nothing})
 
 string = {quote}|{name}|(\\[^]|[^\\ \t\r\n\b}])+
 
 keyword = {name}|{quote}
+namenum = {name}( \[ {num} \])?
+as = (?i:as) {name}
 
 intguts = (?i:
-	(CCTK_|)INT {name}(\[{num}\]|)
+	(CCTK_|)INT {namenum}
 	({quote}|)
-    (as {name} |)
+    {as}?
     (steerable = {steerable} |accumulator = {accumexpr} |accumulator-base = {accname} )*
   )
-  
+
 intpar = (?i:
-	(uses|extends) {intguts}
+	({uses}|{extends}) {intguts}
     ( \{
-    	( {intrange} (:: {quote}|) )*
+    	({intpair}( {intpair})*)?
     \} |)|
 	{intguts} 
     ( \{
     	# some special slop here
     	#( {intrange} (:: {quote}|:: [a-z][^\n]*|) )*
-    	( {intrange} (:: {quote}|) )*
+    	#( {intrange} (:: {quote}|) )*
+    	{intpair}( {intpair})*
     \} {num}|)
   )
 
 realguts = (?i:
-	(CCTK_|)REAL {name}( \[{num}\]|)
+	(CCTK_|)REAL {namenum}
 	({quote}|)
-    (as {name} |)
+    {as}?
     (steerable = {steerable}|)
     (accumulator = {accumexpr} |)
     (accumulator-base = {accname} |)
   )
   
 realpar = (?i:
-	(uses|extends) {realguts} 
+	({uses}|{extends}) {realguts} 
     (\{
-    	( {realrange} (:: {quote} |) )*
+    	({realpair}( {realpair})*)?
     \}|)|
 	{realguts}
     (\{
     	# Note that we allow for lots of slop here
     	#( {realrange} (:: {quote} | {quote} | :: [a-z][^\n]*) )*
-    	( ("{realrange}"|{realrange}) (:: {quote}|) )*
+    	#( ("{realrange}"|{realrange}) (:: {quote}|) )*
+    	{realpair}( {realpair})*
     \} {real}|)
   )
   
+keyword_list = {keyword}( , {keyword})*
+keywordpair = ({nothing}:: {quote}|{keyword_list} :: {quote}|{keyword_list}{nothing})
 keywordguts = (?i:
-	(CCTK_|)KEYWORD {name}(\[{num}\]|)
+	(CCTK_|)KEYWORD {namenum}
 	({quote}|)
-    (as {name} |)
+    {as}?
     (steerable = {steerable}|)
     (accumulator = {accumexpr} |)
     (accumulator-base = {accname} |)
   )
   
 keywordpar = (?i:
-	(extends|uses) {keywordguts} 
+	({uses}|{extends}) {keywordguts} 
     (\{
-    	( {keyword} (, {keyword})* (:: {-quote}|) )*
+    	({keywordpair}( {keywordpair})*)?
     \}|)|
 	{keywordguts} 
     (\{
-    	( {keyword} (, {keyword})* (:: {-quote}|) )*
+    	#( {keyword} (, {keyword})* (:: {-quote}|) )*
+    	{keywordpair}( {keywordpair})*
     \} {keyword}|)
   )
   
 stringguts = (?i:
-	(CCTK_|)STRING {name}(\[{num}\]|)
+	(CCTK_|)STRING {namenum}
 	({quote}|)
-    (as {name} |)
+    {as}?
     (steerable = {steerable} |accumulator = {accumexpr} |accumulator-base = {accname} )*
   )
   
+string_list = {string}( , {string})*
+
+# Simplfy reading the parse try by ensuring
+# stringpair always has 2 children
+stringpair = ({nothing}:: {quote}|{string_list} :: {quote}|{string_list}{nothing})
+
 stringpar = (?i:
-	(uses|extends) {stringguts} 
+	({uses}|{extends}) {stringguts} 
     (\{
-    	( {string} (, {string})* (:: {quote}|) )*
+    	#( {string} (, {string})* (:: {quote}|) )*
+        {stringpair}( {stringpair})*
     \}|)|
 	{stringguts}
     (\{
     	# first option is weird
-    	( :: {quote} |{string} (, {string})* (:: {quote}|) )*
+    	#( :: {quote} |{string} (, {string})* (:: {quote}|) )*
+        {stringpair}( {stringpair})*
     	#({string} (, {string})* (:: {quote}|) )*
     	# no default is permitted!
-    \} ({string}|$)|)
+    \} ({string}|{nothing})|)
   )
 
 boolguts = (?i:
-	(CCTK_|)BOOLEAN {name}(\[{num}\]|)
+	(CCTK_|)BOOLEAN {namenum}
 	({quote}|)
-    (as {name} |)
+    {as}?
     (steerable = {steerable}|)
     (accumulator = {accumexpr} |)
     (accumulator-base = {accname} |)
   )
   
 boolpar = (?i:
-	(uses|extends) {boolguts} 
+	({uses}|{extends}) {boolguts} 
     (\{
-    ({bool} (:: {quote} |))*
+    ({boolpair}( {boolpair})*)?
     \}|)|
 	{boolguts} 
-    (\{
+    \{
     # Note the weird slop here
     #({bool} (:: {quote} |)|: :: {quote}|:: {quote})*
-    (:: {quote}|{bool} (:: {quote} |) )*
-    ( : :: {quote} )*
-    \} {bool}|)
+    #(:: {quote}|{bool} (:: {quote} |) )*
+    #( : :: {quote} )*
+    ({boolpair}( {boolpair})*)?
+    \} {bool}
   )
   
 pars = ^ ({access}|{intpar}|{realpar}|{keywordpar}|{stringpar}|{boolpar})* $
