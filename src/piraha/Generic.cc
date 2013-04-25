@@ -89,7 +89,7 @@ int main(int argc,char **argv) {
     smart_ptr<Grammar> g = new Grammar();
     compileFile(g,grammar_file.c_str());
     smart_ptr<Matcher> mg =
-        new Matcher (g,g->default_rule.c_str(),input_file.c_str());
+        new Matcher (g.ptr(),g->default_rule.c_str(),input_file.c_str());
     if(mg->matches()) {
         //std::vector<char> vec(4096);
         std::ofstream o;

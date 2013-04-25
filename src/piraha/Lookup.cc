@@ -2,7 +2,7 @@
 
 using namespace piraha;
 
-Lookup::Lookup(std::string name_,smart_ptr<Grammar> g) : gram(g), name(name_), capture(true) {
+Lookup::Lookup(std::string name_,Grammar *g) : gram(g), name(name_), capture(true) {
     if(name[0] == '-') {
         capture = false;
         name = name.substr(1);

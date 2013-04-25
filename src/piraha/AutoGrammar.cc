@@ -2,8 +2,8 @@
 
 using namespace piraha;
 
-smart_ptr<Grammar> AutoGrammar::reparserGenerator() {
-    smart_ptr<Grammar> g = new Grammar();
+Grammar *AutoGrammar::reparserGenerator() {
+    Grammar *g = new Grammar();
     g->patterns.put("named",new Seq(
                 new Literal('{'),
                 new Lookup("name",g),
@@ -166,8 +166,8 @@ smart_ptr<Grammar> AutoGrammar::reparserGenerator() {
     return g;
 }
   
-smart_ptr<Grammar> AutoGrammar::fileParserGenerator() {
-    smart_ptr<Grammar> g = new Grammar();
+Grammar *AutoGrammar::fileParserGenerator() {
+    Grammar *g = new Grammar();
     g->patterns.put("named",new Seq(
                 new Literal('{'),
                 new Lookup("name",g),

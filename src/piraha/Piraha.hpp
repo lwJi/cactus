@@ -49,15 +49,14 @@ public:
 
     int start() { return start_; }
     int end() { return end_; }
-    int childCount(), line();
+    int line();
+    int groupCount() { return children.size(); }
     std::string getPatternName();
     std::string substring();
-    smart_ptr<Group> child(int i);
     void dump(std::ostream& o=std::cout);
     void dump(int n,std::ostream& o,int indent=0);
     void dumpPerl(std::ostream&o=std::cout);
     void dumpPerl(std::ostream&o,int indent);
-    int groupCount() { return children.size(); }
     smart_ptr<Group> group(int i) { return children[i]; }
     smart_ptr<Group> group(const char *nm,int ix=0) {
     	for(unsigned int i=0;i<children.size();i++) {
@@ -103,11 +102,19 @@ public:
             return NULL;
         }
         smart_ptr<Pattern> res = m[key];
-        assert(res.valid());
+        if(!res.valid()) {
+            std::cout << "Invalid pattern [" << key << "]" << std::endl;
+            assert(false);
+        }
         return res;
     }
     void put(std::string key,smart_ptr<Pattern> p) {
         assert(p.valid());
+        // Don't allow overwriting of patterns
+        if(m.find(key) != m.end()) {
+            std::cerr << "Redefinition of pattern '" << key << "'" << std::endl;
+            assert(false);
+        }
         m[key] = p;
     }
     friend std::ostream& operator<<(std::ostream&,JMap&);
@@ -131,6 +138,9 @@ public:
     virtual ~Grammar() {}
     JMap patterns;
     std::string default_rule;
+    smart_ptr<Pattern> compile(const char * pattern_name,const char * pattern_text);
+    smart_ptr<Matcher> matcher(const char * pattern_name,const char * text,int text_size=-1);
+    smart_ptr<Matcher> matcher(const char * text,int text_size=-1);
 };
 
 class Seq : public Pattern {
@@ -231,18 +241,21 @@ public:
 };
 
 class Lookup : public Pattern {
-    smart_ptr<Grammar> gram;
+    Grammar *gram;
     std::string name;
     bool capture;
 public:
-    Lookup(std::string s,smart_ptr<Grammar> g);
+    Lookup(std::string s,Grammar *g);
     virtual ~Lookup() {}
     bool match(Matcher *m);
     std::string fmt() {
         return "Literal:"+name;
     }
     virtual void insert(std::ostream& o) {
-        o << "{" << name << "}";
+        o << "{";
+        if(!capture)
+            o << "-";
+        o << name << "}";
     }
 };
 
@@ -340,37 +353,58 @@ public:
 
 class AutoGrammar {
 public:
-    static smart_ptr<Grammar> reparserGenerator();
-    static smart_ptr<Grammar> fileParserGenerator();
+    static Grammar *reparserGenerator();
+    static Grammar *fileParserGenerator();
+};
+
+class Near {
+public:
+    int pos;
+    int column;
+    bool eol;
+    int startOfLine;
+    int lineNum;
+    const char *text;
+    std::string rule;
+    std::string expected;
 };
 
 class Matcher : public Group {
 public:
-    Matcher(smart_ptr<Grammar> g,const char *pat_,const char *input_,int input_size=-1);
+    Matcher(Grammar *g,const char *pat_,const char *input_,int input_size=-1);
     virtual ~Matcher() {}
     const char *input;
-    smart_ptr<Grammar> g;
+    Grammar *g;
     int input_size;
     int pos;
     int max_pos;
     const char *pat;
     bool matches();
-    Bracket expected;
+    Bracket expected_;
     void showError();
     std::string inrule;
     std::string inrule_max;
     int err_pos;
     void fail(Bracket *ex);
     void fail(char lo,char hi);
+    smart_ptr<Group> result();
+    int error_pos();
+    smart_ptr<Near> near();
 };
 
 extern smart_ptr<Grammar> pegGrammar;
-extern smart_ptr<Pattern> compile(smart_ptr<Group> g,bool ignCase,smart_ptr<Grammar> gram);
-extern void compileFile(smart_ptr<Grammar> g,const char *buffer,signed long buffersize=-1);
-void compile(smart_ptr<Grammar> thisg,std::string name,std::string pattern);
-void compile(smart_ptr<Grammar> thisg,std::string name,smart_ptr<Group> pattern);
+extern smart_ptr<Pattern> compile(smart_ptr<Group> g,bool ignCase,Grammar *gram);
+extern int compileFile(smart_ptr<Grammar> g,const char *buffer,signed long buffersize=-1);
+extern int compileFile(Grammar *g,const char *buffer,signed long buffersize=-1);
+extern int compilePattern(smart_ptr<Grammar> g,std::string pattern_name,std::string pattern);
+extern int compilePattern(Grammar *g,const char *pattern_name,const char *pattern,unsigned int len);
+void compile(Grammar *thisg,std::string name,std::string pattern);
+void compile(Grammar *thisg,std::string name,smart_ptr<Group> pattern);
 void insertc(std::ostream& o,char c);
 
 }
+
+extern int pir_compile_errors_are_fatal;
+extern int pir_print_compile_errors;
 
 #endif

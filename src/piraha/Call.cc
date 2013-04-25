@@ -208,7 +208,6 @@ std::ostream& operator<<(std::ostream& o,const smart_ptr<Value>& val) {
 	return o;
 }
 
-std::map<std::string,std::map<std::string,smart_ptr<Value> > > values;
 typedef std::map<std::string,std::map<std::string,smart_ptr<Value> > >::iterator th_iter;
 typedef std::map<std::string,smart_ptr<Value> >::iterator nm_iter;
 
@@ -216,21 +215,47 @@ smart_ptr<Value> eval_expr(std::string inp);
 
 // If the value was already defined in this parameter file, look
 // it up in the map. Otherwise, get it from Cactus.
-smart_ptr<Value> find_val(std::string thorn,std::string name) {
-	smart_ptr<Value> ret;
-	th_iter th = values.find(thorn);
-	if(th != values.end()) {
-		nm_iter nm = th->second.find(name);
-		if(nm != th->second.end()) {
-			ret = nm->second;
-			return ret;
-		}
-	}
-	const cParamData *data = CCTK_ParameterData(name.c_str(),thorn.c_str());
-	if(data != NULL) {
-		std::string expr = data->defval;
-		ret = eval_expr(expr);
-	}
+smart_ptr<Value> find_val(smart_ptr<Group> gr,std::string thorn,std::string name) {
+	smart_ptr<Value> ret = new Value(gr);
+    int type;
+    const void *result;
+    result = CCTK_ParameterGet(name.c_str(),thorn.c_str(),&type);
+    if(result == NULL) {
+		std::ostringstream msg;
+		msg << "Undefined or inaccessible variable: " << thorn << "::" << name << std::endl;
+		std::string par = get_parfile();
+		CCTK_Error(gr->line(),par.c_str(),current_thorn.c_str(),msg.str().c_str());
+    }
+    
+    switch(type) {
+        case PARAMETER_REAL:
+            ret->type = PIR_REAL;
+            ret->ddata = *(const CCTK_REAL*)result;
+            break;
+        case PARAMETER_INT:
+            ret->type = PIR_INT;
+            ret->idata = *(const CCTK_INT*)result;
+            break;
+        case PARAMETER_BOOLEAN:
+            ret->type = PIR_BOOL;
+            ret->idata = *(const CCTK_INT*)result;
+            break;
+        case PARAMETER_STRING:
+        case PARAMETER_SENTENCE:
+        case PARAMETER_KEYWORD:
+            {
+                ret->type = PIR_STRING;
+                const char *s = *(const char **)result;
+                ret->sdata += s;
+            }
+            break;
+        default:
+		    std::ostringstream msg;
+		    msg << "Unexpected type result from ParameterGet=" << type << std::endl;
+		    std::string par = get_parfile();
+		    CCTK_Error(gr->line(),par.c_str(),current_thorn.c_str(),msg.str().c_str());
+    }
+    std::cout << "Piraha: GET: " << thorn << "::" << name << "=" << ret << std::endl;
 	return ret;
 }
 
@@ -263,7 +288,7 @@ smart_ptr<Value> lookup_var(smart_ptr<Group> gr) {
 
 
 std::string string_reparser(std::string s) {
-	smart_ptr<Matcher> m = new Matcher(par_file_grammar,"stringparser",s.c_str(),s.length());
+	smart_ptr<Matcher> m = new Matcher(par_file_grammar.ptr(),"stringparser",s.c_str(),s.length());
 	if(m->matches()) {
 		std::string out = "";
 		for(int i=0;i < m->groupCount(); i++) {
@@ -425,11 +450,11 @@ smart_ptr<Value> meval(smart_ptr<Group> gr) {
 				o << name << "[" << index->idata << "]";
 				o << std::flush;
 				std::string keyi = o.str();
-				ret = find_val(thorn,keyi);
+				ret = find_val(gr,thorn,keyi);
 				return ret;
 			}
 		} else {
-			ret = find_val(thorn,name);
+			ret = find_val(gr,thorn,name);
 			return ret;
 		}
 		std::ostringstream msg;
@@ -572,10 +597,12 @@ smart_ptr<Value> meval(smart_ptr<Group> gr) {
 				if(addop == "+") {
 					ret->sdata = v1->sdata + v2->sdata;
 				} else {
+                    ret->sdata = v1->sdata + addop + v2->sdata;
 					std::ostringstream msg;
 					msg << "Unknown add operator: " << addop << std::endl;
+                    msg << "Interpreting as literal string with value '" << ret->sdata << "'" << std::endl;
 					std::string par = get_parfile();
-					CCTK_Error(gr->line(),par.c_str(),current_thorn.c_str(),msg.str().c_str());
+					CCTK_Warn(1,gr->line(),par.c_str(),current_thorn.c_str(),msg.str().c_str());
 				}
 			} else if(v1->intOrDouble() && v2->intOrDouble()) {
 				ret->type = PIR_REAL;
@@ -643,6 +670,14 @@ smart_ptr<Value> meval(smart_ptr<Group> gr) {
 					std::string par = get_parfile();
 					CCTK_Error(gr->line(),par.c_str(),current_thorn.c_str(),msg.str().c_str());
 				}
+			} else if(v1->type == PIR_STRING && v2->type == PIR_STRING) {
+				std::ostringstream msg;
+                ret->type = PIR_STRING;
+                ret->sdata = v1->sdata + mulop + v2->sdata;
+				msg << "Unknown operation: " << v1->type << " " << mulop << v2->type << std::endl;
+                msg << "Interpreting as literal string with value '" << ret->sdata << "'" << std::endl;
+				std::string par = get_parfile();
+				CCTK_Warn(1,gr->line(),par.c_str(),current_thorn.c_str(),msg.str().c_str());
 			} else {
 				std::ostringstream msg;
 				msg << "Unknown operation: " << v1->type << " " << mulop << v2->type << std::endl;
@@ -663,7 +698,7 @@ smart_ptr<Value> meval(smart_ptr<Group> gr) {
 
 
 smart_ptr<Value> eval_expr(std::string input) {
-	smart_ptr<Matcher> m = new Matcher(par_file_grammar,"eval",input.c_str());
+	smart_ptr<Matcher> m = new Matcher(par_file_grammar.ptr(),"eval",input.c_str());
 	smart_ptr<Value> ret;
 	if(m->matches()) {
 		ret = meval(m->group(0));
@@ -722,7 +757,7 @@ extern "C" int cctk_PirahaParser(const char *buffer,unsigned long buffersize,int
 			"# Note that / occurs in some par files. It is my\n"
 			"# feeling that this should require quote marks.\n"
 
-			"name = [@a-zA-Z_][@a-zA-Z0-9_-]*\n"
+			"name = [a-zA-Z][a-zA-Z0-9_]*\n"
 			"dname = [0-9][a-zA-Z_]{2,}\n"
 			"inquot = ({var}|\\\\.|[^\\\\\"])*\n"
 			"fname = \\.?/[-\\./0-9a-zA-Z_]+\n"
@@ -759,10 +794,10 @@ extern "C" int cctk_PirahaParser(const char *buffer,unsigned long buffersize,int
 			"set = ({active} = ({quot}|{name})|{par}( {index}|) = ({array}|\\+?{expr})){-skipeol}\n"
 			"file = ^( !DESC {quot}|)( ({set}|{active}) )*$";
 
-	compileFile(par_file_grammar,par_file_src,strlen(par_file_src));
+	compileFile(par_file_grammar.ptr(),par_file_src,strlen(par_file_src));
 
 	std::string active;
-    smart_ptr<Matcher> m2 = new Matcher(par_file_grammar,"file",buffer,buffersize);
+    smart_ptr<Matcher> m2 = new Matcher(par_file_grammar.ptr(),"file",buffer,buffersize);
     if(m2->matches()) {
     	int line = -1;
     	for(int i=0;i<m2->groupCount();i++) {
@@ -813,7 +848,7 @@ extern "C" int cctk_PirahaParser(const char *buffer,unsigned long buffersize,int
     				smart_ptr<Value> smv = meval(aexpr);
 					val = smv->copy();
     				assert(smv.valid());
-    				values[thorn][key] = smv;
+    				//values[thorn][key] = smv;
     				smv->integerize();
     				if(data != NULL) {
         				if(data->type == PARAMETER_REAL)
@@ -834,7 +869,7 @@ extern "C" int cctk_PirahaParser(const char *buffer,unsigned long buffersize,int
     					keyi << key << '[' << i << ']';
     					smart_ptr<Value> smv = meval(aexpr);
     					val = smv->copy();
-        				values[thorn][keyi.str()] = smv;
+        				//values[thorn][keyi.str()] = smv;
         				if(data != NULL) {
             				if(data->type == PARAMETER_REAL)
             					smv->integerize();

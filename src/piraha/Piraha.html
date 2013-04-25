@@ -1,0 +1,150 @@
+<p>
+Here we see three examples of how to match a simple pattern and
+extract data using Piraha. These examples highlight what is similar
+and what is different among the supported langauges.
+</p>
+<table border='1' cellpadding='5' cellspacing='0'>
+<tr><td>Java</td><td>C++</td><td>C</td></tr>
+<tr><td>
+<pre>
+import edu.lsu.cct.piraha.*;
+
+public class example0 {
+    public static void main(String[] args) {
+        // Allocate a grammar
+        <b>Grammar gram = new Grammar();</b>
+
+        // Compile the rules individually
+        gram.compile("num","[0-9]+");
+        gram.compile("expr","range=\\[{num}:{num}\\]");
+
+        // Attempt a match
+        // The matcher holds the parse tree in memory.
+        String input = "range=[10:150]";
+        <b>Matcher  matcher =
+            gram.matcher(input);</b>
+        if(matcher.matches()) {
+            System.out.println("Match succeeded!");
+            int v1,v2;
+
+            Group group = matcher;
+            Group ch = group.group(0);
+            String s = ch.substring();
+            v1 = Integer.parseInt(s);
+
+            ch = group.group(1);
+            s = ch.substring();
+            v2 = Integer.parseInt(s);
+
+            System.out.println("v1=" + v1 + ",v2=" + v2);
+        } else {
+            Near near = matcher.near();
+            System.err.println("fail at pos=" + near.pos
+                + ": found='" + input.charAt(near.pos)
+                + "', expected=" + near.expected);
+        }
+    }
+}
+</pre>
+</td>
+<td>
+<pre>
+#include &lt;iostream&gt;
+#include &lt;stdlib.h&gt;
+#include "Piraha.hpp"
+
+using namespace piraha;
+
+int main() {
+    // Allocate a grammar
+    <b>smart_ptr&lt;Grammar&gt; gram = new Grammar();</b>
+
+    // Compile the rules individually
+    gram-&gt;compile("num","[0-9]+");
+    gram-&gt;compile("expr","range=\\[{num}:{num}\\]");
+
+    // Attempt a match
+    // The matcher holds the parse tree in memory.
+    std::string input = "range=[10:150]";
+    <b>smart_ptr&lt;Matcher&gt; matcher =
+        gram-&gt;matcher(input.c_str());</b>
+    if(matcher-&gt;matches()) {
+        std::cout &lt;&lt; "Match succeeded!" &lt;&lt; std::endl;
+        int v1,v2;
+
+        smart_ptr&lt;Group&gt; group = matcher-&gt;result();
+        smart_ptr&lt;Group&gt; ch = group-&gt;group(0);
+        std::string s = ch-&gt;substring();
+        v1 = atoi(s.c_str());
+
+        ch = group-&gt;group(1);
+        s = ch-&gt;substring();
+        v2 = atoi(s.c_str());
+
+        std::cout &lt;&lt; "v1=" &lt;&lt; v1 &lt;&lt; ",v2="
+            &lt;&lt; v2 &lt;&lt; std::endl;
+    } else {
+        smart_ptr&lt;Near&gt; near = matcher-&gt;near();
+        int pos = near-&gt;pos;
+        std::string expected = near-&gt;expected;
+        std::cerr &lt;&lt; "fail at pos=" &lt;&lt; pos
+            &lt;&lt; ": found='" &lt;&lt; input[pos]
+            &lt;&lt; "', expected=" &lt;&lt; expected &lt;&lt; std::endl;
+    }
+    return 0;
+}
+</pre>
+</td>
+<td>
+<pre>
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+#include "Piraha.h"
+#include &lt;stdlib.h&gt;
+#include &lt;assert.h&gt;
+
+int main() {
+    // Allocate a grammar
+    <b>pir_grammar_t *gram = pir_alloc_grammar();</b>
+
+    // Compile the rules individually
+    pir_compile(gram,"num","[0-9]+");
+    pir_compile(gram,"expr","range=\\[{num}:{num}\\]");
+
+    // Attempt a match
+    // The matcher holds the parse tree in memory.
+    pir_group_t group,ch;
+    const char *input = "range=[10:150]";
+    const char *pattern_name = 0; // use default
+    <b>pir_matcher_t *matcher =
+        pir_alloc_matcher(gram,pattern_name,input);</b>
+    if(pir_matches(matcher,&amp;group)) {
+        printf("Match succeeded!\n");
+        char buf[10];
+        int v1,v2;
+
+        pir_get_group(&amp;group,0,&amp;ch);
+        pir_get_str(&amp;ch,buf);
+        v1 = atoi(buf);
+
+        pir_get_group(&amp;group,1,&amp;ch);
+        pir_get_str(&amp;ch,buf);
+        v2 = atoi(buf);
+
+        printf("v1=%d,v2=%d\n",v1,v2);
+    } else {
+        char expected[20];
+        int pos = pir_error(matcher,expected);
+        printf("fail at pos=%d: found=(%c), expected=%s\n",
+            pos,input[pos],expected);
+    }
+    pir_free_matcher(matcher);
+
+    // Free the space used by the Grammar
+    pir_free_grammar(gram);
+    return 0;
+}
+</pre>
+</td>
+</tr>
+</table>

@@ -2,7 +2,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+int pir_compile_errors_are_fatal = 0;
+int pir_match_errors_are_fatal = 0;
+int pir_print_compile_errors = 0;
+int pir_print_match_errors = 0;
+
 namespace piraha {
+
 
 char getChar(smart_ptr<Group> gr) {
     if(gr->groupCount()==1) {
@@ -62,15 +68,20 @@ smart_ptr<Pattern> mkMulti(smart_ptr<Group> g) {
 }
 
 
-void compileFile(smart_ptr<Grammar> g,const char *buffer,signed long buffersize) {
+int compileFile(smart_ptr<Grammar> g,const char *buffer,signed long buffersize) {
+    return compileFile(g.ptr(),buffer,buffersize);
+}
+int compileFile(Grammar *g,const char *buffer,signed long buffersize) {
 	if(buffersize < 0)
 		buffersize = strlen(buffer);
 	smart_ptr<Grammar> grammar = AutoGrammar::fileParserGenerator();
-	smart_ptr<Matcher> m = new Matcher(grammar,"file",buffer,buffersize);
+	smart_ptr<Matcher> m = new Matcher(grammar.ptr(),"file",buffer,buffersize);
 	bool b = m->matches();
     if(!b) {
-        m->showError();
-	    assert(false);
+        if(pir_print_compile_errors
+        || pir_compile_errors_are_fatal) m->showError();
+	    if(pir_compile_errors_are_fatal) assert(false);
+        return m->err_pos;
     }
 
 	for(int i=0;i<m->groupCount();i++) {
@@ -80,9 +91,45 @@ void compileFile(smart_ptr<Grammar> g,const char *buffer,signed long buffersize)
 		g->patterns.put(nm,ptmp);
         g->default_rule = nm;
 	}
+    return -1;
 }
 
-smart_ptr<Pattern> compile(smart_ptr<Group> g,bool ignCase,smart_ptr<Grammar> gram) {
+int compilePattern(
+        smart_ptr<Grammar> g,
+        std::string pattern_name,
+        std::string pattern)
+{
+    return compilePattern(
+        g.ptr(),
+        pattern_name.c_str(),
+        pattern.c_str(),
+        pattern.length());
+}
+
+int compilePattern(
+        Grammar *g,
+        const char *pattern_name,
+        const char *pattern,
+        unsigned int pattern_len)
+{
+	smart_ptr<Grammar> grammar = AutoGrammar::reparserGenerator();
+	smart_ptr<Matcher> m =
+        new Matcher(grammar.ptr(),"pattern",pattern,pattern_len);
+	bool b = m->matches();
+    if(!b) {
+        if(pir_print_compile_errors
+        || pir_compile_errors_are_fatal) m->showError();
+	    if(pir_compile_errors_are_fatal) assert(false);
+        return m->err_pos;
+    }
+    smart_ptr<Group> result = m->result();
+    smart_ptr<Pattern> p = compile(result,false,g);
+    g->patterns.put(pattern_name,p);
+    g->default_rule = pattern_name;
+    return -1;
+}
+
+smart_ptr<Pattern> compile(smart_ptr<Group> g,bool ignCase,Grammar *gram) {
     std::string pn = g->getPatternName();
     if("literal" == pn) {
         char c = getChar(g);
