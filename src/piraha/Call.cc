@@ -893,4 +893,51 @@ extern "C" int cctk_PirahaParser(const char *buffer,unsigned long buffersize,int
     return 0;
 }
 
+extern "C" void *CCTK_EvaluateParamExpr(const char *expr,int *type) {
+    void *data = NULL;
+    std::string input_expr = expr;
+    smart_ptr<Value> value = eval_expr(input_expr);
+    switch(value->type) {
+    case PIR_STRING:
+        {
+        *type = PARAMETER_STRING;
+        char *result = strdup(value->sdata.c_str());
+        data = &result;
+        break;
+        }
+    case PIR_REAL:
+        {
+        *type = PARAMETER_REAL;
+        CCTK_REAL *d = (CCTK_REAL*)malloc(sizeof(CCTK_REAL));
+        *d = value->dvalue;
+        result = d;
+        break;
+        }
+    case PIR_INT:
+        {
+        *type = PARAMETER_INT;
+        CCTK_INT *i = (CCTK_INT*)malloc(sizeof(CCTK_INT));
+        *i = value->ivalue;
+        result = i;
+        break;
+        }
+    case PIR_BOOLEAN:
+        {
+        *type = PARAMETER_BOOL;
+        CCTK_BOOL *i = (CCTK_BOOL*)malloc(sizeof(CCTK_BOOL));
+        *i = value->ivalue;
+        result = i;
+        break;
+        }
+    default:
+        {
+		std::ostringstream msg;
+        msg << "expresion '" << expr
+            << "' evalutes to unknown type " << value << std::endl;
+		CCTK_Error(__LINE__,__FILE__,"piraha",msg.str().c_str());
+        break;
+        }
+    }
+}
+
 }
