@@ -18,14 +18,6 @@ typedef struct pir_grammar_t_ {
     void *pir_handle;
 #ifdef __cplusplus
     pir_grammar_t_();
-    ~pir_grammar_t_();
-    int compile(
-        const char *pattern_name,
-        const char *pattern);
-    int compile_file(
-        const char *file_contents);
-private:
-    pir_grammar_t_(const pir_grammar_t_& g) {}
 #endif
 } pir_grammar_t;
 
@@ -34,10 +26,6 @@ typedef struct pir_matcher_t_ {
 #ifdef __cplusplus
     pir_matcher_t_() : pir_handle(0) {}
     pir_matcher_t_(pir_grammar_t *gram,const char *pattern,const char *text);
-    ~pir_matcher_t_();
-    int matches(pir_group_t_ *group);
-private:
-    pir_matcher_t_(const pir_matcher_t_& m) {}
 #endif
 } pir_matcher_t;
 
@@ -49,11 +37,6 @@ typedef struct pir_group_t_ {
     int pir_ngroups;
     const char *pir_text;
     void *pir_handle;
-#ifdef __cplusplus
-    pir_group_t_ child(int n);
-    void child(int n,pir_group_t_ *ch);
-    std::string get_str();
-#endif
 } pir_group_t;
 
 // Create/Free a grammar

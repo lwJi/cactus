@@ -21,17 +21,10 @@ pir_matcher_t_::pir_matcher_t_(pir_grammar_t *gram,const char *pattern,const cha
     Matcher *m = new Matcher(g,pattern,text);
     pir_handle = m;
 }
-pir_matcher_t_::~pir_matcher_t_() {
-    Matcher *m = (Matcher*)pir_handle;
-    delete m;
-}
-pir_grammar_t_::~pir_grammar_t_() {
-    Grammar *g = (Grammar*)pir_handle;
-    delete g;
-}
 
 void pir_free_grammar(pir_grammar_t *gram) {
-    delete gram;
+    Grammar *g = (Grammar*)gram->pir_handle;
+    delete g;
 }
 
 int pir_compile(pir_grammar_t *gram,const char *pattern_name,const char *pattern) {
@@ -46,7 +39,8 @@ int pir_compile_file(pir_grammar_t *gram, const char *file_contents) {
 }
 
 void pir_free_matcher(pir_matcher_t *matcher) {
-    delete matcher;
+    Matcher *m = (Matcher*)matcher->pir_handle;
+    delete m;
 }
 
 int pir_matches(
@@ -105,31 +99,6 @@ int pir_error(pir_matcher_t *matcher,char *expected) {
     return m->err_pos;
 }
 
-std::string pir_group_t_::get_str() {
-    Group *g = (Group *)pir_handle;
-    return g->substring();
-}
-
-pir_group_t_ pir_group_t_::child(int n) {
-    pir_group_t_ g;
-    pir_get_group(this,n,&g);
-    return g;
-}
-void pir_group_t_::child(int n,pir_group_t_ *g) {
-    pir_get_group(this,n,g);
-}
-int pir_grammar_t_::compile(
-        const char *pattern_name,
-        const char *pattern) {
-    return pir_compile(this,pattern_name,pattern);
-}
-int pir_grammar_t_::compile_file(
-        const char *file_contents) {
-    return pir_compile_file(this,file_contents);
-}
 pir_grammar_t_::pir_grammar_t_() {
     pir_handle = new Grammar();
-}
-int pir_matcher_t_::matches(pir_group_t_ *gr) {
-    return pir_matches(this,gr);
 }
