@@ -16,7 +16,12 @@
 
 extern std::set<void*> *ptrs;
 
-#ifdef NDEBUG
+// TODO: This code is disabled because it leads to segfaults during
+// startup. Most likely, this code is used during initialisation of
+// global variables, but also implicitly assumes that all global
+// variables have already been initialised.
+#if 0
+//#ifndef NDEBUG
 inline void add(std::set<void*>& v,void *t) {
     if(t == NULL)
         return;
