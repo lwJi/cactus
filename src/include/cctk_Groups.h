@@ -26,12 +26,12 @@ typedef struct
 
 /* Prototypes */
 
+#include "cctk_Types.h"
+
 #ifdef __cplusplus 
 extern "C" 
 {
 #endif
-
-#include "cctk_Types.h"
 
 int         CCTK_DecomposeName(const char *fullname, 
                                char **implementation, 
