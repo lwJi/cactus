@@ -1,4 +1,4 @@
-#! /bin/sh
+#!/bin/bash
 # Create all thorn documentations
 # (C) 2003/05/24 Erik Schnetter <schnetter@uni-tuebingen.de>
 # (C) 2010-04-21 Barry Wardell <barry.wardell@aei.mpg.de>
