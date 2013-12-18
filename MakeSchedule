@@ -1,0 +1,124 @@
+#! /bin/bash
+#
+#  The following script runs all testsuites available in $CCTK_HOME
+#  in parallel using GNU Make according to a longest-first algorithm. 
+# 
+#  If the tests have been run and previous times obtained, they are
+#  used to schedule.  If a test has not been run, its time is estimated
+#  to be 0s.  After running, timing information is collected from all 
+#  tests to be used for the next schedule.
+
+
+die() {
+	echo "$@" 1>&2; 
+	exit 1;
+}
+
+
+cdordie() {
+	if [ -d "$1" ]
+	then
+		cd $1
+	else
+		die "$1 does not exist."
+	fi
+}
+
+
+rmifexists () {
+	if [ -e "$1" ]
+	then
+		rm $1
+	fi
+}
+
+
+# Check CCTK_HOME and cd to it
+if [ -z $CCTK_HOME ]
+then
+	CCTK_HOME=$PWD
+fi
+cdordie $CCTK_HOME
+
+
+# Check if a test directory exists
+if [ -d "testdir" ]
+then
+	TESTDIR="testdir"
+else
+	if [ -z $TESTDIR ]
+	then
+		"No test directory specified... making testdir/" 
+		mkdir testdir
+		TESTDIR="testdir"
+	fi
+fi
+
+
+# Check if executable exists
+if [ -z $EXE ]
+then
+	EXE=$CCTK_HOME/exe/cactus_wave_test
+else
+	if [ !-e $EXE ]
+	then
+		die 'Executable does not exist or $EXE not set.'
+	fi
+fi
+
+
+# Get all test parfiles
+find $CCTK_HOME | grep "\/test\/" | grep "\.par" > $TESTDIR/AllTests
+cdordie $TESTDIR 
+
+
+# Use previous results to schedule this round
+if [ -e "TestResults" ]
+then
+	# Add estimates for those tests which are not in TestResults
+	cat TestResults | awk '{print $2}'       > PreviousTests
+	cat PreviousTests AllTests | sort | uniq > NewTests
+	cp TestResults TestSchedule
+	for TEST in `cat NewTests`
+	do
+		echo "1.00 $TEST" >> TestSchedule
+	done
+else
+	# If no previous information, give ETA as 1s.
+	rmifexists "TestSchedule" 
+	for TEST in `cat AllTests`
+	do
+		echo "1.00 $TEST" >> TestSchedule
+	done
+fi
+
+
+# Sort for scheduling
+mv TestSchedule TestSchedule.tmp
+sort -n -r TestSchedule.tmp -o TestSchedule  
+rm TestSchedule.tmp
+
+
+# Schedule the tests
+echo "all: " > $CCTK_HOME/Makefile.tests
+rmifexists "TestResults" 
+for TEST in `cat TestSchedule | awk '{print $2}'`
+do
+	COMMAND="/usr/bin/time -o 'TestResults' --append -f '%e' $EXE $TEST; echo $TEST >> TestResults"
+	echo "	$COMMAND" >> $CCTK_HOME/Makefile.tests
+	echo $TEST
+done
+
+
+# Determine number of processors
+if [ -e "/proc/cpuinfo" ]
+then
+	NPROCS=`cat /proc/cpuinfo | grep "core id" | wc -l`
+else
+	NPROCS="2"
+fi 
+
+
+# Finally, make
+make -j$NPROCS -f $CCTK_HOME/Makefile.tests
+sed -i 'N;s/\n/ /' TestResults
