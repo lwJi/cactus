@@ -75,8 +75,10 @@ while ($choice !~ /^Q/i)
     print "------------------------------------------------------------------------\n\n";
     print "  --- Menu ---\n\n";
     
+    print "  List runnable tests [L]\n";
     print "  Run entire set of tests [E]\n";
     print "  Run entire set of tests interactively [I]\n";
+    print "  Run entire set of tests in parallel with Make [M]\n";
     print "  Choose test from [T]horn or [A]rrangement\n";
     print "  Rerun previous test [R]\n";
     print "  Rerun previous test and show run output on screen [S]\n";
@@ -132,6 +134,39 @@ while ($choice !~ /^Q/i)
       $haverunall = 1;
 
     } 
+    elsif ($choice =~ /^L/i)
+    {
+      foreach $thorn (split(" ",$testdata->{"RUNNABLETHORNS"}))
+      {
+        print "$thorn:\n";
+	foreach $test (split(" ",$testdata->{"$thorn RUNNABLE"}))
+	{
+          print "\t$test\n";
+        }
+      }
+    }
+    elsif ($choice =~ /^M/i)
+    {
+      $tests_dir = $config_data->{"TESTS_DIR"};
+      open(my $testfile, ">", "$tests_dir/AllTests");
+      foreach $thorn (split(" ",$testdata->{"RUNNABLETHORNS"}))
+      {
+	foreach $test (split(" ",$testdata->{"$thorn RUNNABLE"}))
+	{
+            $testdata = &FindTestArchiveFiles($test,$thorn,$testdata);
+            my $arrangement = $testdata->{"$thorn ARRANGEMENT"};
+            my $parfile = TransformDirs($testdata->{"$thorn TESTSDIR"}. "/" . $test . ".par");
+            print $testfile "$parfile\n";
+        }
+      }
+      close($testfile);
+      print "Invoking MakeTestSchedule...\n";
+      open(my $MS, "-|", "$config_data->{'CCTK_DIR'}/lib/sbin/MakeTestSchedule -e $config_data->{'EXE'} -n $config_data->{'NPROCS'}");
+      while (my $line = <$MS>) {
+          print $line;
+      }
+      close $MS;
+    }
     elsif ($choice =~ /^[AT]/i)
     {
       ($ntests,@tests) = &ChooseTests($choice,$testdata);

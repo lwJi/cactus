@@ -1,0 +1,3 @@
+source 'lib/smartlog/smartlog.sh'
+source 'lib/smartlog/smartcheck.sh'
+source 'lib/smartlog/smartexec.sh'

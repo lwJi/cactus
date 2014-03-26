@@ -1,0 +1,271 @@
+#! /bin/bash
+#
+#  The following script runs all testsuites available in $CCTK_HOME
+#  in parallel using GNU Make according to a longest-first algorithm. 
+# 
+#  If the tests have been run and previous times obtained, they are
+#  used to schedule.  If a test has not been run, its time is estimated
+#  to be 0s.  After running, timing information is collected from all 
+#  tests to be used for the next schedule.
+
+
+
+##############################################################################
+#  log "Setting options"
+##############################################################################
+while getopts "e:h:n:t:" opt; do
+	case $opt in
+		e)
+			EXE=$OPTARG
+			;;
+		h)
+			CCTK_HOME=$OPTARG
+			;;
+		n)
+			PPJ=$OPTARG  # processors per job
+			;;
+		t)
+			TESTDIR=$OPTARG
+			;;
+		?)
+			usage
+			;;
+	esac
+done
+# ok
+
+
+
+cdordie() {
+	if ! s_cd "$1" "$2"
+	then
+		die "Could not cd $2/"
+	fi
+}
+
+
+
+rmif () {
+	if check_file "$1" "$2"
+	then
+		s_ex "Removing $1 directory" \
+		"rm -rf $2"
+	fi
+}
+
+
+
+usage() {
+	echo ""
+	echo "usage: ${BOLD}MakeSchedule${NORMAL} [option]"
+	echo "  -e  ${ULINE}executable${NOLINE}"
+	echo "  -h  ${ULINE}cactus_home${NOLINE}"
+	echo "  -n  ${ULINE}num_processes${NOLINE}"
+	echo "  -t  ${ULINE}test_directory${NOLINE}"
+	echo ""
+}
+
+
+
+##############################################################################
+# Check $CCTK_HOME and cd into it.
+##############################################################################
+if [ -z $CCTK_HOME ]
+then
+	CCTK_HOME=$PWD
+fi
+
+if ! cd $CCTK_HOME
+then
+	echo "Could not cd to CCTK_HOME."
+	exit 1
+fi
+
+if ! source 'lib/smartlog/lib'
+then
+	echo "Could not find lib smartlog."
+	echo "It should be in \$CCTK_HOME/lib."
+	exit 1
+fi
+
+
+
+##############################################################################
+# Check if a test directory exists
+##############################################################################
+if ! check_var "test directory" $TESTDIR
+then
+	optip "-t"
+	tip "Setting test directory to 'testdir/'"
+	TESTDIR=testdir;
+fi
+
+
+
+##############################################################################
+# Get NPROCS
+##############################################################################
+if check_file "cpu info" "/proc/cpuinfo"
+then
+	NCORES=`cat /proc/cpuinfo | grep "core id" | wc -l`
+else
+	warn "Cannot determine NCORES from /proc/cpuinfo";
+	NCORES=1;
+fi 
+tip "Using $NCORES processes"
+
+if ! check_var "processes-per-job" $PPJ
+then
+	optip "-n";
+	warn "Guessing processes per job";
+	PPJ=2;
+fi
+tip "Using $PPJ processes per job"
+
+if ! check_var "core-sets" $NPROCS
+then
+	NPROCS=$(( NCORES / PPJ ));
+fi
+tip "Using $NPROCS sets of $PPJ cores"
+
+
+
+
+##############################################################################
+# If it does, tell user.
+##############################################################################
+log "Making test directory"
+if ! mkdir testdir 2> /dev/null
+then
+	yellow_ok
+	tip "Test directory already exists";
+else
+	ok
+fi
+
+
+
+##############################################################################
+# Check if executable exists
+##############################################################################
+if ! check_var "executable" $EXE
+then
+	optip "-e"
+	die "No executable set"
+fi
+if ! check_file "executable" $EXE
+then
+	die "Executable $EXE does not exist"
+fi
+
+
+
+##############################################################################
+# Get all test parfiles
+##############################################################################
+if ! check_file "test list" $TESTDIR/AllTests
+then
+	if ! find $CCTK_HOME | grep '\/test\/' | grep '\.par' | grep -v 'svn-base' > $TESTDIR/AllTests 2> /dev/null
+	then
+		die "The test list could not be obtained"
+	fi
+else
+	tip "Found a test list"
+fi
+
+cdordie "test directory" $TESTDIR 
+
+
+
+##############################################################################
+# Use previous results to schedule this round
+##############################################################################
+if check_file "test results" TestResults
+then
+	log "Creating schedule from test results"; echo ""
+	log "Isolating previous tests" 
+	if cat TestResults | awk '{print $2}' > PreviousTests
+	then
+		ok
+	else
+		fail
+	fi
+ 
+	log "Identifying new tests" 
+	if cat PreviousTests AllTests | sort | uniq > NewTests
+	then
+		ok
+	else
+		fail
+	fi
+ 
+	s_cp "results" "schedule" \
+	TestResults TestSchedule 
+	log "Estimating time for new tests as 1.00 seconds";
+	for TEST in `cat NewTests`
+	do
+		echo "1.00 $TEST" >> TestSchedule
+	done
+	ok
+else
+	warn "Estimating time for all tests as 1.00 seconds";
+	rmif "test schedule" "TestSchedule" 
+	for TEST in `cat AllTests`
+	do
+		echo "1.00 $TEST" >> TestSchedule
+	done
+fi
+
+
+
+##############################################################################
+# Sort for run
+##############################################################################
+s_cp  "schedule" "temp" \
+TestSchedule TestSchedule.tmp 
+s_ex "Sorting schedule" \
+"sort -n -r TestSchedule.tmp -o TestSchedule"
+rm TestSchedule.tmp
+
+
+
+SUBDIR=`date +%y%d%m%M%S`
+#mkdir $CCTK_HOME/$TESTDIR/$SUBDIR
+
+
+##############################################################################
+# Construct Makefile
+##############################################################################
+rmif "old test results" "TestResults" 
+log "Constructing Makefile"
+echo "" > $CCTK_HOME/Makefile.tests
+i=0
+for TEST in `cat TestSchedule | awk '{print $2}'`
+do
+	i=`expr $i + 1`
+	i=`printf "%03d" $i`
+	THORN=`echo $TEST | sed 's/.*\/[[:alnum:]]*\/\([[:alnum:]\-\_]*\)\/test\/.*/\1/g'`
+	mkdir $THORN 2> /dev/null
+	NAME=`echo $TEST | sed 's/.*\/\(.*\)\.par/\1/'`
+	COMMAND="               echo \"Executing test $i: $NAME...\";"
+	COMMAND="$COMMAND	/usr/bin/time -o 'TestResults' --append -f '%e'"
+	COMMAND="$COMMAND       setsid mpirun -np $PPJ $EXE $TEST > /dev/null 2> /dev/null || true;" 
+	COMMAND="$COMMAND	mv $NAME $CCTK_HOME/$TESTDIR/$THORN/$NAME.$i 2> /dev/null;"
+	COMMAND="$COMMAND	echo \"Finished  test $i.\";"
+	COMMAND="$COMMAND	echo $TEST >> TestResults;"
+	echo "$i.$NAME:"  >> $CCTK_HOME/Makefile.tests
+	echo "	$COMMAND" >> $CCTK_HOME/Makefile.tests
+	echo ""           >> $CCTK_HOME/Makefile.tests
+	NAMES="$NAMES $i.$NAME"
+done
+echo -n "all: "    >> $CCTK_HOME/Makefile.tests
+echo "	$NAMES" >> $CCTK_HOME/Makefile.tests 
+echo ""         >> $CCTK_HOME/Makefile.tests
+ok
+
+
+# Finally, make
+cd ../
+make all -i -k --quiet -j $NPROCS -f $CCTK_HOME/Makefile.tests
+sed -i 'N;s/\n/ /' TestResults
+
