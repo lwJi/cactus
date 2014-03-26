@@ -248,11 +248,13 @@ do
 	mkdir $THORN 2> /dev/null
 	NAME=`echo $TEST | sed 's/.*\/\(.*\)\.par/\1/'`
 	COMMAND="               echo \"Executing test $i: $NAME...\";"
+	COMMAND="$COMMAND	cd $CCTK_HOME/$TESTDIR;"
 	COMMAND="$COMMAND	/usr/bin/time -o 'TestResults' --append -f '%e'"
 	COMMAND="$COMMAND       setsid mpirun -np $PPJ $EXE $TEST > /dev/null 2> /dev/null || true;" 
 	COMMAND="$COMMAND	mv $NAME $CCTK_HOME/$TESTDIR/$THORN/$NAME.$i 2> /dev/null;"
 	COMMAND="$COMMAND	echo \"Finished  test $i.\";"
 	COMMAND="$COMMAND	echo $TEST >> TestResults;"
+	COMMAND="$COMMAND	cd $CCTK_HOME;";
 	echo "$i.$NAME:"  >> $CCTK_HOME/Makefile.tests
 	echo "	$COMMAND" >> $CCTK_HOME/Makefile.tests
 	echo ""           >> $CCTK_HOME/Makefile.tests
