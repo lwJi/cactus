@@ -148,6 +148,7 @@ while ($choice !~ /^Q/i)
     elsif ($choice =~ /^M/i)
     {
       $tests_dir = $config_data->{"TESTS_DIR"};
+      mkdir $tests_dir;
       open(my $testfile, ">", "$tests_dir/AllTests");
       foreach $thorn (split(" ",$testdata->{"RUNNABLETHORNS"}))
       {
