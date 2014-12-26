@@ -235,9 +235,9 @@ ifeq ($(strip $(CONFIGURATIONS)),)
 	@echo \'$(MAKE) help\' lists all $(MAKE) options.
 else
 ifeq ($(words $(CONFIGURATIONS)), 1)
-	@echo Please use $(MAKE) $(CONFIGURATIONS)
+	@echo Using the only available configuration: $(CONFIGURATIONS).
 	$(NOTIFY_DIVIDER)
-	@echo \'$(MAKE) help\' lists all $(MAKE) options.
+	$(MAKE) $(CONFIGURATIONS)
 else
 	@echo Known configurations are: $(CONFIGURATIONS)
 	@echo Please use $(MAKE) \<configuration\>
