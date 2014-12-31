@@ -49,8 +49,8 @@ static void CommandLinePrintParameter (const cParamData *properties);
  *********************     Local Data   *****************************
  ********************************************************************/
 static char* logdir = NULL;
-static int requested_stdout_redirection = 0;
-static int requested_stderr_redirection = 0;
+static redirect_t requested_stdout_redirection = REDIRECT_NONE;
+static redirect_t requested_stderr_redirection = REDIRECT_NONE;
 static int buffering_type = 0;
 /* buffering: 0=default, 1=unbuffered, 2=line, 3=fully */
 static int paramchecking = 0;
@@ -464,7 +464,7 @@ void CCTKi_CommandLineParameterLevel (const char *argument)
    @vio        in
    @endvar
 @@*/
-void CCTKi_CommandLineRedirect (const char *argument, const int type)
+void CCTKi_CommandLineRedirect (const char *argument, const redirect_t type)
 {
   if (!argument || strchr(argument,'o')) /* redirect stdout */
   {

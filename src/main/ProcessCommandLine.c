@@ -194,9 +194,9 @@ int CCTKi_ProcessCommandLine(int *inargc, char ***inargv, tFleshConfig *ConfigDa
           case parameter_level_option:
             CCTKi_CommandLineParameterLevel(optarg); break;
           case redirect_option:
-            CCTKi_CommandLineRedirect(optarg, 1); break;
+            CCTKi_CommandLineRedirect(optarg, REDIRECT_NONROOT); break;
           case Redirect_option:
-            CCTKi_CommandLineRedirect(optarg, 2); break;
+            CCTKi_CommandLineRedirect(optarg, REDIRECT_ALL); break;
           case logdir_option:
             CCTKi_CommandLineLogDir(optarg); break;
           case buffering_option:
