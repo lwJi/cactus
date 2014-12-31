@@ -716,7 +716,8 @@ void CCTKi_CommandLineFinished (void)
   }
 
   /* redirect stdout/stderr on non-root processors */
-  if (logdir && !(requested_stdout_redirection || requested_stderr_redirection))
+  if (logdir && requested_stdout_redirection == REDIRECT_NONE &&
+                requested_stderr_redirection == REDIRECT_NONE)
   {
     CCTK_VWarn (CCTK_WARN_PICKY, __LINE__, __FILE__, "Cactus",
                 "Specifying the '-logdir' option without the '-r' or '-R' "
@@ -727,7 +728,8 @@ void CCTKi_CommandLineFinished (void)
      for redirected stdout/stderr logfiles */
   if (logdir)
   {
-    if (requested_stdout_redirection || requested_stderr_redirection)
+    if (requested_stdout_redirection != REDIRECT_NONE ||
+        requested_stderr_redirection != REDIRECT_NONE)
     {
       if (CCTK_CreateDirectory (0755, logdir) < 0)
       {
@@ -750,10 +752,10 @@ void CCTKi_CommandLineFinished (void)
      send stdout/stderr messages to <logdir>/CCTK_Proc<id>.{out,err}
      otherwise redirect stdout to the NULL device */
   logfilename = malloc (strlen (logdir) + 32);
-  if ( (myproc && requested_stdout_redirection) ||
-        requested_stdout_redirection > 1 )
+  if ( (myproc && requested_stdout_redirection != REDIRECT_NONE) ||
+       requested_stdout_redirection == REDIRECT_ALL )
   {
-    if (myproc == 0 && requested_stdout_redirection > 1)
+    if (myproc == 0 && requested_stdout_redirection == REDIRECT_ALL)
       printf("Redirection of all stdout to file(s) was requested. This means "
              "that there will be no output to the screen. In order to see the "
              "redirected output you will need to look at these files, e.g., "
@@ -766,7 +768,7 @@ void CCTKi_CommandLineFinished (void)
                   "Could not redirect stdout to logfile '%s'", logfilename);
     }
   }
-  else if (myproc && !requested_stdout_redirection)
+  else if (myproc && requested_stdout_redirection != REDIRECT_NONE)
   {
     newfile = freopen (NULL_DEVICE, "w", stdout);
     if (! newfile)
@@ -777,8 +779,8 @@ void CCTKi_CommandLineFinished (void)
     }
   }
 
-  if ( (myproc && requested_stderr_redirection) ||
-       requested_stderr_redirection > 1 )
+  if ( (myproc && requested_stderr_redirection != REDIRECT_NONE) ||
+       requested_stderr_redirection == REDIRECT_ALL )
   {
     sprintf (logfilename, "%s/CCTK_Proc%u.err", logdir, myproc);
     newfile = freopen (logfilename, "w", stderr);
