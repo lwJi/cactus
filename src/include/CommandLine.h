@@ -14,6 +14,8 @@
 extern "C" {
 #endif
 
+typedef enum {REDIRECT_NONE, REDIRECT_NONROOT, REDIRECT_ALL} redirect_t;
+
 void CCTKi_CommandLineTestThornCompiled(const char *argument);
 void CCTKi_CommandLineDescribeAllParameters(const char *argument);
 void CCTKi_CommandLineDescribeParameter(const char *argument);
@@ -22,7 +24,7 @@ void CCTKi_CommandLineLoggingLevel(const char *argument);
 void CCTKi_CommandLineWarningLevel(const char *argument);
 void CCTKi_CommandLineErrorLevel(const char *argument);
 void CCTKi_CommandLineParameterLevel(const char *argument);
-void CCTKi_CommandLineRedirect(const char *argument, const int type);
+void CCTKi_CommandLineRedirect(const char *argument, const redirect_t type);
 void CCTKi_CommandLineLogDir(const char *argument);
 void CCTKi_CommandLineSetBuffering(const char *argument);
 void CCTKi_CommandLinePrintSchedule(void);
