@@ -113,6 +113,7 @@ sub parse_schedule_ccl
   my($n_statements);
   my($name, $as, $type, $description, $where, $language,
        $mem_groups, $comm_groups, $trigger_groups, $sync_groups,
+       $sync_begin_groups, $sync_end_groups,
        $options, $tags, $before_list, $after_list,
        $writes_list, $reads_list, $while_list, $if_list);
   my($groups);
@@ -128,6 +129,7 @@ sub parse_schedule_ccl
       ($line_number,
        $name, $as, $type, $description, $where, $language,
        $mem_groups, $comm_groups, $trigger_groups, $sync_groups,
+       $sync_begin_groups, $sync_end_groups,
        $options, $tags, $before_list, $after_list,
        $writes_list, $reads_list, $while_list, $if_list) =
            &ParseScheduleBlock($thorn,$line_number, @data);
@@ -142,6 +144,8 @@ sub parse_schedule_ccl
       $schedule_db{"\U$thorn\E BLOCK_$n_blocks COMM"}        = $comm_groups;
       $schedule_db{"\U$thorn\E BLOCK_$n_blocks TRIG"}        = $trigger_groups;
       $schedule_db{"\U$thorn\E BLOCK_$n_blocks SYNC"}        = $sync_groups;
+      $schedule_db{"\U$thorn\E BLOCK_$n_blocks SYNC_BEGIN"}  = $sync_begin_groups;
+      $schedule_db{"\U$thorn\E BLOCK_$n_blocks SYNC_END"}    = $sync_end_groups;
       $schedule_db{"\U$thorn\E BLOCK_$n_blocks OPTIONS"}     = $options;
       $schedule_db{"\U$thorn\E BLOCK_$n_blocks TAGS"}        = $tags;
       $schedule_db{"\U$thorn\E BLOCK_$n_blocks BEFORE"}      = $before_list;
@@ -201,6 +205,7 @@ sub ParseScheduleBlock
   my($thorn,$line_number, @data) = @_;
   my($name, $as, $type, $description, $where, $language,
      $mem_groups, $comm_groups, $trigger_groups, $sync_groups,
+     $sync_begin_groups, $sync_end_groups,
      $options, $tags, $before_list, $after_list,
      $writes_list, $reads_list, $while_list, $if_list);
   my(@fields);
@@ -215,6 +220,8 @@ sub ParseScheduleBlock
   my(@comm_groups)    = ();
   my(@trigger_groups) = ();
   my(@sync_groups)    = ();
+  my(@sync_begin_groups) = ();
+  my(@sync_end_groups) = ();
   my(@options)        = ();
   my(@tags)           = ();
   my($keyword) = "";
@@ -472,9 +479,17 @@ sub ParseScheduleBlock
       {
         push(@trigger_groups, split(/\s+|\s*,\s*/, $1));
       }
-      elsif($data[$line_number] =~ m/^\s*SYNC[^:]*:\s*(.*)$/i)
+      elsif($data[$line_number] =~ m/^\s*SYNC[^:_]*:\s*(.*)$/i)
       {
         push(@sync_groups, split(/\s+|\s*,\s*/, $1));
+      }
+      elsif($data[$line_number] =~ m/^\s*SYNC_BEGIN[^:]*:\s*(.*)$/i)
+      {
+        push(@sync_begin_groups, split(/\s+|\s*,\s*/, $1));
+      }
+      elsif($data[$line_number] =~ m/^\s*SYNC_END[^:]*:\s*(.*)$/i)
+      {
+        push(@sync_end_groups, split(/\s+|\s*,\s*/, $1));
       }
       elsif($data[$line_number] =~ m/^\s*WRITES\s*:\s*(.*)$/i)
       {
@@ -538,6 +553,8 @@ sub ParseScheduleBlock
   $comm_groups    = join(",", @comm_groups);
   $trigger_groups = join(",", @trigger_groups);
   $sync_groups    = join(",", @sync_groups);
+  $sync_begin_groups = join(",", @sync_begin_groups);
+  $sync_end_groups = join(",", @sync_end_groups);
   $options        = join(",", @options);
   $tags           = join(" ", @tags);
   $before_list    = join(",", @before_list);
@@ -551,6 +568,7 @@ sub ParseScheduleBlock
   return ($line_number,
           $name, $as, $type, $description, $where, $language,
           $mem_groups, $comm_groups, $trigger_groups, $sync_groups,
+          $sync_begin_groups, $sync_end_groups,
           $options, $tags, $before_list, $after_list,
           $writes_list, $reads_list, $while_list, $if_list);
 

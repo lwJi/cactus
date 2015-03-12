@@ -85,6 +85,12 @@ int CactusDefaultSyncGroup (const cGH *GH, const char *groupname);
 int CactusDefaultSyncGroupsByDirI(const cGH *GH, int num_groups,
                                   const int *groups,
                                   const int *directions);
+int CactusDefaultSyncGroupsBeginByDirI(const cGH *GH, int num_groups,
+                                       const int *groups,
+                                       const int *directions);
+int CactusDefaultSyncGroupsEndByDirI(const cGH *GH, int num_groups,
+                                     const int *groups,
+                                     const int *directions);
 int CactusDefaultEnableGroupStorage(const cGH *GH, const char *group);
 int CactusDefaultDisableGroupStorage(const cGH *GH, const char *group);
 int CactusDefaultGroupStorageIncrease(const cGH *GH, int n_groups,
@@ -592,6 +598,20 @@ int CactusDefaultSyncGroupsByDirI (const cGH *GH, int num_groups,
   }
 
   return (retval);
+}
+
+int CactusDefaultSyncGroupsBeginByDirI (const cGH *GH, int num_groups,
+                                        const int *groups,
+                                        const int *directions)
+{
+  return 0;
+}
+
+int CactusDefaultSyncGroupsEndByDirI (const cGH *GH, int num_groups,
+                                      const int *groups,
+                                      const int *directions)
+{
+  return CactusDefaultSyncGroupsByDirI (GH, num_groups, groups, directions);
 }
 
 

@@ -27,6 +27,10 @@ typedef struct
 
   int n_SyncGroups;
   int *SyncGroups;
+  int n_SyncBeginGroups;
+  int *SyncBeginGroups;
+  int n_SyncEndGroups;
+  int *SyncEndGroups;
 
   /* Option Flags */
 

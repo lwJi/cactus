@@ -123,6 +123,8 @@ static t_attribute *CreateAttribute(const char *where,
                                     int n_comm_groups,
                                     int n_trigger_groups,
                                     int n_sync_groups,
+                                    int n_sync_begin_groups,
+                                    int n_sync_end_groups,
                                     int n_writes,
                                     int n_reads,
                                     int n_options,
@@ -424,6 +426,16 @@ const cFunctionData *CCTK_ScheduleQueryCurrentFunction(const cGH * CCTK_ATTRIBUT
    @vtype   int
    @vio     in
    @endvar
+   @var     n_sync_begin_groups
+   @vdesc   Number of groups needing synchronisation-begin after this function
+   @vtype   int
+   @vio     in
+   @endvar
+   @var     n_sync_end_groups
+   @vdesc   Number of groups needing synchronisation-end after this function
+   @vtype   int
+   @vio     in
+   @endvar
    @var     n_writes
    @vdesc   Number of writes clauses
    @vtype   int
@@ -486,6 +498,8 @@ int CCTKi_ScheduleFunction(void *function,
                            int n_comm_groups,
                            int n_trigger_groups,
                            int n_sync_groups,
+                           int n_sync_begin_groups,
+                           int n_sync_end_groups,
                            int n_writes,
                            int n_reads,
                            int n_options,
@@ -506,7 +520,8 @@ int CCTKi_ScheduleFunction(void *function,
 
   attribute = CreateAttribute(where,name,description, language, thorn, implementation,
                               n_mem_groups, n_comm_groups, n_trigger_groups,
-                              n_sync_groups, n_writes, n_reads,
+                              n_sync_groups, n_sync_begin_groups, n_sync_end_groups,
+                              n_writes, n_reads,
                               n_options, timelevels, &ap);
   modifier  = CreateModifiers(n_before, n_after, n_while, n_if, &ap);
 
@@ -600,6 +615,16 @@ int CCTKi_ScheduleFunction(void *function,
    @vtype   int
    @vio     in
    @endvar
+   @var     n_sync_begin_groups
+   @vdesc   Number of groups needing synchronisation-begin after this function
+   @vtype   int
+   @vio     in
+   @endvar
+   @var     n_sync_end_groups
+   @vdesc   Number of groups needing synchronisation-end after this function
+   @vtype   int
+   @vio     in
+   @endvar
    @var     n_writes
    @vdesc   Number of writes clauses
    @vtype   int
@@ -660,6 +685,8 @@ int CCTKi_ScheduleGroup(const char *realname,
                         int n_comm_groups,
                         int n_trigger_groups,
                         int n_sync_groups,
+                        int n_sync_begin_groups,
+                        int n_sync_end_groups,
                         int n_writes,
                         int n_reads,
                         int n_options,
@@ -680,7 +707,8 @@ int CCTKi_ScheduleGroup(const char *realname,
 
   attribute = CreateAttribute(where,name,description, NULL, thorn, implementation,
                               n_mem_groups, n_comm_groups, n_trigger_groups,
-                              n_sync_groups, n_writes, n_reads,
+                              n_sync_groups, n_sync_begin_groups, n_sync_end_groups,
+                              n_writes, n_reads,
                               n_options, timelevels, &ap);
   modifier  = CreateModifiers(n_before, n_after, n_while, n_if, &ap);
 
@@ -1425,6 +1453,16 @@ static int ScheduleTraverse(const char *where,
    @vtype   int
    @vio     in
    @endvar
+   @var     n_sync_begin_groups
+   @vdesc   Number of groups needing synchronisation-begin after this function
+   @vtype   int
+   @vio     in
+   @endvar
+   @var     n_sync_end_groups
+   @vdesc   Number of groups needing synchronisation-end after this function
+   @vtype   int
+   @vio     in
+   @endvar
    @var     n_writes
    @vdesc   Number of writes clauses
    @vtype   int
@@ -1466,6 +1504,8 @@ static t_attribute *CreateAttribute(const char *where,
                                     int n_comm_groups,
                                     int n_trigger_groups,
                                     int n_sync_groups,
+                                    int n_sync_begin_groups,
+                                    int n_sync_end_groups,
                                     int n_writes,
                                     int n_reads,
                                     int n_options,
@@ -1498,6 +1538,14 @@ static t_attribute *CreateAttribute(const char *where,
     {
       this->FunctionData.SyncGroups = malloc(n_sync_groups*sizeof(int));
     }
+    if (n_sync_begin_groups > 0)
+    {
+      this->FunctionData.SyncBeginGroups = malloc(n_sync_begin_groups*sizeof(int));
+    }
+    if (n_sync_end_groups > 0)
+    {
+      this->FunctionData.SyncEndGroups = malloc(n_sync_end_groups*sizeof(int));
+    }
     if (n_writes > 0)
     {
       this->FunctionData.WritesClauses = malloc(n_writes*sizeof(char*));
@@ -1523,6 +1571,8 @@ static t_attribute *CreateAttribute(const char *where,
        (this->comm_groups || n_comm_groups==0)       &&
        (this->FunctionData.TriggerGroups || n_trigger_groups==0) &&
        (this->FunctionData.SyncGroups || n_sync_groups==0) &&
+       (this->FunctionData.SyncBeginGroups || n_sync_begin_groups==0) &&
+       (this->FunctionData.SyncEndGroups || n_sync_end_groups==0) &&
        (this->FunctionData.WritesClauses || n_writes==0) &&
        (this->FunctionData.ReadsClauses || n_reads==0))
     {
@@ -1544,12 +1594,14 @@ static t_attribute *CreateAttribute(const char *where,
       }
 
       /* Create the lists of indices of groups we're interested in. */
-      CreateGroupIndexList(n_mem_groups,     this->mem_groups, ap);
-      CreateGroupIndexList(n_comm_groups,    this->comm_groups, ap);
-      CreateGroupIndexList(n_trigger_groups, this->FunctionData.TriggerGroups, ap);
-      CreateGroupIndexList(n_sync_groups,    this->FunctionData.SyncGroups, ap);
-      CreateStringList    (n_writes,       this->FunctionData.WritesClauses, ap);
-      CreateStringList    (n_reads,       this->FunctionData.ReadsClauses, ap);
+      CreateGroupIndexList(n_mem_groups,        this->mem_groups, ap);
+      CreateGroupIndexList(n_comm_groups,       this->comm_groups, ap);
+      CreateGroupIndexList(n_trigger_groups,    this->FunctionData.TriggerGroups, ap);
+      CreateGroupIndexList(n_sync_groups,       this->FunctionData.SyncGroups, ap);
+      CreateGroupIndexList(n_sync_begin_groups, this->FunctionData.SyncBeginGroups, ap);
+      CreateGroupIndexList(n_sync_end_groups,   this->FunctionData.SyncEndGroups, ap);
+      CreateStringList    (n_writes,            this->FunctionData.WritesClauses, ap);
+      CreateStringList    (n_reads,             this->FunctionData.ReadsClauses, ap);
 
       for(i=0; i< n_mem_groups; i++)
       {
@@ -1568,6 +1620,8 @@ static t_attribute *CreateAttribute(const char *where,
       this->n_comm_groups    = n_comm_groups;
       this->FunctionData.n_TriggerGroups = n_trigger_groups;
       this->FunctionData.n_SyncGroups = n_sync_groups;
+      this->FunctionData.n_SyncBeginGroups = n_sync_begin_groups;
+      this->FunctionData.n_SyncEndGroups = n_sync_end_groups;
       this->FunctionData.n_WritesClauses = n_writes;
       this->FunctionData.n_ReadsClauses = n_reads;
 
@@ -2779,6 +2833,20 @@ static int CCTKi_ScheduleCallExit(t_attribute *attribute,
       CCTK_SyncGroupsI(data->GH,
                        attribute->FunctionData.n_SyncGroups,
                        attribute->FunctionData.SyncGroups);
+      attribute->synchronised = 0;
+    }
+    if(attribute->FunctionData.n_SyncBeginGroups > 0 && ! attribute->synchronised)
+    {
+      CCTK_SyncGroupsBeginI(data->GH,
+                            attribute->FunctionData.n_SyncBeginGroups,
+                            attribute->FunctionData.SyncBeginGroups);
+      attribute->synchronised = 0;
+    }
+    if(attribute->FunctionData.n_SyncEndGroups > 0 && ! attribute->synchronised)
+    {
+      CCTK_SyncGroupsEndI(data->GH,
+                          attribute->FunctionData.n_SyncEndGroups,
+                          attribute->FunctionData.SyncEndGroups);
       attribute->synchronised = 0;
     }
 

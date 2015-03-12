@@ -91,6 +91,8 @@ my %var_mapping = (
 	'AFTER'=> 'After',
 	'TRIG' => 'Triggers',
 	'SYNC' => 'Sync',
+	'SYNC_BEGIN' => 'SyncBegin',
+	'SYNC_END' => 'SyncEnd',
 );
 
 # get/setup the output directory and the arrangements directory

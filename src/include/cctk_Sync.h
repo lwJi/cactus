@@ -24,6 +24,10 @@ int CCTK_SyncGroupWithVarI (const cGH *GH, int var)
   CCTK_ATTRIBUTE_NONNULL(1);
 int CCTK_SyncGroupsI (const cGH *GH, int n_groups, const int *groups)
   CCTK_ATTRIBUTE_NONNULL(1);
+int CCTK_SyncGroupsBeginI (const cGH *GH, int n_groups, const int *groups)
+  CCTK_ATTRIBUTE_NONNULL(1);
+int CCTK_SyncGroupsEndI (const cGH *GH, int n_groups, const int *groups)
+  CCTK_ATTRIBUTE_NONNULL(1);
 
 #ifdef __cplusplus
 }

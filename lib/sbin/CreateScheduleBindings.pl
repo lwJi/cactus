@@ -491,6 +491,8 @@ sub ScheduleBlock
   my($unused_comm_groups);
   my($trigger_groups);
   my($sync_groups);
+  my($sync_begin_groups);
+  my($sync_end_groups);
   my(@options);
   my($tags);
   my(@before_list);
@@ -525,6 +527,12 @@ sub ScheduleBlock
 
   ($sync_groups) = &ScheduleSelectGroups($thorn, $implementation,
                                          $rhschedule_db->{"\U$thorn\E BLOCK_$block SYNC"},
+                                         $rhinterface_db);
+  ($sync_begin_groups) = &ScheduleSelectGroups($thorn, $implementation,
+                                         $rhschedule_db->{"\U$thorn\E BLOCK_$block SYNC_BEGIN"},
+                                         $rhinterface_db);
+  ($sync_end_groups) = &ScheduleSelectGroups($thorn, $implementation,
+                                         $rhschedule_db->{"\U$thorn\E BLOCK_$block SYNC_END"},
                                          $rhinterface_db);
 
   @options = split(/,/, $rhschedule_db->{"\U$thorn\E BLOCK_$block OPTIONS"});
@@ -640,9 +648,9 @@ sub ScheduleBlock
     $buffer .= "$indent\"$language\",\n";
   }
 
-  $buffer .= $indent . scalar(@$mem_groups) . ",  /* Number of STORAGE  groups   */\n";
-  $buffer .= $indent . scalar(@$comm_groups) . ",  /* Number of COMM     groups   */\n";
-  $buffer .= $indent . scalar(@$trigger_groups) . ",  /* Number of TRIGGERS groups   */\n";
+  $buffer .= $indent . scalar(@$mem_groups)        . ", /* Number of STORAGE    groups    */\n";
+  $buffer .= $indent . scalar(@$comm_groups)       . ", /* Number of COMM       groups    */\n";
+  $buffer .= $indent . scalar(@$trigger_groups)    . ", /* Number of TRIGGERS   groups    */\n";
 ### TR 22 Jan 2004: disabled the check for triggers of ANALYSIS routines
 ###                 as the absence of triggers now means to schedule
 ###                 such routines unconditionally
@@ -654,17 +662,20 @@ sub ScheduleBlock
 #    $help .= 'IO methods to decide whether of not execution should happen.';
 #    &CST_error(0,$mess,$help,__LINE__,__FILE__);
 #  }
-  $buffer .= $indent . scalar(@$sync_groups)  . ", /* Number of SYNC     groups    */\n";
-  $buffer .= $indent . scalar(@writes_list)   . ", /* Number of WRITES clauses     */\n";
-  $buffer .= $indent . scalar(@reads_list)    . ", /* Number of READS clauses      */\n";
-  $buffer .= $indent . scalar(@options)       . ", /* Number of Options            */\n";
-  $buffer .= $indent . scalar(@before_list)   . ", /* Number of BEFORE   routines  */\n";
-  $buffer .= $indent . scalar(@after_list)    . ", /* Number of AFTER    routines  */\n";
-  $buffer .= $indent . scalar(@while_list)    . ", /* Number of WHILE    variables */\n";
-  $buffer .= $indent . scalar(@if_list)       . ", /* Number of IF       variables */\n";
+  $buffer .= $indent . scalar(@$sync_groups)       . ", /* Number of SYNC       groups    */\n";
+  $buffer .= $indent . scalar(@$sync_begin_groups) . ", /* Number of SYNC_BEGIN groups    */\n";
+  $buffer .= $indent . scalar(@$sync_end_groups)   . ", /* Number of SYNC_END   groups    */\n";
+  $buffer .= $indent . scalar(@writes_list)        . ", /* Number of WRITES     clauses   */\n";
+  $buffer .= $indent . scalar(@reads_list)         . ", /* Number of READS      clauses   */\n";
+  $buffer .= $indent . scalar(@options)            . ", /* Number of Options              */\n";
+  $buffer .= $indent . scalar(@before_list)        . ", /* Number of BEFORE     routines  */\n";
+  $buffer .= $indent . scalar(@after_list)         . ", /* Number of AFTER      routines  */\n";
+  $buffer .= $indent . scalar(@while_list)         . ", /* Number of WHILE      variables */\n";
+  $buffer .= $indent . scalar(@if_list)            . ", /* Number of IF         variables */\n";
   $buffer .= $indent . "cctkschedulei_tlevelarray  /* Array of timelevel data for storage groups */";
 
   foreach $item (@$mem_groups, @$comm_groups, @$trigger_groups, @$sync_groups,
+                 @$sync_begin_groups, @$sync_end_groups,
                  @writes_list, @reads_list, @options)
   {
     $buffer .= ",\n$indent\"$item\"";

@@ -39,6 +39,12 @@ void CCTK_FCALL CCTK_FNAME (CCTK_SyncGroupWithVarI)
 void CCTK_FCALL CCTK_FNAME (CCTK_SyncGroupsI)
                            (int *ierror, const cGH **GH, const int *num_groups,
                             const int *groups);
+void CCTK_FCALL CCTK_FNAME (CCTK_SyncGroupsBeginI)
+                           (int *ierror, const cGH **GH, const int *num_groups,
+                            const int *groups);
+void CCTK_FCALL CCTK_FNAME (CCTK_SyncGroupsEndI)
+                           (int *ierror, const cGH **GH, const int *num_groups,
+                            const int *groups);
 
 
  /*@@
@@ -219,9 +225,47 @@ int CCTK_SyncGroupsI (const cGH *GH,
   return (retval);
 }
 
+int CCTK_SyncGroupsBeginI (const cGH *GH,
+                      int n_groups,
+                      const int *groups)
+{
+  int retval;
+
+
+  /* passing NULL as the last argument means: synchronise all directions */
+  retval = CCTK_SyncGroupsBeginByDirI (GH, n_groups, groups, NULL);
+
+  return (retval);
+}
+
+int CCTK_SyncGroupsEndI (const cGH *GH,
+                      int n_groups,
+                      const int *groups)
+{
+  int retval;
+
+
+  /* passing NULL as the last argument means: synchronise all directions */
+  retval = CCTK_SyncGroupsEndByDirI (GH, n_groups, groups, NULL);
+
+  return (retval);
+}
+
 
 void CCTK_FCALL CCTK_FNAME (CCTK_SyncGroupsI)
      (int *ierror, const cGH **GH, const int *num_groups, const int *groups)
 {
   *ierror = CCTK_SyncGroupsI (*GH, *num_groups, groups);
+}
+
+void CCTK_FCALL CCTK_FNAME (CCTK_SyncGroupsBeginI)
+     (int *ierror, const cGH **GH, const int *num_groups, const int *groups)
+{
+  *ierror = CCTK_SyncGroupsBeginI (*GH, *num_groups, groups);
+}
+
+void CCTK_FCALL CCTK_FNAME (CCTK_SyncGroupsEndI)
+     (int *ierror, const cGH **GH, const int *num_groups, const int *groups)
+{
+  *ierror = CCTK_SyncGroupsEndI (*GH, *num_groups, groups);
 }
