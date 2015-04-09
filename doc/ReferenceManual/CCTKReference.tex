@@ -852,6 +852,10 @@ from Fortran.
   Prints a formatted string with a variable argument list as an information
   message to screen
 
+\item[\code{CCTK\_VParamWarn}] [\pageref{CCTK-VParamWarn}]
+  Prints a formatted string with a variable argument list as a warning from
+  parameter checking, and possibly stops the code
+
 \item[\code{CCTK\_VWarn}] [\pageref{CCTK-VWarn}]
   Prints a formatted string with a variable argument list as a warning message
   to standard error and possibly stops the code
@@ -9307,7 +9311,7 @@ int istat = CCTK_OutputVarAs (const cGH *cctkGH,
 \end{Synopsis}
 \begin{Synopsis}{Fortran}
 \begin{verbatim}
-call CCTK_OutputVarAsByMethod (istat, cctkGH, variable, alias)
+call CCTK_OutputVarAs (istat, cctkGH, variable, alias)
 integer istat
 CCTK_POINTER cctkGH
 character*(*) variable
@@ -10211,6 +10215,22 @@ The call should be used in routines registered at the schedule point \code{CCTK\
 to indicate that there is parameter error or conflict and the code should
 terminate. The code will terminate only after all the parameters have been
 checked.
+
+The macro \code{CCTK\_PARAMWARN(message)} expands to a call to the
+underlying function \code{CCTK\_ParamWarn}:
+
+\begin{verbatim}
+CCTK_ParamWarn(CCTK_THORNSTRING, message)
+\end{verbatim}
+
+So the macro automatically includes the name of the originating thorn in the
+info message. It is recommended that the macro \code{CCTK\_PARAMWARN} is used
+to print a message rather than calling \code{CCTK\_ParamWarn} directly.
+
+To include variables in an info message from C, you can use the routine
+\code{CCTK\_VParamWarn} which accepts a variable argument list.
+To include variables from Fortran, a string must be constructed and passed
+in a \code{CCTK\_PARAMWARN} macro.
 \end{Discussion}
 \begin{ExampleSection}
 \begin{Example}{C}
@@ -10224,6 +10244,13 @@ call  CCTK_PARAMWARN("Inside interpolator")
 \end{verbatim}
 \end{Example}
 \end{ExampleSection}
+
+\begin{SeeAlsoSection}
+\begin{SeeAlso2}{CCTK\_VParamWarn}{CCTK-VParamWarn}
+Prints a formatted string with a variable argument list as a warning from
+parameter checking, and possibly stops the code
+\end{SeeAlso2}
+\end{SeeAlsoSection}
 \end{FunctionDescription}
 
 
@@ -13322,6 +13349,52 @@ CCTK_VInfo(CCTK_THORNSTRING, "Output files will go to '%s'", outdir);
 \end{ExampleSection}
 \end{FunctionDescription}
 
+
+% WarnLevel.c
+\begin{FunctionDescription}{CCTK\_VParamWarn}{Prints a formatted string with a variable argument list as a warning from parameter checking, and possibly stops the code}
+\label{CCTK-VParamWarn}
+\begin{SynopsisSection}
+\begin{Synopsis}{C}
+\begin{verbatim}
+#include <cctk.h>
+
+int status = CCTK_VParamWarn(const char *thorn,
+                             const char *format,
+                             ...);
+\end{verbatim}
+\end{Synopsis}
+\end{SynopsisSection}
+\begin{ParameterSection}
+\begin{Parameter}{thorn}
+Name of originating thorn
+\end{Parameter}
+\begin{Parameter}{format}
+Format for variable argument list
+\end{Parameter}
+\begin{Parameter}{\ldots}
+Variable argument list
+\end{Parameter}
+\end{ParameterSection}
+\begin{Discussion}
+The call should be used in routines registered at the schedule point \code{CCTK\_PARAMCHECK}
+to indicate that there is parameter error or conflict and the code should
+terminate. The code will terminate only after all the parameters have been
+checked.
+\end{Discussion}
+\begin{ExampleSection}
+\begin{Example}{C}
+\begin{verbatim}
+CCTK_VParamWarn("Mass cannot be negative: %g", (double)mass);
+\end{verbatim}
+\end{Example}
+\end{ExampleSection}
+
+\begin{SeeAlsoSection}
+\begin{SeeAlso2}{CCTK\_PARAMWARN}{CCTK-PARAMWARN}
+Prints a warning from parameter checking, and possibly stops the code
+\end{SeeAlso2}
+\end{SeeAlsoSection}
+\end{FunctionDescription}
 
 %Entering a function description for CCTK_VWarn
 \begin{FunctionDescription}{CCTK\_VWarn}
