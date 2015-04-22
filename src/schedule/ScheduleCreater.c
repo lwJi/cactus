@@ -64,6 +64,10 @@ static int ScheduleSetupIfs(t_sched_item *item);
  ********************* Other Routine Prototypes *********************
  ********************************************************************/
 
+void CCTKi_rdwr_init(void **rdwr,t_sched_group *group);
+int CCTKi_rdwr_assign_after(void *rdwr,int item,int size,int *thisorders,t_sched_group *group);
+void CCTKi_rdwr_free(void *rdwr);
+
 /********************************************************************
  *********************     Local Data   *****************************
  ********************************************************************/
@@ -843,6 +847,7 @@ static const char *ScheduleModifierTypeName(t_sched_modifier_type type)
     Or number of scheduling errors
    @endreturndesc
 @@*/
+
 static int ScheduleSortGroup(t_sched_group *group)
 {
   DECLARE_CCTK_PARAMETERS;
@@ -878,6 +883,9 @@ static int ScheduleSortGroup(t_sched_group *group)
     qsort(group->scheditems, group->n_scheditems,
         sizeof(*group->scheditems), ScheduleCompareDescending);
   }
+
+  void *CCTKi_rdwr_ptr=0;
+  CCTKi_rdwr_init(&CCTKi_rdwr_ptr,group);
   
   for(item=0; item < group->n_scheditems; item++)
   {
@@ -919,6 +927,14 @@ static int ScheduleSortGroup(t_sched_group *group)
         thisorders[number] = mod;
       }
     }
+    errcode = CCTKi_rdwr_assign_after(CCTKi_rdwr_ptr,item,group->n_scheditems,thisorders,group);
+    if(errcode)
+    {
+      CCTK_VWarn(CCTK_WARN_ABORT, __LINE__, __FILE__, "Cactus",
+      "Adding item %s to group %s failed on %s (probably a circular dependency).\n",
+      group->scheditems[item].name, group->name,
+      group->scheditems[-errcode-1].name );  
+    }
 
 #ifdef DEBUG_SCHEDULAR
     printf("Orderlist for item %d is...\n", item);
@@ -935,7 +951,7 @@ static int ScheduleSortGroup(t_sched_group *group)
       CCTK_VWarn(CCTK_WARN_ABORT, __LINE__, __FILE__, "Cactus",
       "Adding item %s to group %s failed due to a circular dependency on %s.\n",
       group->scheditems[item].name, group->name,
-      group->scheditems[-errcode-1].name );  /*NOTREACHED*/
+      group->scheditems[-errcode-1].name );  
     }
 
     /* Clear the array for the next item. */
@@ -972,26 +988,26 @@ static int ScheduleSortGroup(t_sched_group *group)
   if(errcode)
   {
     CCTK_VWarn(CCTK_WARN_ABORT, __LINE__, __FILE__, "Cactus",
-    "Schedule sort of group %s failed with error code %d\n",
-    group->name, errcode);                                  /*NOTREACHED*/
+    "Schedule sort of group %s failed (probably a dependency cycle) with error code %d\n",
+    group->name, errcode); 
   }
 
-#ifdef DEBUG_SCHEDULAR
+#ifndef DEBUG_SCHEDULAR
   printf("Final array is...\n");
-  for(i=0; i < group->n_scheditems; i++)
+  for(int i=0; i < group->n_scheditems; i++)
   {
-    for(j=0; j < group->n_scheditems; j++)
+    for(int j=0; j < group->n_scheditems; j++)
     {
-      printf("  %d", (int)array[i][j]);
+      printf(" %2d", (int)array[i][j]);
     }
 
     printf("\n");
   }
 
   printf("Final order is...\n");
-  for(i=0; i < group->n_scheditems; i++)
+  for(int i=0; i < group->n_scheditems; i++)
   {
-    printf("  %d", order[i]);
+    printf("  %s: %d\n", group->scheditems[i].name, order[i]);
   }
   printf("\n");
 #endif
@@ -1002,6 +1018,7 @@ static int ScheduleSortGroup(t_sched_group *group)
 
   group->order = order;
 
+  CCTKi_rdwr_free(CCTKi_rdwr_ptr);
   return errcode;
 }
 

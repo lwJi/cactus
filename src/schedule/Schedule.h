@@ -8,6 +8,7 @@
    @version $Header$
  @@*/
 
+#include "cctk_Schedule.h"
 #include "cctki_Schedule.h"
 #include "StoreHandledData.h"
 
@@ -42,7 +43,50 @@ cHandledData *CCTKi_DoScheduleGetGroups(void);
 
 /* Internal type data */
 
+typedef enum {schedpoint_misc, schedpoint_analysis} iSchedPoint;
+
+/* Timer data for a routine in a given schedule bin */
+typedef struct t_timer
+{
+  struct t_timer *next;
+  int timer_handle;
+  char *schedule_bin;
+  int has_been_output;
+} t_timer;
+
 typedef enum {sched_item_none, sched_group, sched_function} t_sched_item_type;
+
+typedef struct
+{
+  /* Static data */
+  char *description;
+
+  /*char *thorn; MOVED TO FunctionData */
+  char *implementation;
+
+  //iSchedType type;
+  t_sched_item_type type;
+
+  cFunctionData FunctionData;
+
+  int n_mem_groups;
+  int *mem_groups;
+  int *timelevels;
+
+  int n_comm_groups;
+  int *comm_groups;
+
+  /* Timer data */
+  t_timer *timers;
+
+  /* Dynamic data */
+  int *CommOnEntry;
+  int *StorageOnEntry;
+
+  int done_entry;
+  int synchronised;
+
+} t_attribute;
 
 typedef enum {sort_order_none, sort_order_ascending, sort_order_descending} t_sort_order;
 
@@ -60,7 +104,7 @@ typedef struct
   int n_ifs;
   char **ifs;
 
-  void *attributes;
+  t_attribute *attributes;
 
   t_sched_modifier *modifiers;
 } t_sched_item;

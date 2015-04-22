@@ -193,6 +193,7 @@ int CCTKi_ScheduleAddRow(int size,
     {
       if(array[row][column] && array[row][column] != (signed char)thisorders[column])
       {
+        // signals a circular dependency
         retval = -(1+column);
         break;
       }

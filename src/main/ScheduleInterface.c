@@ -5,7 +5,7 @@
    @desc
               Routines to interface the main part of Cactus to the schedular.
    @enddesc
-   @version   $Id$
+   @version   $Id: ScheduleInterface.c 4890 2012-10-24 20:03:13Z knarf $
  @@*/
 
 #include <stdio.h>
@@ -17,6 +17,7 @@
 #include "cctk_WarnLevel.h"
 #include "cctk_Misc.h"
 
+#include "schedule/Schedule.h"
 #include "cctk_Schedule.h"
 #include "cctki_ScheduleBindings.h"
 #include "cctki_Schedule.h"
@@ -43,48 +44,6 @@ CCTK_FILEVERSION(main_ScheduleInterface_c);
  *********************     Local Data Types   ***********************
  ********************************************************************/
 
-typedef enum {sched_none, sched_group, sched_function} iSchedType;
-typedef enum {schedpoint_misc, schedpoint_analysis} iSchedPoint;
-
-/* Timer data for a routine in a given schedule bin */
-typedef struct t_timer
-{
-  struct t_timer *next;
-  int timer_handle;
-  char *schedule_bin;
-  int has_been_output;
-} t_timer;
-
-typedef struct
-{
-  /* Static data */
-  char *description;
-
-  /*char *thorn; MOVED TO FunctionData */
-  char *implementation;
-
-  iSchedType type;
-
-  cFunctionData FunctionData;
-
-  int n_mem_groups;
-  int *mem_groups;
-  int *timelevels;
-
-  int n_comm_groups;
-  int *comm_groups;
-
-  /* Timer data */
-  t_timer *timers;
-
-  /* Dynamic data */
-  int *CommOnEntry;
-  int *StorageOnEntry;
-
-  int done_entry;
-  int synchronised;
-
-} t_attribute;
 
 typedef struct
 {
@@ -868,9 +827,10 @@ int CCTK_ScheduleTraverse(const char *where,
   }
   else
   {
-    if(current_length < strlen(where) + 7)
+    int newlen = strlen(where)+7;
+    if (current_length < newlen)
     {
-      current_length = strlen(where)+7;
+      current_length = newlen;
 
       temp = realloc(current_point, current_length);
 
