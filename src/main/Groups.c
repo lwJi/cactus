@@ -309,7 +309,6 @@ int CCTK_VarIndex (const char *fullvarname)
   char *impname = NULL;
   char *varname = NULL;
 
-
   impname = varname = NULL;
   retval = CCTK_DecomposeName (fullvarname, &impname, &varname);
   if (! retval)
@@ -1184,10 +1183,47 @@ int CCTK_DecomposeName (const char *fullname,
                         char **implementation,
                         char **name)
 {
-  int retval;
+  int retval=0;
 
+  //retval = Util_SplitString (implementation, name, fullname, "::");
+  //printf("  impl=%s, name=%s, retval=%d\n",*implementation,*name,retval);
+  const char *end = fullname;
+  const char *dcolon = 0;
+  const char *namestart = fullname;
+  while(*end && *end != '$') {
+    if(*end == ':' && *(end+1) == ':') {
+      dcolon = end;
+      namestart = end+2;
+    }
+    end++;
+  }
+  if(dcolon == 0) {
+    *implementation = 0;
+    *name = 0;
+    retval = 1;
+  } else {
+    int impl_size = dcolon-fullname+1;
+    int name_size = end   -namestart+1;
+    char *impl_buf = (char *)malloc(sizeof(char)*impl_size);
+    char *name_buf = (char *)malloc(sizeof(char)*name_size);
+    *implementation = impl_buf;
+    *name = name_buf;
 
-  retval = Util_SplitString (implementation, name, fullname, "::");
+    end = fullname;
+    int i=0;
+    while(end != dcolon) {
+      impl_buf[i++] = *end;
+      end++;
+    }
+    impl_buf[i] = 0;
+    end = namestart;
+    i=0;
+    while(*end && *end != '$') {
+      name_buf[i++] = *end;
+      end++;
+    }
+    name_buf[i] = 0;
+  }
   if (retval)
   {
     if (retval == 1)
