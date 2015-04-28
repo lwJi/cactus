@@ -7,6 +7,11 @@
 #include <set>
 #include <algorithm>
 
+// TODO:
+// (1) Disallow multiple writes to the same variable
+// (2) Maximum of one input read version and one output write version of a variable per group/function
+// (3) Correctly calculate the one read/write version in group discovery
+
 inline char lc(char c) {
   if(c >= 'A' && c <= 'Z')
     return c + 'a'-'A';
