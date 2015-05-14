@@ -1185,6 +1185,12 @@ int CCTK_DecomposeName (const char *fullname,
 {
   int retval=0;
 
+  // TODO: This is a terrible hack that I did to try and make
+  // version tags work. It isn't the right way to do it.
+  // Somewhere in the flesh, the parenthetical statement is
+  // stripped off "var$tag(Interior)" to produce "var$tag".
+  // That place should be identified, and the tag removed
+  // at that point.
   //retval = Util_SplitString (implementation, name, fullname, "::");
   //printf("  impl=%s, name=%s, retval=%d\n",*implementation,*name,retval);
   const char *end = fullname;

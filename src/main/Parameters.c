@@ -2307,8 +2307,19 @@ static int ParameterSetReal (t_param *param, const char *value)
    * (we allow [eEdD]) to 'e', since strtod(3) (which we will use
    * to do the actual conversion) only groks [eE].
    */
-  temp = strdup (value);
-  for (unsigned int p = 0; p < strlen (temp); p++)
+  // TODO: This should also be backed out before a final
+  // commit. It's harmless, but valgrind fixes are machine
+  // dependent.
+  // this change makes valgrind produce saner output
+  //temp = strdup (value);
+  unsigned int nn = 0;
+  for (; value[nn] != 0; nn++)
+    ;
+  temp = malloc(nn+1);
+  for (unsigned int p = 0; p < nn; p++)
+    temp[p] = value[p];
+  temp[nn] = 0;
+  for (unsigned int p = 0; p < nn; p++)
   {
     if (temp[p] == 'E' || temp[p] == 'd' || temp[p] == 'D')
     {

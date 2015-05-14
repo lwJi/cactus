@@ -67,7 +67,7 @@ static int ScheduleSetupIfs(t_sched_item *item);
 void CCTKi_rdwr_discover(void *rdwr,t_sched_group *group);
 void CCTKi_rdwr_group_discover(void *rdwr,t_sched_group *group);
 void CCTKi_rdwr_after_discover(void *rdwr,t_sched_group *group);
-int CCTKi_rdwr_assign_after(void *rdwr,int item,int size,int *thisorders,t_sched_group *group);
+int  CCTKi_rdwr_assign_after(void *rdwr,int item,int size,int *thisorders,t_sched_group *group);
 void CCTKi_rdwr_free(void *rdwr);
 void CCTKi_rdwr_alloc(void **rdwr);
 
@@ -371,6 +371,8 @@ int CCTKi_DoScheduleSortAllGroups(void)
   void *rdwr = 0;
   CCTKi_rdwr_alloc(&rdwr);
 
+  // We need three passes to do this. First, find
+  // the scheduled functions and their dependencies.
   for(group = 0; group < n_schedule_groups; group++)
   {
     if((gdata = (t_sched_group *)Util_GetHandledData(schedule_groups, group)))
@@ -378,6 +380,8 @@ int CCTKi_DoScheduleSortAllGroups(void)
       CCTKi_rdwr_discover(rdwr,gdata);
     }
   }
+  // Attach the dependencies found in the first step
+  // to groups.
   for(group = 0; group < n_schedule_groups; group++)
   {
     if((gdata = (t_sched_group *)Util_GetHandledData(schedule_groups, group)))
@@ -385,6 +389,8 @@ int CCTKi_DoScheduleSortAllGroups(void)
       CCTKi_rdwr_group_discover(rdwr,gdata);
     }
   }
+  // Using the dependency data on scheuled functions and
+  // groups, construct the after clauses.
   for(group = 0; group < n_schedule_groups; group++)
   {
     if((gdata = (t_sched_group *)Util_GetHandledData(schedule_groups, group)))
@@ -411,6 +417,10 @@ int CCTKi_DoScheduleSortAllGroups(void)
     }
   }
 
+  // Free data structures
+  // used to calculate read/write
+  // dependency effect on the
+  // schedule.
   CCTKi_rdwr_free(rdwr);
    
   return -n_errors;
@@ -877,7 +887,6 @@ static const char *ScheduleModifierTypeName(t_sched_modifier_type type)
     Or number of scheduling errors
    @endreturndesc
 @@*/
-
 static int ScheduleSortGroup(void *rdwr,t_sched_group *group)
 {
   DECLARE_CCTK_PARAMETERS;
@@ -914,9 +923,6 @@ static int ScheduleSortGroup(void *rdwr,t_sched_group *group)
         sizeof(*group->scheditems), ScheduleCompareDescending);
   }
 
-  //void *CCTKi_rdwr_ptr=0;
-  //CCTKi_rdwr_init(&CCTKi_rdwr_ptr,group);
-  
   for(item=0; item < group->n_scheditems; item++)
   {
 #ifdef DEBUG_SCHEDULAR
@@ -1022,7 +1028,7 @@ static int ScheduleSortGroup(void *rdwr,t_sched_group *group)
     group->name, errcode); 
   }
 
-#ifndef DEBUG_SCHEDULAR
+#ifdef DEBUG_SCHEDULAR
   printf("Final array is...\n");
   for(int i=0; i < group->n_scheditems; i++)
   {
@@ -1048,7 +1054,6 @@ static int ScheduleSortGroup(void *rdwr,t_sched_group *group)
 
   group->order = order;
 
-  //CCTKi_rdwr_free(CCTKi_rdwr_ptr);
   return errcode;
 }
 
