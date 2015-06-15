@@ -167,7 +167,8 @@ else
       CC_VERSION="`$CC --version 2>&1 | head -n 1`"
       # : ${CFLAGS="-no-cpp-precomp -mlongcall"}
       # : ${CFLAGS="-mlongcall"}
-      : ${CFLAGS=-std=gnu99}
+      # Add -fgnu89-inline to avoid duplicate symbol errors at link-time
+      : ${CFLAGS=-std=gnu99 -fgnu89-inline}
       ;;
     intel)
       CC_VERSION="`$CC --version 2>&1 | head -n 1`"
