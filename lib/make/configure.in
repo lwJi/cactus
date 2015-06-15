@@ -163,7 +163,7 @@ dnl Checks for programs.
 AC_PROG_MAKE_SET
 
 if test -z "$CC" ; then
-  AC_CHECK_PROGS(CC, gcc-mp-4.4 gcc-mp-4.3 gcc-mp-4.2 gcc cc cl xlc)
+  AC_CHECK_PROGS(CC, gcc-mp-4.9 gcc-mp-4.8 gcc-mp-4.7 gcc-mp-4.6 gcc-mp-4.5 gcc-mp-4.4 gcc-mp-4.3 gcc-mp-4.2 gcc cc cl xlc)
 fi
 
 CCTK_PROG_CC_WORKS
@@ -171,7 +171,7 @@ AC_PROG_CC_GNU
 
 if test "x$CXX" != 'xnone' ; then
   if test -z "$CXX" ; then
-    AC_CHECK_PROGS(CXX, g++-mp-4.4 g++-mp-4.2 g++-mp-4.2 c++ g++ gcc CC cxx cc++ cl xlC)
+    AC_CHECK_PROGS(CXX, g++-mp-4.9 g++-mp-4.8 g++-mp-4.7 g++-mp-4.6 g++-mp-4.5 g++-mp-4.4 g++-mp-4.2 g++-mp-4.2 c++ g++ gcc CC cxx cc++ cl xlC)
   fi
 
   CCTK_PROG_CXX_WORKS
@@ -223,7 +223,7 @@ if test -z "$GIT" ; then
 fi
 
 if test -z "$F90" ; then
-  AC_CHECK_PROGS(F90, f90 pgf90 xlf90 ifort gfortran-mp-4.4 gfortran-mp-4.3 gfortran-mp-4.2 gfortran)
+  AC_CHECK_PROGS(F90, f90 pgf90 xlf90 ifort gfortran-mp-4.9 gfortran-mp-4.8 gfortran-mp-4.7 gfortran-mp-4.6 gfortran-mp-4.5 gfortran-mp-4.4 gfortran-mp-4.3 gfortran-mp-4.2 gfortran)
 fi
 
 if test -z "$AR" ; then
