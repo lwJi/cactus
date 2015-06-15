@@ -37,7 +37,7 @@ else
 
   if test "`$CC --version 2>&1 | head -n 1 | grep -i gcc`" ; then
       MAC_C_COMP=gcc
-  elif test "`$CC --version 2>&1 | head -n 1 | grep -i clang`" ; then
+  elif test "`$CC --version 2>&1 | grep -i clang`" ; then
       MAC_C_COMP=clang
   elif test "`$CC -version 2>&1 | grep xlc`" ; then
       MAC_C_COMP=ibm
@@ -49,7 +49,7 @@ else
 
   if test "`$CXX --version 2>&1 | head -n 1 | grep -i gcc`" ; then
       MAC_CXX_COMP=gcc
-  elif test "`$CXX --version 2>&1 | head -n 1 | grep -i clang`" ; then
+  elif test "`$CXX --version 2>&1 | grep -i clang`" ; then
       MAC_CXX_COMP=clang
   elif test "`$CXX -version 2>&1 | grep xlc`" ; then
       MAC_CXX_COMP=ibm
@@ -98,7 +98,7 @@ else
       MAC_F90_COMP=absoft
     elif test "`$F90 --version 2>&1 | head -n 1 | grep -i gcc`" ; then
       MAC_F90_COMP=gcc
-    elif test "`$F90 --version 2>&1 | head -n 1 | grep -i clang`" ; then
+    elif test "`$F90 --version 2>&1 | grep -i clang`" ; then
       MAC_F90_COMP=clang
     elif test "`$F90 -V 2>&1 | grep -i intel`" ; then
       MAC_F90_COMP=intel
@@ -139,7 +139,7 @@ else
       MAC_F77_COMP=absoft77
     elif test "`$F77 --version 2>&1 | head -n 1 | grep -i gcc`" ; then
       MAC_F77_COMP=gcc
-    elif test "`$F77 --version 2>&1 | head -n 1 | grep -i clang`" ; then
+    elif test "`$F77 --version 2>&1 | grep -i clang`" ; then
       MAC_F77_COMP=clang
     elif test "`$F77 -V 2>&1 | grep -i intel`" ; then
       MAC_F77_COMP=intel
@@ -164,7 +164,7 @@ else
       : ${CFLAGS=-std=gnu99}
       ;;
     clang)
-      CC_VERSION="`$CC --version 2>&1 | head -n 1`"
+      CC_VERSION="`$CC --version 2>&1 | grep version`"
       # : ${CFLAGS="-no-cpp-precomp -mlongcall"}
       # : ${CFLAGS="-mlongcall"}
       # Add -fgnu89-inline to avoid duplicate symbol errors at link-time
@@ -197,7 +197,7 @@ else
       # : ${CXXFLAGS=-std=gnu++0x}
       ;;
     clang)
-      CXX_VERSION="`$CXX --version 2>&1 | head -n 1`"
+      CXX_VERSION="`$CXX --version 2>&1 | grep version`"
       # : ${CXXFLAGS="-no-cpp-precomp -mlongcall"}
       # : ${CXXFLAGS="-mlongcall"}
       # The setting below would be desirable, but isn't available on
