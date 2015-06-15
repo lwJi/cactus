@@ -673,7 +673,8 @@ typedef enum {false, true} bool;
 #ifdef HAVE_CCTK_CXX_STATIC_ASSERT
 #  define CCTK_STATIC_ASSERT(cond,msg) static_assert(cond,msg)
 #else
-#  define CCTK_STATIC_ASSERT(cond,msg) do { typedef int ai[(cond) ? 1 : -1]; enum aj {ak = sizeof(ai)}; } while(0)
+#  define CCTK_STATIC_ASSERT(cond,msg)                            \
+     typedef int CCTK_CONCAT(cctk_sa_, __LINE__)[(cond) ? 1 : -1]
 #  define static_assert(cond,msg) CCTK_STATIC_ASSERT(cond,msg)
 #endif
 
