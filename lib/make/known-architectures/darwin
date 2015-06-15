@@ -257,6 +257,7 @@ else
       # : ${F77FLAGS='-mlongcall'}
       # : ${F90FLAGS='-mlongcall'}
       : ${LIBS='gfortran'}
+      : ${LIBDIRS="$(dirname $($F90 --print-file-name libgfortran.a))"}
       ;;
     ibm)
 #      : ${LD='xlC'}
