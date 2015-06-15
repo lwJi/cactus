@@ -152,6 +152,14 @@
 #undef HAVE_CCTK_REAL8
 #undef HAVE_CCTK_REAL4
 
+/****************************************************************************/
+/* Utility macros */
+/****************************************************************************/
+
+/* TODO: should these go somewhere else, e.g. somewhere in src/include? */
+#define CCTK_CONCAT1(a,b) a##b
+#define CCTK_CONCAT(a,b) CCTK_CONCAT1(a,b)
+
 /******************************************************************************/
 
 #ifdef CCODE
