@@ -267,7 +267,7 @@ for $dim (1,2,3,4) {
         (reverse (rpt (bsnl '    [I==1?:for (int [C]=cctki0_[C]min; [C]<cctki0_[C]max; ++[C]) {]'))),
         # Align i-loop to vector size
         (bsnl ('    const int cctki0_ioff = ' . (sep '', rpt '[I==1?(cctki0_imin:+cctki0_[C-1]ash*([C]]') . (sep '', rpt ')') . ' & (cctki0_istr-1);')),
-        (bsnl '    [DIM==1?_Pragma("omp for"):]'),
+        (bsnl '    _Pragma("omp simd")'),
         (bsnl '    for (int i=cctki0_imin-cctki0_ioff; i<cctki0_imax; i+=cctki0_istr) {'),
         (rpt (bsnl '      const int n[C] CCTK_ATTRIBUTE_UNUSED = cctki0_[C]dir<0 ? [C]+1 : cctki0_[C]dir==0 ? 0 : cctki0_[C]max-[C];')),
         (bsnl '      {'),
@@ -737,12 +737,11 @@ for $dim (1,2,3,4) {
         # Export loop bounds in the i direction
         (bsnl '   && imin = name/**/0_imin'),
         (bsnl '   && imax = name/**/0_imax'),
-        (bsnl '   && !$omp do[DIM==1?: collapse([DIM-1])]'),
-        (reverse (rpt (bsnl ('   && do [C] = name/**/0_[C]min' .
-                             # Align i-loop to vector size
-                             '[I==1? - modulo(' . (sep '', rpt '[I==1?(imin:+name/**/0_[C-1]ash*([C]]') . (sep '', rpt ')') . ', name/**/0_istr):]' .
-                             ', name/**/0_[C]max' .
-                             '[I==1?, name/**/0_istr:]')))),
+        (bsnl '   && [DIM==1?:!$omp do collapse([DIM-1])]'),
+        (reverse (rpt (bsnl ('   && [I==1?:do [C] = name/**/0_[C]min, name/**/0_[C]max]')))),
+        (bsnl '   && !$omp simd'),
+         # Align i-loop to vector size
+        (bsnl ('   && do i = name/**/0_imin - modulo(' . (sep '', rpt '[I==1?(imin:+name/**/0_[C-1]ash*(i]') . (sep '', rpt ')') . ', name/**/0_istr), name/**/0_imax, name/**/0_istr')),
         (rpt (bsnl '   &&    n[C] = 0')),
         (rpt (bsnl '   &&    if (name/**/0_[C]dir < 0) n[C] = [C]')),
         (rpt (bsnl '   &&    if (name/**/0_[C]dir > 0) n[C] = name/**/0_[C]max+1-[C]')),

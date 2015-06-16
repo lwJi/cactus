@@ -73,7 +73,7 @@
      \
      \
     const int cctki0_ioff = (cctki0_imin) & (cctki0_istr-1); \
-    _Pragma("omp for") \
+    _Pragma("omp simd") \
     for (int i=cctki0_imin-cctki0_ioff; i<cctki0_imax; i+=cctki0_istr) { \
       const int ni CCTK_ATTRIBUTE_UNUSED = cctki0_idir<0 ? i+1 : cctki0_idir==0 ? 0 : cctki0_imax-i; \
       { \
@@ -540,7 +540,9 @@
    && name/**/0_istr = cctki0_istr \
    && imin = name/**/0_imin \
    && imax = name/**/0_imax \
-   && !$omp do \
+   &&  \
+   &&  \
+   && !$omp simd \
    && do i = name/**/0_imin - modulo((imin), name/**/0_istr), name/**/0_imax, name/**/0_istr \
    &&    ni = 0 \
    &&    if (name/**/0_idir < 0) ni = i \
@@ -1062,7 +1064,7 @@
     for (int j=cctki0_jmin; j<cctki0_jmax; ++j) { \
      \
     const int cctki0_ioff = (cctki0_imin+cctki0_iash*(j)) & (cctki0_istr-1); \
-     \
+    _Pragma("omp simd") \
     for (int i=cctki0_imin-cctki0_ioff; i<cctki0_imax; i+=cctki0_istr) { \
       const int ni CCTK_ATTRIBUTE_UNUSED = cctki0_idir<0 ? i+1 : cctki0_idir==0 ? 0 : cctki0_imax-i; \
       const int nj CCTK_ATTRIBUTE_UNUSED = cctki0_jdir<0 ? j+1 : cctki0_jdir==0 ? 0 : cctki0_jmax-j; \
@@ -1554,7 +1556,9 @@
    && imax = name/**/0_imax \
    && !$omp do collapse(1) \
    && do j = name/**/0_jmin, name/**/0_jmax \
-   && do i = name/**/0_imin - modulo((imin+name/**/0_iash*(j)), name/**/0_istr), name/**/0_imax, name/**/0_istr \
+   &&  \
+   && !$omp simd \
+   && do i = name/**/0_imin - modulo((imin+name/**/0_iash*(i)), name/**/0_istr), name/**/0_imax, name/**/0_istr \
    &&    ni = 0 \
    &&    nj = 0 \
    &&    if (name/**/0_idir < 0) ni = i \
@@ -2112,7 +2116,7 @@
     for (int j=cctki0_jmin; j<cctki0_jmax; ++j) { \
      \
     const int cctki0_ioff = (cctki0_imin+cctki0_iash*(j+cctki0_jash*(k))) & (cctki0_istr-1); \
-     \
+    _Pragma("omp simd") \
     for (int i=cctki0_imin-cctki0_ioff; i<cctki0_imax; i+=cctki0_istr) { \
       const int ni CCTK_ATTRIBUTE_UNUSED = cctki0_idir<0 ? i+1 : cctki0_idir==0 ? 0 : cctki0_imax-i; \
       const int nj CCTK_ATTRIBUTE_UNUSED = cctki0_jdir<0 ? j+1 : cctki0_jdir==0 ? 0 : cctki0_jmax-j; \
@@ -2628,7 +2632,9 @@
    && !$omp do collapse(2) \
    && do k = name/**/0_kmin, name/**/0_kmax \
    && do j = name/**/0_jmin, name/**/0_jmax \
-   && do i = name/**/0_imin - modulo((imin+name/**/0_iash*(j+name/**/0_jash*(k))), name/**/0_istr), name/**/0_imax, name/**/0_istr \
+   &&  \
+   && !$omp simd \
+   && do i = name/**/0_imin - modulo((imin+name/**/0_iash*(i+name/**/0_jash*(i))), name/**/0_istr), name/**/0_imax, name/**/0_istr \
    &&    ni = 0 \
    &&    nj = 0 \
    &&    nk = 0 \
@@ -3223,7 +3229,7 @@
     for (int j=cctki0_jmin; j<cctki0_jmax; ++j) { \
      \
     const int cctki0_ioff = (cctki0_imin+cctki0_iash*(j+cctki0_jash*(k+cctki0_kash*(l)))) & (cctki0_istr-1); \
-     \
+    _Pragma("omp simd") \
     for (int i=cctki0_imin-cctki0_ioff; i<cctki0_imax; i+=cctki0_istr) { \
       const int ni CCTK_ATTRIBUTE_UNUSED = cctki0_idir<0 ? i+1 : cctki0_idir==0 ? 0 : cctki0_imax-i; \
       const int nj CCTK_ATTRIBUTE_UNUSED = cctki0_jdir<0 ? j+1 : cctki0_jdir==0 ? 0 : cctki0_jmax-j; \
@@ -3763,7 +3769,9 @@
    && do l = name/**/0_lmin, name/**/0_lmax \
    && do k = name/**/0_kmin, name/**/0_kmax \
    && do j = name/**/0_jmin, name/**/0_jmax \
-   && do i = name/**/0_imin - modulo((imin+name/**/0_iash*(j+name/**/0_jash*(k+name/**/0_kash*(l)))), name/**/0_istr), name/**/0_imax, name/**/0_istr \
+   &&  \
+   && !$omp simd \
+   && do i = name/**/0_imin - modulo((imin+name/**/0_iash*(i+name/**/0_jash*(i+name/**/0_kash*(i)))), name/**/0_istr), name/**/0_imax, name/**/0_istr \
    &&    ni = 0 \
    &&    nj = 0 \
    &&    nk = 0 \
