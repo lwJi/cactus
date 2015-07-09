@@ -542,7 +542,7 @@
    && imax = name/**/0_imax \
    &&  \
    &&  \
-   && !$omp simd \
+   && CCTK_FORTRAN_OMP_SIMD() \
    && do i = name/**/0_imin - modulo((imin), name/**/0_istr), name/**/0_imax, name/**/0_istr \
    &&    ni = 0 \
    &&    if (name/**/0_idir < 0) ni = i \
@@ -1557,7 +1557,7 @@
    && !$omp do collapse(1) \
    && do j = name/**/0_jmin, name/**/0_jmax \
    &&  \
-   && !$omp simd \
+   && CCTK_FORTRAN_OMP_SIMD() \
    && do i = name/**/0_imin - modulo((imin+name/**/0_iash*(i)), name/**/0_istr), name/**/0_imax, name/**/0_istr \
    &&    ni = 0 \
    &&    nj = 0 \
@@ -2633,7 +2633,7 @@
    && do k = name/**/0_kmin, name/**/0_kmax \
    && do j = name/**/0_jmin, name/**/0_jmax \
    &&  \
-   && !$omp simd \
+   && CCTK_FORTRAN_OMP_SIMD() \
    && do i = name/**/0_imin - modulo((imin+name/**/0_iash*(i+name/**/0_jash*(i))), name/**/0_istr), name/**/0_imax, name/**/0_istr \
    &&    ni = 0 \
    &&    nj = 0 \
@@ -3770,7 +3770,7 @@
    && do k = name/**/0_kmin, name/**/0_kmax \
    && do j = name/**/0_jmin, name/**/0_jmax \
    &&  \
-   && !$omp simd \
+   && CCTK_FORTRAN_OMP_SIMD() \
    && do i = name/**/0_imin - modulo((imin+name/**/0_iash*(i+name/**/0_jash*(i+name/**/0_kash*(i)))), name/**/0_istr), name/**/0_imax, name/**/0_istr \
    &&    ni = 0 \
    &&    nj = 0 \

@@ -739,7 +739,7 @@ for $dim (1,2,3,4) {
         (bsnl '   && imax = name/**/0_imax'),
         (bsnl '   && [DIM==1?:!$omp do collapse([DIM-1])]'),
         (reverse (rpt (bsnl ('   && [I==1?:do [C] = name/**/0_[C]min, name/**/0_[C]max]')))),
-        (bsnl '   && !$omp simd'),
+        (bsnl '   && CCTK_FORTRAN_OMP_SIMD()'),
          # Align i-loop to vector size
         (bsnl ('   && do i = name/**/0_imin - modulo(' . (sep '', rpt '[I==1?(imin:+name/**/0_[C-1]ash*(i]') . (sep '', rpt ')') . ', name/**/0_istr), name/**/0_imax, name/**/0_istr')),
         (rpt (bsnl '   &&    n[C] = 0')),
