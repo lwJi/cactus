@@ -606,29 +606,6 @@ case "$cctk_cv_c_static_inline" in
 esac
 ])
 
-AC_DEFUN(CCTK_C_BOOL,
-[AC_CACHE_CHECK([for C bool], cctk_cv_have_c_bool,
-[cctk_cv_have_c_bool=no
-AC_TRY_COMPILE(, bool foo;, cctk_cv_have_c_bool=yes, cctk_cv_have_c_bool=no)
-])
-if test "$cctk_cv_have_c_bool" = "yes" ; then
-   AC_DEFINE(HAVE_CCTK_C_BOOL, 1)
-fi
-])
-
-AC_DEFUN(CCTK_CXX_BOOL,
-[AC_CACHE_CHECK([for C++ bool], cctk_cv_have_cxx_bool,
-[cctk_cv_have_cxx_bool=no
-AC_LANG_SAVE
-AC_LANG_CPLUSPLUS
-AC_TRY_COMPILE(, bool foo;, cctk_cv_have_cxx_bool=yes, cctk_cv_have_cxx_bool=no)
-AC_LANG_RESTORE
-])
-if test "$cctk_cv_have_cxx_bool" = "yes" ; then
-   AC_DEFINE(HAVE_CCTK_CXX_BOOL, 1)
-fi
-])
-
 dnl Do nothing if the compiler accepts the _Pragma keyword.
 dnl Otherwise define _Pragma to be empty.
 AC_DEFUN(CCTK_C__PRAGMA,

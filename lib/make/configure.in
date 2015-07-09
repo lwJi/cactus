@@ -825,9 +825,6 @@ if test "x$CXX" != 'xnone' ; then
   AC_LANG_SAVE
   AC_LANG_CPLUSPLUS
   CCTK_CHECK_HEADERS(vector vector.h)
-
-dnl  AC_TRY_COMPILE(, bool foo;,
-dnl AC_DEFINE(HAVE_BOOL))
   AC_LANG_RESTORE
 fi
 
@@ -854,9 +851,6 @@ if test "x$cctk_cv_header_regex_h" = 'xyes' ; then
 else
   BUILD_REGEX=yes
 fi
-
-CCTK_C_BOOL
-CCTK_CXX_BOOL
 
 AC_C_CONST
 #AC_C_INLINE
