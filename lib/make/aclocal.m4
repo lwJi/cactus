@@ -165,16 +165,13 @@ int main2() {
 ; return 0; }
 ])EOF
 if AC_TRY_EVAL(ac_link conftest2.$ac_ext) && test -s conftest${ac_exeext}; then
-  ifelse([$4], , :, [rm -rf conftest*
-  $4])
+  ifelse([$4], , :, [$4])
 else
   echo "configure: failed program was:" >&AC_FD_CC
   cat conftest.$ac_ext >&AC_FD_CC
-ifelse([$5], , , [  rm -rf conftest*
-  $5
-])dnl
+ifelse([$5], , , [$5])
 fi
-rm -f conftest*])
+rm -fr conftest*])
 
 
 dnl CCTK_FIND_NULLDEVICE
@@ -653,11 +650,8 @@ if AC_TRY_EVAL(ac_compile); then
 else
   echo "configure: failed program was:" >&AC_FD_CC
   cat conftest.$ac_ext >&AC_FD_CC
-ifelse([$4], , , [  rm -rf conftest*
-  $4
-])dnl
-fi
-rm -f conftest*])
+  ifelse([$4], , , [$4])
+fi])
 
 AC_DEFUN(CCTK_FORTRAN_REAL4,
 [AC_CACHE_CHECK([for Fortran REAL*4], cctk_cv_have_fortran_real4,
@@ -1379,7 +1373,7 @@ if eval "test \"`echo '$cctk_cv_defined_'$cctk_safe`\" = yes"; then
   ifelse([$3], , :, [$3])
 else
   AC_MSG_RESULT(no)
-ifelse([$4], , , [$4])
+  ifelse([$4], , , [$4])
 fi
 ])
 
@@ -1400,7 +1394,7 @@ if eval "test \"`echo '$cctk_cv_has_'$cctk_lang'_prototype_'$cctk_safe`\" = yes"
   ifelse([$4], , :, [$4])
 else
   AC_MSG_RESULT(no)
-ifelse([$5], , , [$5])
+  ifelse([$5], , , [$5])
 fi
 ])
 
@@ -1511,16 +1505,20 @@ AC_DEFUN(CCTK_FORTRAN_OMP_SIMD,
 [cctk_cv_have_fortran_openmp_simd=no
 AC_LANG_SAVE
 AC_LANG_FORTRAN77
+old_FFLAGS="$FFLAGS"
+FFLAGS="$FFLAGS $F77FLAGS $F77_OPENMP_FLAGS"
 CCTK_TRY_COMPILE(
 [],
 [
       integer i
-c$omp simd
+!\$omp simd
       do i=1,10
       end do
 ],
 cctk_cv_have_fortran_openmp_simd=yes,
 cctk_cv_have_fortran_openmp_simd=no)
+FFLAGS="$old_FFLAGS"
+unset old_FFLAGS
 AC_LANG_RESTORE
 ])
 if test "$cctk_cv_have_fortran_openmp_simd" = "yes" ; then
