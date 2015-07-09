@@ -946,6 +946,9 @@ CCTK_CXX_AUTO_SPECIFIER
 CCTK_CXX_LAMBDA
 CCTK_CXX_RANGE_BASED_FOR
 
+# Find out whether Fortran OpenMP supports simd
+CCTK_FORTRAN_OMP_SIMD
+
 if test "x$REAL16_KIND" = 'x'; then
   REAL16_KIND=16
 fi

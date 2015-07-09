@@ -708,6 +708,14 @@
 #  undef COLLAPSE
 #endif
 
+/* OpenMP simd directive */
+#undef HAVE_CCTK_FORTRAN_OPENMP_SIMD
+#ifdef HAVE_CCTK_FORTRAN_OPENMP_SIMD
+#  define CCTK_FORTRAN_OMP_SIMD(args) !$omp simd args
+#else
+#  define CCTK_FORTRAN_OMP_SIMD(args)
+#endif
+
 #endif /* FCODE */
 
 /* Now include the code to pick an appropriate precison for reals and ints */

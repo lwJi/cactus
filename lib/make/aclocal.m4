@@ -1505,3 +1505,25 @@ if test "$cctk_cv_have_fortran_cray_pointers" = "yes" ; then
    AC_DEFINE(HAVE_CCTK_FORTRAN_CRAY_POINTERS)
 fi
 ])
+
+AC_DEFUN(CCTK_FORTRAN_OMP_SIMD,
+[AC_CACHE_CHECK([for Fortran OpenMP simd], cctk_cv_have_fortran_openmp_simd,
+[cctk_cv_have_fortran_openmp_simd=no
+AC_LANG_SAVE
+AC_LANG_FORTRAN77
+CCTK_TRY_COMPILE(
+[],
+[
+      integer i
+c$omp simd
+      do i=1,10
+      end do
+],
+cctk_cv_have_fortran_openmp_simd=yes,
+cctk_cv_have_fortran_openmp_simd=no)
+AC_LANG_RESTORE
+])
+if test "$cctk_cv_have_fortran_openmp_simd" = "yes" ; then
+   AC_DEFINE(HAVE_CCTK_FORTRAN_OPENMP_SIMD)
+fi
+])
