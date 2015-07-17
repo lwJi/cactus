@@ -104,6 +104,91 @@ typedef struct
 
 } t_sched_data;
 
+void *CCTKi_VarDataPtr(const cGH *GH, int timelevel,
+                       const char *implementation, const char *varname);
+
+int inside_diagnostic = 0;
+
+const char *vars[] = {
+  "ML_BSSN", "A", "1",
+  "ML_BSSN_HOST", "A", "1",
+  "ML_BSSN_Host", "A", "1",
+  "ML_BSSN", "A", "0",
+  "ML_BSSN_HOST", "A", "0",
+  "ML_BSSN_Host", "A", "0",
+  0, 0, 0};
+//int time_level = 1;
+//const char *name = "A";
+//const char *thorn = "ML_BSSN_Host";
+
+char diagnostic_buf[1024] = "";
+extern char diagnostic_buf[1024];
+extern void Accel_varlocation(int vi,int rl,int tl,char *data);
+extern void Accel_dump();
+
+void print_diagnostics(void *v,const char *tag) {
+  cGH *GH = (cGH*)v;
+  char diag[10]={""};
+  int dump = 0;
+  for(const char **varp = vars; *varp != 0; varp += 3) {
+    const char *thorn = varp[0];
+    const char *name = varp[1];
+    int time_level = atoi(varp[2]);
+    double *data = GH == 0 ? 0 : CCTKi_VarDataPtr(GH,time_level,thorn,name);
+    if(data != 0) {
+      char fullname[512];
+      sprintf(fullname,"%s::%s",thorn,name);
+      int vi = CCTK_VarIndex(fullname);
+      int rl = 0;
+      int tl = time_level;
+      if(CCTK_IsThornActive("Accelerator"))
+        Accel_varlocation(vi,rl,tl,diag);
+      dump = 1;
+      printf("::%s %s::%s[tl=%d](%s) = %f (vi=%d)\n",
+           tag,thorn,name,time_level,diag,data[0],vi);
+    }
+  }
+  if(dump)
+    ;//Accel_dump();
+}
+
+void pre_diagnostic(void *v,cFunctionData *fdata) {
+  cGH *GH = (cGH*)v;
+  printf("::pre%d(%s::%s) at %s\n",inside_diagnostic,fdata->thorn,fdata->routine,fdata->where);
+  sprintf(diagnostic_buf,"entered: %s->%s::%s",fdata->where,fdata->thorn,fdata->routine);
+
+  inside_diagnostic++;
+  /*
+  for(const char **varp = vars; *varp != 0; varp += 3) {
+    const char *thorn = varp[0];
+    const char *name = varp[1];
+    int time_level = atoi(varp[2]);
+    double *data = GH == 0 ? 0 : CCTKi_VarDataPtr(GH,time_level,thorn,name);
+    if(data != 0)
+      printf("::pstart %s::%s[tl=%d] = %f\n",thorn,name,data[0],time_level);
+  }
+  */
+  print_diagnostics(v,"pstart");
+}
+
+void post_diagnostic(void *v,cFunctionData *fdata) {
+  cGH *GH = (cGH*)v;
+  /*
+  for(const char **varp = vars; *varp != 0; varp += 3) {
+    const char *thorn = varp[0];
+    const char *name = varp[1];
+    int time_level = atoi(varp[2]);
+    double *data = GH == 0 ? 0 : CCTKi_VarDataPtr(GH,time_level,thorn,name);
+    if(data != 0)
+      printf("::pend %s::%s[tl=%d] = %f\n",thorn,name,data[0],time_level);
+  }
+  */
+  print_diagnostics(v,"pend");
+
+  inside_diagnostic--;
+  printf("::post%d(%s::%s) at %s\n",inside_diagnostic,fdata->thorn,fdata->routine,fdata->where);
+  sprintf(diagnostic_buf,"exited: %s->%s::%s",fdata->where,fdata->thorn,fdata->routine);
+}
 
 /********************************************************************
  ********************* Local Routine Prototypes *********************
@@ -294,6 +379,7 @@ int CCTK_CallFunction(void *function,
   }
   current_scheduled_function = fdata;
 
+  pre_diagnostic(data,fdata);
   switch(fdata->type)
   {
     case FunctionNoArgs:
@@ -326,6 +412,7 @@ int CCTK_CallFunction(void *function,
       CCTK_Warn(1,__LINE__,__FILE__,"Cactus",
                 "CCTK_CallFunction: Unknown function type.");
   }
+  post_diagnostic(data,fdata);
 
   current_scheduled_function = NULL;
 
@@ -2986,6 +3073,7 @@ static int CCTKi_ScheduleCallFunction(void *function,
 {
   /* find the timer for this function and this schedule bin */
   t_timer *timer = attribute->timers;
+  pre_diagnostic(data->GH,&attribute->FunctionData);
   while (timer && strcmp(timer->schedule_bin, data->schedule_bin))
   {
     timer = timer->next;
@@ -3045,12 +3133,15 @@ static int CCTKi_ScheduleCallFunction(void *function,
   /* Use whatever has been chosen as the calling function for this
    * function.
    */
+  // here
   attribute->synchronised = data->CallFunction(function, &(attribute->FunctionData), data->GH);
+  // here
 
   if (timer)
   {
     CCTK_TimerStopI(timer->timer_handle);
   }
+  post_diagnostic(data->GH,&attribute->FunctionData);
 
   return 1;
 }
