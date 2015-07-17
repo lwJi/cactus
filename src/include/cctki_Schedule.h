@@ -11,6 +11,7 @@
 
 #ifndef _CCTKI_SCHEDULE_H_
 #define _CCTKI_SCHEDULE_H_ 1
+#include "cctk_Schedule.h"
 
 /* Types needed by other routines. */
 
@@ -70,5 +71,46 @@ int CCTKi_DoScheduleTraverse(const char *group_name,
 #ifdef __cplusplus
 }
 #endif
+
+/* Timer data for a routine in a given schedule bin */
+typedef struct t_timer
+{
+  struct t_timer *next;
+  int timer_handle;
+  char *schedule_bin;
+  int has_been_output;
+} t_timer;
+
+typedef enum {sched_none, sched_group, sched_function} iSchedType;
+typedef struct
+{
+  /* Static data */
+  char *description;
+
+  /*char *thorn; MOVED TO FunctionData */
+  char *implementation;
+
+  iSchedType type;
+
+  cFunctionData FunctionData;
+
+  int n_mem_groups;
+  int *mem_groups;
+  int *timelevels;
+
+  int n_comm_groups;
+  int *comm_groups;
+
+  /* Timer data */
+  t_timer *timers;
+
+  /* Dynamic data */
+  int *CommOnEntry;
+  int *StorageOnEntry;
+
+  int done_entry;
+  int synchronised;
+
+} t_attribute;
 
 #endif /* _CCTKI_SCHEDULE_H_ */

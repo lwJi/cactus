@@ -396,7 +396,7 @@ static int ScheduleTraverseGroup(cHandledData *schedule_groups,
                                 function_process,
                                 data);
           break;
-        case sched_item_none :
+        case sched_none :
           /* FALLTHROUGH */
         default :
           CCTK_VWarn(CCTK_WARN_ALERT, __LINE__, __FILE__, "Cactus",

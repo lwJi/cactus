@@ -43,7 +43,7 @@ static t_sched_item *ScheduleCreateItem(const char *name,
 
 static int ScheduleAddItem(int ghandle, t_sched_item *item);
 
-static int ScheduleSortGroup(t_sched_group *group);
+static int ScheduleSortGroup(void *rdwr,t_sched_group *group);
 
 static t_sched_modifier_type ScheduleTranslateModifierType(const char *modifier);
 
@@ -63,6 +63,13 @@ static int ScheduleSetupIfs(t_sched_item *item);
 /********************************************************************
  ********************* Other Routine Prototypes *********************
  ********************************************************************/
+
+void CCTKi_rdwr_discover(void *rdwr,t_sched_group *group);
+void CCTKi_rdwr_group_discover(void *rdwr,t_sched_group *group);
+void CCTKi_rdwr_after_discover(void *rdwr,t_sched_group *group);
+int  CCTKi_rdwr_assign_after(void *rdwr,int item,int size,int *thisorders,t_sched_group *group);
+void CCTKi_rdwr_free(void *rdwr);
+void CCTKi_rdwr_alloc(void **rdwr);
 
 /********************************************************************
  *********************     Local Data   *****************************
@@ -361,11 +368,42 @@ int CCTKi_DoScheduleSortAllGroups(void)
   
   n_errors  = 0;
 
+  void *rdwr = 0;
+  CCTKi_rdwr_alloc(&rdwr);
+
+  // We need three passes to do this. First, find
+  // the scheduled functions and their dependencies.
   for(group = 0; group < n_schedule_groups; group++)
   {
     if((gdata = (t_sched_group *)Util_GetHandledData(schedule_groups, group)))
     {
-      errcode = ScheduleSortGroup(gdata);
+      CCTKi_rdwr_discover(rdwr,gdata);
+    }
+  }
+  // Attach the dependencies found in the first step
+  // to groups.
+  for(group = 0; group < n_schedule_groups; group++)
+  {
+    if((gdata = (t_sched_group *)Util_GetHandledData(schedule_groups, group)))
+    {
+      CCTKi_rdwr_group_discover(rdwr,gdata);
+    }
+  }
+  // Using the dependency data on scheuled functions and
+  // groups, construct the after clauses.
+  for(group = 0; group < n_schedule_groups; group++)
+  {
+    if((gdata = (t_sched_group *)Util_GetHandledData(schedule_groups, group)))
+    {
+      CCTKi_rdwr_after_discover(rdwr,gdata);
+    }
+  }
+
+  for(group = 0; group < n_schedule_groups; group++)
+  {
+    if((gdata = (t_sched_group *)Util_GetHandledData(schedule_groups, group)))
+    {
+      errcode = ScheduleSortGroup(rdwr,gdata);
 
       if(errcode)
       {
@@ -378,6 +416,12 @@ int CCTKi_DoScheduleSortAllGroups(void)
       }
     }
   }
+
+  // Free data structures
+  // used to calculate read/write
+  // dependency effect on the
+  // schedule.
+  CCTKi_rdwr_free(rdwr);
    
   return -n_errors;
 }
@@ -537,7 +581,7 @@ static t_sched_item *ScheduleCreateItem(const char *name, t_sched_modifier *modi
     {
       strcpy(this->name, name);
 
-      this->type     = sched_item_none;
+      this->type     = sched_none;
       this->function = NULL;
       this->group    = -1;
       this->modifiers = modifiers;
@@ -845,7 +889,7 @@ static const char *ScheduleModifierTypeName(t_sched_modifier_type type)
     Or number of scheduling errors
    @endreturndesc
 @@*/
-static int ScheduleSortGroup(t_sched_group *group)
+static int ScheduleSortGroup(void *rdwr,t_sched_group *group)
 {
   DECLARE_CCTK_PARAMETERS;
 
@@ -880,6 +924,9 @@ static int ScheduleSortGroup(t_sched_group *group)
     qsort(group->scheditems, group->n_scheditems,
         sizeof(*group->scheditems), ScheduleCompareDescending);
   }
+
+  //void *CCTKi_rdwr_ptr=0;
+  //CCTKi_rdwr_init(&CCTKi_rdwr_ptr,group);
   
   for(item=0; item < group->n_scheditems; item++)
   {
@@ -924,6 +971,14 @@ static int ScheduleSortGroup(t_sched_group *group)
         thisorders[number] = mod;
       }
     }
+    errcode = CCTKi_rdwr_assign_after(rdwr,item,group->n_scheditems,thisorders,group);
+    if(errcode)
+    {
+      CCTK_VWarn(CCTK_WARN_ABORT, __LINE__, __FILE__, "Cactus",
+      "Adding item %s to group %s failed on %s (probably a circular dependency).\n",
+      group->scheditems[item].name, group->name,
+      group->scheditems[-errcode-1].name );  
+    }
 
 #ifdef DEBUG_SCHEDULAR
     printf("Orderlist for item %d is...\n", item);
@@ -940,7 +995,7 @@ static int ScheduleSortGroup(t_sched_group *group)
       CCTK_VWarn(CCTK_WARN_ABORT, __LINE__, __FILE__, "Cactus",
       "Adding item %s to group %s failed due to a circular dependency on %s.\n",
       group->scheditems[item].name, group->name,
-      group->scheditems[-errcode-1].name );  /*NOTREACHED*/
+      group->scheditems[-errcode-1].name );  
     }
 
     /* Clear the array for the next item. */
@@ -977,26 +1032,26 @@ static int ScheduleSortGroup(t_sched_group *group)
   if(errcode)
   {
     CCTK_VWarn(CCTK_WARN_ABORT, __LINE__, __FILE__, "Cactus",
-    "Schedule sort of group %s failed with error code %d\n",
-    group->name, errcode);                                  /*NOTREACHED*/
+    "Schedule sort of group %s failed (probably a dependency cycle) with error code %d\n",
+    group->name, errcode); 
   }
 
-#ifdef DEBUG_SCHEDULAR
+#ifndef DEBUG_SCHEDULAR
   printf("Final array is...\n");
-  for(i=0; i < group->n_scheditems; i++)
+  for(int i=0; i < group->n_scheditems; i++)
   {
-    for(j=0; j < group->n_scheditems; j++)
+    for(int j=0; j < group->n_scheditems; j++)
     {
-      printf("  %d", (int)array[i][j]);
+      printf(" %2d", (int)array[i][j]);
     }
 
     printf("\n");
   }
 
   printf("Final order is...\n");
-  for(i=0; i < group->n_scheditems; i++)
+  for(int i=0; i < group->n_scheditems; i++)
   {
-    printf("  %d", order[i]);
+    printf("  %s: %d\n", group->scheditems[i].name, order[i]);
   }
   printf("\n");
 #endif
@@ -1007,6 +1062,7 @@ static int ScheduleSortGroup(t_sched_group *group)
 
   group->order = order;
 
+  //CCTKi_rdwr_free(CCTKi_rdwr_ptr);
   return errcode;
 }
 
