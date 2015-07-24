@@ -557,20 +557,11 @@ esac
 dnl Do nothing if the compiler accepts the inline keyword.  Otherwise
 dnl define inline to __inline__ or __inline if one of those work,
 dnl otherwise define inline to be empty.
-dnl 
-dnl The setting '__inline__ __attribute__((__gnu_inline__))' is for gcc
-dnl 4.3 and later.  By default this version of gcc follows the new ANSI
-dnl standard for "static inline" and "extern inline", which is
-dnl incompatible with many libraries, leading to linker errors about
-dnl duplicate symbols.  This setting makes gcc fall back to the old
-dnl meaning.
-dnl 
 AC_DEFUN(CCTK_CHECK_C_INLINE,
 [AC_CACHE_CHECK([for C inline], cctk_cv_c_inline,
 [cctk_cv_c_inline=no
-for ac_kw in inline __inline__ __inline '__inline__ __attribute__((__gnu_inline__))'; do
-dnl  AC_TRY_COMPILE(, [} $ac_kw int foo() {], [cctk_cv_c_inline=$ac_kw; break])
-  CCTK_TRY_LINK_2(, [foo();], [;} $ac_kw foo() {], [cctk_cv_c_inline=$ac_kw; break])
+for ac_kw in inline __inline__ __inline; do
+  AC_TRY_COMPILE(, [} $ac_kw int foo() {], [cctk_cv_c_inline=$ac_kw; break])
 done
 ])
 case "$cctk_cv_c_inline" in
@@ -585,6 +576,23 @@ case "$cctk_cv_c_inline" in
 esac
 ])
 
+dnl Define the macro EXTERN_INLINE to the keywords that the compiler needs
+dnl to obtain what is obtained by "extern inline" in the C99 standard.  If
+dnl the compiler does not support the "inline" keyword, define the macro
+dnl to "extern".
+AC_DEFUN(CCTK_CHECK_C_EXTERN_INLINE,
+[AC_CACHE_CHECK([for C extern inline], cctk_cv_c_extern_inline,
+[cctk_cv_c_extern_inline=no
+for ac_kw in 'extern inline' 'extern __inline__' 'extern __inline' extern; do
+  CCTK_TRY_LINK_2(, [foo();], [;} $ac_kw foo() {], [cctk_cv_c_extern_inline=$ac_kw; break])
+done
+])
+case "$cctk_cv_c_extern_inline" in
+  no) AC_DEFINE(CCTK_C_EXTERN_INLINE, extern) ;;
+  *)  AC_DEFINE_UNQUOTED(CCTK_C_EXTERN_INLINE, $cctk_cv_c_extern_inline) ;;
+esac
+])
+
 dnl Define the macro STATIC_INLINE to the keywords that the compiler needs
 dnl to obtain what is obtained by "static inline" in the C99 standard.  If
 dnl the compiler does not support the "inline" keyword, define the macro
@@ -592,8 +600,7 @@ dnl to "static".
 AC_DEFUN(CCTK_CHECK_C_STATIC_INLINE,
 [AC_CACHE_CHECK([for C static inline], cctk_cv_c_static_inline,
 [cctk_cv_c_static_inline=no
-for ac_kw in 'static inline' 'static __inline__' 'static __inline' 'static __inline__ __attribute__((__gnu_inline__))'; do
-dnl  AC_TRY_COMPILE(, [} $ac_kw int foo() {], [cctk_cv_c_inline=$ac_kw; break])
+for ac_kw in 'static inline' 'static __inline__' 'static __inline' static; do
   CCTK_TRY_LINK_2(, [;} $ac_kw ifoo(){} foo(){ifoo();], [;} $ac_kw ifoo(){} foo2(){ifoo();], [cctk_cv_c_static_inline=$ac_kw; break])
 done
 ])

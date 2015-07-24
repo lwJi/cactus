@@ -204,6 +204,11 @@
 #undef CCTK_C_STATIC_INLINE
 #define CCTK_STATIC_INLINE CCTK_C_STATIC_INLINE
 
+/* Define to 'extern' if the 'extern inline' keyword combination does
+   not work. */
+#undef CCTK_C_EXTERN_INLINE
+#define CCTK_EXTERN_INLINE CCTK_C_EXTERN_INLINE
+
 /* Define to empty if the 'const' keyword does not work. */
 #undef const
 
@@ -430,6 +435,7 @@
 #ifdef __cplusplus
 
 #define CCTK_STATIC_INLINE static inline
+#define CCTK_EXTERN_INLINE extern
 
 /* Whether copysign exists, and how it should be called */
 #undef HAVE_CCTK_CXX_COPYSIGN
