@@ -11792,7 +11792,7 @@ const cFunctionData *CCTK_ScheduleQueryCurrentFunction(const cGH *GH)
   
   \begin{Discussion}
     Returns a data structure containing the thorn and routine name of the
-    currently executing function as well as the Cactus bin name. If no
+    currently executing function as well as the Cactus schedule bin or schedule group name. If no
     function is currently executing, returns \code{NULL}. This is intended to
     be used by thorns providing callable functions to identify their caller
     when reporting errors.
