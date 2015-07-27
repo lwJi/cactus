@@ -372,7 +372,9 @@ extern "C"
 ])dnl
 [/* We use char because int might match the return type of a gcc2
     builtin and then its argument prototype would still apply.  */
-char $2();
+dnl We need a space before the parentheses to avoid accidentally calling
+dnl an m4 function, if $2 expands to an m4 function.
+char $2 ();
 ])),
             [$2()],
             eval "ac_cv_lib_$ac_lib_var=yes",
