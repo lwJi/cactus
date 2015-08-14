@@ -83,15 +83,15 @@ void CCTK_FCALL CCTK_FNAME (CCTK_MaxDim)
                            (int *dim);
 void CCTK_FCALL CCTK_FNAME (CCTK_MaxGFDim)
                            (int *dim);
-void CCTK_FCALL CCTK_FNAME (CCTK_MaxTimeLevels)
+void CCTK_FCALL CCTK_FNAME (CCTK_DeclaredTimeLevels)
                            (int *num, ONE_FORTSTRING_ARG);
-void CCTK_FCALL CCTK_FNAME (CCTK_MaxTimeLevelsGI)
+void CCTK_FCALL CCTK_FNAME (CCTK_DeclaredTimeLevelsGI)
                            (int *num, const int *group);
-void CCTK_FCALL CCTK_FNAME (CCTK_MaxTimeLevelsGN)
+void CCTK_FCALL CCTK_FNAME (CCTK_DeclaredTimeLevelsGN)
                            (int *num, ONE_FORTSTRING_ARG);
-void CCTK_FCALL CCTK_FNAME (CCTK_MaxTimeLevelsVI)
+void CCTK_FCALL CCTK_FNAME (CCTK_DeclaredTimeLevelsVI)
                            (int *num, const int *var);
-void CCTK_FCALL CCTK_FNAME (CCTK_MaxTimeLevelsVN)
+void CCTK_FCALL CCTK_FNAME (CCTK_DeclaredTimeLevelsVN)
                            (int *num, ONE_FORTSTRING_ARG);
 void CCTK_FCALL CCTK_FNAME (CCTK_NumGroups)
                            (int *num_groups);
@@ -1539,7 +1539,7 @@ void CCTK_FCALL CCTK_FNAME (CCTK_VarTypeI)
 
 
  /*@@
-   @routine    CCTK_MaxTimeLevelsGI
+   @routine    CCTK_DeclaredTimeLevelsGI
    @date       July 16 2003
    @author     Gabrielle Allen
    @desc
@@ -1552,21 +1552,21 @@ void CCTK_FCALL CCTK_FNAME (CCTK_VarTypeI)
                -1 if given group index is invalid
    @endreturndesc
 @@*/
-int CCTK_MaxTimeLevelsGI (int group)
+int CCTK_DeclaredTimeLevelsGI (int group)
 {
   return ((0 <= group && group < n_groups) ?
           groups[group].n_timelevels : -1);
 }
 
-void CCTK_FCALL CCTK_FNAME (CCTK_MaxTimeLevelsGI)
+void CCTK_FCALL CCTK_FNAME (CCTK_DeclaredTimeLevelsGI)
                            (int *num, const int *group)
 {
-  *num = CCTK_MaxTimeLevelsGI (*group);
+  *num = CCTK_DeclaredTimeLevelsGI (*group);
 }
 
 
  /*@@
-   @routine    CCTK_MaxTimeLevelsVI
+   @routine    CCTK_DeclaredTimeLevelsVI
    @date       3 July 1999
    @author     Gabrielle Allen
    @desc
@@ -1579,21 +1579,21 @@ void CCTK_FCALL CCTK_FNAME (CCTK_MaxTimeLevelsGI)
                -1 if given variable index is invalid
    @endreturndesc
 @@*/
-int CCTK_MaxTimeLevelsVI (int var)
+int CCTK_DeclaredTimeLevelsVI (int var)
 {
   return ((0 <= var && var < total_variables) ?
           groups[group_of_variable[var]].n_timelevels : -1);
 }
 
-void CCTK_FCALL CCTK_FNAME (CCTK_MaxTimeLevelsVI)
+void CCTK_FCALL CCTK_FNAME (CCTK_DeclaredTimeLevelsVI)
                            (int *num, const int *var)
 {
-  *num = CCTK_MaxTimeLevelsVI (*var);
+  *num = CCTK_DeclaredTimeLevelsVI (*var);
 }
 
 
  /*@@
-   @routine    CCTK_MaxTimeLevels
+   @routine    CCTK_DeclaredTimeLevels
    @date       8 June 2003
    @author     Gabrielle Allen
    @desc
@@ -1602,24 +1602,24 @@ void CCTK_FCALL CCTK_FNAME (CCTK_MaxTimeLevelsVI)
 
    @returntype int
    @returndesc
-               return code of @seeroutine CCTK_MaxTimeLevelsI
+               return code of @seeroutine CCTK_DeclaredTimeLevelsI
    @endreturndesc
 @@*/
-int CCTK_MaxTimeLevels (const char *group)
+int CCTK_DeclaredTimeLevels (const char *group)
 {
-  return CCTK_MaxTimeLevelsGI (CCTK_GroupIndex (group));
+  return CCTK_DeclaredTimeLevelsGI (CCTK_GroupIndex (group));
 }
 
-void CCTK_FCALL CCTK_FNAME (CCTK_MaxTimeLevels)
+void CCTK_FCALL CCTK_FNAME (CCTK_DeclaredTimeLevels)
                            (int *num, ONE_FORTSTRING_ARG)
 {
   ONE_FORTSTRING_CREATE (group)
-  *num = CCTK_MaxTimeLevels (group);
+  *num = CCTK_DeclaredTimeLevels (group);
   free (group);
 }
 
  /*@@
-   @routine    CCTK_MaxTimeLevelsGN
+   @routine    CCTK_DeclaredTimeLevelsGN
    @date       8 June 2003
    @author     Gabrielle Allen
    @desc
@@ -1628,24 +1628,24 @@ void CCTK_FCALL CCTK_FNAME (CCTK_MaxTimeLevels)
 
    @returntype int
    @returndesc
-               return code of @seeroutine CCTK_MaxTimeLevelsGI
+               return code of @seeroutine CCTK_DeclaredTimeLevelsGI
    @endreturndesc
 @@*/
-int CCTK_MaxTimeLevelsGN (const char *group)
+int CCTK_DeclaredTimeLevelsGN (const char *group)
 {
-  return CCTK_MaxTimeLevelsGI (CCTK_GroupIndex (group));
+  return CCTK_DeclaredTimeLevelsGI (CCTK_GroupIndex (group));
 }
 
-void CCTK_FCALL CCTK_FNAME (CCTK_MaxTimeLevelsGN)
+void CCTK_FCALL CCTK_FNAME (CCTK_DeclaredTimeLevelsGN)
                            (int *num, ONE_FORTSTRING_ARG)
 {
   ONE_FORTSTRING_CREATE (group)
-  *num = CCTK_MaxTimeLevelsGN (group);
+  *num = CCTK_DeclaredTimeLevelsGN (group);
   free (group);
 }
 
  /*@@
-   @routine    CCTK_MaxTimeLevelsVN
+   @routine    CCTK_DeclaredTimeLevelsVN
    @date       3 July 1999
    @author     Gabrielle Allen
    @desc
@@ -1654,134 +1654,23 @@ void CCTK_FCALL CCTK_FNAME (CCTK_MaxTimeLevelsGN)
 
    @returntype int
    @returndesc
-               return code of @seeroutine CCTK_MaxTimeLevelsVI
+               return code of @seeroutine CCTK_DeclaredTimeLevelsVI
    @endreturndesc
 @@*/
-int CCTK_MaxTimeLevelsVN (const char *var)
+int CCTK_DeclaredTimeLevelsVN (const char *var)
 {
-  return CCTK_MaxTimeLevelsVI (CCTK_VarIndex (var));
+  return CCTK_DeclaredTimeLevelsVI (CCTK_VarIndex (var));
 }
 
-void CCTK_FCALL CCTK_FNAME (CCTK_MaxTimeLevelsVN)
+void CCTK_FCALL CCTK_FNAME (CCTK_DeclaredTimeLevelsVN)
                            (int *num, ONE_FORTSTRING_ARG)
 {
   ONE_FORTSTRING_CREATE (var)
-  *num = CCTK_MaxTimeLevelsVN (var);
+  *num = CCTK_DeclaredTimeLevelsVN (var);
   free (var);
 }
 
 
-
-
- /*@@
-   @routine    CCTK_NumTimeLevelsI
-   @date       3 July 1999
-   @author     Gabrielle Allen
-   @desc
-               DEPRECATED BETA 13
-               Given a group index return the number of timelevels
-   @enddesc
-
-   @returntype int
-   @returndesc
-               the number of timelevels of variables in the group, or
-               -1 if given group index is invalid
-   @endreturndesc
-@@*/
-int CCTK_NumTimeLevelsI (int group)
-{
-  return ((0 <= group && group < n_groups) ?
-          groups[group].n_timelevels : -1);
-}
-
-void CCTK_FCALL CCTK_FNAME (CCTK_NumTimeLevelsI)
-                           (int *num, const int *group)
-{
-  *num = CCTK_NumTimeLevelsI (*group);
-}
-
-
- /*@@
-   @routine    CCTK_NumTimeLevelsFromVarI
-   @date       3 July 1999
-   @author     Gabrielle Allen
-   @desc
-               DEPRECATED BETA 13
-               Given a variable index return the number of timelevels
-   @enddesc
-
-   @returntype int
-   @returndesc
-               the number of timelevels of the given variable, or
-               -1 if given variable index is invalid
-   @endreturndesc
-@@*/
-int CCTK_NumTimeLevelsFromVarI (int var)
-{
-  return ((0 <= var && var < total_variables) ?
-          groups[group_of_variable[var]].n_timelevels : -1);
-}
-
-void CCTK_FCALL CCTK_FNAME (CCTK_NumTimeLevelsFromVarI)
-                           (int *num, const int *var)
-{
-  *num = CCTK_NumTimeLevelsFromVarI (*var);
-}
-
-
- /*@@
-   @routine    CCTK_NumTimeLevels
-   @date       8 June 2003
-   @author     Gabrielle Allen
-   @desc
-               DEPRECATED BETA 13
-               Given a group name return the number of timelevels
-   @enddesc
-
-   @returntype int
-   @returndesc
-               return code of @seeroutine CCTK_NumTimeLevelsI
-   @endreturndesc
-@@*/
-int CCTK_NumTimeLevels (const char *group)
-{
-  return CCTK_NumTimeLevelsI (CCTK_GroupIndex (group));
-}
-
-void CCTK_FCALL CCTK_FNAME (CCTK_NumTimeLevels)
-                           (int *num, ONE_FORTSTRING_ARG)
-{
-  ONE_FORTSTRING_CREATE (group)
-  *num = CCTK_NumTimeLevels (group);
-  free (group);
-}
-
- /*@@
-   @routine    CCTK_NumTimeLevelsFromVar
-   @date       3 July 1999
-   @author     Gabrielle Allen
-   @desc
-               DEPRECATED BETA 13
-               Given a variable name return the number of timelevels
-   @enddesc
-
-   @returntype int
-   @returndesc
-               return code of @seeroutine CCTK_NumTimeLevelsFromVarI
-   @endreturndesc
-@@*/
-int CCTK_NumTimeLevelsFromVar (const char *var)
-{
-  return CCTK_NumTimeLevelsFromVarI (CCTK_VarIndex (var));
-}
-
-void CCTK_FCALL CCTK_FNAME (CCTK_NumTimeLevelsFromVar)
-                           (int *num, ONE_FORTSTRING_ARG)
-{
-  ONE_FORTSTRING_CREATE (var)
-  *num = CCTK_NumTimeLevelsFromVar (var);
-  free (var);
-}
 
 
  /*@@

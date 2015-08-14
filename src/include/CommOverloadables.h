@@ -135,6 +135,14 @@ OVERLOADABLE(GroupStorageDecrease)
 #undef USE_ARGUMENTS
 #undef RETURN_TYPE
 
+#define RETURN_TYPE int
+#define ARGUMENTS const cGH *GH, int n_groups,const int *groups, int *status
+#define USE_ARGUMENTS GH = GH; n_groups=n_groups; groups = groups; status = status;
+OVERLOADABLE(QueryMaxTimeLevels)
+#undef ARGUMENTS
+#undef USE_ARGUMENTS
+#undef RETURN_TYPE
+
 /* overloadable routine CCTK_InterpGridArrays() */
 #define RETURN_TYPE int
 #define ARGUMENTS const cGH *GH,                                              \

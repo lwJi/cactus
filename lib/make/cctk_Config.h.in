@@ -644,10 +644,12 @@
 /* Whether static_assert exists. */
 #undef HAVE_CCTK_CXX_STATIC_ASSERT
 #ifdef HAVE_CCTK_CXX_STATIC_ASSERT
-#  define CCTK_STATIC_ASSERT(cond,msg) static_assert(cond,msg)
+#  define CCTK_STATIC_ASSERT(cond,msg) static_assert(cond, msg)
 #else
-#  define CCTK_STATIC_ASSERT(cond,msg) typedef int cctk_sa_##__LINE__[(cond) ? 1 : -1] CCTK_ATTRIBUTE_UNUSED
-#  define static_assert(cond,msg) CCTK_STATIC_ASSERT(cond,msg)
+#  define CCTK_STATIC_ASSERT_NAME1(x, y) x##y
+#  define CCTK_STATIC_ASSERT_NAME2(x, y) CCTK_STATIC_ASSERT_NAME1(x, y)
+#  define CCTK_STATIC_ASSERT(cond, msg) typedef int CCTK_STATIC_ASSERT_NAME2(cctk_sa_, __LINE__)[(cond) ? 1 : -1] CCTK_ATTRIBUTE_UNUSED
+#  define static_assert(cond, msg) CCTK_STATIC_ASSERT(cond, msg)
 #endif
 
 /* Whether C++11 is supported. */

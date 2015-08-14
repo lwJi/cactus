@@ -65,17 +65,12 @@ int         CCTK_MaxGFDim(void);
 
 int         CCTK_NumGroups(void);
 
-/* DEPRECATED BETA 13 */
-int         CCTK_NumTimeLevelsFromVar(const char *var);
-int         CCTK_NumTimeLevelsFromVarI(int var);
-int         CCTK_NumTimeLevels(const char *group);
-int         CCTK_NumTimeLevelsI(int group);
-
-int         CCTK_MaxTimeLevels(const char *group);
-int         CCTK_MaxTimeLevelsVN(const char *var);
-int         CCTK_MaxTimeLevelsVI(int var);
-int         CCTK_MaxTimeLevelsGN(const char *group);
-int         CCTK_MaxTimeLevelsGI(int group);
+#define HAVE_CCTK_DECLARED_TIMELEVELS
+int         CCTK_DeclaredTimeLevels(const char *group);
+int         CCTK_DeclaredTimeLevelsVN(const char *var);
+int         CCTK_DeclaredTimeLevelsVI(int var);
+int         CCTK_DeclaredTimeLevelsGN(const char *group);
+int         CCTK_DeclaredTimeLevelsGI(int group);
 
 
 int         CCTK_NumVars(void);

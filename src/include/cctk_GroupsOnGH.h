@@ -21,6 +21,7 @@ typedef struct GROUPDYNAMICDATA
   const int *ash;
   const int *bbox;
   const int *nghostzones;
+  int maxtimelevels;
   int activetimelevels;
 } cGroupDynamicData;
 
@@ -79,6 +80,12 @@ int CCTK_ActiveTimeLevelsGN(const cGH *GH, const char *groupname);
 int CCTK_ActiveTimeLevelsGI(const cGH *GH, int groupindex);
 int CCTK_ActiveTimeLevelsVN(const cGH *GH, const char *varname);
 int CCTK_ActiveTimeLevelsVI(const cGH *GH, int varindex);
+
+int CCTK_MaxActiveTimeLevels(const cGH *GH, const char *groupname);
+int CCTK_MaxActiveTimeLevelsGN(const cGH *GH, const char *groupname);
+int CCTK_MaxActiveTimeLevelsGI(const cGH *GH, int groupindex);
+int CCTK_MaxActiveTimeLevelsVN(const cGH *GH, const char *varname);
+int CCTK_MaxActiveTimeLevelsVI(const cGH *GH, int varindex);
 
 #ifdef __cplusplus 
 }

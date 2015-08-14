@@ -166,6 +166,21 @@ from Fortran.
 \item[\code{CCTK\_CreateDirectory}] [\pageref{CCTK-CreateDirectory}]
   Creates a directory
 
+\item[\code{CCTK\_DeclaredTimelevels}] [\pageref{CCTK-DeclaredTimelevels}]
+  Gives the maximum number of timelevels for a group
+
+\item[\code{CCTK\_DeclaredTimelevelsGI}] [\pageref{CCTK-DeclaredTimelevelsGI}]
+  Gives the maximum number of timelevels for a group
+
+\item[\code{CCTK\_DeclaredTimelevelsGN}] [\pageref{CCTK-DeclaredTimelevelsGN}]
+  Gives the maximum number of timelevels for a group
+
+\item[\code{CCTK\_DeclaredTimelevelsVI}] [\pageref{CCTK-DeclaredTimelevelsVI}]
+  Gives the maximum number of timelevels for a variable
+
+\item[\code{CCTK\_DeclaredTimelevelsVN}] [\pageref{CCTK-DeclaredTimelevelsVN}]
+  Gives the maximum number of timelevels for a variable
+
 \item[\code{CCTK\_DecomposeName}] [\pageref{CCTK-DecomposeName}]
   Given the full name of a variable/group, separates the name
   returning both the implementation and the variable/group
@@ -502,6 +517,21 @@ from Fortran.
 \item[\code{CCTK\_LocalArrayReductionHandle}] [\pageref{CCTK-LocalArrayReductionHandle}]
   Returns the handle of a given local array reduction operator
 
+\item[\code{CCTK\_MaxActiveTimeLevels}] [\pageref{CCTK-MaxActiveTimeLevels}]
+  Returns the maximum number of timeleves that were ever active from a group name
+
+\item[\code{CCTK\_MaxActiveTimeLevelsGI}] [\pageref{CCTK-MaxActiveTimeLevels}]
+  Returns the maximum number of timeleves that were ever active from a group index
+
+\item[\code{CCTK\_MaxActiveTimeLevelsGN}] [\pageref{CCTK-MaxActiveTimeLevels}]
+  Returns the maximum number of timeleves that were ever active from a group name
+
+\item[\code{CCTK\_MaxActiveTimeLevelsVI}] [\pageref{CCTK-MaxActiveTimeLevels}]
+  Returns the maximum number of timeleves that were ever active from a variable index
+
+\item[\code{CCTK\_MaxActiveTimeLevelsVN}] [\pageref{CCTK-MaxActiveTimeLevels}]
+  Returns the maximum number of timeleves that were ever active from a variable name
+
 \item[\code{CCTK\_MaxDim}] [\pageref{CCTK-MaxDim}]
   Get the maximum dimension of any grid variable
 
@@ -509,19 +539,7 @@ from Fortran.
   Get the maximum dimension of all grid functions
 
 \item[\code{CCTK\_MaxTimeLevels}] [\pageref{CCTK-MaxTimeLevels}]
-  Gives the maximum number of timelevels for a group
-
-\item[\code{CCTK\_MaxTimeLevelsGI}] [\pageref{CCTK-MaxTimeLevelsGI}]
-  Gives the maximum number of timelevels for a group
-
-\item[\code{CCTK\_MaxTimeLevelsGN}] [\pageref{CCTK-MaxTimeLevelsGN}]
-  Gives the maximum number of timelevels for a group
-
-\item[\code{CCTK\_MaxTimeLevelsVI}] [\pageref{CCTK-MaxTimeLevelsVI}]
-  Gives the maximum number of timelevels for a variable
-
-\item[\code{CCTK\_MaxTimeLevelsVN}] [\pageref{CCTK-MaxTimeLevelsVN}]
-  Gives the maximum number of timelevels for a variable
+  Decprecated. Use \code{CCTK\_DeclaredTimeLevels} instead.
 
 \item[\code{CCTK\_MyProc}] [\pageref{CCTK-MyProc}]
   Get the local processor number
@@ -553,26 +571,6 @@ from Fortran.
 
 \item[\code{CCTK\_NumReductionArraysGloballyOperators}] [\pageref{CCTK-NumReductionArraysGloballyOperators}]
   The number of global array reduction operators registered
-
-\item[\code{CCTK\_NumTimeLevels}] [\pageref{CCTK-NumTimeLevels}]
-  Returns the number of active timelevels from a group name
-  \textbf{(deprecated)}
-
-\item[\code{CCTK\_NumTimeLevelsGI}] [\pageref{CCTK-NumTimeLevels}]
-  Returns the number of active timelevels from a group index
-  \textbf{(deprecated)}
-
-\item[\code{CCTK\_NumTimeLevelsGN}] [\pageref{CCTK-NumTimeLevels}]
-  Returns the number of active timelevels from a group name
-  \textbf{(deprecated)}
-
-\item[\code{CCTK\_NumTimeLevelsVI}] [\pageref{CCTK-NumTimeLevels}]
-  Returns the number of active timelevels from a variable index
-  \textbf{(deprecated)}
-
-\item[\code{CCTK\_NumTimeLevelsVN}] [\pageref{CCTK-NumTimeLevels}]
-  Returns the number of active timelevels from a variable name
-  \textbf{(deprecated)}
 
 \item[\code{CCTK\_NumTimerClocks}] [\pageref{CCTK-NumTimerClocks}]
   Returns the number of clocks in a {\t cTimerData} structure.
@@ -1142,15 +1140,15 @@ Index of a variable in the group.
 This function returns the number of timelevels for which storage has
 been activated, which is always equal to or less than the maximum
 number of timelevels which may have storage provided by
-\code{CCTK\_MaxTimeLevels}.
+\code{CCTK\_MaxActiveTimeLevels}.
 \end{Discussion}
 
 \begin{SeeAlsoSection}
-\begin{SeeAlso2}{CCTK\_MaxTimeLevels}{CCTK-MaxTimeLevels}
-Return the maximum number of active timelevels.
+\begin{SeeAlso2}{CCTK\_MaxActiveTimeLevels}{CCTK-MaxActiveTimeLevels}
+  Returns the maximum number of timeleves that were ever active from a group name
 \end{SeeAlso2}
-\begin{SeeAlso2}{CCTK\_NumTimeLevels}{CCTK-NumTimeLevels}
-Deprecated; same as \code{CCTK\_ActiveTimeLevels}.
+\begin{SeeAlso2}{CCTK\_DeclaredTimelevels}{CCTK-DeclaredTimelevels}
+Return the maximum number of active timelevels.
 \end{SeeAlso2}
 \begin{SeeAlso2}{CCTK\_GroupStorageDecrease}{CCTK-GroupStorageDecrease}
 Base function, overloaded by the driver, which decreases the number of
@@ -2621,6 +2619,190 @@ call CCTK_CREATEDIRECTORY(ierr,0755, "Results/New")
 %%%%%
 
 
+\begin{FunctionDescription}{CCTK\_DeclaredTimelevels}{Gives the number of timelevels for a group}
+\label{CCTK-DeclaredTimelevels}
+\begin{SynopsisSection}
+\begin{Synopsis}{C}
+\begin{verbatim}int numlevels = CCTK_DeclaredTimelevels( const char * name)\end{verbatim}
+\end{Synopsis}
+\begin{Synopsis}{Fortran}
+\begin{verbatim}call CCTK_DeclaredTimelevels(numlevels , name )
+
+integer numlevels
+character*(*) name\end{verbatim}
+\end{Synopsis}
+\end{SynopsisSection}
+\begin{ParameterSection}
+\begin{Parameter}{name}
+The full group name
+\end{Parameter}
+\begin{Parameter}{numlevels}
+The number of timelevels
+\end{Parameter}
+\end{ParameterSection}
+\begin{Discussion}
+The group name should be in the form \code{<implementation>::<group>}
+\end{Discussion}
+\begin{ExampleSection}
+\begin{Example}{C}
+\begin{verbatim}
+numlevels = CCTK_DeclaredTimelevels("evolve::phivars");
+\end{verbatim}
+\end{Example}
+\begin{Example}{Fortran}
+\begin{verbatim}
+call CCTK_DECLAREDTIMELEVELS(numlevels,"evolve::phivars")
+\end{verbatim}
+\end{Example}
+\end{ExampleSection}
+\end{FunctionDescription}
+
+% Groups.c
+\begin{FunctionDescription}{CCTK\_DeclaredTimelevelsGI}{Gives the number of timelevels for a group}
+\label{CCTK-DeclaredTimelevelsGI}
+\begin{SynopsisSection}
+\begin{Synopsis}{C}
+\begin{verbatim}int numlevels = CCTK_DeclaredTimelevelsGI( int index)\end{verbatim}
+\end{Synopsis}
+\begin{Synopsis}{Fortran}
+\begin{verbatim}call CCTK_DeclaredTimelevelsGI(numlevels , index )
+
+integer numlevels
+integer index\end{verbatim}
+\end{Synopsis}
+\end{SynopsisSection}
+\begin{ParameterSection}
+\begin{Parameter}{numlevels}
+The number of timelevels
+\end{Parameter}
+\begin{Parameter}{index}
+The group index
+\end{Parameter}
+\end{ParameterSection}
+
+\begin{ExampleSection}
+\begin{Example}{C}
+\begin{verbatim}
+index = CCTK_GroupIndex("evolve::phivars")
+numlevels = CCTK_DeclaredTimelevelsGI(index);
+\end{verbatim}
+\end{Example}
+\begin{Example}{Fortran}
+\begin{verbatim}
+call CCTK_DECLAREDTIMELEVELSGI(numlevels,3)}
+\end{verbatim}
+\end{Example}
+\end{ExampleSection}
+\end{FunctionDescription}
+
+
+% Groups.c
+\begin{FunctionDescription}{CCTK\_DeclaredTimelevelsGN}
+\label{CCTK-DeclaredTimelevelsGN}
+Gives the number of timelevels for a group
+\begin{SynopsisSection}
+\begin{Synopsis}{C}
+\begin{verbatim}int retval = CCTK_DeclaredTimelevelsGN(const char *group);\end{verbatim}
+\end{Synopsis}
+\end{SynopsisSection}
+
+\begin{ResultSection}
+\begin{Result}{}
+The maximum number of timelevels this group has, or -1 if the group name is incorrect.
+\end{Result}
+\end{ResultSection}
+
+\begin{ParameterSection}
+\begin{Parameter}{group}
+The variable group's name
+\end{Parameter}
+\end{ParameterSection}
+
+\begin{Discussion}
+This function and its relatives return the maximum number of timelevels that the given variable group can have active.  This function does not tell you anything about how many time levels are active at the time.
+\end{Discussion}
+\end{FunctionDescription}
+
+
+
+% Groups.c
+\begin{FunctionDescription}{CCTK\_DeclaredTimelevelsVI}{Gives the number of timelevels for a variable}
+\label{CCTK-DeclaredTimelevelsVI}
+\begin{SynopsisSection}
+\begin{Synopsis}{C}
+\begin{verbatim}int numlevels = CCTK_DeclaredTimelevelsVI( int index)\end{verbatim}
+\end{Synopsis}
+\begin{Synopsis}{Fortran}
+\begin{verbatim}call CCTK_DeclaredTimelevelsVI(numlevels , index )
+
+integer numlevels
+integer index\end{verbatim}
+\end{Synopsis}
+\end{SynopsisSection}
+\begin{ParameterSection}
+\begin{Parameter}{numlevels}
+The number of timelevels
+\end{Parameter}
+\begin{Parameter}{index}
+The variable index
+\end{Parameter}
+\end{ParameterSection}
+
+\begin{ExampleSection}
+\begin{Example}{C}
+\begin{verbatim}
+index = CCTK_VarIndex("evolve::phi")
+numlevels = CCTK_DeclaredTimelevelsVI(index);
+\end{verbatim}
+\end{Example}
+\begin{Example}{Fortran}
+\begin{verbatim}
+call CCTK_DECLAREDTIMELEVELSVI(numlevels,3)
+\end{verbatim}
+\end{Example}
+\end{ExampleSection}
+\end{FunctionDescription}
+
+\begin{FunctionDescription}{CCTK\_DeclaredTimelevelsVN}{Gives the number of timelevels for a variable}
+\label{CCTK-DeclaredTimelevelsVN}
+\begin{SynopsisSection}
+\begin{Synopsis}{C}
+\begin{verbatim}int numlevels = CCTK_DeclaredTimelevelsVN( const char * name)\end{verbatim}
+\end{Synopsis}
+\begin{Synopsis}{Fortran}
+\begin{verbatim}call CCTK_DeclaredTimelevelsVN(numlevels , name )
+
+integer numlevels
+character*(*) name\end{verbatim}
+\end{Synopsis}
+\end{SynopsisSection}
+\begin{ParameterSection}
+\begin{Parameter}{name}
+The full variable name
+\end{Parameter}
+\begin{Parameter}{numlevels}
+The number of timelevels
+\end{Parameter}
+\end{ParameterSection}
+\begin{Discussion}
+The variable name should be in the form \code{<implementation>::<variable>}
+\end{Discussion}
+\begin{ExampleSection}
+\begin{Example}{C}
+\begin{verbatim}
+numlevels = CCTK_DeclaredTimelevelsVN("evolve::phi")
+\end{verbatim}
+\end{Example}
+\begin{Example}{Fortran}
+\begin{verbatim}
+call CCTK_DECLAREDTIMELEVELSVN(numlevels,"evolve::phi")
+\end{verbatim}
+\end{Example}
+\end{ExampleSection}
+\end{FunctionDescription}
+
+
+
 % Groups.c
 \begin{FunctionDescription}{CCTK\_DecomposeName}{Given the full name of a variable/group, separates the name returning both the implementation and the variable/group}
 \label{CCTK-DecomposeName}
@@ -4026,7 +4208,7 @@ The {\t cGroup} structure%%%
   int dim;            /* dimension (rank) of the group */
                       /* e.g. 3 for a group of 3-D variables */
   int numvars;        /* number of variables in the group */
-  int numtimelevels;  /* maximum number of time levels for this group's variables */
+  int numtimelevels;  /* declared number of time levels for this group's variables */
   int vectorgroup;    /* 1 if this is a vector group, 0 if it's not */
   int vectorlength;   /* vector length of group */
                       /* (i.e. number of vector elements) */
@@ -8188,6 +8370,128 @@ The number of local reduction operators registered
 %%%%%
 
 
+% cctk_GroupsOnGH.h
+%Entering a function description for CCTK\_MaxActiveTimeLevels
+\begin{FunctionDescription}{CCTK\_MaxActiveTimeLevels}
+\label{CCTK-MaxActiveTimeLevels}
+Returns the maximum number of time levels ever active for a group.
+
+\begin{SynopsisSection}
+\begin{Synopsis}{C}
+\begin{verbatim}
+#include "cctk.h"
+
+int timelevels = CCTK_MaxActiveTimeLevels(const cGH *cctkGH,
+                                       const char *groupname);
+
+int timelevels = CCTK_MaxActiveTimeLevelsGI(const cGH *cctkGH,
+                                         int groupindex);
+
+int timelevels = CCTK_MaxActiveTimeLevelsGN(const cGH *cctkGH,
+                                         const char *groupname);
+
+int timelevels = CCTK_MaxActiveTimeLevelsVI(const cGH *cctkGH,
+                                         int varindex);
+
+int timelevels = CCTK_MaxActiveTimeLevelsVN(const cGH *cctkGH,
+                                         const char *varname);
+\end{verbatim}
+\end{Synopsis}
+\begin{Synopsis}{Fortran}
+\begin{verbatim}
+#include "cctk.h"
+
+subroutine CCTK_MaxActiveTimeLevels(timelevels, cctkGH, groupname)
+   integer       timelevels
+   CCTK_POINTER  cctkGH
+   character*(*) groupname
+end subroutine CCTK_MaxActiveTimeLevels
+
+subroutine CCTK_MaxActiveTimeLevelsGI(timelevels, cctkGH, groupindex)
+   integer       timelevels
+   CCTK_POINTER  cctkGH
+   integer       groupindex
+end subroutine CCTK_MaxActiveTimeLevelsGI
+
+subroutine CCTK_MaxActiveTimeLevelsGN(timelevels, cctkGH, groupname)
+   integer       timelevels
+   CCTK_POINTER  cctkGH
+   character*(*) groupname
+end subroutine CCTK_MaxActiveTimeLevelsGN
+
+subroutine CCTK_MaxActiveTimeLevelsVI(timelevels, cctkGH, varindex)
+   integer       timelevels
+   CCTK_POINTER  cctkGH
+   integer       varindex
+end subroutine CCTK_MaxActiveTimeLevelsVI
+
+subroutine CCTK_MaxActiveTimeLevelsVN(timelevels, cctkGH, varname)
+   integer       timelevels
+   CCTK_POINTER  cctkGH
+   character*(*) varname
+end subroutine CCTK_MaxActiveTimeLevelsVN
+\end{verbatim}
+\end{Synopsis}
+\end{SynopsisSection}
+
+\begin{ResultSection}
+\begin{Result}{timelevels}
+The largest number of timelevels that were ever active for the group or the
+result of \code{CCTK\_DeclaredTimelevels}, whichever is larger.
+\end{Result}
+\end{ResultSection}
+
+\begin{ParameterSection}
+\begin{Parameter}{GH ($\ne$ NULL)}
+Pointer to a valid Cactus grid hierarchy.
+\end{Parameter}
+\begin{Parameter}{groupname}
+Name of the group.
+\end{Parameter}
+\begin{Parameter}{groupindex}
+Index of the group.
+\end{Parameter}
+\begin{Parameter}{varname}
+Name of a variable in the group.
+\end{Parameter}
+\begin{Parameter}{varindex}
+Index of a variable in the group.
+\end{Parameter}
+\end{ParameterSection}
+
+\begin{Discussion}
+This function returns the number of timelevels for which storage has
+ever been request either through an actual storage request or via the
+\code{TIMELEVELS} attribute in \texttt{interface.ccl}. This is always
+at least as large as \code{CCTK\_DeclaredTimelevels}.
+\end{Discussion}
+
+\begin{SeeAlsoSection}
+\begin{SeeAlso2}{CCTK\_DeclaredTimelevels}{CCTK-DeclaredTimelevels}
+Return the maximum number of timelevels in \code{interface.ccl}.
+\end{SeeAlso2}
+\begin{SeeAlso2}{CCTK\_GroupStorageDecrease}{CCTK-GroupStorageDecrease}
+Base function, overloaded by the driver, which decreases the number of
+active timelevels, and also returns the number of active timelevels.
+\end{SeeAlso2}
+\begin{SeeAlso2}{CCTK\_GroupStorageIncrease}{CCTK-GroupStorageIncrease}
+Base function, overloaded by the driver, which increases the number of
+active timelevels, and also returns the number of active timelevels.
+\end{SeeAlso2}
+\end{SeeAlsoSection}
+
+\begin{ErrorSection}
+\begin{Error}{timelevels $<$ 0}
+Illegal arguments given.
+\end{Error}
+\end{ErrorSection}
+
+%\begin{ExampleSection}
+%\end{ExampleSection}
+\end{FunctionDescription}
+
+
+
 % Groups.c
 \begin{FunctionDescription}{CCTK\_MaxDim}{Get the maximum dimension of any grid variable }
 \label{CCTK-MaxDim}
@@ -8261,188 +8565,11 @@ call  CCTK_MaxGFDim(dim)}
 \end{ExampleSection}
 \end{FunctionDescription}
 
-
-
-\begin{FunctionDescription}{CCTK\_MaxTimeLevels}{Gives the number of timelevels for a group}
+\begin{FunctionDescription}{CCTK\_MaxTimeLevels}{Decprecated. Use \code{CCTK\_DeclaredTimeLevels} instead.}
 \label{CCTK-MaxTimeLevels}
 \begin{SynopsisSection}
-\begin{Synopsis}{C}
-\begin{verbatim}int numlevels = CCTK_MaxTimeLevels( const char * name)\end{verbatim}
-\end{Synopsis}
-\begin{Synopsis}{Fortran}
-\begin{verbatim}call CCTK_MaxTimeLevels(numlevels , name )
-
-integer numlevels
-character*(*) name\end{verbatim}
-\end{Synopsis}
+This function has been superseeded by \ref{CCTK-DeclaredTimeLevels}.
 \end{SynopsisSection}
-\begin{ParameterSection}
-\begin{Parameter}{name}
-The full group name
-\end{Parameter}
-\begin{Parameter}{numlevels}
-The number of timelevels
-\end{Parameter}
-\end{ParameterSection}
-\begin{Discussion}
-The group name should be in the form \code{<implementation>::<group>}
-\end{Discussion}
-\begin{ExampleSection}
-\begin{Example}{C}
-\begin{verbatim}
-numlevels = CCTK_MaxTimeLevels("evolve::phivars");
-\end{verbatim}
-\end{Example}
-\begin{Example}{Fortran}
-\begin{verbatim}
-call CCTK_MAXTIMELEVELS(numlevels,"evolve::phivars")
-\end{verbatim}
-\end{Example}
-\end{ExampleSection}
-\end{FunctionDescription}
-
-% Groups.c
-\begin{FunctionDescription}{CCTK\_MaxTimeLevelsGI}{Gives the number of timelevels for a group}
-\label{CCTK-MaxTimeLevelsGI}
-\begin{SynopsisSection}
-\begin{Synopsis}{C}
-\begin{verbatim}int numlevels = CCTK_MaxTimeLevelsGI( int index)\end{verbatim}
-\end{Synopsis}
-\begin{Synopsis}{Fortran}
-\begin{verbatim}call CCTK_MaxTimeLevelsGI(numlevels , index )
-
-integer numlevels
-integer index\end{verbatim}
-\end{Synopsis}
-\end{SynopsisSection}
-\begin{ParameterSection}
-\begin{Parameter}{numlevels}
-The number of timelevels
-\end{Parameter}
-\begin{Parameter}{index}
-The group index
-\end{Parameter}
-\end{ParameterSection}
-
-\begin{ExampleSection}
-\begin{Example}{C}
-\begin{verbatim}
-index = CCTK_GroupIndex("evolve::phivars")
-numlevels = CCTK_MaxTimeLevelsGI(index);
-\end{verbatim}
-\end{Example}
-\begin{Example}{Fortran}
-\begin{verbatim}
-call CCTK_MAXTIMELEVELSGI(numlevels,3)}
-\end{verbatim}
-\end{Example}
-\end{ExampleSection}
-\end{FunctionDescription}
-
-
-% Groups.c
-\begin{FunctionDescription}{CCTK\_MaxTimeLevelsGN}
-\label{CCTK-MaxTimeLevelsGN}
-Gives the number of timelevels for a group
-\begin{SynopsisSection}
-\begin{Synopsis}{C}
-\begin{verbatim}int retval = CCTK_MaxTimeLevelsGN(const char *group);\end{verbatim}
-\end{Synopsis}
-\end{SynopsisSection}
-
-\begin{ResultSection}
-\begin{Result}{}
-The maximum number of timelevels this group has, or -1 if the group name is incorrect.
-\end{Result}
-\end{ResultSection}
-
-\begin{ParameterSection}
-\begin{Parameter}{group}
-The variable group's name
-\end{Parameter}
-\end{ParameterSection}
-
-\begin{Discussion}
-This function and its relatives return the maximum number of timelevels that the given variable group can have active.  This function does not tell you anything about how many time levels are active at the time.
-\end{Discussion}
-\end{FunctionDescription}
-
-
-
-% Groups.c
-\begin{FunctionDescription}{CCTK\_MaxTimeLevelsVI}{Gives the number of timelevels for a variable}
-\label{CCTK-MaxTimeLevelsVI}
-\begin{SynopsisSection}
-\begin{Synopsis}{C}
-\begin{verbatim}int numlevels = CCTK_MaxTimeLevelsVI( int index)\end{verbatim}
-\end{Synopsis}
-\begin{Synopsis}{Fortran}
-\begin{verbatim}call CCTK_MaxTimeLevelsVI(numlevels , index )
-
-integer numlevels
-integer index\end{verbatim}
-\end{Synopsis}
-\end{SynopsisSection}
-\begin{ParameterSection}
-\begin{Parameter}{numlevels}
-The number of timelevels
-\end{Parameter}
-\begin{Parameter}{index}
-The variable index
-\end{Parameter}
-\end{ParameterSection}
-
-\begin{ExampleSection}
-\begin{Example}{C}
-\begin{verbatim}
-index = CCTK_VarIndex("evolve::phi")
-numlevels = CCTK_MaxTimeLevelsVI(index);
-\end{verbatim}
-\end{Example}
-\begin{Example}{Fortran}
-\begin{verbatim}
-call CCTK_MAXTIMELEVELSVI(numlevels,3)
-\end{verbatim}
-\end{Example}
-\end{ExampleSection}
-\end{FunctionDescription}
-
-\begin{FunctionDescription}{CCTK\_MaxTimeLevelsVN}{Gives the number of timelevels for a variable}
-\label{CCTK-MaxTimeLevelsVN}
-\begin{SynopsisSection}
-\begin{Synopsis}{C}
-\begin{verbatim}int numlevels = CCTK_MaxTimeLevelsVN( const char * name)\end{verbatim}
-\end{Synopsis}
-\begin{Synopsis}{Fortran}
-\begin{verbatim}call CCTK_MaxTimeLevelsVN(numlevels , name )
-
-integer numlevels
-character*(*) name\end{verbatim}
-\end{Synopsis}
-\end{SynopsisSection}
-\begin{ParameterSection}
-\begin{Parameter}{name}
-The full variable name
-\end{Parameter}
-\begin{Parameter}{numlevels}
-The number of timelevels
-\end{Parameter}
-\end{ParameterSection}
-\begin{Discussion}
-The variable name should be in the form \code{<implementation>::<variable>}
-\end{Discussion}
-\begin{ExampleSection}
-\begin{Example}{C}
-\begin{verbatim}
-numlevels = CCTK_MaxTimeLevelsVN("evolve::phi")
-\end{verbatim}
-\end{Example}
-\begin{Example}{Fortran}
-\begin{verbatim}
-call CCTK_MAXTIMELEVELSVN(numlevels,"evolve::phi")
-\end{verbatim}
-\end{Example}
-\end{ExampleSection}
 \end{FunctionDescription}
 
 % CommOverloadables.c
@@ -8928,132 +9055,6 @@ Registers a function as a reduction operator of a certain name
 \end{SeeAlso}
 
 \end{SeeAlsoSection}
-\end{FunctionDescription}
-
-
-% cctk_GroupsOnGH.h
-%Entering a function description for CCTK\_NumTimeLevels
-\begin{FunctionDescription}{CCTK\_NumTimeLevels}
-\label{CCTK-NumTimeLevels}
-Returns the number of active time levels for a group (deprecated).
-
-\begin{SynopsisSection}
-\begin{Synopsis}{C}
-\begin{verbatim}
-#include "cctk.h"
-
-int timelevels = CCTK_NumTimeLevels(const cGH *cctkGH,
-                                    const char *groupname);
-
-int timelevels = CCTK_NumTimeLevelsGI(const cGH *cctkGH,
-                                      int groupindex);
-
-int timelevels = CCTK_NumTimeLevelsGN(const cGH *cctkGH,
-                                      const char *groupname);
-
-int timelevels = CCTK_NumTimeLevelsVI(const cGH *cctkGH,
-                                      int varindex);
-
-int timelevels = CCTK_NumTimeLevelsVN(const cGH *cctkGH,
-                                      const char *varname);
-\end{verbatim}
-\end{Synopsis}
-\begin{Synopsis}{Fortran}
-\begin{verbatim}
-#include "cctk.h"
-
-subroutine CCTK_NumTimeLevels(timelevels, cctkGH, groupname)
-   integer       timelevels
-   CCTK_POINTER  cctkGH
-   character*(*) groupname
-end subroutine CCTK_NumTimeLevels
-
-subroutine CCTK_NumTimeLevelsGI(timelevels, cctkGH, groupindex)
-   integer       timelevels
-   CCTK_POINTER  cctkGH
-   integer       groupindex
-end subroutine CCTK_NumTimeLevelsGI
-
-subroutine CCTK_NumTimeLevelsGN(timelevels, cctkGH, groupname)
-   integer       timelevels
-   CCTK_POINTER  cctkGH
-   character*(*) groupname
-end subroutine CCTK_NumTimeLevelsGN
-
-subroutine CCTK_NumTimeLevelsVI(timelevels, cctkGH, varindex)
-   integer       timelevels
-   CCTK_POINTER  cctkGH
-   integer       varindex
-end subroutine CCTK_NumTimeLevelsVI
-
-subroutine CCTK_NumTimeLevelsVN(timelevels, cctkGH, varname)
-   integer       timelevels
-   CCTK_POINTER  cctkGH
-   character*(*) varname
-end subroutine CCTK_NumTimeLevelsVN
-\end{verbatim}
-\end{Synopsis}
-\end{SynopsisSection}
-
-\begin{ResultSection}
-\begin{Result}{timelevels}
-The currently active number of timelevels for the group.
-\end{Result}
-\end{ResultSection}
-
-\begin{ParameterSection}
-\begin{Parameter}{GH ($\ne$ NULL)}
-Pointer to a valid Cactus grid hierarchy.
-\end{Parameter}
-\begin{Parameter}{groupname}
-Name of the group.
-\end{Parameter}
-\begin{Parameter}{groupindex}
-Index of the group.
-\end{Parameter}
-\begin{Parameter}{varname}
-Name of a variable in the group.
-\end{Parameter}
-\begin{Parameter}{varindex}
-Index of a variable in the group.
-\end{Parameter}
-\end{ParameterSection}
-
-\begin{Discussion}
-This function returns the number of timelevels for which storage has
-been activated, which is always equal to or less than the maximum
-number of timelevels which may have storage provided by
-\code{CCTK\_MaxTimeLevels}.
-
-This function has been superceded by \code{CCTK\_ActiveTimeLevels} and
-should not be used any more.
-\end{Discussion}
-
-\begin{SeeAlsoSection}
-\begin{SeeAlso2}{CCTK\_ActiveTimeLevels}{CCTK-ActiveTimeLevels}
-Returns the number of active time levels for a group.
-\end{SeeAlso2}
-\begin{SeeAlso2}{CCTK\_MaxTimeLevels}{CCTK-MaxTimeLevels}
-Return the maximum number of active timelevels.
-\end{SeeAlso2}
-\begin{SeeAlso2}{CCTK\_GroupStorageDecrease}{CCTK-GroupStorageDecrease}
-Base function, overloaded by the driver, which decreases the number of
-active timelevels, and also returns the number of active timelevels.
-\end{SeeAlso2}
-\begin{SeeAlso2}{CCTK\_GroupStorageIncrease}{CCTK-GroupStorageIncrease}
-Base function, overloaded by the driver, which increases the number of
-active timelevels, and also returns the number of active timelevels.
-\end{SeeAlso2}
-\end{SeeAlsoSection}
-
-\begin{ErrorSection}
-\begin{Error}{timelevels $<$ 0}
-Illegal arguments given.
-\end{Error}
-\end{ErrorSection}
-
-%\begin{ExampleSection}
-%\end{ExampleSection}
 \end{FunctionDescription}
 
 

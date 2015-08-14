@@ -17,6 +17,8 @@
 #
 #   gmake help
 #
+# Use VERBOSE=yes on the make command line to get verbose output of
+# the compiler commands that make is running
 #
 #   @enddesc
 # @@*/

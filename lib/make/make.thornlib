@@ -78,7 +78,7 @@ OBJS = $(SRCS:%=%.o)
 
 $(NAME): $(addsuffix /make.checked, $(SUBDIRS) $(THORNBINDINGS))
 	if [ -r $(NAME) ] ; then echo Updating $(NAME) ; else echo Creating $(NAME) ; fi
-	if [ -r $@ ] ; then rm -f $@ ; fi
+	rm -f $@
 ###	create an archive of the object files
 #	
 ##	This naive method will fail on some machines (eg. IBM SP5)
@@ -132,8 +132,11 @@ ifeq ($(shell uname),AIX)
 # handled at once.  AIX has a command line length limit of about
 # 32000.  Each object's path name may be about 100 characters long.
 OBJS-words-max = 200
+else ifneq ($(findstring CYGWIN_NT,$(shell uname)),)
+# Ditto
+OBJS-words-max = 200
 else
-# Assume that the system has no limit to speak of.
+# Assume that the system has no limit to speak of
 OBJS-words-max = 10000
 endif
 
@@ -143,26 +146,16 @@ ifeq ($(shell test $(OBJS-words) -le $(OBJS-words-max) && echo 1), 1)
 
 .PHONY: $(NAME).objectlist
 $(NAME).objectlist:
-	echo $(OBJS) > $(NAME).objectlist
+	echo $(OBJS) > $@
 
 else
 
-# The list is long.  Create the file via a set of rules, one rule per
-# object file.
-
-OBJS-added = $(OBJS:%=%.added)
+# The list is long.  Create it one object file a time.
 
 .PHONY: $(NAME).objectlist
-$(NAME).objectlist: $(OBJS-added)
-
-# Truncate the file
-.PHONY: $(NAME).objectlist.create
-$(NAME).objectlist.create:
-	: > $(NAME).objectlist
-
-# Add a line to the file
-.PHONY: $(OBJS-added)
-$(OBJS-added): $(NAME).objectlist.create
-	echo $(@:%.added=%) >> $(NAME).objectlist
+$(NAME).objectlist:
+	$(shell : > $@.tmp)
+	$(foreach obj, $(OBJS), $(shell echo $(obj) >> $@.tmp))
+	mv $@.tmp $@
 
 endif

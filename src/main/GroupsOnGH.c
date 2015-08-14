@@ -217,6 +217,16 @@ void CCTK_FCALL CCTK_FNAME (CCTK_ActiveTimeLevelsGN)
                            (int *num, const cGH **cctkGH, ONE_FORTSTRING_ARG);
 void CCTK_FCALL CCTK_FNAME (CCTK_ActiveTimeLevels)
                            (int *num, const cGH **cctkGH, ONE_FORTSTRING_ARG);
+void CCTK_FCALL CCTK_FNAME (CCTK_MaxActiveTimeLevelsVI)
+                           (int *num, const cGH **cctkGH, const int *var);
+void CCTK_FCALL CCTK_FNAME (CCTK_MaxActiveTimeLevelsVN)
+                           (int *num, const cGH **cctkGH, ONE_FORTSTRING_ARG);
+void CCTK_FCALL CCTK_FNAME (CCTK_MaxActiveTimeLevelsGI)
+                           (int *num, const cGH **cctkGH, const int *var);
+void CCTK_FCALL CCTK_FNAME (CCTK_MaxActiveTimeLevelsGN)
+                           (int *num, const cGH **cctkGH, ONE_FORTSTRING_ARG);
+void CCTK_FCALL CCTK_FNAME (CCTK_MaxActiveTimeLevels)
+                           (int *num, const cGH **cctkGH, ONE_FORTSTRING_ARG);
 
 
 
@@ -262,7 +272,7 @@ void *CCTK_VarDataPtr(const cGH *GH, int timelevel, const char *varname)
   vindex = CCTK_VarIndex(varname);
   if (vindex >= 0)
   {
-    if (timelevel >= 0 && timelevel < CCTK_MaxTimeLevelsVI (vindex))
+    if (timelevel >= 0 && timelevel < CCTK_MaxActiveTimeLevelsVI (GH, vindex))
     {
       retval = GH->data[vindex][timelevel];
     }
@@ -338,7 +348,7 @@ void *CCTK_VarDataPtrI(const cGH *GH, int timelevel, int vindex)
 
 
   retval = NULL;
-  numtimelevels = CCTK_MaxTimeLevelsVI (vindex);
+  numtimelevels = CCTK_MaxActiveTimeLevelsVI (GH, vindex);
   if (numtimelevels > 0)
   {
     if (timelevel >= 0 && timelevel < numtimelevels)
@@ -403,7 +413,13 @@ void CCTK_FCALL CCTK_FNAME(CCTK_VarDataPtrI)
 @@*/
 void *CCTKi_VarDataPtrI(const cGH *GH, int timelevel, int vindex)
 {
-  int numtimelevels = CCTK_MaxTimeLevelsVI (vindex);
+  int numvars = CCTK_NumVars();
+  if (vindex < 0 || vindex >= numvars)
+  {
+    return NULL;
+  }
+
+  int numtimelevels = CCTK_MaxActiveTimeLevelsVI (GH, vindex);
   if (timelevel < 0 || timelevel >= numtimelevels)
   {
     return NULL;
@@ -604,7 +620,7 @@ int CCTK_ActiveTimeLevels(const cGH *GH, const char *groupname)
     return (-1);
   }
 
-  timelevels = CCTK_GroupStorageIncrease(GH, 1, &gindex, &increase, NULL);
+  timelevels = CCTK_GroupStorageIncrease (GH, 1, &gindex, &increase, NULL);
 
   return timelevels;
 }
@@ -665,7 +681,7 @@ int CCTK_ActiveTimeLevelsGI(const cGH *GH, int gindex)
     return (-1);
   }
 
-  timelevels = CCTK_GroupStorageIncrease(GH, 1, &gindex, &increase, NULL);
+  timelevels = CCTK_GroupStorageIncrease (GH, 1, &gindex, &increase, NULL);
 
   return timelevels;
 }
@@ -745,6 +761,175 @@ void CCTK_FCALL CCTK_FNAME (CCTK_ActiveTimeLevelsVI)
                             const int *vindex)
 {
   *timelevels = CCTK_ActiveTimeLevelsVI (*cctkGH, *vindex);
+}
+
+
+/********************************************************************
+ ********************    MaxActiveTimeLevels    *********************
+ ********************************************************************/
+
+
+ /*@@
+   @routine    CCTK_MaxActiveTimeLevels
+   @date       Mon Mar 10 2014
+   @author     Roland Haas
+   @desc
+   Return maximum number of active timelevels for a group
+   @enddesc
+@@*/
+int CCTK_MaxActiveTimeLevels(const cGH *GH, const char *groupname)
+{
+  int gindex;
+  int status;
+
+  gindex = CCTK_GroupIndex(groupname);
+  if (gindex < 0)
+  {
+    CCTK_VWarn (1, __LINE__, __FILE__, "Cactus",
+                "CCTK_MaxActiveTimeLevels: invalid group name '%s'", groupname);
+    return (-1);
+  }
+
+  CCTK_QueryMaxTimeLevels(GH, 1, &gindex, &status);
+
+  return status;
+}
+void CCTK_FCALL CCTK_FNAME (CCTK_MaxActiveTimeLevels)
+                           (int *timelevels,
+                            const cGH **cctkGH,
+                            ONE_FORTSTRING_ARG)
+{
+  ONE_FORTSTRING_CREATE (groupname)
+  *timelevels = CCTK_MaxActiveTimeLevels (*cctkGH, groupname);
+  free (groupname);
+}
+
+ /*@@
+   @routine    CCTK_MaxActiveTimeLevelsGN
+   @date       Mon Mar 10 2014
+   @author     Roland Haas
+   @desc
+   Return maximum number of active timelevels for a group
+   @enddesc
+@@*/
+int CCTK_MaxActiveTimeLevelsGN(const cGH *GH, const char *groupname)
+{
+  int timelevels;
+
+  timelevels = CCTK_MaxActiveTimeLevels(GH, groupname);
+
+  return timelevels;
+}
+void CCTK_FCALL CCTK_FNAME (CCTK_MaxActiveTimeLevelsGN)
+                           (int *timelevels,
+                            const cGH **cctkGH,
+                            ONE_FORTSTRING_ARG)
+{
+  ONE_FORTSTRING_CREATE (groupname)
+  *timelevels = CCTK_MaxActiveTimeLevels (*cctkGH, groupname);
+  free (groupname);
+}
+
+ /*@@
+   @routine    CCTK_MaxActiveTimeLevelsGI
+   @date       Mon Mar 10 2014
+   @author     Roland Haas
+   @desc
+   Return maximum number of active timelevels for a group
+   @enddesc
+@@*/
+int CCTK_MaxActiveTimeLevelsGI(const cGH *GH, int gindex)
+{
+  int status;
+
+  if (gindex < 0 || gindex >= CCTK_NumGroups ())
+  {
+    CCTK_VWarn (1, __LINE__, __FILE__, "Cactus",
+                "CCTK_MaxActiveTimeLevelsGI: invalid group index %d given",
+                gindex);
+    return (-1);
+  }
+
+  CCTK_QueryMaxTimeLevels(GH, 1, &gindex, &status);
+
+  return status;
+}
+void CCTK_FCALL CCTK_FNAME (CCTK_MaxActiveTimeLevelsGI)
+                           (int *timelevels,
+                            const cGH **cctkGH,
+                            const int *gindex)
+{
+  *timelevels = CCTK_MaxActiveTimeLevelsGI (*cctkGH, *gindex);
+}
+
+
+ /*@@
+   @routine    CCTK_MaxActiveTimeLevelsVN
+   @date       Mon Mar 10 2014
+   @author     Roland Haas
+   @desc
+   Return maximum number of active timelevels for a group
+   @enddesc
+@@*/
+int CCTK_MaxActiveTimeLevelsVN(const cGH *GH, const char *varname)
+{
+  int timelevels;
+  int gindex;
+
+  gindex = CCTK_GroupIndexFromVar(varname);
+  if (gindex < 0)
+  {
+    CCTK_VWarn (1, __LINE__, __FILE__, "Cactus",
+                "CCTK_MaxActiveTimeLevelsVN: invalid variable name '%s'", varname);
+    return (-1);
+  }
+
+  timelevels = CCTK_MaxActiveTimeLevelsGI(GH, gindex);
+
+  return timelevels;
+}
+void CCTK_FCALL CCTK_FNAME (CCTK_MaxActiveTimeLevelsVN)
+                           (int *timelevels,
+                            const cGH **cctkGH,
+                            ONE_FORTSTRING_ARG)
+{
+  ONE_FORTSTRING_CREATE (varname)
+  *timelevels = CCTK_MaxActiveTimeLevelsVN (*cctkGH, varname);
+  free (varname);
+}
+
+
+ /*@@
+   @routine    CCTK_MaxActiveTimeLevelsVI
+   @date       Mon Mar 10 2014
+   @author     Roland Haas
+   @desc
+   Return maximum number of active timelevels for a group
+   @enddesc
+@@*/
+int CCTK_MaxActiveTimeLevelsVI(const cGH *GH, int vindex)
+{
+  int timelevels;
+  int gindex;
+
+  gindex = CCTK_GroupIndexFromVarI(vindex);
+  if (gindex < 0)
+  {
+    CCTK_VWarn (1, __LINE__, __FILE__, "Cactus",
+                "CCTK_MaxActiveTimeLevelsVI: invalid variable index %d", vindex);
+    return (-1);
+  }
+
+  timelevels = CCTK_MaxActiveTimeLevelsGI(GH, gindex);
+
+  return timelevels;
+}
+void CCTK_FCALL CCTK_FNAME (CCTK_MaxActiveTimeLevelsVI)
+                           (int *timelevels,
+                            const cGH **cctkGH,
+                            const int *vindex)
+{
+  *timelevels = CCTK_MaxActiveTimeLevelsVI (*cctkGH, *vindex);
 }
 
 

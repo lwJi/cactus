@@ -25,6 +25,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -115,7 +116,7 @@ int CactusDefaultInterpGridArrays (const cGH *GH, int N_dims,
    @enddesc
    @calls      CCTK_MaxGFDim
                CCTK_NumVars
-               CCTK_MaxTimeLevelsVI
+               CCTK_DeclaredTimeLevelsVI
                CCTK_NumGroups
                CCTKi_SetupGHExtensions
 
@@ -198,7 +199,7 @@ cGH *CactusDefaultSetupGH(tFleshConfig *config, int convergence_level)
     {
       for(variable = 0; variable < n_variables; variable++)
       {
-        ntimelevels = CCTK_MaxTimeLevelsVI(variable);
+        ntimelevels = CCTK_DeclaredTimeLevelsVI(variable);
 
         thisGH->data[variable] = calloc(ntimelevels, sizeof(void *));
         if(thisGH->data[variable] == NULL)
@@ -792,7 +793,7 @@ int CactusDefaultGroupStorageIncrease (const cGH *GH, int n_groups,
          */
         if(CCTK_QueryGroupStorageI(GH, groups[i]))
         {
-          value = CCTK_NumTimeLevelsI(groups[i]);
+          value = CCTK_DeclaredTimeLevelsVI(groups[i]);
         }
         else
         {
@@ -902,7 +903,7 @@ int CactusDefaultGroupStorageDecrease (const cGH *GH, int n_groups,
          */
         if(CCTK_QueryGroupStorageI(GH, groups[i]))
         {
-          value = CCTK_NumTimeLevelsI(groups[i]);
+          value = CCTK_DeclaredTimeLevelsVI(groups[i]);
         }
         else
         {
@@ -930,6 +931,62 @@ int CactusDefaultGroupStorageDecrease (const cGH *GH, int n_groups,
   }
 
   return retval;
+}
+
+ /*@@
+   @routine    CactusDefaultQueryMaxTimeLevels
+   @date       Mon Mar 10 19:16:22 PDT 2014
+   @author     Roland Haas
+   @desc
+               Default routine to query the size of cctkGH->data.
+
+               Using GroupStorageIncrease any number of timelevels can be
+               created, this routine returns the total number created.
+   @enddesc
+
+   @var        GH
+   @vdesc      Pointer to CCTK grid hierarchy
+   @vtype      const cGH *
+   @vio        inout
+   @endvar
+   @var        n_groups
+   @vdesc      number of groups in group array
+   @vtype      int
+   @vio        in
+   @endvar
+   @var        groups
+   @vdesc      list of group indices to reduce storage for
+   @vtype      const int *
+   @vio        in
+   @endvar
+   @var        status
+   @vdesc      on return,
+               contain the number of timelevels for which storage has ever been
+               allocated for each group
+   @vtype      const int *
+   @vio        out
+   @endvar
+
+   @returntype int
+   @returndesc
+               Negative uppon errors.
+   @endreturndesc
+ @@*/
+int CactusDefaultQueryMaxTimeLevels (const cGH *GH, int n_groups,
+                                     const int *groups, int *status)
+{
+  assert (status || n_groups == 0);
+  assert (groups || n_groups == 0);
+  assert (GH);
+
+  /* A driver that supports arbitrary time levels needs to overload the
+   * routine, otherwise this should be fine.
+   */
+  for(int g = 0; g < n_groups; g++)
+    status[g] = CCTK_DeclaredTimeLevelsGI(groups[g]);
+
+  (void)(GH);
+  return 0;
 }
 
 
