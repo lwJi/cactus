@@ -66,7 +66,7 @@ sub CreateConfigurationBindings
       # we need to do is put the provides where they belong.
       if ($cfg->{"\U$thorn\E PROVIDES"})
       {
-          foreach my $providedcap (split (' ', $cfg->{"\U$thorn\E PROVIDES"}))
+          foreach my $providedcap (sort split (' ', $cfg->{"\U$thorn\E PROVIDES"}))
           {
               die if $providedcap !~ m{^[A-Za-z0-9_.]+$};
               

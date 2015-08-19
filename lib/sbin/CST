@@ -579,76 +579,79 @@ sub CreateBindings
 
 #/*@@
 #  @routine    TopoSort
-#  @date       20 Apr 2004
-#  @author     Yaakoub Y El-Khamra
+#  @date       2015-08-19
+#  @author     Erik Schnetter
 #  @desc
-#  Here we perform a topological sort of thorns.
+#  Sort thorns topologically.
 #  @enddesc
 #@@*/
 sub TopoSort
 {
-  my($thorns, $interface,  $cfg)= @_;
-  my($data) = '';
-  my($nouse) = '';
-  my $thorn;
-  my($exit_value, $signal_num, $dumped_core);
+    my ($thorns, $interface, $cfg) = @_;
 
-  foreach $thorn (sort keys %thorns)
-  {
-    $thorn_ancestor{"\U$thorn\E"} = '';
-    foreach $ancestor_imp ( split(' ', $interface->{"\U$thorn INHERITS\E"}))
-    {
-      $thorn_ancestor{"\U$thorn\E"} .= $interface->{"IMPLEMENTATION \U$ancestor_imp\E THORNS"}. ' ';
-    }
-    $thorn_requires{"\U$thorn\E"} = '';
-    foreach $capability (split(' ', $cfg->{"\U$thorn REQUIRES\E"}))
-    {
-        foreach $thorn2 (sort keys %thorns)
-        {
-            foreach $capability2 (split(' ', $cfg->{"\U$thorn2 PROVIDES\E"}))
-            {
-                if ("\U$capability\E" eq "\U$capability2\E")
-                {
-                    $thorn_requires{"\U$thorn\E"} .= " $thorn2";
-                }
+    my %children;            # set of thorns that a thorn requires
+
+    # Inheritance
+    foreach my $thorn (keys %thorns) {
+        foreach $ancestor_impl (split ' ',
+                                $interface->{"\U$thorn INHERITS\E"}) {
+            my $ancestor_thorns =
+                $interface->{"IMPLEMENTATION \U$ancestor_impl\E THORNS"};
+            foreach my $thorn2 (split ' ', $ancestor_thorns) {
+                ${$children{$thorn}}{$thorn2} = 1 if $thorn2 ne $thorn;
             }
         }
     }
 
-    my @uses_thorns = split (' ', $cfg->{"\U$thorn\E USES THORNS"} . ' ' . $cfg->{"\U$thorn\E REQUIRES THORNS"} . ' ' . $thorn_requires{"\U$thorn\E"} . ' ' . $thorn_ancestor{"\U$thorn\E"});
-    my $uses_thorns = '';
-    foreach (@uses_thorns)
-    {
-      # ignore if a thorn wants to use itself
-      # otherwise we'll get a cyclic list later in the topological sort
-      $uses_thorns .= "$thorn $_\n" if ($thorn ne $_);
+    # Capabilities
+    my %providers;              # thorns providing a capability
+    foreach my $thorn (keys %thorns) {
+        foreach my $cap (split ' ', $cfg->{"\U$thorn PROVIDES\E"}) {
+            push @{$providers{$cap}}, $thorn;
+        }
     }
-    $uses_thorns = "cctk_unlikely_dummy_name $thorn\n" if (! $uses_thorns);
-    $data .= $uses_thorns;
-  }
+    foreach my $thorn (keys %thorns) {
+        foreach my $cap (split ' ', $cfg->{"\U$thorn REQUIRES\E"}) {
+            foreach my $thorn2 (@{$providers{$cap}}) {
+                ${$children{$thorn}}{$thorn2} = 1 if $thorn2 ne $thorn;
+            }
+        }
+    }
 
-  if ($data)
-  {
-    &WriteFile("$bindings_dir/linklist", \$data);
+    # Direct requres and uses declarations
+    foreach my $thorn (keys %thorns) {
+        foreach my $thorn2 (split ' ', $cfg->{"\U$thorn\E REQURES THORNS"}) {
+            push @{$requires{$thorn}}, $thorn2;
+        }
+        foreach my $thorn2 (split ' ', $cfg->{"\U$thorn\E USES THORNS"}) {
+            ${$children{$thorn}}{$thorn2} = 1 if $thorn2 ne $thorn;
+        }
+    }
 
-    $data = `perl $sbin_dir/tsort $bindings_dir/linklist`;
+    # Count parents
+    my %nparents;
+    foreach my $thorn (keys %thorns) {
+        $nparents{$thorn} += 0;
+        foreach my $child (keys %{$children{$thorn}}) {
+            ++$nparents{$child};
+        }
+    }
 
-    &CST_error (0,  "Cyclic dependency detected") if ($data eq "cycle deteced");
+    # Sort topologically
+    my @data;
+    my @todo = sort grep {!$nparents{$_}} keys %thorns;
+    while (@todo) {
+        my $thorn = pop @todo;
+        push @data, $thorn;
+        foreach my $child (sort keys %{$children{$thorn}}) {
+            if (!--$nparents{$child}) {
+                push @todo, $child;
+            }
+        }
+    }
 
-    $exit_value  = $? >> 8;
-    $signal_num  = $? & 127;
-    $dumped_core = $? & 128;
-
-    &CST_error (0,  "Tsort script returned $exit_value\n") if $exit_value;
-    &CST_error (0,  "Tsort script received signal $signal_num\n") if $signal_num;
-    &CST_error (0,  "Tsort script dumped core\n" ) if $dumped_core;
-
-    $data =  join(' ', split("\n", $data));
-    $data =~ s/cctk_unlikely_dummy_name//;
-    $data =~ s/  / /;
-  }
-  
-return $data;
+    # Convert to string
+    return join ' ', @data;
 }
 
 
