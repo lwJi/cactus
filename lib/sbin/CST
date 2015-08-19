@@ -583,6 +583,10 @@ sub CreateBindings
 #  @author     Erik Schnetter
 #  @desc
 #  Sort thorns topologically.
+#  Original implementation by Thomas Radke, with this comment:
+#  Algorithm stolen from Jon Bentley (More Programming Pearls, pp.
+#  20-23), who, in turn, stole it from Don Knuth (Art of Computer
+#  Programming, volume 1: Fundamental Algorithms, Section 2.2.3)
 #  @enddesc
 #@@*/
 sub TopoSort
