@@ -1687,6 +1687,9 @@ sub CompareTestFiles
 
         $numlines = 0;
 
+        my $odata = {};
+        my $ndata = {};
+
         while ($oline = <INORIG>)
         {
           # ignore comment lines in old file
@@ -1720,38 +1723,49 @@ sub CompareTestFiles
             my $nnew = scalar(@newvals);
             $nold = scalar(@oldvals);
 
-            my $allzero = 1;
-            for ($count = 0; $count < $nold; $count++)
-            {
-              $absdiff[$count] = abs($newvals[$count] - $oldvals[$count]);
-              $allzero = 0 if ($absdiff[$count]);
-            }
-            next if ($allzero);
-
-            # They diff. But do they differ strongly?
-            $rundata->{"$thorn $test $file NFAILWEAK"}++;
-
-            # store difference for strong failures
-            for ($count = 0; $count < $nold; $count++)
-            {
-              $maxabsdiff[$count] = $absdiff[$count]
-                if ($maxabsdiff[$count] < $absdiff[$count]);
-              my $absoldval = abs ($oldvals[$count]);
-              my $absnewval = abs ($newvals[$count]);
-              $valmax[$count] = $absoldval > $absnewval ?
-                                $absoldval : $absnewval;
+            if($nold == 13) {
+              my $okey = join(",",@oldvals[0,5,6,7]);
+              $odata->{$okey} = $oldvals[12];
             }
 
-            for ($count = 0; $count < $nold; $count++)
-            {
-              my $vreltol = $filereltol * $valmax[$count];
-              my $vtol = $fileabstol > $vreltol ? $fileabstol : $vreltol;
-              if ($absdiff[$count] >= $vtol) {
-                $rundata->{"$thorn $test $file NFAILSTRONG"}++;
-                last;
-              }
+            if($nnew == 13) {
+              my $nkey = join(",",@newvals[0,5,6,7]); 
+              $ndata->{$nkey} = $newvals[12];
             }
+
+#            my $allzero = 1;
+#            for ($count = 0; $count < $nold; $count++)
+#            {
+#              $absdiff[$count] = abs($newvals[$count] - $oldvals[$count]);
+#              $allzero = 0 if ($absdiff[$count]);
+#            }
+#            next if ($allzero);
+
+#            # They diff. But do they differ strongly?
+#            $rundata->{"$thorn $test $file NFAILWEAK"}++;
+
+#            # store difference for strong failures
+#            for ($count = 0; $count < $nold; $count++)
+#            {
+#              $maxabsdiff[$count] = $absdiff[$count]
+#                if ($maxabsdiff[$count] < $absdiff[$count]);
+#              my $absoldval = abs ($oldvals[$count]);
+#              my $absnewval = abs ($newvals[$count]);
+#              $valmax[$count] = $absoldval > $absnewval ?
+#                                $absoldval : $absnewval;
+#            }
+
+#            for ($count = 0; $count < $nold; $count++)
+#            {
+#              my $vreltol = $filereltol * $valmax[$count];
+#              my $vtol = $fileabstol > $vreltol ? $fileabstol : $vreltol;
+#              if ($absdiff[$count] >= $vtol) {
+#                $rundata->{"$thorn $test $file NFAILSTRONG"}++;
+#                last;
+#              }
+#            }
           }
+          
           # Check against nans
           elsif ($nline =~ /nan/ && $oline !~ /nan/)
           {
@@ -1783,6 +1797,31 @@ sub CompareTestFiles
             print "TESTSUITE ERROR: Didn't catch case in CompareFiles\n";
           }
         } #while
+
+        my $maxkey = undef;
+        my $maxval = 0;
+        for my $key (keys %$odata) {
+          if(defined($ndata->{$key})) {
+            my $absdiff = abs($odata->{$key} - $ndata->{$key});
+            if($absdiff > 0) {
+              $rundata->{"$thorn $test $file NFAILWEAK"}++;
+              my $valmax = abs($odata->{$key});
+              my $vn = abs($ndata->{$key});
+              $valmax = $vn if($vn > $valmax);
+              my $vreltol = $filereltol * $valmax;
+              my $vtol = $fileabstol > $vreltol ? $fileabstol : $vreltol;
+              if($absdiff > $maxval) {
+                $maxval = $absdiff;
+                $maxkey = $key;
+              }
+              if ($absdiff >= $vtol) {
+                $rundata->{"$thorn $test $file NFAILSTRONG"}++;
+              }
+            }
+          }
+        }
+        #print "  maxdiff at $maxkey: $maxval\n";
+        $rundata->{"$thorn $test MAXABSDIFF"} = "      max diff at $maxkey = $maxval";
 
       }
       elsif (!-e $newfile && -s $oldfile)
@@ -1841,7 +1880,7 @@ sub CompareTestFiles
       {
         splice (@maxabsdiff, $nold);
         splice (@maxreldiff, $nold);
-        $rundata->{"$thorn $test $file MAXABSDIFF"} = \@maxabsdiff;
+        #$rundata->{"$thorn $test $file MAXABSDIFF"} = \@maxabsdiff;
         $rundata->{"$thorn $test $file MAXRELDIFF"} = \@maxreldiff;
       }
 
@@ -1907,16 +1946,17 @@ sub ReportOnTest
       $tmp = $rundata->{"$key NFAILSTRONG"};
       push (@log, "      significant differences on $tmp (out of $rundata->{\"$key NUMLINES\"}) lines");
 
-      my $maxabsdiff = $rundata->{"$key MAXABSDIFF"};
+      my $maxabsdiff = $rundata->{"$thorn $test MAXABSDIFF"};
       my $maxreldiff = $rundata->{"$key MAXRELDIFF"};
-      my @tmp = ();
-      for (my $c = 0; $c < scalar (@$maxabsdiff); $c++)
-      {
-        next unless ($$maxabsdiff[$c] > 0);
-        my $col = $c + 1;
-        push (@log, "      maximum absolute difference in column $col is $$maxabsdiff[$c]");
-        push (@tmp, "      maximum relative difference in column $col is $$maxreldiff[$c]");
-      }
+      push (@log,$maxabsdiff);
+#      my @tmp = ();
+#      for (my $c = 0; $c < scalar (@$maxabsdiff); $c++)
+#      {
+#        next unless ($$maxabsdiff[$c] > 0);
+#        my $col = $c + 1;
+#        push (@log, "      maximum absolute difference in column $col is $$maxabsdiff[$c]");
+#        push (@tmp, "      maximum relative difference in column $col is $$maxreldiff[$c]");
+#      }
       push (@log, @tmp);
 
       $tmp = $rundata->{"$key NFAILWEAK"} - $rundata->{"$key NFAILSTRONG"};
@@ -2098,14 +2138,14 @@ sub ParseAllParameterFiles
       {
         $testdata->{"$thorn UNRUNNABLE"} .= "$testbase ";
         $testdata->{"$thorn $testbase MISSING"} .= $missing;
-        $testdata->{'NUNRUNNABLE'}++;
+         $testdata->{'NUNRUNNABLE'}++;
       }
-      elsif ($nprocs_required != $nprocs_available)
-      {
-        $testdata->{"$thorn UNRUNNABLE"} .= "$testbase ";
-        $testdata->{"$thorn $testbase NPROCS"} = $nprocs_required;
-        $testdata->{'NUNRUNNABLE'}++;
-      }
+#      elsif ($nprocs_required != 1) 
+#      {
+#        $testdata->{"$thorn UNRUNNABLE"} .= "$testbase ";
+#        $testdata->{"$thorn $testbase NPROCS"} = $nprocs_required;
+#        $testdata->{'NUNRUNNABLE'}++;
+#      }
       else
       {
         $testdata->{"$thorn RUNNABLE"} .= "$testbase ";
