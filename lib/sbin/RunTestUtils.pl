@@ -1800,19 +1800,25 @@ sub CompareTestFiles
 
         my $maxkey = undef;
         my $maxval = 0;
+        my $valold = undef;
+        my $valnew = undef;
         for my $key (keys %$odata) {
           if(defined($ndata->{$key})) {
-            my $absdiff = abs($odata->{$key} - $ndata->{$key});
+            my $ov = $odata->{$key};
+            my $nv = $ndata->{$key};
+            my $absdiff = abs($nv-$ov);
             if($absdiff > 0) {
               $rundata->{"$thorn $test $file NFAILWEAK"}++;
-              my $valmax = abs($odata->{$key});
-              my $vn = abs($ndata->{$key});
+              my $valmax = abs($ov);
+              my $vn = abs($nv);
               $valmax = $vn if($vn > $valmax);
               my $vreltol = $filereltol * $valmax;
               my $vtol = $fileabstol > $vreltol ? $fileabstol : $vreltol;
               if($absdiff > $maxval) {
                 $maxval = $absdiff;
                 $maxkey = $key;
+                $valold = $ov;
+                $valnew = $nv;
               }
               if ($absdiff >= $vtol) {
                 $rundata->{"$thorn $test $file NFAILSTRONG"}++;
@@ -1821,7 +1827,7 @@ sub CompareTestFiles
           }
         }
         #print "  maxdiff at $maxkey: $maxval\n";
-        $rundata->{"$thorn $test MAXABSDIFF"} = "      max diff at $maxkey = $maxval";
+        $rundata->{"$thorn $test $file MAXABSDIFF"} = "      max diff at $maxkey (old=$valold, new=$valnew) = $maxval";
 
       }
       elsif (!-e $newfile && -s $oldfile)
@@ -1946,7 +1952,7 @@ sub ReportOnTest
       $tmp = $rundata->{"$key NFAILSTRONG"};
       push (@log, "      significant differences on $tmp (out of $rundata->{\"$key NUMLINES\"}) lines");
 
-      my $maxabsdiff = $rundata->{"$thorn $test MAXABSDIFF"};
+      my $maxabsdiff = $rundata->{"$thorn $test $file MAXABSDIFF"};
       my $maxreldiff = $rundata->{"$key MAXRELDIFF"};
       push (@log,$maxabsdiff);
 #      my @tmp = ();
