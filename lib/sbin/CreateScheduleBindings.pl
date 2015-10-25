@@ -120,6 +120,11 @@ sub ScheduleCreateInterfaceFile
               $language = 'C';
               $function = $rhschedule_db->{"\U$thorn\E BLOCK_$block NAME"};
           }
+          elsif ($rhschedule_db->{"\U$thorn\E BLOCK_$block LANG"} =~ m:^\s*LUA\s*$:i)
+          {
+              $language = 'C';
+              $function = $rhschedule_db->{"\U$thorn\E BLOCK_$block NAME"};
+          }
           elsif ($rhschedule_db->{"\U$thorn\E BLOCK_$block LANG"} =~ m:^\s*(F|F77|FORTRAN|F90)\s*$:i)
           {
               $language = 'Fortran';
@@ -227,6 +232,7 @@ sub ScheduleCreateFile
 
   my($implementation);
   my($buffer, $prototypes);
+  my $language_callbacks = '';
   my($recovery_buffer, $recovery_prototypes);
   my($block, $block_buffer, $block_prototype);
   my($statement, $statement_buffer, $statement_prototype);
@@ -258,6 +264,27 @@ sub ScheduleCreateFile
       $recovery_buffer =~ s:\@BLOCK\@$block:result =  $block_buffer();:;
       $buffer =~ s:\@BLOCK\@$block::;
       $recovery_prototypes .= "extern int $block_buffer(void);\n";
+    }
+    if($rhschedule_db->{"\U$thorn\E BLOCK_$block LANG"} =~ m:^\s*Lua\s*$:i )
+    {
+      $block_buffer = $rhschedule_db->{"\U$thorn\E BLOCK_$block NAME"};
+      # TODO: This callback isn't always correct (only for 'normal' blocks)
+      $language_callbacks .= "/* Lua callback for $block_buffer */\n";
+      $language_callbacks .= "extern CCTK_INT LanguageCall_Lua(const CCTK_POINTER func, CCTK_STRING name);\n\n";
+      $language_callbacks .= "extern const char *Lua_function_${thorn}_$block_buffer;\n";
+      $language_callbacks .= "void $block_buffer(CCTK_ARGUMENTS)\n";
+      $language_callbacks .= "{\n";
+      $language_callbacks .= "  DECLARE_CCTK_PARAMETERS\n";
+      $language_callbacks .= "  CCTK_VInfo (\"CACTUS\", \"Calling Lua function $block_buffer\");\n";
+      $language_callbacks .= "  if (!CCTK_IsFunctionAliased(\"LanguageCall_Lua\"))\n";
+      $language_callbacks .= "  {\n";
+      $language_callbacks .= "    CCTK_ERROR(\"No callback for language 'Lua' found, (aliased function LanguageCall_Lua() not provided by any thorn). You have to activate a thorn providing this function to use 'Lua' in Cactus\");\n";
+      $language_callbacks .= "  }\n";
+      $language_callbacks .= "  if (LanguageCall_Lua(Lua_function_${thorn}_$block_buffer, \"$block_buffer\"))\n";
+      $language_callbacks .= "  {\n";
+      $language_callbacks .= "    CCTK_ERROR(\"Error callung Lua function '$block_buffer'.\");\n";
+      $language_callbacks .= "  }\n";
+      $language_callbacks .= "}\n";
     }
   }
 
@@ -298,6 +325,8 @@ sub ScheduleCreateFile
   push(@data, '/* Prototypes for Fortran schedule bindings functions to be registered */');
   push(@data, '/* Note that this is a cheat, we just need a function pointer. */');
   push(@data, join "\n", (grep /CCTK_FNAME/, (split "\n", $prototypes)));
+  push(@data, '');
+  push(@data, $language_callbacks);
   push(@data, '');
   push(@data, "void CCTKi_BindingsSchedule_$thorn(void);");
   push(@data, "void CCTKi_BindingsSchedule_$thorn(void)");
@@ -594,6 +623,11 @@ sub ScheduleBlock
   elsif($rhschedule_db->{"\U$thorn\E BLOCK_$block TYPE"} eq "FUNCTION")
   {
     if($rhschedule_db->{"\U$thorn\E BLOCK_$block LANG"} =~ m:^\s*C\s*$:i )
+    {
+      $language = 'C';
+      $function = $rhschedule_db->{"\U$thorn\E BLOCK_$block NAME"};
+    }
+    elsif($rhschedule_db->{"\U$thorn\E BLOCK_$block LANG"} =~ m:^\s*Lua\s*$:i )
     {
       $language = 'C';
       $function = $rhschedule_db->{"\U$thorn\E BLOCK_$block NAME"};
