@@ -482,7 +482,7 @@ sub CreateFortranArgumentDeclarations
       $argument .= '_p';
     }
 
-    if(! $type =~ /^(BYTE|INT|INT1|INT2|INT4|INT8|REAL|REAL4|REAL8|REAL16|COMPLEX|COMPLEX8|COMPLEX16|COMPLEX32)$/)
+    if(! $type =~ /^(BYTE|INT|INT1|INT2|INT4|INT8|INT16|REAL|REAL4|REAL8|REAL16|COMPLEX|COMPLEX8|COMPLEX16|COMPLEX32)$/)
     {
       CST_error(0,"Unknown argument type \"$type\"","",__LINE__,__FILE__);
     }
@@ -521,7 +521,7 @@ sub CreateCArgumentDeclarations
     my $var            = "\"$varname$6\"";
     my $fullvar        = "\"$3::$varname$6\"";
 
-    if(! $type =~ /^(BYTE|INT|INT1|INT2|INT4|INT8|REAL|REAL4|REAL8|REAL16|COMPLEX|COMPLEX8|COMPLEX16|COMPLEX32)$/)
+    if(! $type =~ /^(BYTE|INT|INT1|INT2|INT4|INT8|INT16|REAL|REAL4|REAL8|REAL16|COMPLEX|COMPLEX8|COMPLEX16|COMPLEX32)$/)
     {
       CST_error(0,"Unknown argument type $type","",__LINE__,__FILE__);
     }
@@ -698,7 +698,7 @@ sub CreateCArgumentPrototype
         push(@prototype, "CCTK_$type *");
       }
 
-      if($type !~ /^(CHAR|BYTE|INT|INT1|INT2|INT4|INT8|REAL|REAL4|REAL8|REAL16|COMPLEX|COMPLEX8|COMPLEX16|COMPLEX32)$/)
+      if($type !~ /^(CHAR|BYTE|INT|INT1|INT2|INT4|INT8|INT16|REAL|REAL4|REAL8|REAL16|COMPLEX|COMPLEX8|COMPLEX16|COMPLEX32)$/)
       {
         CST_error(0,"Unknown argument type $type","",__LINE__,__FILE__);
       }
@@ -754,7 +754,7 @@ sub CreateCArgumentList
       push(@arglist, "(CCTK_$type *)(PASS_REFERENCE($argument, $level))");
     }
 
-    if($type =~ /^(CHAR|BYTE|INT|INT1|INT2|INT4|INT8|REAL|REAL4|REAL8|REAL16|COMPLEX|COMPLEX8|COMPLEX16|COMPLEX32)$/)
+    if($type =~ /^(CHAR|BYTE|INT|INT1|INT2|INT4|INT8|INT16|REAL|REAL4|REAL8|REAL16|COMPLEX|COMPLEX8|COMPLEX16|COMPLEX32)$/)
     {
       # DEPRECATED IN BETA 10
       if($type eq 'CHAR')

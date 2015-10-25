@@ -396,9 +396,15 @@ sub parse_param_ccl
             if ($type eq 'REAL' && ! (
                 $new_ranges eq '*' ||
                 $new_ranges =~ /^$real$/ ||
-                $new_ranges =~ /^["(]?(\*|\(?$real)?:(\*|$real\)?)?(:$real)?[)"]?$/)) {
-              # this will become a level 0 error in the fture
+                $new_ranges =~ /("|)[(\[]?(\*|$real)?:(\*|$real)(:$real)[)\]]?\1$/ ||
+                $new_ranges =~ /("|)[(\[]?(\*|$real)?:(\*|$real)?[)\]]?\1$/)) {
+              # this will become a level 0 error in the future
               &CST_error(1, "Invalid range '$new_ranges' for real " .
+                         "parameter '$variable' of thorn '$thorn'. ".
+                         "This will be an error in the future.",
+                         '', __LINE__, __FILE__);
+            } elsif($1 eq '"') {
+              &CST_error(1, "Invalid quotes on range '$new_ranges' for real " .
                          "parameter '$variable' of thorn '$thorn'. ".
                          "This will be an error in the future.",
                          '', __LINE__, __FILE__);
@@ -494,8 +500,8 @@ sub parse_param_ccl
           if($data[$line_number] =~ m:\s*\}\s*([^\s].*)\s*:)
           {
             &CST_error(0, "param.ccl of thorn '$thorn' attempts to change " .
-                          "default value of shared or extended parameter " .
-                          "'$variable'",
+                          "the default value of the shared or extended " .
+                          "parameter '$variable'",
                        '', __LINE__, __FILE__);
           }
         }

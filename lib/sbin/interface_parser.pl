@@ -802,7 +802,7 @@ sub parse_interface_ccl
       $interface_data_ref->{"\U$thorn FUNCTION\E $funcname ARGS"} .= "${funcargs} ";
       $interface_data_ref->{"\U$thorn FUNCTION\E $funcname RET"} .= "${rettype} ";
     }
-    elsif ($line =~ m/^\s*(CCTK_)?(CHAR|BYTE|INT|INT1|INT2|INT4|INT8|REAL|REAL4|REAL8|REAL16|COMPLEX|COMPLEX8|COMPLEX16|COMPLEX32)\s*(([a-zA-Z][a-zA-Z_0-9]*)\s*(\[([^]]+)\])?)\s*(.*)\s*$/i)
+    elsif ($line =~ m/^\s*(CCTK_)?(CHAR|BYTE|INT|INT1|INT2|INT4|INT8|INT16|REAL|REAL4|REAL8|REAL16|COMPLEX|COMPLEX8|COMPLEX16|COMPLEX32)\s*(([a-zA-Z][a-zA-Z_0-9]*)\s*(\[([^]]+)\])?)\s*(.*)\s*$/i)
     {
 #      for($i = 1; $i < 10; $i++)
 #      {

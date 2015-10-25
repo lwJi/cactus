@@ -768,7 +768,7 @@ void CCTKi_CommandLineFinished (void)
                   "Could not redirect stdout to logfile '%s'", logfilename);
     }
   }
-  else if (myproc && requested_stdout_redirection != REDIRECT_NONE)
+  else if (myproc && requested_stdout_redirection == REDIRECT_NONE)
   {
     newfile = freopen (NULL_DEVICE, "w", stdout);
     if (! newfile)

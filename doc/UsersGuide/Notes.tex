@@ -378,6 +378,14 @@ compiler reports error messages about unrecognised \verb|#| directives.
   Available options are \texttt{yes} and \texttt{no}, the default is
   \texttt{no}. To create a cross-compiled configuration one must explicitly set   this option to \texttt{yes}.
 
+\item [\texttt{DISABLE\_INT16}] Disable support for the data type
+\texttt{CCTK\_INT16}.  The only options available are \texttt{yes} and
+\texttt{no}, the default is \texttt{no}.  Cactus autodetects this data type
+  only for C.  If the C compiler supports it, but the Fortran compiler
+  does not, it may be necessary to disable \texttt{CCTK\_INT16}
+  altogether, since Cactus assumes that data types are fully supported
+  if they exist.
+
 \item [\texttt{DISABLE\_REAL16}] Disable support for the data type
 \texttt{CCTK\_REAL16}.  The only options available are \texttt{yes} and
 \texttt{no}, the default is \texttt{no}.  Cactus autodetects this data type

@@ -100,7 +100,7 @@ define CL_DEPENDENCIES
 endef
 
 define F77_DEPENDENCIES
-	$(F77_DEPEND) $(INCLUDE_LINE) $(EXTRA_DEFINES:%=-D%) -DFCODE $< $(F77_DEPEND_OUT)
+	$(F77_DEPEND) $(INCLUDE_LINE) $(EXTRA_DEFINES:%=-D%) -DFCODE -DF90CODE $< $(F77_DEPEND_OUT)
 	$(DEPENDENCY_FIXER)
 endef
 
@@ -194,8 +194,9 @@ $(CUCC_POSTPROCESSING)
 endef
 
 # Define how to do a F77 compilation
+# Note: We compile this file as Fortran 90
 define PREPROCESS_F77
-{ if test $(F_LINE_DIRECTIVES) = 'yes'; then echo '#line 1 "'$<'"'; fi; cat $<; } | $(PERL) -p -e 's.//.CCTK_AUTOMATICALLY_GENERATED_CONCATENATION_PROTECTION.g' | $(FPP) $(FPPFLAGS) $(INCLUDE_LINE) $(EXTRA_DEFINES:%=-D%) -DFCODE | $(PERL) -p -e 's.CCTK_AUTOMATICALLY_GENERATED_CONCATENATION_PROTECTION.//.g' | $(PERL) -p -e 's/__FORTRANFILE__/\"$(basename $(notdir $<)).F77\"/g' | $(PERL) -s $(F_FILE_PROCESSOR) -line_directives=$(F_LINE_DIRECTIVES) -source_file_name=$< > $(basename $(notdir $<)).f
+{ if test $(F_LINE_DIRECTIVES) = 'yes'; then echo '#line 1 "'$<'"'; fi; cat $<; } | $(PERL) -p -e 's.//.CCTK_AUTOMATICALLY_GENERATED_CONCATENATION_PROTECTION.g' | $(FPP) $(FPPFLAGS) $(INCLUDE_LINE) $(EXTRA_DEFINES:%=-D%) -DFCODE -DF90CODE | $(PERL) -p -e 's.CCTK_AUTOMATICALLY_GENERATED_CONCATENATION_PROTECTION.//.g' | $(PERL) -p -e 's/__FORTRANFILE__/\"$(basename $(notdir $<)).F77\"/g' | $(PERL) -s $(F_FILE_PROCESSOR) -line_directives=$(F_LINE_DIRECTIVES) -source_file_name=$< > $(basename $(notdir $<)).f
 endef
 
 define COMPILE_F77

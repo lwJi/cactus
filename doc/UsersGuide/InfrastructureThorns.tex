@@ -104,6 +104,7 @@ the schedule tree.
    \hline {\t CCTK\_SyncGroupsByDirI}    &\\
    \hline {\t CCTK\_EnableGroupStorage}  &\\
    \hline {\t CCTK\_DisableGroupStorage} &\\
+   \hline {\t CCTK\_QueryMaxTimeLevels}  &\\
    \hline {\t CCTK\_EnableGroupComm}     &\\
    \hline {\t CCTK\_DisableGroupComm}    &\\
    \hline {\t CCTK\_Barrier}             &\\
@@ -147,6 +148,7 @@ functions.
 \begin{enumerate}
 \item{} {\tt CCTK\_EnableGroupStorage}
 \item{} {\tt CCTK\_DisableGroupStorage}
+\item{} {\tt CCTK\_QueryMaxTimeLevels}
 \item{} {\tt CCTK\_ArrayGroupSizeB}
 \item{} {\tt CCTK\_QueryGroupStorageB}
 \item{} {\tt CCTK\_SyncGroup}
@@ -352,6 +354,7 @@ These consist of
 \begin{enumerate}
 \item{} {\tt CCTK\_EnableGroupStorage}
 \item{} {\tt CCTK\_DisableGroupStorage}
+\item{} {\tt CCTK\_QueryMaxTimeLevels}
 \item{} {\tt CCTK\_QueryGroupStorageB}
 \item{} {\tt CCTK\_ArrayGroupSizeB}
 \end{enumerate}
@@ -391,6 +394,10 @@ int SimpleEnableGroupStorage(cGH *GH, const char *groupname)
 \end{verbatim}
 
 The disable function is basically the reverse of the enable one.
+
+The {\tt CCTK\_QueryMaxTimeLevels} function returns the maximum number of
+timelevels ever activated for a given group ie. the size of the {\tt data}
+member of {\tt cGH}.
 
 The {\tt QueryGroupStorage} function basically returns true or false if
 there is storage for the group, and the {\tt ArrayGroupSize} returns the

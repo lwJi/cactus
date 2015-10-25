@@ -1,8 +1,8 @@
 #! /bin/sh
 # /*@@
 #   @file      cygwin
-#   @date      Thu Jun 24 22:56:51 1999
-#   @author    Tom Goodale
+#   @date      Sat Mar 28 12:00:00 2015
+#   @author    Tom Goodale, Michele Mottini
 #   @desc 
 #   Known architecture file for Windows using cygwin.
 #   @enddesc 
@@ -12,21 +12,21 @@
 if test "$CCTK_CONFIG_STAGE" = "preferred-compilers" ; then
 
   if test -z "$CC"; then
-    echo Setting C compiler to cl
-    CC="cl"
+    echo Setting C compiler to GNU C
+    CC="gcc"
   fi
 
   if test -z "$CXX"; then
-    echo Setting C++ compiler to cl
-    CXX="cl /TP"
+    echo Setting C++ compiler to GNU C++
+    CXX="c++"
   fi
 
   if test -z "$LD"; then
-    LD='$(CC)'
+    LD="c++"
   fi
 
   if test -z "$FPP" -a -z "$FPPFLAGS"; then
-    FPP='/usr/bin/cpp'
+    FPP="cpp"
     FPPFLAGS='-traditional'
     echo Setting FPP to $FPP
     echo Setting FPPFLAGS to $FPPFLAGS
@@ -34,17 +34,14 @@ if test "$CCTK_CONFIG_STAGE" = "preferred-compilers" ; then
 
 else
 
-  CCTK_WriteLine cctk_Archdefs.h '/* WIN stuff */'
-  CCTK_WriteLine cctk_Archdefs.h '#define WIN32'
-
   CYGWIN_CC_COMP=
 
   if test "`$CC 2>&1 | grep -i microsoft`" ; then 
     CYGWIN_CC_COMP=microsoft
   elif test "`$CC 2>&1 | grep -i intel`" ; then 
     CYGWIN_CC_COMP=intel
-#  elif test "`$CC 2>&1 | grep -i gcc`" ; then
-#    CYGWIN_CC_COMP=gnu
+  elif test "`$CC -v 2>&1 | grep -i gcc`" ; then
+    CYGWIN_CC_COMP=gnu
   else
     echo Unknown Windows C compiler.
     echo Please add appropriate information to 
@@ -60,8 +57,8 @@ else
     CYGWIN_CXX_COMP=microsoft
   elif test "`$CXX 2>&1 | grep -i intel`" ; then 
     CYGWIN_CXX_COMP=intel
-#  elif test "`$CXX 2>&1 | grep -i gcc`" ; then
-#    CYGWIN_CXX_COMP=gnu
+  elif test "`$CXX -v 2>&1 | grep -i gcc`" ; then
+    CYGWIN_CXX_COMP=gnu
   else
     echo Unknown Windows C++ compiler.
     echo Please add appropriate information to 
@@ -80,7 +77,7 @@ else
         CYGWIN_F90_COMP=compaq
     elif test "`$F90 2>&1 | grep -i intel`" ; then 
         CYGWIN_F90_COMP=intel
-    elif test "`$F90 2>&1 | grep -i g77`" ; then
+    elif test "`$F90 -v 2>&1 | grep -i gcc`" ; then
         CYGWIN_F90_COMP=gnu
     else
         echo Unknown Windows f90 compiler.
@@ -102,6 +99,11 @@ else
       : ${C_OPTIMISE_FLAGS="/Oxy-"}
       : ${CCOMPILEONLY="/c /Fo"}
       : ${OPTIONSEP="# not even a single a single space under cygwin"}
+	  ;;
+    gnu)
+      : ${CFLAGS="-pipe -std=gnu99"}
+      : ${C_OPTIMISE_FLAGS="-O2"}
+      : ${DISABLE_REAL16="yes"}
       ;;
     *)
       ;;
@@ -116,6 +118,10 @@ else
       : ${CACTUSLIBLINKLINE='/link /libpath:"$(call TRANSFORM_DIRS,$(CCTK_LIBDIR))" $(foreach lib,$(ALLCACTUSLIBS), $(LIBNAME_PREFIX)$(lib)$(LIBNAME_SUFFIX))'}
       GENERAL_LIBRARIES='$(foreach i,$(LIBDIRS),/libpath:"$(call TRANSFORM_DIRS,$(i))") $(LIBS:%=%.lib) /NODEFAULTLIB:libcd /NODEFAULTLIB:libcmt'
       : ${OPTIONSEP="# not even a single a single space under cygwin"}
+	  ;;
+    gnu)
+      : ${CXX_OPTIMISE_FLAGS="-O2"}
+	  : ${DISABLE_REAL16="yes"}
       ;;
     *)
       ;;
@@ -153,37 +159,8 @@ else
      ;;
   esac
 
-  DIRSEP="\\\\"
-
-# Convert //a to a: 
-
-  GET_WD="cygpath -wa ."
-
-  TRANSFORM_DIRS='$(shell cygpath -wa $(1))'
-
-# The -nostdinc stops it picking stdio.h, etc, from the GNU headers.
-# The -x c++ is because some of the Windows headers contain C++ comments
-  C_DEPEND='$(CPP) -x c++ -E -MM -nostdinc -D_WIN32 $(CPPFLAGS) $(CFLAGS) '
-  CXX_DEPEND='$(CPP) -x c++ -E -MM -nostdinc -D_WIN32 $(CPPFLAGS) $(CXXFLAGS) '
-
-# Add in system include dirs from $(INCLUDE).  These may contain spaces.
-# The -D_M_IX86 is necessary for things like winnt.h.  Since this is
-# only used for generating dependencies, it shouldn't make a difference
-# if we use this same flag on ia64.
-  C_DEPEND_OUT='-D_M_IX86 -I"$(strip $(subst ;," -I",$(INCLUDE)))" > $@'
-  CXX_DEPEND_OUT='-D_M_IX86 -I"$(strip $(subst ;," -I",$(INCLUDE)))" > $@'
-
-  MKDIR="mkdir "
-  MKDIRFLAGS=" -p "
-
-  LIBNAME_PREFIX=""
-  LIBNAME_SUFFIX=".lib"
-
-  LIBS="$F90_LIBS wsock32"
-
-# The Windows file system requires perl backup files to be made when
-# doing in place editing
-  PERL_BACKUP_NECESSARY='yes'
+  MKDIR="mkdir"
+  MKDIRFLAGS="-p"
 
   if test "x$cross_compiling" = "xyes" ; then
     case "$host_cpu" in

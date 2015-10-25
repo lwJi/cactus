@@ -47,7 +47,7 @@ for arr in `cd arrangements; echo *`; do
 
               echo "  Running htlatex..."
               {
-                htlatex documentation  "" "" "" -interaction=nonstopmode  < /dev/null > LATEX_MESSAGES 2>&1
+                htlatex documentation "xhtml,mathml,charset=utf-8" " -cunihtf -utf8" "" -interaction=nonstopmode  < /dev/null > LATEX_MESSAGES 2>&1
               } ||
               echo "    ERROR: Could not create documentation (check for latex errors)"
             )

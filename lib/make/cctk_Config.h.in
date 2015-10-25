@@ -106,10 +106,6 @@
 #undef HAVE_TIME_GETRUSAGE
 #undef HAVE_TIME__FTIME
 
-/* Cache stuff */
-#undef CCTK_CACHELINE_BYTES
-#undef CCTK_CACHE_SIZE
-
 /* The name of the NULL device for redirecting things to */
 #undef NULL_DEVICE
 
@@ -121,10 +117,10 @@
 /******************************************************************************/
 
 /* Size info for various datatypes */
-#undef SIZEOF_SHORT_INT
-#undef SIZEOF_INT
-#undef SIZEOF_LONG_INT
 #undef SIZEOF_LONG_LONG
+#undef SIZEOF_LONG_INT
+#undef SIZEOF_INT
+#undef SIZEOF_SHORT_INT
 #undef SIZEOF_LONG_DOUBLE
 #undef SIZEOF_DOUBLE
 #undef SIZEOF_FLOAT
@@ -138,12 +134,14 @@
 #undef CCTK_REAL_PRECISION_4
 
 /* Integer precision */
+#undef CCTK_INTEGER_PRECISION_16
 #undef CCTK_INTEGER_PRECISION_8
 #undef CCTK_INTEGER_PRECISION_4
 #undef CCTK_INTEGER_PRECISION_2
 #undef CCTK_INTEGER_PRECISION_1
 
 /* Integer sizes */
+#undef HAVE_CCTK_INT16
 #undef HAVE_CCTK_INT8
 #undef HAVE_CCTK_INT4
 #undef HAVE_CCTK_INT2
@@ -159,6 +157,7 @@
 #ifdef CCODE
 
 /* CCTK C/C++ Integer datatypes */
+#undef CCTK_INT16_TYPE
 #undef CCTK_INT8_TYPE
 #undef CCTK_INT4_TYPE
 #undef CCTK_INT2_TYPE
@@ -185,12 +184,30 @@
 
 /* Define to empty if the 'inline' keyword does not work. */
 #undef HAVE_CCTK_C_INLINE
-#undef inline
+#undef HAVE_STANDARD_CCTK_C_INLINE
+#undef CCTK_C_INLINE
+
+#ifdef HAVE_CCTK_C_INLINE
+#  ifdef HAVE_STANDARD_CCTK_C_INLINE
+/* 'inline' works -- do nothing (CCTK_C_INLINE is 'inline') */
+#  else
+/* need a macro to use 'inline' */
+#    define inline CCTK_C_INLINE
+#  endif
+#else
+/* 'inline' does not work (CCTK_C_INLINE is empty ) */
+#  define inline
+#endif
 
 /* Define to 'static' if the 'static inline' keyword combination does
    not work. */
 #undef CCTK_C_STATIC_INLINE
 #define CCTK_STATIC_INLINE CCTK_C_STATIC_INLINE
+
+/* Define to 'extern' if the 'extern inline' keyword combination does
+   not work. */
+#undef CCTK_C_EXTERN_INLINE
+#define CCTK_EXTERN_INLINE CCTK_C_EXTERN_INLINE
 
 /* Define to empty if the 'const' keyword does not work. */
 #undef const
@@ -218,21 +235,6 @@
 #undef HAVE_CCTK_C__PRAGMA
 #ifndef HAVE_CCTK_C__PRAGMA
 #  define _Pragma(x)
-#endif
-
-/* Some C compilers (e.g. C99 ones) define bool */
-#undef HAVE_CCTK_C_BOOL
-
-/* deprecated in beta15 */
-#ifdef HAVE_CCTK_C_BOOL
-#  define CCTK_HAVE_C_BOOL
-#endif
-
-/* Since this is non-standard leave commented out for the moment */
-#if 0
-#ifndef HAVE_CCTK_C_BOOL
-typedef enum {false, true} bool;
-#endif /* HAVE_CCTK_C_BOOL */
 #endif
 
 /* Whether copysign exists, and how it should be called */
@@ -433,16 +435,7 @@ typedef enum {false, true} bool;
 #ifdef __cplusplus
 
 #define CCTK_STATIC_INLINE static inline
-
-/* Some C++ compilers don't have bool */
-#undef HAVE_CCTK_CXX_BOOL
-
-#ifndef HAVE_CCTK_CXX_BOOL
-typedef enum {false, true} bool;
-#else
-  /* deprecated in beta15 */
-#  define CCTK_HAVE_CXX_BOOL
-#endif
+#define CCTK_EXTERN_INLINE extern
 
 /* Whether copysign exists, and how it should be called */
 #undef HAVE_CCTK_CXX_COPYSIGN
@@ -651,11 +644,18 @@ typedef enum {false, true} bool;
 /* Whether static_assert exists. */
 #undef HAVE_CCTK_CXX_STATIC_ASSERT
 #ifdef HAVE_CCTK_CXX_STATIC_ASSERT
-#  define CCTK_STATIC_ASSERT(cond,msg) static_assert(cond,msg)
+#  define CCTK_STATIC_ASSERT(cond,msg) static_assert(cond, msg)
 #else
-#  define CCTK_STATIC_ASSERT(cond,msg) do { typedef int ai[(cond) ? 1 : -1]; } while(0)
-#  define static_assert(cond,msg) CCTK_STATIC_ASSERT(cond,msg)
+#  define CCTK_STATIC_ASSERT_NAME1(x, y) x##y
+#  define CCTK_STATIC_ASSERT_NAME2(x, y) CCTK_STATIC_ASSERT_NAME1(x, y)
+#  define CCTK_STATIC_ASSERT(cond, msg) typedef int CCTK_STATIC_ASSERT_NAME2(cctk_sa_, __LINE__)[(cond) ? 1 : -1] CCTK_ATTRIBUTE_UNUSED
+#  define static_assert(cond, msg) CCTK_STATIC_ASSERT(cond, msg)
 #endif
+
+/* Whether C++11 is supported. */
+#undef HAVE_CCTK_CXX_AUTO_SPECIFIER
+#undef HAVE_CCTK_CXX_LAMBDA
+#undef HAVE_CCTK_CXX_RANGE_BASED_FOR
 
 /* Some C++ compilers recognise the restrict keyword */
 /* Define to empty if the keyword does not work. */

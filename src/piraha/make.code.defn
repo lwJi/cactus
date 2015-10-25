@@ -1,3 +1,4 @@
+INCS += src/include
 SRCS=\
 AutoGrammar.cc Bracket.cc Dot.cc End.cc \
 Grammar.cc Group.cc ILiteral.cc \

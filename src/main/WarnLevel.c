@@ -36,6 +36,7 @@
 #include "cctk_Comm.h"
 #include "cctk_Parameter.h"
 #include "cctk_FortranString.h"
+#include "cctk_Schedule.h"
 #include "cctk_WarnLevel.h"
 #include "cctki_WarnLevel.h"
 
@@ -529,6 +530,20 @@ int CCTK_VWarn (int level,
   int msg_size;
   char *message = NULL;
   char hostname[MAXNAMELEN+1];
+  const cFunctionData *current_function;
+  const char *cf_where = "(none)";
+  const char *cf_routine = "(no routine)";
+  const char *cf_thorn = "(no thorn)";
+
+  /* Determine current scheduled function */
+  /* (We should pass cctkGH instead of NULL, but NULL works fine. */
+  current_function = CCTK_ScheduleQueryCurrentFunction(NULL);
+  if (current_function)
+  {
+    cf_where = current_function->where;
+    cf_routine = current_function->routine;
+    cf_thorn = current_function->thorn;
+  }
 
   /* Start generating message only if the warbcallback list is not NULL */
   if(warncallbacks)
@@ -587,10 +602,14 @@ int CCTK_VWarn (int level,
 
       if (level <= error_level || cctk_full_warnings)
       {
-        fprintf (stderr, "WARNING level %d in thorn %s processor %d host %s\n"
-                         "  (line %d of %s): \n"
-                         "  ->",
-                         level, thorn, myproc, hostname, line, file);
+        fprintf (stderr,
+                 "WARNING level %d from host %s process %d\n"
+                 "  while executing schedule bin %s, routine %s::%s\n"
+                 "  in thorn %s, file %s:%d:\n"
+                 "  ->",
+                 level, hostname, myproc,
+                 cf_where, cf_thorn, cf_routine,
+                 thorn, file, line);
       }
       else
       {
@@ -622,10 +641,14 @@ int CCTK_VWarn (int level,
 
       if (level <= error_level || cctk_full_warnings)
       {
-        fprintf (stdout, "WARNING level %d in thorn %s processor %d host %s\n"
-                         "  (line %d of %s): \n"
-                         "  ->",
-                         level, thorn, myproc, hostname, line, file);
+        fprintf (stdout,
+                 "WARNING level %d from host %s process %d\n"
+                 "  while executing schedule bin %s, routine %s::%s\n"
+                 "  in thorn %s, file %s:%d:\n"
+                 "  ->",
+                 level, hostname, myproc,
+                 cf_where, cf_thorn, cf_routine,
+                 thorn, file, line);
       }
       else
       {
@@ -674,6 +697,18 @@ void CCTK_VError (int line,
   int msg_size;
   char *message = NULL;
   char hostname[MAXNAMELEN+1];
+  const cFunctionData *current_function;
+  const char *cf_where = "(none)";
+  const char *cf_routine = "(no routine)";
+  const char *cf_thorn = "(no thorn)";
+
+  current_function = CCTK_ScheduleQueryCurrentFunction(NULL);
+  if (current_function)
+  {
+    cf_where = current_function->where;
+    cf_routine = current_function->routine;
+    cf_thorn = current_function->thorn;
+  }
 
   /* Start generating message only if the warbcallback list is not NULL */
   if(warncallbacks)
@@ -718,10 +753,14 @@ void CCTK_VError (int line,
     bold_stderr (ON);
   }
 
-  fprintf (stderr, "ERROR in thorn %s processor %d host %s\n"
-           "  (line %d of %s): \n"
+  fprintf (stderr,
+           "ERROR from host %s process %d\n"
+           "  while executing schedule bin %s, routine %s::%s\n"
+           "  in thorn %s, file %s:%d:\n"
            "  ->",
-           thorn, myproc, hostname, line, file);
+            hostname, myproc,
+           cf_where, cf_thorn, cf_routine,
+           thorn, file, line);
 
   if (highlight_warning_messages)
   {
@@ -740,10 +779,14 @@ void CCTK_VError (int line,
     bold_stdout (ON);
   }
 
-  fprintf (stdout, "ERROR in thorn %s processor %d host %s\n"
-           "  (line %d of %s): \n"
+  fprintf (stdout,
+           "ERROR from host %s process %d\n"
+           "  while executing schedule bin %s, routine %s::%s\n"
+           "  in thorn %s, file %s:%d:\n"
            "  ->",
-           thorn, myproc, hostname, line, file);
+           hostname, myproc,
+           cf_where, cf_thorn, cf_routine,
+           thorn, file, line);
 
   if (highlight_warning_messages)
   {

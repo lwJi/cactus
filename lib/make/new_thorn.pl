@@ -106,7 +106,7 @@ print OUT "Cactus Code Thorn $thorn_name\n";
 print OUT "Author(s)    : ";
 for ($i = 0; $i < (@author_names); $i++) {
    if ($i ne 0) { 
-      print OUT "\n                    : ";
+      print OUT "\n             : ";
    }
    if ($author_emails[$i] ne "none") {
      print OUT "$author_names[$i] <$author_emails[$i]>";
@@ -117,7 +117,7 @@ for ($i = 0; $i < (@author_names); $i++) {
 print OUT "\nMaintainer(s): ";
 for ($i = 0; $i < (@author_names); $i++) {
    if ($i ne 0) {
-      print OUT "\n                    : ";
+      print OUT "\n             : ";
    }
    if ($author_emails[$i] ne "none") {
      print OUT "$author_names[$i] <$author_emails[$i]>";

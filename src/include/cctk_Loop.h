@@ -870,11 +870,12 @@
 
 #define CCTK_LOOP1STR_INT_DECLARE(name) \
    CCTK_LOOP1STR_INTERIOR_DECLARE(name/**/_int) \
-   && integer :: name/**/3_bndsize    (2) \
-   && integer :: name/**/3_is_ghostbnd(2) \
-   && integer :: name/**/3_is_symbnd  (2) \
-   && integer :: name/**/3_is_physbnd (2) \
-   && integer :: name/**/3_ierr \
+   && CCTK_INT, parameter :: name/**/3_isize = 2 \
+   && CCTK_INT :: name/**/3_bndsize    (2) \
+   && CCTK_INT :: name/**/3_is_ghostbnd(2) \
+   && CCTK_INT :: name/**/3_is_symbnd  (2) \
+   && CCTK_INT :: name/**/3_is_physbnd (2) \
+   && CCTK_INT :: name/**/3_ierr \
 
 #define CCTK_LOOP1STR_INT_OMP_PRIVATE(name) \
    CCTK_LOOP1STR_INTERIOR_OMP_PRIVATE(name/**/_int) \
@@ -884,12 +885,12 @@
                           imin,imax, cctki3_istr) \
    && !$omp single \
    && name/**/3_ierr = GetBoundarySizesAndTypes \
-         (cctkGH, 2, name/**/3_bndsize, name/**/3_is_ghostbnd, name/**/3_is_symbnd, name/**/3_is_physbnd) \
+         (cctkGH, name/**/3_isize, name/**/3_bndsize, name/**/3_is_ghostbnd, name/**/3_is_symbnd, name/**/3_is_physbnd) \
    && !$omp end single copyprivate(name/**/3_bndsize) \
    && CCTK_LOOP1STR_INTERIOR(name/**/_int, \
                              i, \
-                             name/**/3_bndsize(1+1), \
-                             name/**/3_bndsize(2), \
+                             int(name/**/3_bndsize(1+1)), \
+                             int(name/**/3_bndsize(2)), \
                              imin,imax, (cctki3_istr)) \
 
 #define CCTK_ENDLOOP1STR_INT(name) \
@@ -919,11 +920,12 @@
 
 #define CCTK_LOOP1STR_BND_DECLARE(name) \
    CCTK_LOOP1STR_BOUNDARIES_DECLARE(name/**/_bnd) \
-   && integer :: name/**/3_bndsize    (2) \
-   && integer :: name/**/3_is_ghostbnd(2) \
-   && integer :: name/**/3_is_symbnd  (2) \
-   && integer :: name/**/3_is_physbnd (2) \
-   && integer :: name/**/3_ierr \
+   && CCTK_INT, parameter :: name/**/3_isize = 2 \
+   && CCTK_INT :: name/**/3_bndsize    (2) \
+   && CCTK_INT :: name/**/3_is_ghostbnd(2) \
+   && CCTK_INT :: name/**/3_is_symbnd  (2) \
+   && CCTK_INT :: name/**/3_is_physbnd (2) \
+   && CCTK_INT :: name/**/3_ierr \
 
 #define CCTK_LOOP1STR_BND_OMP_PRIVATE(name) \
    CCTK_LOOP1STR_BOUNDARIES_OMP_PRIVATE(name/**/_bnd) \
@@ -934,15 +936,15 @@
                           imin,imax, cctki3_istr) \
    && !$omp single \
    && name/**/3_ierr = GetBoundarySizesAndTypes \
-         (cctkGH, 2, name/**/3_bndsize, name/**/3_is_ghostbnd, name/**/3_is_symbnd, name/**/3_is_physbnd) \
+         (cctkGH, name/**/3_isize, name/**/3_bndsize, name/**/3_is_ghostbnd, name/**/3_is_symbnd, name/**/3_is_physbnd) \
    && !$omp end single copyprivate(name/**/3_bndsize, name/**/3_is_physbnd) \
    && CCTK_LOOP1STR_BOUNDARIES(name/**/_bnd, \
                                i, \
                                ni, \
-                               name/**/3_bndsize(1)+1, \
-                               name/**/3_bndsize(2), \
-                               name/**/3_is_physbnd(1), \
-                               name/**/3_is_physbnd(2), \
+                               int(name/**/3_bndsize(1))+1, \
+                               int(name/**/3_bndsize(2)), \
+                               int(name/**/3_is_physbnd(1)), \
+                               int(name/**/3_is_physbnd(2)), \
                                imin,imax, (cctki3_istr)) \
 
 #define CCTK_ENDLOOP1STR_BND(name) \
@@ -975,11 +977,12 @@
 
 #define CCTK_LOOP1STR_INTBND_DECLARE(name) \
    CCTK_LOOP1STR_INTBOUNDARIES_DECLARE(name/**/_bnd) \
-   && integer :: name/**/3_bndsize    (2) \
-   && integer :: name/**/3_is_ghostbnd(2) \
-   && integer :: name/**/3_is_symbnd  (2) \
-   && integer :: name/**/3_is_physbnd (2) \
-   && integer :: name/**/3_ierr \
+   && CCTK_INT, parameter :: name/**/3_isize = 2 \
+   && CCTK_INT :: name/**/3_bndsize    (2) \
+   && CCTK_INT :: name/**/3_is_ghostbnd(2) \
+   && CCTK_INT :: name/**/3_is_symbnd  (2) \
+   && CCTK_INT :: name/**/3_is_physbnd (2) \
+   && CCTK_INT :: name/**/3_ierr \
 
 #define CCTK_LOOP1STR_INTBND_OMP_PRIVATE(name) \
    CCTK_LOOP1STR_INTBOUNDARIES_OMP_PRIVATE(name/**/_bnd) \
@@ -990,15 +993,15 @@
                              imin,imax, cctki3_istr) \
    && !$omp single \
    && name/**/3_ierr = GetBoundarySizesAndTypes \
-         (cctkGH, 2, name/**/3_bndsize, name/**/3_is_ghostbnd, name/**/3_is_symbnd, name/**/3_is_physbnd) \
+         (cctkGH, name/**/3_isize, name/**/3_bndsize, name/**/3_is_ghostbnd, name/**/3_is_symbnd, name/**/3_is_physbnd) \
    && !$omp end single copyprivate(name/**/3_bndsize, name/**/3_is_physbnd) \
    && CCTK_LOOP1STR_INTBOUNDARIES(name/**/_bnd, \
                                   i, \
                                   ni, \
-                                  name/**/3_bndsize(1+1), \
-                                  name/**/3_bndsize(2), \
-                                  name/**/3_is_physbnd(1), \
-                                  name/**/3_is_physbnd(2), \
+                                  int(name/**/3_bndsize(1+1)), \
+                                  int(name/**/3_bndsize(2)), \
+                                  int(name/**/3_is_physbnd(1)), \
+                                  int(name/**/3_is_physbnd(2)), \
                                   imin,imax, (cctki3_istr)) \
 
 #define CCTK_ENDLOOP1STR_INTBND(name) \
@@ -1912,11 +1915,12 @@
 
 #define CCTK_LOOP2STR_INT_DECLARE(name) \
    CCTK_LOOP2STR_INTERIOR_DECLARE(name/**/_int) \
-   && integer :: name/**/3_bndsize    (4) \
-   && integer :: name/**/3_is_ghostbnd(4) \
-   && integer :: name/**/3_is_symbnd  (4) \
-   && integer :: name/**/3_is_physbnd (4) \
-   && integer :: name/**/3_ierr \
+   && CCTK_INT, parameter :: name/**/3_isize = 4 \
+   && CCTK_INT :: name/**/3_bndsize    (4) \
+   && CCTK_INT :: name/**/3_is_ghostbnd(4) \
+   && CCTK_INT :: name/**/3_is_symbnd  (4) \
+   && CCTK_INT :: name/**/3_is_physbnd (4) \
+   && CCTK_INT :: name/**/3_ierr \
 
 #define CCTK_LOOP2STR_INT_OMP_PRIVATE(name) \
    CCTK_LOOP2STR_INTERIOR_OMP_PRIVATE(name/**/_int) \
@@ -1926,12 +1930,12 @@
                           imin,imax, cctki3_istr) \
    && !$omp single \
    && name/**/3_ierr = GetBoundarySizesAndTypes \
-         (cctkGH, 4, name/**/3_bndsize, name/**/3_is_ghostbnd, name/**/3_is_symbnd, name/**/3_is_physbnd) \
+         (cctkGH, name/**/3_isize, name/**/3_bndsize, name/**/3_is_ghostbnd, name/**/3_is_symbnd, name/**/3_is_physbnd) \
    && !$omp end single copyprivate(name/**/3_bndsize) \
    && CCTK_LOOP2STR_INTERIOR(name/**/_int, \
                              i,j, \
-                             name/**/3_bndsize(1+1),name/**/3_bndsize(3+1), \
-                             name/**/3_bndsize(2),name/**/3_bndsize(4), \
+                             int(name/**/3_bndsize(1+1)),int(name/**/3_bndsize(3+1)), \
+                             int(name/**/3_bndsize(2)),int(name/**/3_bndsize(4)), \
                              imin,imax, (cctki3_istr)) \
 
 #define CCTK_ENDLOOP2STR_INT(name) \
@@ -1961,11 +1965,12 @@
 
 #define CCTK_LOOP2STR_BND_DECLARE(name) \
    CCTK_LOOP2STR_BOUNDARIES_DECLARE(name/**/_bnd) \
-   && integer :: name/**/3_bndsize    (4) \
-   && integer :: name/**/3_is_ghostbnd(4) \
-   && integer :: name/**/3_is_symbnd  (4) \
-   && integer :: name/**/3_is_physbnd (4) \
-   && integer :: name/**/3_ierr \
+   && CCTK_INT, parameter :: name/**/3_isize = 4 \
+   && CCTK_INT :: name/**/3_bndsize    (4) \
+   && CCTK_INT :: name/**/3_is_ghostbnd(4) \
+   && CCTK_INT :: name/**/3_is_symbnd  (4) \
+   && CCTK_INT :: name/**/3_is_physbnd (4) \
+   && CCTK_INT :: name/**/3_ierr \
 
 #define CCTK_LOOP2STR_BND_OMP_PRIVATE(name) \
    CCTK_LOOP2STR_BOUNDARIES_OMP_PRIVATE(name/**/_bnd) \
@@ -1976,15 +1981,15 @@
                           imin,imax, cctki3_istr) \
    && !$omp single \
    && name/**/3_ierr = GetBoundarySizesAndTypes \
-         (cctkGH, 4, name/**/3_bndsize, name/**/3_is_ghostbnd, name/**/3_is_symbnd, name/**/3_is_physbnd) \
+         (cctkGH, name/**/3_isize, name/**/3_bndsize, name/**/3_is_ghostbnd, name/**/3_is_symbnd, name/**/3_is_physbnd) \
    && !$omp end single copyprivate(name/**/3_bndsize, name/**/3_is_physbnd) \
    && CCTK_LOOP2STR_BOUNDARIES(name/**/_bnd, \
                                i,j, \
                                ni,nj, \
-                               name/**/3_bndsize(1)+1,name/**/3_bndsize(3)+1, \
-                               name/**/3_bndsize(2),name/**/3_bndsize(4), \
-                               name/**/3_is_physbnd(1),name/**/3_is_physbnd(3), \
-                               name/**/3_is_physbnd(2),name/**/3_is_physbnd(4), \
+                               int(name/**/3_bndsize(1))+1,int(name/**/3_bndsize(3))+1, \
+                               int(name/**/3_bndsize(2)),int(name/**/3_bndsize(4)), \
+                               int(name/**/3_is_physbnd(1)),int(name/**/3_is_physbnd(3)), \
+                               int(name/**/3_is_physbnd(2)),int(name/**/3_is_physbnd(4)), \
                                imin,imax, (cctki3_istr)) \
 
 #define CCTK_ENDLOOP2STR_BND(name) \
@@ -2017,11 +2022,12 @@
 
 #define CCTK_LOOP2STR_INTBND_DECLARE(name) \
    CCTK_LOOP2STR_INTBOUNDARIES_DECLARE(name/**/_bnd) \
-   && integer :: name/**/3_bndsize    (4) \
-   && integer :: name/**/3_is_ghostbnd(4) \
-   && integer :: name/**/3_is_symbnd  (4) \
-   && integer :: name/**/3_is_physbnd (4) \
-   && integer :: name/**/3_ierr \
+   && CCTK_INT, parameter :: name/**/3_isize = 4 \
+   && CCTK_INT :: name/**/3_bndsize    (4) \
+   && CCTK_INT :: name/**/3_is_ghostbnd(4) \
+   && CCTK_INT :: name/**/3_is_symbnd  (4) \
+   && CCTK_INT :: name/**/3_is_physbnd (4) \
+   && CCTK_INT :: name/**/3_ierr \
 
 #define CCTK_LOOP2STR_INTBND_OMP_PRIVATE(name) \
    CCTK_LOOP2STR_INTBOUNDARIES_OMP_PRIVATE(name/**/_bnd) \
@@ -2032,15 +2038,15 @@
                              imin,imax, cctki3_istr) \
    && !$omp single \
    && name/**/3_ierr = GetBoundarySizesAndTypes \
-         (cctkGH, 4, name/**/3_bndsize, name/**/3_is_ghostbnd, name/**/3_is_symbnd, name/**/3_is_physbnd) \
+         (cctkGH, name/**/3_isize, name/**/3_bndsize, name/**/3_is_ghostbnd, name/**/3_is_symbnd, name/**/3_is_physbnd) \
    && !$omp end single copyprivate(name/**/3_bndsize, name/**/3_is_physbnd) \
    && CCTK_LOOP2STR_INTBOUNDARIES(name/**/_bnd, \
                                   i,j, \
                                   ni,nj, \
-                                  name/**/3_bndsize(1+1),name/**/3_bndsize(3+1), \
-                                  name/**/3_bndsize(2),name/**/3_bndsize(4), \
-                                  name/**/3_is_physbnd(1),name/**/3_is_physbnd(3), \
-                                  name/**/3_is_physbnd(2),name/**/3_is_physbnd(4), \
+                                  int(name/**/3_bndsize(1+1)),int(name/**/3_bndsize(3+1)), \
+                                  int(name/**/3_bndsize(2)),int(name/**/3_bndsize(4)), \
+                                  int(name/**/3_is_physbnd(1)),int(name/**/3_is_physbnd(3)), \
+                                  int(name/**/3_is_physbnd(2)),int(name/**/3_is_physbnd(4)), \
                                   imin,imax, (cctki3_istr)) \
 
 #define CCTK_ENDLOOP2STR_INTBND(name) \
@@ -3015,11 +3021,12 @@
 
 #define CCTK_LOOP3STR_INT_DECLARE(name) \
    CCTK_LOOP3STR_INTERIOR_DECLARE(name/**/_int) \
-   && integer :: name/**/3_bndsize    (6) \
-   && integer :: name/**/3_is_ghostbnd(6) \
-   && integer :: name/**/3_is_symbnd  (6) \
-   && integer :: name/**/3_is_physbnd (6) \
-   && integer :: name/**/3_ierr \
+   && CCTK_INT, parameter :: name/**/3_isize = 6 \
+   && CCTK_INT :: name/**/3_bndsize    (6) \
+   && CCTK_INT :: name/**/3_is_ghostbnd(6) \
+   && CCTK_INT :: name/**/3_is_symbnd  (6) \
+   && CCTK_INT :: name/**/3_is_physbnd (6) \
+   && CCTK_INT :: name/**/3_ierr \
 
 #define CCTK_LOOP3STR_INT_OMP_PRIVATE(name) \
    CCTK_LOOP3STR_INTERIOR_OMP_PRIVATE(name/**/_int) \
@@ -3029,12 +3036,12 @@
                           imin,imax, cctki3_istr) \
    && !$omp single \
    && name/**/3_ierr = GetBoundarySizesAndTypes \
-         (cctkGH, 6, name/**/3_bndsize, name/**/3_is_ghostbnd, name/**/3_is_symbnd, name/**/3_is_physbnd) \
+         (cctkGH, name/**/3_isize, name/**/3_bndsize, name/**/3_is_ghostbnd, name/**/3_is_symbnd, name/**/3_is_physbnd) \
    && !$omp end single copyprivate(name/**/3_bndsize) \
    && CCTK_LOOP3STR_INTERIOR(name/**/_int, \
                              i,j,k, \
-                             name/**/3_bndsize(1+1),name/**/3_bndsize(3+1),name/**/3_bndsize(5+1), \
-                             name/**/3_bndsize(2),name/**/3_bndsize(4),name/**/3_bndsize(6), \
+                             int(name/**/3_bndsize(1+1)),int(name/**/3_bndsize(3+1)),int(name/**/3_bndsize(5+1)), \
+                             int(name/**/3_bndsize(2)),int(name/**/3_bndsize(4)),int(name/**/3_bndsize(6)), \
                              imin,imax, (cctki3_istr)) \
 
 #define CCTK_ENDLOOP3STR_INT(name) \
@@ -3064,11 +3071,12 @@
 
 #define CCTK_LOOP3STR_BND_DECLARE(name) \
    CCTK_LOOP3STR_BOUNDARIES_DECLARE(name/**/_bnd) \
-   && integer :: name/**/3_bndsize    (6) \
-   && integer :: name/**/3_is_ghostbnd(6) \
-   && integer :: name/**/3_is_symbnd  (6) \
-   && integer :: name/**/3_is_physbnd (6) \
-   && integer :: name/**/3_ierr \
+   && CCTK_INT, parameter :: name/**/3_isize = 6 \
+   && CCTK_INT :: name/**/3_bndsize    (6) \
+   && CCTK_INT :: name/**/3_is_ghostbnd(6) \
+   && CCTK_INT :: name/**/3_is_symbnd  (6) \
+   && CCTK_INT :: name/**/3_is_physbnd (6) \
+   && CCTK_INT :: name/**/3_ierr \
 
 #define CCTK_LOOP3STR_BND_OMP_PRIVATE(name) \
    CCTK_LOOP3STR_BOUNDARIES_OMP_PRIVATE(name/**/_bnd) \
@@ -3079,15 +3087,15 @@
                           imin,imax, cctki3_istr) \
    && !$omp single \
    && name/**/3_ierr = GetBoundarySizesAndTypes \
-         (cctkGH, 6, name/**/3_bndsize, name/**/3_is_ghostbnd, name/**/3_is_symbnd, name/**/3_is_physbnd) \
+         (cctkGH, name/**/3_isize, name/**/3_bndsize, name/**/3_is_ghostbnd, name/**/3_is_symbnd, name/**/3_is_physbnd) \
    && !$omp end single copyprivate(name/**/3_bndsize, name/**/3_is_physbnd) \
    && CCTK_LOOP3STR_BOUNDARIES(name/**/_bnd, \
                                i,j,k, \
                                ni,nj,nk, \
-                               name/**/3_bndsize(1)+1,name/**/3_bndsize(3)+1,name/**/3_bndsize(5)+1, \
-                               name/**/3_bndsize(2),name/**/3_bndsize(4),name/**/3_bndsize(6), \
-                               name/**/3_is_physbnd(1),name/**/3_is_physbnd(3),name/**/3_is_physbnd(5), \
-                               name/**/3_is_physbnd(2),name/**/3_is_physbnd(4),name/**/3_is_physbnd(6), \
+                               int(name/**/3_bndsize(1))+1,int(name/**/3_bndsize(3))+1,int(name/**/3_bndsize(5))+1, \
+                               int(name/**/3_bndsize(2)),int(name/**/3_bndsize(4)),int(name/**/3_bndsize(6)), \
+                               int(name/**/3_is_physbnd(1)),int(name/**/3_is_physbnd(3)),int(name/**/3_is_physbnd(5)), \
+                               int(name/**/3_is_physbnd(2)),int(name/**/3_is_physbnd(4)),int(name/**/3_is_physbnd(6)), \
                                imin,imax, (cctki3_istr)) \
 
 #define CCTK_ENDLOOP3STR_BND(name) \
@@ -3120,11 +3128,12 @@
 
 #define CCTK_LOOP3STR_INTBND_DECLARE(name) \
    CCTK_LOOP3STR_INTBOUNDARIES_DECLARE(name/**/_bnd) \
-   && integer :: name/**/3_bndsize    (6) \
-   && integer :: name/**/3_is_ghostbnd(6) \
-   && integer :: name/**/3_is_symbnd  (6) \
-   && integer :: name/**/3_is_physbnd (6) \
-   && integer :: name/**/3_ierr \
+   && CCTK_INT, parameter :: name/**/3_isize = 6 \
+   && CCTK_INT :: name/**/3_bndsize    (6) \
+   && CCTK_INT :: name/**/3_is_ghostbnd(6) \
+   && CCTK_INT :: name/**/3_is_symbnd  (6) \
+   && CCTK_INT :: name/**/3_is_physbnd (6) \
+   && CCTK_INT :: name/**/3_ierr \
 
 #define CCTK_LOOP3STR_INTBND_OMP_PRIVATE(name) \
    CCTK_LOOP3STR_INTBOUNDARIES_OMP_PRIVATE(name/**/_bnd) \
@@ -3135,15 +3144,15 @@
                              imin,imax, cctki3_istr) \
    && !$omp single \
    && name/**/3_ierr = GetBoundarySizesAndTypes \
-         (cctkGH, 6, name/**/3_bndsize, name/**/3_is_ghostbnd, name/**/3_is_symbnd, name/**/3_is_physbnd) \
+         (cctkGH, name/**/3_isize, name/**/3_bndsize, name/**/3_is_ghostbnd, name/**/3_is_symbnd, name/**/3_is_physbnd) \
    && !$omp end single copyprivate(name/**/3_bndsize, name/**/3_is_physbnd) \
    && CCTK_LOOP3STR_INTBOUNDARIES(name/**/_bnd, \
                                   i,j,k, \
                                   ni,nj,nk, \
-                                  name/**/3_bndsize(1+1),name/**/3_bndsize(3+1),name/**/3_bndsize(5+1), \
-                                  name/**/3_bndsize(2),name/**/3_bndsize(4),name/**/3_bndsize(6), \
-                                  name/**/3_is_physbnd(1),name/**/3_is_physbnd(3),name/**/3_is_physbnd(5), \
-                                  name/**/3_is_physbnd(2),name/**/3_is_physbnd(4),name/**/3_is_physbnd(6), \
+                                  int(name/**/3_bndsize(1+1)),int(name/**/3_bndsize(3+1)),int(name/**/3_bndsize(5+1)), \
+                                  int(name/**/3_bndsize(2)),int(name/**/3_bndsize(4)),int(name/**/3_bndsize(6)), \
+                                  int(name/**/3_is_physbnd(1)),int(name/**/3_is_physbnd(3)),int(name/**/3_is_physbnd(5)), \
+                                  int(name/**/3_is_physbnd(2)),int(name/**/3_is_physbnd(4)),int(name/**/3_is_physbnd(6)), \
                                   imin,imax, (cctki3_istr)) \
 
 #define CCTK_ENDLOOP3STR_INTBND(name) \
@@ -4179,11 +4188,12 @@
 
 #define CCTK_LOOP4STR_INT_DECLARE(name) \
    CCTK_LOOP4STR_INTERIOR_DECLARE(name/**/_int) \
-   && integer :: name/**/3_bndsize    (8) \
-   && integer :: name/**/3_is_ghostbnd(8) \
-   && integer :: name/**/3_is_symbnd  (8) \
-   && integer :: name/**/3_is_physbnd (8) \
-   && integer :: name/**/3_ierr \
+   && CCTK_INT, parameter :: name/**/3_isize = 8 \
+   && CCTK_INT :: name/**/3_bndsize    (8) \
+   && CCTK_INT :: name/**/3_is_ghostbnd(8) \
+   && CCTK_INT :: name/**/3_is_symbnd  (8) \
+   && CCTK_INT :: name/**/3_is_physbnd (8) \
+   && CCTK_INT :: name/**/3_ierr \
 
 #define CCTK_LOOP4STR_INT_OMP_PRIVATE(name) \
    CCTK_LOOP4STR_INTERIOR_OMP_PRIVATE(name/**/_int) \
@@ -4193,12 +4203,12 @@
                           imin,imax, cctki3_istr) \
    && !$omp single \
    && name/**/3_ierr = GetBoundarySizesAndTypes \
-         (cctkGH, 8, name/**/3_bndsize, name/**/3_is_ghostbnd, name/**/3_is_symbnd, name/**/3_is_physbnd) \
+         (cctkGH, name/**/3_isize, name/**/3_bndsize, name/**/3_is_ghostbnd, name/**/3_is_symbnd, name/**/3_is_physbnd) \
    && !$omp end single copyprivate(name/**/3_bndsize) \
    && CCTK_LOOP4STR_INTERIOR(name/**/_int, \
                              i,j,k,l, \
-                             name/**/3_bndsize(1+1),name/**/3_bndsize(3+1),name/**/3_bndsize(5+1),name/**/3_bndsize(7+1), \
-                             name/**/3_bndsize(2),name/**/3_bndsize(4),name/**/3_bndsize(6),name/**/3_bndsize(8), \
+                             int(name/**/3_bndsize(1+1)),int(name/**/3_bndsize(3+1)),int(name/**/3_bndsize(5+1)),int(name/**/3_bndsize(7+1)), \
+                             int(name/**/3_bndsize(2)),int(name/**/3_bndsize(4)),int(name/**/3_bndsize(6)),int(name/**/3_bndsize(8)), \
                              imin,imax, (cctki3_istr)) \
 
 #define CCTK_ENDLOOP4STR_INT(name) \
@@ -4228,11 +4238,12 @@
 
 #define CCTK_LOOP4STR_BND_DECLARE(name) \
    CCTK_LOOP4STR_BOUNDARIES_DECLARE(name/**/_bnd) \
-   && integer :: name/**/3_bndsize    (8) \
-   && integer :: name/**/3_is_ghostbnd(8) \
-   && integer :: name/**/3_is_symbnd  (8) \
-   && integer :: name/**/3_is_physbnd (8) \
-   && integer :: name/**/3_ierr \
+   && CCTK_INT, parameter :: name/**/3_isize = 8 \
+   && CCTK_INT :: name/**/3_bndsize    (8) \
+   && CCTK_INT :: name/**/3_is_ghostbnd(8) \
+   && CCTK_INT :: name/**/3_is_symbnd  (8) \
+   && CCTK_INT :: name/**/3_is_physbnd (8) \
+   && CCTK_INT :: name/**/3_ierr \
 
 #define CCTK_LOOP4STR_BND_OMP_PRIVATE(name) \
    CCTK_LOOP4STR_BOUNDARIES_OMP_PRIVATE(name/**/_bnd) \
@@ -4243,15 +4254,15 @@
                           imin,imax, cctki3_istr) \
    && !$omp single \
    && name/**/3_ierr = GetBoundarySizesAndTypes \
-         (cctkGH, 8, name/**/3_bndsize, name/**/3_is_ghostbnd, name/**/3_is_symbnd, name/**/3_is_physbnd) \
+         (cctkGH, name/**/3_isize, name/**/3_bndsize, name/**/3_is_ghostbnd, name/**/3_is_symbnd, name/**/3_is_physbnd) \
    && !$omp end single copyprivate(name/**/3_bndsize, name/**/3_is_physbnd) \
    && CCTK_LOOP4STR_BOUNDARIES(name/**/_bnd, \
                                i,j,k,l, \
                                ni,nj,nk,nl, \
-                               name/**/3_bndsize(1)+1,name/**/3_bndsize(3)+1,name/**/3_bndsize(5)+1,name/**/3_bndsize(7)+1, \
-                               name/**/3_bndsize(2),name/**/3_bndsize(4),name/**/3_bndsize(6),name/**/3_bndsize(8), \
-                               name/**/3_is_physbnd(1),name/**/3_is_physbnd(3),name/**/3_is_physbnd(5),name/**/3_is_physbnd(7), \
-                               name/**/3_is_physbnd(2),name/**/3_is_physbnd(4),name/**/3_is_physbnd(6),name/**/3_is_physbnd(8), \
+                               int(name/**/3_bndsize(1))+1,int(name/**/3_bndsize(3))+1,int(name/**/3_bndsize(5))+1,int(name/**/3_bndsize(7))+1, \
+                               int(name/**/3_bndsize(2)),int(name/**/3_bndsize(4)),int(name/**/3_bndsize(6)),int(name/**/3_bndsize(8)), \
+                               int(name/**/3_is_physbnd(1)),int(name/**/3_is_physbnd(3)),int(name/**/3_is_physbnd(5)),int(name/**/3_is_physbnd(7)), \
+                               int(name/**/3_is_physbnd(2)),int(name/**/3_is_physbnd(4)),int(name/**/3_is_physbnd(6)),int(name/**/3_is_physbnd(8)), \
                                imin,imax, (cctki3_istr)) \
 
 #define CCTK_ENDLOOP4STR_BND(name) \
@@ -4284,11 +4295,12 @@
 
 #define CCTK_LOOP4STR_INTBND_DECLARE(name) \
    CCTK_LOOP4STR_INTBOUNDARIES_DECLARE(name/**/_bnd) \
-   && integer :: name/**/3_bndsize    (8) \
-   && integer :: name/**/3_is_ghostbnd(8) \
-   && integer :: name/**/3_is_symbnd  (8) \
-   && integer :: name/**/3_is_physbnd (8) \
-   && integer :: name/**/3_ierr \
+   && CCTK_INT, parameter :: name/**/3_isize = 8 \
+   && CCTK_INT :: name/**/3_bndsize    (8) \
+   && CCTK_INT :: name/**/3_is_ghostbnd(8) \
+   && CCTK_INT :: name/**/3_is_symbnd  (8) \
+   && CCTK_INT :: name/**/3_is_physbnd (8) \
+   && CCTK_INT :: name/**/3_ierr \
 
 #define CCTK_LOOP4STR_INTBND_OMP_PRIVATE(name) \
    CCTK_LOOP4STR_INTBOUNDARIES_OMP_PRIVATE(name/**/_bnd) \
@@ -4299,15 +4311,15 @@
                              imin,imax, cctki3_istr) \
    && !$omp single \
    && name/**/3_ierr = GetBoundarySizesAndTypes \
-         (cctkGH, 8, name/**/3_bndsize, name/**/3_is_ghostbnd, name/**/3_is_symbnd, name/**/3_is_physbnd) \
+         (cctkGH, name/**/3_isize, name/**/3_bndsize, name/**/3_is_ghostbnd, name/**/3_is_symbnd, name/**/3_is_physbnd) \
    && !$omp end single copyprivate(name/**/3_bndsize, name/**/3_is_physbnd) \
    && CCTK_LOOP4STR_INTBOUNDARIES(name/**/_bnd, \
                                   i,j,k,l, \
                                   ni,nj,nk,nl, \
-                                  name/**/3_bndsize(1+1),name/**/3_bndsize(3+1),name/**/3_bndsize(5+1),name/**/3_bndsize(7+1), \
-                                  name/**/3_bndsize(2),name/**/3_bndsize(4),name/**/3_bndsize(6),name/**/3_bndsize(8), \
-                                  name/**/3_is_physbnd(1),name/**/3_is_physbnd(3),name/**/3_is_physbnd(5),name/**/3_is_physbnd(7), \
-                                  name/**/3_is_physbnd(2),name/**/3_is_physbnd(4),name/**/3_is_physbnd(6),name/**/3_is_physbnd(8), \
+                                  int(name/**/3_bndsize(1+1)),int(name/**/3_bndsize(3+1)),int(name/**/3_bndsize(5+1)),int(name/**/3_bndsize(7+1)), \
+                                  int(name/**/3_bndsize(2)),int(name/**/3_bndsize(4)),int(name/**/3_bndsize(6)),int(name/**/3_bndsize(8)), \
+                                  int(name/**/3_is_physbnd(1)),int(name/**/3_is_physbnd(3)),int(name/**/3_is_physbnd(5)),int(name/**/3_is_physbnd(7)), \
+                                  int(name/**/3_is_physbnd(2)),int(name/**/3_is_physbnd(4)),int(name/**/3_is_physbnd(6)),int(name/**/3_is_physbnd(8)), \
                                   imin,imax, (cctki3_istr)) \
 
 #define CCTK_ENDLOOP4STR_INTBND(name) \

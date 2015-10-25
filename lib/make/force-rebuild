@@ -40,3 +40,4 @@
 17 Jun 2012: Correct error in handling optional dependencies
 18 Jun 2012: Ticket 768, switch from per thorn define to per thorn include
 26 Oct 2012: Use CCTKi_VarDataPtrI instead of CCTK_VarDataPtrI
+04 Aug 2015: Remove CCTK_MaxTimeLevels

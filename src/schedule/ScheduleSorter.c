@@ -176,28 +176,29 @@ int CCTKi_ScheduleAddRow(int size,
                          int item, 
                          int *thisorders)
 {
-  int retval;
-
-  int row;
-  int column;
-
-  retval = 0;
+  int retval = 0;
 
   order[item]=item;
 
-  row = item;
+  const int row = item;
 
-  for(column=0; column < size; column++)
+  if(thisorders[item]) /* self-referential ordering */
+    retval = -(1+item);
+
+  /* we drop all cyclical orderng descriptions */
+  for(int column=0; column < size; column++)
   {
     if(thisorders[column])
     {
       if(array[row][column] && array[row][column] != (signed char)thisorders[column])
       {
         retval = -(1+column);
-        break;
       }
-      array[row][column] = (signed char)(  thisorders[column]);
-      array[column][row] = (signed char)( -thisorders[column]);
+      else
+      {
+        array[row][column] = (signed char)(  thisorders[column]);
+        array[column][row] = (signed char)( -thisorders[column]);
+      }
     }
   }
     

@@ -799,6 +799,8 @@ static const char *ScheduleModifierTypeName(t_sched_modifier_type type)
     case sched_if:
       return "if";
       break;
+    case sched_mod_none:
+      /* FALLTHROUGH */
     default:
       CCTK_VWarn(CCTK_WARN_ABORT, __LINE__, __FILE__, "Cactus",
           "Internal error: Unknown schedule modifier type %d",
@@ -909,6 +911,9 @@ static int ScheduleSortGroup(t_sched_group *group)
         {
           case sched_before : mod = -1;  break;
           case sched_after  : mod = 1; break;
+          case sched_while: /* FALLTHROUGH */
+          case sched_if: /* FALLTHROUGH */
+          case sched_mod_none: /* FALLTHROUGH */
           default :
             mod = 0;
         }

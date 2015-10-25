@@ -25,7 +25,7 @@ endif
 endif
 
 # Add appropriate include lines
-INC_DIRS += $(SRCDIR) $(SRCDIR)/include  $(BINDINGS_DIR)/include/$(THORN)
+INC_DIRS += $(SRCDIR) $(wildcard $(SRCDIR)/include)  $(BINDINGS_DIR)/include/$(THORN)
 
 # Include the subdirectory's local include data
 -include $(SRCDIR)/make.code.defn

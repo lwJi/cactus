@@ -115,6 +115,10 @@ sub get_c_type_string
   {
     $type_string = 'CCTK_INT8';
   }
+  elsif($type eq 'INT16')
+  {
+    $type_string = 'CCTK_INT16';
+  }
   elsif($type eq 'REAL')
   {
     $type_string = 'CCTK_REAL';

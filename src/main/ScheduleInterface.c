@@ -169,7 +169,8 @@ static int CCTKi_SchedulePrintWhile(int n_whiles,
 static int CCTKi_SchedulePrintIf(int n_if,
                                  char **ifs,
                                  t_attribute *attribute,
-                                 t_sched_data *data);
+                                 t_sched_data *data,
+                                 int first);
 static int CCTKi_SchedulePrintFunction(void *function, t_attribute *attribute, t_sched_data *data);
 
 static int CCTKi_ScheduleCallEntry(t_attribute *attribute, t_sched_data *data);
@@ -1368,7 +1369,7 @@ static int ScheduleTraverse(const char *where,
      (int (*)(void *, void *))                    CCTKi_ScheduleCallEntry,
      (int (*)(void *, void *))                    CCTKi_ScheduleCallExit,
      (int (*)(int, char **, void *, void *, int)) CCTKi_ScheduleCallWhile,
-     (int (*)(int, char **, void *, void *))      CCTKi_ScheduleCallIf,
+     (int (*)(int, char **, void *, void *, int)) CCTKi_ScheduleCallIf,
      (int (*)(void *, void *, void *))            calling_function,
      (void *)&data);
 
@@ -2195,7 +2196,7 @@ static int SchedulePrint(const char *where)
        (int (*)(void *, void *))                    CCTKi_SchedulePrintEntry,
        (int (*)(void *, void *))                    CCTKi_SchedulePrintExit,
        (int (*)(int, char **, void *, void *, int)) CCTKi_SchedulePrintWhile,
-       (int (*)(int, char **, void *, void *))      CCTKi_SchedulePrintIf,
+       (int (*)(int, char **, void *, void *, int)) CCTKi_SchedulePrintIf,
        (int (*)(void *, void *, void *))            CCTKi_SchedulePrintFunction,
        (void *)&data);
   }
@@ -2476,6 +2477,11 @@ static int CCTKi_SchedulePrintWhile(int n_whiles,
    @vtype   t_sched_data
    @vio     in
    @endvar
+   @var     first
+   @vdesc   flag - 1 before the item is entered, 0 afterwards
+   @vtype   int
+   @vio     in
+   @endvar
 
    @returntype int
    @returndesc
@@ -2486,7 +2492,8 @@ static int CCTKi_SchedulePrintWhile(int n_whiles,
 static int CCTKi_SchedulePrintIf(int n_ifs,
                                  char **ifs,
                                  t_attribute *attribute,
-                                 t_sched_data *data)
+                                 t_sched_data *data,
+                                 int first)
 {
   int i;
 
@@ -2494,20 +2501,27 @@ static int CCTKi_SchedulePrintIf(int n_ifs,
   attribute = attribute;
   data = data;
 
-  printf("%*s", indent_level + 2 + 7, "if (");
-
-  for(i = 0; i < n_ifs; i++)
+  if(first)
   {
-    if(i > 0)
+    printf("%*s", indent_level + 2 + 4, "if (");
+    for(i = 0; i < n_ifs; i++)
     {
-      printf(" && ");
+      if(i > 0)
+      {
+        printf(" && ");
+      }
+
+      printf("%s", ifs[i]);
     }
-
-    printf("%s", ifs[i]);
+    printf(")\n");
+    indent_level += 2;
   }
-  printf(")\n");
+  else
+  {
+    indent_level -= 2;
+  }
 
-  return 1;
+  return first;
 }
 
 /*@@

@@ -63,7 +63,7 @@ int CCTKi_DoScheduleTraverse(const char *group_name,
                              int (*item_entry)(void *, void *),
                              int (*item_exit)(void *, void *),
                              int (*while_check)(int, char **, void *, void *, int),
-                             int (*if_check)(int, char **, void *, void *),
+                             int (*if_check)(int, char **, void *, void *, int),
                              int (*function_process)(void *, void *, void *),
                              void *data);
 

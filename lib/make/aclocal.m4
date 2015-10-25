@@ -375,7 +375,9 @@ extern "C"
 ])dnl
 [/* We use char because int might match the return type of a gcc2
     builtin and then its argument prototype would still apply.  */
-char $2();
+dnl We need a space before the parentheses to avoid accidentally calling
+dnl an m4 function, if $2 expands to an m4 function.
+char $2 ();
 ])),
             [$2()],
             eval "ac_cv_lib_$ac_lib_var=yes",
@@ -560,28 +562,39 @@ esac
 dnl Do nothing if the compiler accepts the inline keyword.  Otherwise
 dnl define inline to __inline__ or __inline if one of those work,
 dnl otherwise define inline to be empty.
-dnl 
-dnl The setting '__inline__ __attribute__((__gnu_inline__))' is for gcc
-dnl 4.3 and later.  By default this version of gcc follows the new ANSI
-dnl standard for "static inline" and "extern inline", which is
-dnl incompatible with many libraries, leading to linker errors about
-dnl duplicate symbols.  This setting makes gcc fall back to the old
-dnl meaning.
-dnl 
 AC_DEFUN(CCTK_CHECK_C_INLINE,
 [AC_CACHE_CHECK([for C inline], cctk_cv_c_inline,
 [cctk_cv_c_inline=no
-for ac_kw in inline __inline__ __inline '__inline__ __attribute__((__gnu_inline__))'; do
-dnl  AC_TRY_COMPILE(, [} $ac_kw int foo() {], [cctk_cv_c_inline=$ac_kw; break])
-  CCTK_TRY_LINK_2(, [foo();], [;} $ac_kw foo() {], [cctk_cv_c_inline=$ac_kw; break])
+for ac_kw in inline __inline__ __inline; do
+  AC_TRY_COMPILE(, [} $ac_kw int foo() {], [cctk_cv_c_inline=$ac_kw; break])
 done
 ])
 case "$cctk_cv_c_inline" in
-  inline | yes) 
+  inline) 
+      AC_DEFINE_UNQUOTED(CCTK_C_INLINE, inline)
+      AC_DEFINE(HAVE_CCTK_C_INLINE, 1)
+      AC_DEFINE(HAVE_STANDARD_CCTK_C_INLINE, 1) ;;
+  no) AC_DEFINE_UNQUOTED(CCTK_C_INLINE, )
+      AC_DEFINE(CCTK_C_INLINE, ) ;;
+  *)  AC_DEFINE_UNQUOTED(CCTK_C_INLINE, $cctk_cv_c_inline)
       AC_DEFINE(HAVE_CCTK_C_INLINE, 1) ;;
-  no) AC_DEFINE(inline, ) ;;
-  *)  AC_DEFINE_UNQUOTED(inline, $cctk_cv_c_inline)
-      AC_DEFINE(HAVE_CCTK_C_INLINE, 1) ;;
+esac
+])
+
+dnl Define the macro EXTERN_INLINE to the keywords that the compiler needs
+dnl to obtain what is obtained by "extern inline" in the C99 standard.  If
+dnl the compiler does not support the "inline" keyword, define the macro
+dnl to "extern".
+AC_DEFUN(CCTK_CHECK_C_EXTERN_INLINE,
+[AC_CACHE_CHECK([for C extern inline], cctk_cv_c_extern_inline,
+[cctk_cv_c_extern_inline=no
+for ac_kw in 'extern inline' 'extern __inline__' 'extern __inline' extern; do
+  CCTK_TRY_LINK_2(, [foo();], [;} $ac_kw foo() {], [cctk_cv_c_extern_inline=$ac_kw; break])
+done
+])
+case "$cctk_cv_c_extern_inline" in
+  no) AC_DEFINE(CCTK_C_EXTERN_INLINE, extern) ;;
+  *)  AC_DEFINE_UNQUOTED(CCTK_C_EXTERN_INLINE, $cctk_cv_c_extern_inline) ;;
 esac
 ])
 
@@ -592,8 +605,7 @@ dnl to "static".
 AC_DEFUN(CCTK_CHECK_C_STATIC_INLINE,
 [AC_CACHE_CHECK([for C static inline], cctk_cv_c_static_inline,
 [cctk_cv_c_static_inline=no
-for ac_kw in 'static inline' 'static __inline__' 'static __inline' 'static __inline__ __attribute__((__gnu_inline__))'; do
-dnl  AC_TRY_COMPILE(, [} $ac_kw int foo() {], [cctk_cv_c_inline=$ac_kw; break])
+for ac_kw in 'static inline' 'static __inline__' 'static __inline' static; do
   CCTK_TRY_LINK_2(, [;} $ac_kw ifoo(){} foo(){ifoo();], [;} $ac_kw ifoo(){} foo2(){ifoo();], [cctk_cv_c_static_inline=$ac_kw; break])
 done
 ])
@@ -601,29 +613,6 @@ case "$cctk_cv_c_static_inline" in
   no) AC_DEFINE(CCTK_C_STATIC_INLINE, static) ;;
   *)  AC_DEFINE_UNQUOTED(CCTK_C_STATIC_INLINE, $cctk_cv_c_static_inline) ;;
 esac
-])
-
-AC_DEFUN(CCTK_C_BOOL,
-[AC_CACHE_CHECK([for C bool], cctk_cv_have_c_bool,
-[cctk_cv_have_c_bool=no
-AC_TRY_COMPILE(, bool foo;, cctk_cv_have_c_bool=yes, cctk_cv_have_c_bool=no)
-])
-if test "$cctk_cv_have_c_bool" = "yes" ; then
-   AC_DEFINE(HAVE_CCTK_C_BOOL, 1)
-fi
-])
-
-AC_DEFUN(CCTK_CXX_BOOL,
-[AC_CACHE_CHECK([for CXX bool], cctk_cv_have_cxx_bool,
-[cctk_cv_have_cxx_bool=no
-AC_LANG_SAVE
-AC_LANG_CPLUSPLUS
-AC_TRY_COMPILE(, bool foo;, cctk_cv_have_cxx_bool=yes, cctk_cv_have_cxx_bool=no)
-AC_LANG_RESTORE
-])
-if test "$cctk_cv_have_cxx_bool" = "yes" ; then
-   AC_DEFINE(HAVE_CCTK_CXX_BOOL, 1)
-fi
 ])
 
 dnl Do nothing if the compiler accepts the _Pragma keyword.
@@ -770,7 +759,7 @@ fi
 ])
 
 AC_DEFUN(CCTK_CXX_ATTRIBUTE_CONST,
-[AC_CACHE_CHECK([for CXX function __attribute__((__const__))], cctk_cv_have_cxx_attribute_const,
+[AC_CACHE_CHECK([for C++ function __attribute__((__const__))], cctk_cv_have_cxx_attribute_const,
 [cctk_cv_have_cxx_attribute_const=no
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
@@ -783,7 +772,7 @@ fi
 ])
 
 AC_DEFUN(CCTK_CXX_MEMBER_ATTRIBUTE_CONST,
-[AC_CACHE_CHECK([for CXX member function __attribute__((__const__))], cctk_cv_have_cxx_member_attribute_const,
+[AC_CACHE_CHECK([for C++ member function __attribute__((__const__))], cctk_cv_have_cxx_member_attribute_const,
 [cctk_cv_have_cxx_member_attribute_const=no
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
@@ -808,7 +797,7 @@ fi
 ])
 
 AC_DEFUN(CCTK_CXX_ATTRIBUTE_PURE,
-[AC_CACHE_CHECK([for CXX function __attribute__((__pure__))], cctk_cv_have_cxx_attribute_pure,
+[AC_CACHE_CHECK([for C++ function __attribute__((__pure__))], cctk_cv_have_cxx_attribute_pure,
 [cctk_cv_have_cxx_attribute_pure=no
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
@@ -821,7 +810,7 @@ fi
 ])
 
 AC_DEFUN(CCTK_CXX_MEMBER_ATTRIBUTE_PURE,
-[AC_CACHE_CHECK([for CXX member function __attribute__((__pure__))], cctk_cv_have_cxx_member_attribute_pure,
+[AC_CACHE_CHECK([for C++ member function __attribute__((__pure__))], cctk_cv_have_cxx_member_attribute_pure,
 [cctk_cv_have_cxx_member_attribute_pure=no
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
@@ -846,7 +835,7 @@ fi
 ])
 
 AC_DEFUN(CCTK_CXX_ATTRIBUTE_NOINLINE,
-[AC_CACHE_CHECK([for CXX function __attribute__((__noinline__))], cctk_cv_have_cxx_attribute_noinline,
+[AC_CACHE_CHECK([for C++ function __attribute__((__noinline__))], cctk_cv_have_cxx_attribute_noinline,
 [cctk_cv_have_cxx_attribute_noinline=no
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
@@ -859,7 +848,7 @@ fi
 ])
 
 AC_DEFUN(CCTK_CXX_MEMBER_ATTRIBUTE_NOINLINE,
-[AC_CACHE_CHECK([for CXX member function __attribute__((__noinline__))], cctk_cv_have_cxx_member_attribute_noinline,
+[AC_CACHE_CHECK([for C++ member function __attribute__((__noinline__))], cctk_cv_have_cxx_member_attribute_noinline,
 [cctk_cv_have_cxx_member_attribute_noinline=no
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
@@ -884,7 +873,7 @@ fi
 ])
 
 AC_DEFUN(CCTK_CXX_ATTRIBUTE_ALWAYS_INLINE,
-[AC_CACHE_CHECK([for CXX function __attribute__((__always_inline__))], cctk_cv_have_cxx_attribute_always_inline,
+[AC_CACHE_CHECK([for C++ function __attribute__((__always_inline__))], cctk_cv_have_cxx_attribute_always_inline,
 [cctk_cv_have_cxx_attribute_always_inline=no
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
@@ -897,7 +886,7 @@ fi
 ])
 
 AC_DEFUN(CCTK_CXX_MEMBER_ATTRIBUTE_ALWAYS_INLINE,
-[AC_CACHE_CHECK([for CXX member function __attribute__((__always_inline__))], cctk_cv_have_cxx_member_attribute_always_inline,
+[AC_CACHE_CHECK([for C++ member function __attribute__((__always_inline__))], cctk_cv_have_cxx_member_attribute_always_inline,
 [cctk_cv_have_cxx_member_attribute_always_inline=no
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
@@ -922,7 +911,7 @@ fi
 ])
 
 AC_DEFUN(CCTK_CXX_ATTRIBUTE_UNUSED,
-[AC_CACHE_CHECK([for CXX __attribute__((__unused__))], cctk_cv_have_cxx_attribute_unused,
+[AC_CACHE_CHECK([for C++ __attribute__((__unused__))], cctk_cv_have_cxx_attribute_unused,
 [cctk_cv_have_cxx_attribute_unused=no
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
@@ -947,7 +936,7 @@ fi
 ])
 
 AC_DEFUN(CCTK_CXX_ATTRIBUTE_ALIGNED,
-[AC_CACHE_CHECK([for CXX __attribute__((__aligned__(...)))], cctk_cv_have_cxx_attribute_aligned,
+[AC_CACHE_CHECK([for C++ __attribute__((__aligned__(...)))], cctk_cv_have_cxx_attribute_aligned,
 [cctk_cv_have_cxx_attribute_aligned=no
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
@@ -972,7 +961,7 @@ fi
 ])
 
 AC_DEFUN(CCTK_CXX_ATTRIBUTE_COLD,
-[AC_CACHE_CHECK([for CXX __attribute__((__cold__))], cctk_cv_have_cxx_attribute_cold,
+[AC_CACHE_CHECK([for C++ __attribute__((__cold__))], cctk_cv_have_cxx_attribute_cold,
 [cctk_cv_have_cxx_attribute_cold=no
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
@@ -997,7 +986,7 @@ fi
 ])
 
 AC_DEFUN(CCTK_CXX_ATTRIBUTE_HOT,
-[AC_CACHE_CHECK([for CXX __attribute__((__hot__))], cctk_cv_have_cxx_attribute_hot,
+[AC_CACHE_CHECK([for C++ __attribute__((__hot__))], cctk_cv_have_cxx_attribute_hot,
 [cctk_cv_have_cxx_attribute_hot=no
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
@@ -1022,7 +1011,7 @@ fi
 ])
 
 AC_DEFUN(CCTK_CXX_ATTRIBUTE_FORMAT,
-[AC_CACHE_CHECK([for CXX __attribute__((__format__(printf, 1, 2)))], cctk_cv_have_cxx_attribute_format,
+[AC_CACHE_CHECK([for C++ __attribute__((__format__(printf, 1, 2)))], cctk_cv_have_cxx_attribute_format,
 [cctk_cv_have_cxx_attribute_format=no
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
@@ -1047,7 +1036,7 @@ fi
 ])
 
 AC_DEFUN(CCTK_CXX_ATTRIBUTE_NORETURN,
-[AC_CACHE_CHECK([for CXX __attribute__((__noreturn__))], cctk_cv_have_cxx_attribute_noreturn,
+[AC_CACHE_CHECK([for C++ __attribute__((__noreturn__))], cctk_cv_have_cxx_attribute_noreturn,
 [cctk_cv_have_cxx_attribute_noreturn=no
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
@@ -1089,7 +1078,7 @@ fi
 ])
 
 AC_DEFUN(CCTK_CXX_ATTRIBUTE_NONNULL,
-[AC_CACHE_CHECK([for CXX __attribute__((__nonnull__))], cctk_cv_have_cxx_attribute_nonnull,
+[AC_CACHE_CHECK([for C++ __attribute__((__nonnull__))], cctk_cv_have_cxx_attribute_nonnull,
 [cctk_cv_have_cxx_attribute_nonnull=no
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
@@ -1142,7 +1131,7 @@ fi
 ])
 
 AC_DEFUN(CCTK_CXX_ATTRIBUTE_RETURNS_NONNULL,
-[AC_CACHE_CHECK([for CXX __attribute__((__returns_nonnull__))], cctk_cv_have_cxx_attribute_returns_nonnull,
+[AC_CACHE_CHECK([for C++ __attribute__((__returns_nonnull__))], cctk_cv_have_cxx_attribute_returns_nonnull,
 [cctk_cv_have_cxx_attribute_returns_nonnull=no
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
@@ -1178,7 +1167,7 @@ fi
 ])
 
 AC_DEFUN(CCTK_CXX_BUILTIN_EXPECT,
-[AC_CACHE_CHECK([for CXX __builtin_expect], cctk_cv_have_cxx_builtin_expect,
+[AC_CACHE_CHECK([for C++ __builtin_expect], cctk_cv_have_cxx_builtin_expect,
 [cctk_cv_have_cxx_builtin_expect=no
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
@@ -1203,7 +1192,7 @@ fi
 ])
 
 AC_DEFUN(CCTK_CXX_BUILTIN_UNREACHABLE,
-[AC_CACHE_CHECK([for CXX __builtin_unreachable], cctk_cv_have_cxx_builtin_unreachable,
+[AC_CACHE_CHECK([for C++ __builtin_unreachable], cctk_cv_have_cxx_builtin_unreachable,
 [cctk_cv_have_cxx_builtin_unreachable=no
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
@@ -1231,7 +1220,7 @@ fi
 ])
 
 AC_DEFUN(CCTK_CXX_BUILTIN_ASSUME_ALIGNED,
-[AC_CACHE_CHECK([for CXX __builtin_assume_aligned], cctk_cv_have_cxx_builtin_assume_aligned,
+[AC_CACHE_CHECK([for C++ __builtin_assume_aligned], cctk_cv_have_cxx_builtin_assume_aligned,
 [cctk_cv_have_cxx_builtin_assume_aligned=no
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
@@ -1249,7 +1238,7 @@ fi
 
 
 AC_DEFUN(CCTK_CXX_STATIC_ASSERT,
-[AC_CACHE_CHECK([for CXX static_assert], cctk_cv_have_cxx_static_assert,
+[AC_CACHE_CHECK([for C++ static_assert], cctk_cv_have_cxx_static_assert,
 [cctk_cv_have_cxx_static_assert=no
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
@@ -1309,6 +1298,62 @@ esac
 
 
 
+AC_DEFUN(CCTK_CXX_AUTO_SPECIFIER,
+[AC_CACHE_CHECK([for C++ auto specifier], cctk_cv_have_cxx_auto_specifier,
+[cctk_cv_have_cxx_auto_specifier=no
+AC_LANG_SAVE
+AC_LANG_CPLUSPLUS
+AC_TRY_LINK(,
+  int x; auto y = x,
+  cctk_cv_have_cxx_auto_specifier=yes,
+  cctk_cv_have_cxx_auto_specifier=no)
+AC_LANG_RESTORE
+])
+if test "$cctk_cv_have_cxx_auto_specifier" = "yes" ; then
+   AC_DEFINE(HAVE_CCTK_CXX_AUTO_SPECIFIER)
+fi
+])
+
+
+
+AC_DEFUN(CCTK_CXX_LAMBDA,
+[AC_CACHE_CHECK([for C++ lambda expressions], cctk_cv_have_cxx_lambda,
+[cctk_cv_have_cxx_lambda=no
+AC_LANG_SAVE
+AC_LANG_CPLUSPLUS
+AC_TRY_LINK(,
+  [int x; [x](int y) { return x+y; };],
+  cctk_cv_have_cxx_lambda=yes,
+  cctk_cv_have_cxx_lambda=no)
+AC_LANG_RESTORE
+])
+if test "$cctk_cv_have_cxx_lambda" = "yes" ; then
+   AC_DEFINE(HAVE_CCTK_CXX_LAMBDA)
+fi
+])
+
+
+
+AC_DEFUN(CCTK_CXX_RANGE_BASED_FOR,
+[AC_CACHE_CHECK([for C++ range-based for statements], cctk_cv_have_cxx_range_based_for,
+[cctk_cv_have_cxx_range_based_for=no
+AC_LANG_SAVE
+AC_LANG_CPLUSPLUS
+AC_TRY_LINK(
+  [#include <vector>],
+  [std::vector<int> xs(10);
+   for (int& x: xs) x = 42;],
+  cctk_cv_have_cxx_range_based_for=yes,
+  cctk_cv_have_cxx_range_based_for=no)
+AC_LANG_RESTORE
+])
+if test "$cctk_cv_have_cxx_range_based_for" = "yes" ; then
+   AC_DEFINE(HAVE_CCTK_CXX_RANGE_BASED_FOR)
+fi
+])
+
+
+
 AC_DEFUN(CCTK_CHECK_C99,
 [AC_CACHE_CHECK([for C99 features], cctk_cv_have_c99,
 [cctk_cv_have_c99=no
@@ -1323,6 +1368,70 @@ for (int i=0; i<10; ++i) x+=i;
 if test "$cctk_cv_have_c99" = "yes" ; then
    AC_DEFINE(HAVE_CCTK_C99)
 fi
+])
+
+
+
+dnl CCTK_CHECK_DEFINED(DEFINED, [[ADDITIONAL_CODE [, ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]]])
+AC_DEFUN(CCTK_CHECK_DEFINED,
+[dnl Do the transliteration at runtime so arg 1 can be a shell variable.
+cctk_safe=`echo "$1" | sed 'y%./+-%__p_%'`
+AC_MSG_CHECKING([for $1])
+AC_CACHE_VAL(cctk_cv_defined_$cctk_safe,
+[AC_TRY_COMPILE([$2
+#ifndef $1
+#error "$1 not defined"
+#endif], [ ], eval "cctk_cv_defined_$cctk_safe=yes",
+  eval "cctk_cv_defined_$cctk_safe=no")])dnl
+if eval "test \"`echo '$cctk_cv_defined_'$cctk_safe`\" = yes"; then
+  AC_MSG_RESULT(yes)
+  ifelse([$3], , :, [$3])
+else
+  AC_MSG_RESULT(no)
+ifelse([$4], , , [$4])
+fi
+])
+
+
+
+dnl CCTK_CHECK_HAS_PROTOTYPE(FUNCTION, [FEATURE-DESCRIPTION [, ADDITIONAL_CODE [, ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]]]])
+AC_DEFUN(CCTK_CHECK_HAS_PROTOTYPE,
+[dnl Do the transliteration at runtime so arg 1 can be a shell variable.
+cctk_safe=`echo "$1" | sed 'y%./+-%__p_%'`
+cctk_lang=AC_LANG
+AC_MSG_CHECKING([ifelse([$2], , [for $1], [$2])])
+AC_CACHE_VAL(cctk_cv_has_${cctk_lang}_prototype_$cctk_safe,
+[AC_TRY_COMPILE([$3
+], [char *p = (char*) $1;], eval "cctk_cv_has_${cctk_lang}_prototype_$cctk_safe=yes",
+  eval "cctk_cv_has_${cctk_lang}_prototype_$cctk_safe=no")])dnl
+if eval "test \"`echo '$cctk_cv_has_'$cctk_lang'_prototype_'$cctk_safe`\" = yes"; then
+  AC_MSG_RESULT(yes)
+  ifelse([$4], , :, [$4])
+else
+  AC_MSG_RESULT(no)
+ifelse([$5], , , [$5])
+fi
+])
+
+
+
+dnl CCTK_C_CHECK_HAS_PROTOTYPE(FUNCTION, [FEATURE-DESCRIPTION [, ADDITIONAL_CODE [, ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]]]])
+AC_DEFUN(CCTK_C_CHECK_HAS_PROTOTYPE,
+[dnl short-hand for C protype check
+CCTK_CHECK_HAS_PROTOTYPE([$1], [ifelse([$2], , [for C $1], [$2])],
+[$3], [$4], [$5])dnl
+])
+
+
+
+dnl CCTK_CXX_CHECK_HAS_PROTOTYPE(FUNCTION, [FEATURE-DESCRIPTION [, ADDITIONAL_CODE [, ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]]]])
+AC_DEFUN(CCTK_CXX_CHECK_HAS_PROTOTYPE,
+[dnl short-hand for C++ protype check
+AC_LANG_SAVE
+AC_LANG_CPLUSPLUS
+CCTK_CHECK_HAS_PROTOTYPE([$1], [ifelse([$2], , [for C++ $1], [$2])],
+[$3], [$4], [$5])dnl
+AC_LANG_RESTORE
 ])
 
 

@@ -138,7 +138,7 @@ int CCTK_IEEE_signbit(double x);
                                                 \
   inline int good_isfinite(T x)                 \
   {                                             \
-    return CCTK_ISFINITE(x);                    \
+    return CCTK_ISFINITE((double)x);            \
   }                                             \
                                                 \
   inline int good_isinf(T x)                    \

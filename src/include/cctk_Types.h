@@ -83,6 +83,11 @@ typedef unsigned char CCTK_BYTE;
 
 /* Integer types */
 
+#ifndef __CUDACC__
+#ifdef HAVE_CCTK_INT16
+typedef CCTK_INT16_TYPE CCTK_INT16;
+#endif
+#endif
 #ifdef HAVE_CCTK_INT8
 typedef CCTK_INT8_TYPE CCTK_INT8;
 #endif
@@ -118,6 +123,9 @@ typedef CCTK_INT1_TYPE CCTK_INT1;
 #define CCTK_STRING CCTK_POINTER_TO_CONST
 #define HAVE_CCTK_STRING 1
 
+#ifdef HAVE_CCTK_INT16
+#  define CCTK_INT16 INTEGER*16
+#endif
 #ifdef HAVE_CCTK_INT8
 #  define CCTK_INT8 INTEGER*8
 #endif
@@ -174,6 +182,11 @@ typedef CCTK_INT1_TYPE CCTK_INT1;
 #endif
 
 /* Integer precision */
+
+#ifdef CCTK_INTEGER_PRECISION_16
+#  define CCTK_INTEGER_PRECISION 16
+#  define CCTK_INT CCTK_INT16
+#endif
 
 #ifdef CCTK_INTEGER_PRECISION_8
 #  define CCTK_INTEGER_PRECISION 8

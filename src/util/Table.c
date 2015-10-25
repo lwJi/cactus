@@ -1982,6 +1982,7 @@ void CCTK_FCALL CCTK_FNAME(Util_TableGetGenericArray)
                    CCTK_CHAR,
                    CCTK_BYTE,
                    CCTK_INT, CCTK_INT1, CCTK_INT2, CCTK_INT4, CCTK_INT8,
+                   CCTK_INT16,
                    CCTK_REAL, CCTK_REAL4, CCTK_REAL8, CCTK_REAL16,
                    CCTK_COMPLEX, CCTK_COMPLEX8, CCTK_COMPLEX16, CCTK_COMPLEX32
                 (not all of these may be supported on any given system)
@@ -2259,6 +2260,29 @@ void CCTK_FCALL CCTK_FNAME (Util_TableSetInt8)
 #endif  /* UTIL_TABLE_FORTRAN_WRAPPERS */
 #endif  /* CCTK_INT8 */
 
+/**************************************/
+
+#ifdef HAVE_CCTK_INT16
+int Util_TableSetInt16(int handle, CCTK_INT16 value, const char *key)
+{
+  return Util_TableSetInt16Array(handle, 1, &value, key);
+}
+
+#ifdef UTIL_TABLE_FORTRAN_WRAPPERS
+void CCTK_FCALL CCTK_FNAME (Util_TableSetInt16)
+                           (int *retval, const int *handle,
+                            const CCTK_INT16 *value, ONE_FORTSTRING_ARG);
+void CCTK_FCALL CCTK_FNAME (Util_TableSetInt16)
+                           (int *retval, const int *handle,
+                            const CCTK_INT16 *value, ONE_FORTSTRING_ARG)
+{
+  ONE_FORTSTRING_CREATE(key)
+  *retval = Util_TableSetInt16(*handle, *value, key);
+  free(key);
+}
+#endif  /* UTIL_TABLE_FORTRAN_WRAPPERS */
+#endif  /* CCTK_INT16 */
+
 /**********************************************************/
 
 /*
@@ -2475,6 +2499,7 @@ void CCTK_FCALL CCTK_FNAME(Util_TableSetComplex32)
                    CCTK_CHAR,
                    CCTK_BYTE,
                    CCTK_INT, CCTK_INT1, CCTK_INT2, CCTK_INT4, CCTK_INT8,
+                   CCTK_INT16,
                    CCTK_REAL, CCTK_REAL4, CCTK_REAL8, CCTK_REAL16,
                    CCTK_COMPLEX, CCTK_COMPLEX8, CCTK_COMPLEX16, CCTK_COMPLEX32
                 (not all of these may be supported on any given system)
@@ -2830,6 +2855,35 @@ void CCTK_FCALL CCTK_FNAME(Util_TableSetInt8Array)
 #endif  /* UTIL_TABLE_FORTRAN_WRAPPERS */
 #endif  /* CCTK_INT8 */
 
+/**************************************/
+
+#ifdef HAVE_CCTK_INT16
+int Util_TableSetInt16Array(int handle,
+                            int N_elements, const CCTK_INT16 array[],
+                            const char *key)
+{
+  return internal_set(handle,
+                      CCTK_VARIABLE_INT16, N_elements, (const void *) array,
+                      key);
+}
+
+#ifdef UTIL_TABLE_FORTRAN_WRAPPERS
+void CCTK_FCALL CCTK_FNAME(Util_TableSetInt16Array)
+                          (int *retval, const int *handle,
+                           const int *N_elements,
+                           const CCTK_INT16 array[], ONE_FORTSTRING_ARG);
+void CCTK_FCALL CCTK_FNAME(Util_TableSetInt16Array)
+                          (int *retval, const int *handle,
+                           const int *N_elements,
+                           const CCTK_INT16 array[], ONE_FORTSTRING_ARG)
+{
+  ONE_FORTSTRING_CREATE(key)
+  *retval = Util_TableSetInt16Array(*handle, *N_elements, array, key);
+  free(key);
+}
+#endif  /* UTIL_TABLE_FORTRAN_WRAPPERS */
+#endif  /* CCTK_INT16 */
+
 /**********************************************************/
 
 /*
@@ -3089,6 +3143,7 @@ void CCTK_FCALL CCTK_FNAME(Util_TableSetComplex32Array)
                    CCTK_CHAR,
                    CCTK_BYTE,
                    CCTK_INT, CCTK_INT1, CCTK_INT2, CCTK_INT4, CCTK_INT8,
+                   CCTK_INT16,
                    CCTK_REAL, CCTK_REAL4, CCTK_REAL8, CCTK_REAL16,
                    CCTK_COMPLEX, CCTK_COMPLEX8, CCTK_COMPLEX16, CCTK_COMPLEX32
                 (not all of these may be supported on any given system)
@@ -3411,6 +3466,32 @@ void CCTK_FCALL CCTK_FNAME (Util_TableGetInt8)
 #endif  /* UTIL_TABLE_FORTRAN_WRAPPERS */
 #endif  /* CCTK_INT8 */
 
+/**************************************/
+
+#ifdef HAVE_CCTK_INT16
+int Util_TableGetInt16(int handle, CCTK_INT16 *value, const char *key)
+{
+  const int status = Util_TableGetInt16Array(handle, 1, value, key);
+  return (status == 0)
+         ? UTIL_ERROR_TABLE_VALUE_IS_EMPTY
+         : status;
+}
+
+#ifdef UTIL_TABLE_FORTRAN_WRAPPERS
+void CCTK_FCALL CCTK_FNAME (Util_TableGetInt16)
+                           (int *retval, const int *handle,
+                            CCTK_INT16 *value, ONE_FORTSTRING_ARG);
+void CCTK_FCALL CCTK_FNAME (Util_TableGetInt16)
+                           (int *retval, const int *handle,
+                            CCTK_INT16 *value, ONE_FORTSTRING_ARG)
+{
+  ONE_FORTSTRING_CREATE (key)
+  *retval = Util_TableGetInt16 (*handle, value, key);
+  free (key);
+}
+#endif  /* UTIL_TABLE_FORTRAN_WRAPPERS */
+#endif  /* CCTK_INT16 */
+
 /**********************************************************/
 
 /*
@@ -3650,6 +3731,7 @@ void CCTK_FCALL CCTK_FNAME (Util_TableGetComplex32)
                    CCTK_CHAR,
                    CCTK_BYTE,
                    CCTK_INT, CCTK_INT1, CCTK_INT2, CCTK_INT4, CCTK_INT8,
+                   CCTK_INT16,
                    CCTK_REAL, CCTK_REAL4, CCTK_REAL8, CCTK_REAL16,
                    CCTK_COMPLEX, CCTK_COMPLEX8, CCTK_COMPLEX16, CCTK_COMPLEX32
                 (not all of these may be supported on any given system)
@@ -4021,6 +4103,35 @@ void CCTK_FCALL CCTK_FNAME (Util_TableGetInt8Array)
 }
 #endif  /* UTIL_TABLE_FORTRAN_WRAPPERS */
 #endif  /* CCTK_INT8 */
+
+/**************************************/
+
+#ifdef HAVE_CCTK_INT16
+int Util_TableGetInt16Array(int handle,
+                            int N_elements, CCTK_INT16 array[],
+                            const char *key)
+{
+  return internal_get(handle,
+                      CCTK_VARIABLE_INT16, N_elements, (void *) array,
+                      key);
+}
+
+#ifdef UTIL_TABLE_FORTRAN_WRAPPERS
+void CCTK_FCALL CCTK_FNAME (Util_TableGetInt16Array)
+                           (int *retval, const int *handle,
+                            const int *N_elements, CCTK_INT16 array[],
+                            ONE_FORTSTRING_ARG);
+void CCTK_FCALL CCTK_FNAME (Util_TableGetInt16Array)
+                           (int *retval, const int *handle,
+                            const int *N_elements, CCTK_INT16 array[],
+                            ONE_FORTSTRING_ARG)
+{
+  ONE_FORTSTRING_CREATE (key)
+  *retval = Util_TableGetInt16Array (*handle, *N_elements, array, key);
+  free (key);
+}
+#endif  /* UTIL_TABLE_FORTRAN_WRAPPERS */
+#endif  /* CCTK_INT16 */
 
 /**********************************************************/
 
@@ -4908,6 +5019,7 @@ int Util_TableItSetToKey(int ihandle, const char *key)
                    CCTK_CHAR,
                    CCTK_BYTE,
                    CCTK_INT, CCTK_INT1, CCTK_INT2, CCTK_INT4, CCTK_INT8,
+                   CCTK_INT16,
                    CCTK_REAL, CCTK_REAL4, CCTK_REAL8, CCTK_REAL16,
                    CCTK_COMPLEX, CCTK_COMPLEX8, CCTK_COMPLEX16, CCTK_COMPLEX32
                 (not all of these may be supported on any given system)
@@ -5027,6 +5139,7 @@ static
                    CCTK_CHAR,
                    CCTK_BYTE,
                    CCTK_INT, CCTK_INT1, CCTK_INT2, CCTK_INT4, CCTK_INT8,
+                   CCTK_INT16,
                    CCTK_REAL, CCTK_REAL4, CCTK_REAL8, CCTK_REAL16,
                    CCTK_COMPLEX, CCTK_COMPLEX8, CCTK_COMPLEX16, CCTK_COMPLEX32
                 (not all of these may be supported on any given system)
@@ -5255,6 +5368,7 @@ static
                    CCTK_CHAR,
                    CCTK_BYTE,
                    CCTK_INT, CCTK_INT1, CCTK_INT2, CCTK_INT4, CCTK_INT8,
+                   CCTK_INT16,
                    CCTK_REAL, CCTK_REAL4, CCTK_REAL8, CCTK_REAL16,
                    CCTK_COMPLEX, CCTK_COMPLEX8, CCTK_COMPLEX16, CCTK_COMPLEX32
                 (not all of these may be supported on any given system)

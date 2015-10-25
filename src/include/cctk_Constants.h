@@ -12,25 +12,26 @@
 #define _CCTK_CONSTANTS_H_
 
 #define CCTK_VARIABLE_VOID             100
-#define CCTK_VARIABLE_BYTE             101
-#define CCTK_VARIABLE_INT              102
-#define CCTK_VARIABLE_INT1             103
-#define CCTK_VARIABLE_INT2             104
-#define CCTK_VARIABLE_INT4             105
-#define CCTK_VARIABLE_INT8             106
-#define CCTK_VARIABLE_REAL             107
-#define CCTK_VARIABLE_REAL4            108
-#define CCTK_VARIABLE_REAL8            109
-#define CCTK_VARIABLE_REAL16           110
-#define CCTK_VARIABLE_COMPLEX          111
-#define CCTK_VARIABLE_COMPLEX8         112
-#define CCTK_VARIABLE_COMPLEX16        113
-#define CCTK_VARIABLE_COMPLEX32        114
-#define CCTK_VARIABLE_CHAR             115
-#define CCTK_VARIABLE_STRING           116
-#define CCTK_VARIABLE_POINTER          117
-#define CCTK_VARIABLE_POINTER_TO_CONST 118
-#define CCTK_VARIABLE_FPOINTER         119
+#define CCTK_VARIABLE_BYTE             110
+#define CCTK_VARIABLE_INT              120
+#define CCTK_VARIABLE_INT1             121
+#define CCTK_VARIABLE_INT2             122
+#define CCTK_VARIABLE_INT4             123
+#define CCTK_VARIABLE_INT8             124
+#define CCTK_VARIABLE_INT16            125
+#define CCTK_VARIABLE_REAL             130
+#define CCTK_VARIABLE_REAL4            131
+#define CCTK_VARIABLE_REAL8            132
+#define CCTK_VARIABLE_REAL16           133
+#define CCTK_VARIABLE_COMPLEX          140
+#define CCTK_VARIABLE_COMPLEX8         141
+#define CCTK_VARIABLE_COMPLEX16        142
+#define CCTK_VARIABLE_COMPLEX32        143
+#define CCTK_VARIABLE_CHAR             150
+#define CCTK_VARIABLE_STRING           151
+#define CCTK_VARIABLE_POINTER          160
+#define CCTK_VARIABLE_POINTER_TO_CONST 161
+#define CCTK_VARIABLE_FPOINTER         162
 
 /* DEPRECATED IN BETA 12 */
 #define CCTK_VARIABLE_FN_POINTER CCTK_VARIABLE_FPOINTER

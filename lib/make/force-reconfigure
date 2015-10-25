@@ -43,3 +43,4 @@
 16 Jun 2013: Auto-configure __builtin_assume_aligned
 07 Feb 2014: Change CCTK_REAL8 etc. from #define to typedef
 25 Mar 2014: Disable support for explicitly configuring Fortran 77
+21 Oct 2014: Autoconfigure support for attribute((nonnull))

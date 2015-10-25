@@ -208,6 +208,9 @@ int Util_TableSetInt4(int handle, CCTK_INT4 value, const char *key);
 #ifdef HAVE_CCTK_INT8
 int Util_TableSetInt8(int handle, CCTK_INT8 value, const char *key);
 #endif
+#ifdef HAVE_CCTK_INT16
+int Util_TableSetInt16(int handle, CCTK_INT16 value, const char *key);
+#endif
 
 /* real numbers */
 int Util_TableSetReal(int handle, CCTK_REAL value, const char *key);
@@ -287,6 +290,11 @@ int Util_TableSetInt8Array(int handle,
                            int N_elements, const CCTK_INT8 array[],
                            const char *key);
 #endif
+#ifdef HAVE_CCTK_INT16
+int Util_TableSetInt16Array(int handle,
+                            int N_elements, const CCTK_INT16 array[],
+                            const char *key);
+#endif
 
 /* arrays of real numbers */
 int Util_TableSetRealArray(int handle,
@@ -364,6 +372,9 @@ int Util_TableGetInt4(int handle, CCTK_INT4 *value, const char *key);
 #endif
 #ifdef HAVE_CCTK_INT8
 int Util_TableGetInt8(int handle, CCTK_INT8 *value, const char *key);
+#endif
+#ifdef HAVE_CCTK_INT16
+int Util_TableGetInt16(int handle, CCTK_INT16 *value, const char *key);
 #endif
 
 /* real numbers */
@@ -444,6 +455,11 @@ int Util_TableGetInt4Array(int handle,
 int Util_TableGetInt8Array(int handle,
                            int N_elements, CCTK_INT8 array[],
                            const char *key);
+#endif
+#ifdef HAVE_CCTK_INT16
+int Util_TableGetInt16Array(int handle,
+                            int N_elements, CCTK_INT16 array[],
+                            const char *key);
 #endif
 
 /* real numbers */

@@ -26,6 +26,20 @@ else
 # Replace slashes with underscores.
 $config =~ s:[/\\]:_:g;
 
+# Check for troublesome configuration names and abort in that case
+my @invalid = ("build", "clean", "cleandeps", "cleanobjs", "config",
+               "configinfo", "delete", "editthorns", "realclean",
+               "rebuild", "reconfig", "utils", "testsuite",
+               "thornlist", "Thornguide", "update", "examples");
+for my $i (@invalid)
+{
+  if ($config =~ /-$i$/)
+  {
+    die "The suffix -$i in the configuration name $config is invalid.\n".
+        "Please choose another name for the configuration.\n";
+  }
+}
+
 # Work out if there is a user default file
 if($ENV{CACTUSRC_DIR})
 {

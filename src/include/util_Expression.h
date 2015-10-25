@@ -19,12 +19,13 @@ extern "C"
   /* Structure to hold values. */
 typedef struct 
 {
-  enum {rval,ival} type;
+  enum {rval,ival,sval} type;
   
   union 
   {
-    double rval;
-    int    ival;
+    CCTK_REAL rval;
+    CCTK_INT  ival;
+    const char *sval;
   } value;
 } uExpressionValue;
 
@@ -41,6 +42,7 @@ int Util_ExpressionEvaluate(const uExpression buffer,
                             const void *data);
 
 void Util_ExpressionFree(uExpression buffer);
+typedef int (*uExpressionEvaluator)(int, const char * const *, uExpressionValue *, const void *);
 
 #ifdef __cplusplus
 }

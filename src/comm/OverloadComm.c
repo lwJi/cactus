@@ -41,6 +41,7 @@ CCTK_FILEVERSION(comm_OverloadComm_c);
 #define CCTKi_DummyDisableGroupStorage   CactusDefaultDisableGroupStorage
 #define CCTKi_DummyGroupStorageIncrease  CactusDefaultGroupStorageIncrease
 #define CCTKi_DummyGroupStorageDecrease  CactusDefaultGroupStorageDecrease
+#define CCTKi_DummyQueryMaxTimeLevels    CactusDefaultQueryMaxTimeLevels
 
 #define CCTKi_DummyInterpGridArrays  CactusDefaultInterpGridArrays
 
@@ -60,6 +61,7 @@ CCTK_FILEVERSION(comm_OverloadComm_c);
 #undef CCTKi_DummyDisableGroupStorage
 #undef CCTKi_DummyGroupStorageIncrease
 #undef CCTKi_DummyGroupStorageDecrease
+#undef CCTKi_DummyQueryMaxTimeLevels
 
 #undef CCTKi_DummyInterpGridArrays
 
@@ -108,6 +110,7 @@ int CCTKi_SetupCommFunctions(void)
 #define CCTKi_DummyDisableGroupStorage   CactusDefaultDisableGroupStorage
 #define CCTKi_DummyGroupStorageIncrease  CactusDefaultGroupStorageIncrease
 #define CCTKi_DummyGroupStorageDecrease  CactusDefaultGroupStorageDecrease
+#define CCTKi_DummyQueryMaxTimeLevels    CactusDefaultQueryMaxTimeLevels
 
 #define CCTKi_DummyInterpGridArrays  CactusDefaultInterpGridArrays
 
@@ -127,6 +130,7 @@ int CCTKi_SetupCommFunctions(void)
 #undef CCTKi_DummyDisableGroupStorage
 #undef CCTKi_DummyGroupStorageIncrease
 #undef CCTKi_DummyGroupStorageDecrease
+#undef CCTKi_DummyQueryMaxTimeLevels
 
 #undef CCTKi_DummyInterpGridArrays
 
@@ -163,6 +167,7 @@ void CCTK_FCALL CCTK_FNAME (CCTK_SyncGroupsByDirI) (int *ierror, cGH **GH, const
 void CCTK_FCALL CCTK_FNAME (CCTK_EnableGroupComm) (int *ierror, const cGH **GH, ONE_FORTSTRING_ARG);
 void CCTK_FCALL CCTK_FNAME (CCTK_DisableGroupComm) (int *ierror, const cGH **GH, ONE_FORTSTRING_ARG);
 void CCTK_FCALL CCTK_FNAME (CCTK_EnableGroupStorage) (int *ierror, const cGH **GH, ONE_FORTSTRING_ARG);
+void CCTK_FCALL CCTK_FNAME (CCTK_QueryMaxTimeLevels) (int *ierror, const cGH **GH, const int *num_groups, const int *groups, int *status);
 void CCTK_FCALL CCTK_FNAME (CCTK_DisableGroupStorage) (int *ierror, const cGH **GH, ONE_FORTSTRING_ARG);
 void CCTK_FCALL CCTK_FNAME (CCTK_QueryGroupStorage) (int *ierror, const cGH **GH, ONE_FORTSTRING_ARG);
 
@@ -234,6 +239,14 @@ void CCTK_FCALL CCTK_FNAME (CCTK_DisableGroupStorage) (int *ierror, const cGH **
   ONE_FORTSTRING_CREATE (group_name)
   *ierror = CCTK_DisableGroupStorage (*GH, group_name);
   free (group_name);
+}
+
+void CCTK_FCALL CCTK_FNAME (CCTK_QueryMaxTimeLevels) (int *ierror, const cGH **GH,
+                                                      const int *num_groups,
+                                                      const int *groups,
+                                                      int *status)
+{
+  *ierror = CCTK_QueryMaxTimeLevels (*GH, *num_groups, groups, status);
 }
 
 void CCTK_FCALL CCTK_FNAME (CCTK_QueryGroupStorage) (int *ierror, const cGH **GH, ONE_FORTSTRING_ARG)

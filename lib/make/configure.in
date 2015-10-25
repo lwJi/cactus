@@ -472,13 +472,13 @@ AC_SUBST(LIBLINK_PREFIX)
 : ${LIBLINK_PREFIX='-l'}
 : ${LIBLINK_SUFFIX=''}
 
-dnl Checks for libraries.
+# Checks for libraries.
 
-dnl Checks for header files.
+# Checks for header files.
 
 AC_HEADER_STDC
 
-dnl Check for C99
+# Check for C99
 
 CCTK_CHECK_C99
 if test "$cctk_cv_have_c99" = "no" ; then
@@ -486,7 +486,24 @@ if test "$cctk_cv_have_c99" = "no" ; then
   exit 1
 fi
 
-dnl Checks for typedefs, structures, and compiler characteristics.
+# Check for M_PI
+CCTK_CHECK_DEFINED(M_PI, [#include <math.h>], [],
+AC_MSG_ERROR(M_PI not defined. Try adding -D_XOPEN_SOURCE to CPPFLAGS.)
+)
+
+# Check for prototype of strdup
+CCTK_C_CHECK_HAS_PROTOTYPE(strdup, [], [#include <string.h>], [],
+AC_MSG_ERROR(strdup has no C prototype. Try adding -D_XOPEN_SOURCE -D_XOPEN_SOURCE_EXTENDED to CPPFLAGS.)
+)
+
+# This will most likely never trigger since libstdc++ required
+# _GNU_SOURCE to be set. See
+# https://gcc.gnu.org/onlinedocs/libstdc++/faq.html#faq.predefined
+CCTK_CXX_CHECK_HAS_PROTOTYPE(strdup, [], [#include <string.h>], [],
+AC_MSG_ERROR(strdup has no C++ prototype. Try adding -D_XOPEN_SOURCE -D_XOPEN_SOURCE_EXTENDED to CPPFLAGS.)
+)
+
+# Checks for typedefs, structures, and compiler characteristics.
 
 if test "x$cross_compiling" = 'xno' ; then
   AC_C_BIGENDIAN
@@ -782,7 +799,21 @@ AC_CACHE_VAL(cctk_cv_have___int64,
 eval "cctk_cv_have___int64=no")
 ])
 if test "$cctk_cv_have___int64" = 'yes'; then
-  CCTK_INT8='__int64'
+  CCTK_INT8_TYPE='__int64'
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi
+
+# Check if we have __int128
+AC_MSG_CHECKING([if __int128 is defined])
+AC_CACHE_VAL(cctk_cv_have___int128,
+[AC_TRY_COMPILE(,
+[__int128 foo; return 0], eval "cctk_cv_have___int128=yes",
+eval "cctk_cv_have___int128=no")
+])
+if test "$cctk_cv_have___int128" = 'yes'; then
+  CCTK_INT16_TYPE='__int128'
   AC_MSG_RESULT(yes)
 else
   AC_MSG_RESULT(no)
@@ -794,9 +825,6 @@ if test "x$CXX" != 'xnone' ; then
   AC_LANG_SAVE
   AC_LANG_CPLUSPLUS
   CCTK_CHECK_HEADERS(vector vector.h)
-
-dnl  AC_TRY_COMPILE(, bool foo;,
-dnl AC_DEFINE(HAVE_BOOL))
   AC_LANG_RESTORE
 fi
 
@@ -823,9 +851,6 @@ if test "x$cctk_cv_header_regex_h" = 'xyes' ; then
 else
   BUILD_REGEX=yes
 fi
-
-CCTK_C_BOOL
-CCTK_CXX_BOOL
 
 AC_C_CONST
 #AC_C_INLINE
@@ -915,6 +940,11 @@ CCTK_CXX_BUILTIN_ASSUME_ALIGNED
 
 # Find out whether the compiler supports static_assert
 CCTK_CXX_STATIC_ASSERT
+
+# Find out whether the compiler supports C++11
+CCTK_CXX_AUTO_SPECIFIER
+CCTK_CXX_LAMBDA
+CCTK_CXX_RANGE_BASED_FOR
 
 if test "x$REAL16_KIND" = 'x'; then
   REAL16_KIND=16
@@ -1044,6 +1074,8 @@ AC_SUBST(EXE)
 # Integer types
 
 case "x$ac_cv_sizeof_long_long" in
+    'x16')
+      CCTK_INT16_TYPE='long long' ;;
     'x8')
       CCTK_INT8_TYPE='long long' ;;
     'x4')
@@ -1053,6 +1085,8 @@ case "x$ac_cv_sizeof_long_long" in
 esac
 
 case "x$ac_cv_sizeof_long_int" in
+    'x16')
+      CCTK_INT16_TYPE='long int' ;;
     'x8')
       CCTK_INT8_TYPE='long int' ;;
     'x4')
@@ -1062,6 +1096,8 @@ case "x$ac_cv_sizeof_long_int" in
 esac
 
 case "x$ac_cv_sizeof_int" in
+    'x16')
+      CCTK_INT16_TYPE='int' ;;
     'x8')
       CCTK_INT8_TYPE='int' ;;
     'x4')
@@ -1071,6 +1107,8 @@ case "x$ac_cv_sizeof_int" in
 esac
 
 case "x$ac_cv_sizeof_short_int" in
+    'x16')
+      CCTK_INT16_TYPE='short int' ;;
     'x8')
       CCTK_INT8_TYPE='short int' ;;
     'x4')
@@ -1080,6 +1118,15 @@ case "x$ac_cv_sizeof_short_int" in
 esac
 
 CCTK_INT1_TYPE='signed char'
+
+if test "x$DISABLE_INT16" != 'xyes' -a "x$DISABLE_INT16" != 'xno' -a "x$DISABLE_INT16" != 'x'; then
+    AC_ERROR([Didn't recognise setting of DISABLE_INT16=\"$DISABLE_INT16\"; should be either \"yes\" or \"no\" or \"\" (empty)])
+fi
+
+if test -n "$CCTK_INT16_TYPE" -a "x$DISABLE_INT16" != 'xyes' ; then
+  AC_DEFINE_UNQUOTED(CCTK_INT16_TYPE, $CCTK_INT16_TYPE)
+  AC_DEFINE(HAVE_CCTK_INT16)
+fi
 
 if test -n "$CCTK_INT8_TYPE" ; then
   AC_DEFINE_UNQUOTED(CCTK_INT8_TYPE, $CCTK_INT8_TYPE)
@@ -1375,12 +1422,6 @@ AC_SUBST(GENERAL_LIBRARIES)
 # Do we need to make sure Perl makes a backup when editting in place ?
 AC_SUBST(PERL_BACKUP_NECESSARY)
 : ${PERL_BACKUP_NECESSARY=''}
-
-# Cache stuff - this will probably change
-: ${CACHELINE_BYTES='0'}
-: ${CACHE_SIZE='0'}
-AC_DEFINE_UNQUOTED(CCTK_CACHELINE_BYTES, $CACHELINE_BYTES)
-AC_DEFINE_UNQUOTED(CCTK_CACHE_SIZE, $CACHE_SIZE)
 
 
 #########################################################################

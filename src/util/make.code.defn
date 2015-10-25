@@ -11,12 +11,10 @@ Misc.c\
 StoreHandledData.c\
 SKBinTree.c\
 Hash.c\
-Cache.c\
 Malloc.c\
 Math.c\
 String.c\
 StringList.c\
 Table.c\
 Time.c\
-Network.c\
-Expression.c
+Network.c

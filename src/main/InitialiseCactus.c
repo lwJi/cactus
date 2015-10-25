@@ -20,7 +20,6 @@
 #include "cctki_Banner.h"
 #include "cctki_Bindings.h"
 #include "cctki_Schedule.h"
-#include "cctki_Cache.h"
 
 
 static const char *rcsid = "$Header$";
@@ -102,8 +101,6 @@ int CCTKi_InitialiseCactus (int *argc, char ***argv, tFleshConfig *config)
   CCTKi_ProcessParameterDatabase (config);
 
   CCTKi_RecoverParameters (config);
-
-  CCTKi_SetupCache();
 
   CCTKi_BindingsVariablesInitialise ();
 

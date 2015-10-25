@@ -33,7 +33,6 @@ ProcessEnvironment.c\
 ProcessParameterDatabase.c\
 ScheduleInterface.c\
 SetParams.c\
-SetupCache.c\
 ShutdownCactus.c\
 Subsystems.c\
 Termination.c\

@@ -49,7 +49,7 @@ int CCTKi_RegisterDefaultTimerFunctions(void);
    @desc 
    
    @enddesc 
-   @calls     CCTKi_ActivateThorn CCTKi_SetupCache
+   @calls     CCTKi_ActivateThorn
    @calledby   
    @history 
  
