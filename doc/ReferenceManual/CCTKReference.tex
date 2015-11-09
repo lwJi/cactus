@@ -431,7 +431,8 @@ from Fortran.
   of the variable in each dimension
 
 \item[\code{CCTK\_ImpFromVarI}] [\pageref{CCTK-ImpFromVarI}]
-  Given a variable index, returns the implementation name
+  Given a variable index, returns the implementation name for
+  a public or protected variable, the thorn name otherwise.
 
 \item[\code{CCTK\_ImplementationRequires}]
   [\pageref{CCTK-ImplementationRequires}]
@@ -5946,7 +5947,8 @@ Returns the upper bounds for a given group.
 \end{SynopsisSection}
 \begin{ParameterSection}
 \begin{Parameter}{implementation}
-The implementation name
+The implementation name if the argument is the index of a public
+or protected variable, the thorn name otherwise.
 \end{Parameter}
 \begin{Parameter}{index}
 The variable index
@@ -8568,7 +8570,9 @@ call  CCTK_MaxGFDim(dim)}
 \begin{FunctionDescription}{CCTK\_MaxTimeLevels}{Decprecated. Use \code{CCTK\_DeclaredTimeLevels} instead.}
 \label{CCTK-MaxTimeLevels}
 \begin{SynopsisSection}
+\begin{Synopsis}{C}
 This function has been superseeded by \ref{CCTK-DeclaredTimeLevels}.
+\end{Synopsis}
 \end{SynopsisSection}
 \end{FunctionDescription}
 

@@ -1107,6 +1107,7 @@ sections:
 PROVIDES <\var{Capability}>
 \{
   SCRIPT <\var{Configuration script}>
+  [VERSION <\var{Version String}>]
   LANG <\var{Language}>
   [OPTIONS [<option>[,<option>]...]]
 \}
@@ -1122,6 +1123,12 @@ script may also indicate the failure to detect a capability by
 returning a non-zero exit code;  this will stop the build after the
 CST stage.
 
+All capabilities have an optional version attached to them, so that other
+thorns can depend on such a specific version. Version strings can only contain
+letters, numbers, or ``.+-:'' (dot, plus, minus, colon), and have to start with
+a number. Specifying a version number is optional. If none is given, ``0.0.1''
+is assumed.
+
 Scripts can be in any language.  If an interpreter is needed to run
 the script, for example \verb|Perl|, this should be indicated by the
 \verb|LANG| option.
@@ -1135,12 +1142,43 @@ between builds.
 \item
 
 \begin{alltt}
-REQUIRES  <\var{Capability}>
+REQUIRES  <\var{Capability}> [(\var{Comparison operator} \var{Version string})]
 \end{alltt}
 
 Informs the CST that this thorn requires a certain capability to be
 present.  If no thorn providing the capability is in the ThornList,
 the build will stop after the CST stage.
+
+Optionally, thorns can depend on a capability version. This has to be enclosed in
+parentheses, following the capability name. Inside the parenthesis, first a comparison
+operator determines the kind of dependency on the requested capability version, which
+has to be attached without spaces. Valid operators and their meaning are:
+\begin{itemize}
+ \item[$<<$] Requesting capability strictly older than given version
+ \item[$<=$] Requesting capability older or equal to given version
+ \item[$=$]  Requesting capability exactly equal to given version
+ \item[$>=$] Requesting capability newer or equal to given version
+ \item[$>>$] Requesting capability strictly newer than given version.
+\end{itemize}
+Version strings are compared from left to right. First the initial part of each
+string consisting entirely of digits is determined. The integer values of
+these two parts are compared. If a difference is found it is returned. Then the
+initial part of the remainder of each string which consists entirely of
+non-digit characters is determined. The two parts are compared lexically, and
+any difference found is returned as the result of the comparison. The lexical
+comparison is a comparison of ASCII values. These two steps (comparing and
+removing initial non-digit strings and initial digit strings) are repeated
+until a difference is found or both strings are exhausted. Spaces inside the
+parentheses are allowed, except inside the operator or version string.
+
+Example:
+
+\begin{alltt}
+REQUIRES ExampleCapability (>=2.43.2dev-1)
+\end{alltt}
+
+
+\item
 
 \begin{alltt}
 OPTIONAL <\var{Capability}>

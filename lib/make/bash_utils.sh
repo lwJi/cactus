@@ -115,12 +115,19 @@ function find_standardlib {
   local GUESS=$5
   local INCFILES=$(echo "$INCS" | perl -pe 's/(^| )+([^ \n]+)/ include\/\2/g')
 
+  # multi-arch file layouts without pkg-config
+  MACHINE=${MACHINE:=`gcc -dumpmachine 2>/dev/null`} || true
+  if [ -n "${MACHINE}" ]; then
+    MACHINE="lib/${MACHINE}"
+  fi
+  # standard paths
+
   local DIRS="$GUESS /usr /usr/local /usr/local/packages /usr/local/apps /opt /opt/local $HOME c:/packages"
   local ALLDIRS=$(echo "$DIRS" | perl -pe 's/([^ \n]+)/\1\/'"$LIBNAME"' \1/g')
   # for each of these dirs, check if all necessary files are there
   for dir in $ALLDIRS; do
     local FINCFILES=$(echo "$INCFILES" | perl -pe 's|(^\| )+([^ \n]+)| '"$dir"'/\2|g')
-    for ldir in . lib64 lib; do
+    for ldir in . lib64 lib "${MACHINE}"; do
       # different possibilities for library names
       for libext in a so dylib; do
         local LIBFILES=$(echo "$LIBS" | perl -pe 's|(^\| )+([^ \n]+)| '"$dir/$ldir"'/lib\2.'$libext'|g')
