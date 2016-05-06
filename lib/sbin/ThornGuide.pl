@@ -75,6 +75,9 @@ my $file = "documentation.tex";
 # for putting all the bibs at the end
 my $bibliography = "";
 
+# for putting the content of all the bibliographies at the end
+my @bibfiles;
+
 # specify output file 
 $outfile ||= "ThornGuide.tex";
 
@@ -259,6 +262,12 @@ sub Read_New_Thorn_Doc
                while (($line = <DOC>) && ($line !~ /\\end\{thebibliography/)) {
                   $bibliography .= $line;
                }
+               next;
+            }
+
+            next if ($cleanline =~ /\\bibliographystyle\s*\{/);
+            if ($cleanline =~ /\\bibliography\s*\{([^}]*)\}/) {
+               push @bibfiles, (map {"$path/$_"} split(",", $1));
                next;
             }
             $contents .= $_;
@@ -495,12 +504,19 @@ sub Output_Bottom
    if ($bibliography =~ /\w/) {
       #$bibliography = "\\addcontentsline\{toc\}\{chapter\}\{Bibliography\}\n\\begin\{thebibliography\}\{9\}\n$bibliography\n\\end\{thebibliography\}";
       &Start_Arr("References", $counter);
-      $bibliography = "\\begin\{thebibliography\}\{9\}\n$bibliography\n\\end\{thebibliography\}";
+      $bibliography = "\\begin\{thebibliography\}\{9\}\n$bibliography\n\\input{bibliography.bbl}\n\\end\{thebibliography\}";
       &End_Arr;
+   }
+   my $bibdata;
+   if (@bibfiles) {
+      $bibdata = "\\bibliographystyle{unsrt}\n".
+                 "\\makeatletter\\immediate\\write\\\@auxout{\\string\\bibdata{".
+                 join(",",@bibfiles)."}}\\makeatother";
    }
 
 print OUT <<EOC;
 
+$bibdata
 $bibliography
 
 \\end{document}
