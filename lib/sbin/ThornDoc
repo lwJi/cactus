@@ -27,6 +27,7 @@ for arr in `cd arrangements; echo *`; do
                             path=$abspath/arrangements/$arr/$th/doc
                             < $path/documentation.tex sed -e 's+\(\\includegraphics.*\){ *\(.*\) *}+\1{'"$path"'/\2}+g' |
                             sed -e 's+\(\\input *\){ *\(.*\) *}+\1'"$path"'/\2+g' |
+                            perl -p -e 's!\\bibliography *\{(.*)\}!"\\bibliography{".join ",", map {"'"$path"'/$_"} split ",",$1."}"!e' |
                             sed -e 's+\\begin{document}+\\newlength{\\tableWidth} \\newlength{\\maxVarWidth} \\newlength{\\paraWidth} \\newlength{\\descWidth} \\begin{document}+g' |
                             sed -e 's+\\end{document}++g' > documentation.tex
 
@@ -46,6 +47,7 @@ for arr in `cd arrangements; echo *`; do
                             
                             {
                                 pdflatex documentation < /dev/null > LATEX_MESSAGES 2>&1
+                                bibtex documentation < /dev/null > LATEX_MESSAGES 2>&1
                                 pdflatex documentation < /dev/null > LATEX_MESSAGES 2>&1
                                 pdflatex documentation < /dev/null > LATEX_MESSAGES 2>&1
                             } ||
