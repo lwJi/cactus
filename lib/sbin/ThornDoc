@@ -26,7 +26,7 @@ for arr in `cd arrangements; echo *`; do
                             rm -f documentation.tex documentation.pdf
                             path=$abspath/arrangements/$arr/$th/doc
                             < $path/documentation.tex sed -e 's+\(\\includegraphics.*\){ *\(.*\) *}+\1{'"$path"'/\2}+g' |
-                            sed -e 's+\(\\input *\)\(.*\)+\1'"$path"'/\2+g' |
+                            sed -e 's+\(\\input *\){ *\(.*\) *}+\1'"$path"'/\2+g' |
                             sed -e 's+\\begin{document}+\\newlength{\\tableWidth} \\newlength{\\maxVarWidth} \\newlength{\\paraWidth} \\newlength{\\descWidth} \\begin{document}+g' |
                             sed -e 's+\\end{document}++g' > documentation.tex
 
