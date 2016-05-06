@@ -219,15 +219,19 @@ sub Read_New_Thorn_Doc
    while (<DOC>)                            # loop through thorn doc.
    {
       print "processing: $_" if $debug;
-      if (/\\title\{(.*?(?:.*?\{.*?[^\{].*?\}.*?)?(?:.*?\{.*?[^\{].*?\}.*?)?(?:.*?\{.*?[^\{].*?\}.*?)?(?:.*?\{.*?[^\{].*?\}.*?)?(?:.*?\{.*?[^\{].*?\}.*?)?.*?)\}/) { 
+      my $cleanline = $_;
+      # remove LaTeX comments since the pattern matching below does not take them into account
+      $cleanline =~ s/^(.*?[^\\]|)%.*\n/$1\n/;
+
+      if ($cleanline =~ /\\title\{(.*?(?:.*?\{.*?[^\{].*?\}.*?)?(?:.*?\{.*?[^\{].*?\}.*?)?(?:.*?\{.*?[^\{].*?\}.*?)?(?:.*?\{.*?[^\{].*?\}.*?)?(?:.*?\{.*?[^\{].*?\}.*?)?.*?)\}/) {
 	  $title = $1; 
 	  if ($title !~ /\w/) { 
 	      print "ThornGuide.pl Warning: \\title{} does not contain any word characters.\n";
 	      #close DOC; return 0;
 	  }
       }
-      if (/\\author\{(.*?(?:.*?\{.*?[^\{].*?\}.*?)?(?:.*?\{.*?[^\{].*?\}.*?)?(?:.*?\{.*?[^\{].*?\}.*?)?(?:.*?\{.*?[^\{].*?\}.*?)?(?:.*?\{.*?[^\{].*?\}.*?)?.*?)\}/) { $author = $1;}
-      if (/\\date\{(.*?(?:.*?\{.*?[^\{].*?\}.*?)?(?:.*?\{.*?[^\{].*?\}.*?)?(?:.*?\{.*?[^\{].*?\}.*?)?(?:.*?\{.*?[^\{].*?\}.*?)?(?:.*?\{.*?[^\{].*?\}.*?)?.*?)\}/) { $date = $1; $date =~ s/.*Date:(.*?)\$\s*?\$/$1/; }
+      if ($cleanline =~ /\\author\{(.*?(?:.*?\{.*?[^\{].*?\}.*?)?(?:.*?\{.*?[^\{].*?\}.*?)?(?:.*?\{.*?[^\{].*?\}.*?)?(?:.*?\{.*?[^\{].*?\}.*?)?(?:.*?\{.*?[^\{].*?\}.*?)?.*?)\}/) { $author = $1;}
+      if ($cleanline =~ /\\date\{(.*?(?:.*?\{.*?[^\{].*?\}.*?)?(?:.*?\{.*?[^\{].*?\}.*?)?(?:.*?\{.*?[^\{].*?\}.*?)?(?:.*?\{.*?[^\{].*?\}.*?)?(?:.*?\{.*?[^\{].*?\}.*?)?.*?)\}/) { $date = $1; $date =~ s/.*Date:(.*?)\$\s*?\$/$1/; }
       if (/^% START CACTUS THORNGUIDE\s*$/) {
          $start = 1;
 
@@ -246,7 +250,11 @@ sub Read_New_Thorn_Doc
 
             next if (/^\s*?\\tableofcontents\s*?$/);
 
-            if (/\\begin\{thebibliography/) {
+            my $cleanline = $_;
+            # remove LaTeX comments since the pattern matching below does not take them into account
+            $cleanline =~ s/^(.*?[^\\]|)%.*\n/$1\n/;
+
+            if ($cleanline =~ /\\begin\{thebibliography/) {
                my $line;
                while (($line = <DOC>) && ($line !~ /\\end\{thebibliography/)) {
                   $bibliography .= $line;
