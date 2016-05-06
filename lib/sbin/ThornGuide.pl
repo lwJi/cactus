@@ -227,7 +227,7 @@ sub Read_New_Thorn_Doc
       if (/\\title\{/) {
 	 $title = &Read_LaTeX_Arg($DOC, "title");
 	 if ($title !~ /\w/) {
-	     print 'ThornGuide.pl Warning: \title{} does not contain any word characters.\n';
+	     print 'ThornGuide.pl Warning: \\title{} does not contain any word characters.\n';
 	     #close $DOC; return 0;
 	 }
       }
