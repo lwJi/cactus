@@ -9,8 +9,14 @@
  @@*/
 #include <stdio.h>
 
+#include "cctk_Capabilities.h"
 #include "cctk_Flesh.h"
 #include "CactusMainFunctions.h"
+
+#ifdef HAVE_CAPABILITY_FunHPC
+#include <funhpc/main.hpp>
+#include <funhpc/server.hpp>
+#endif
 
 static const char *rcsid = "$Header$";
 CCTK_FILEVERSION(main_flesh_cc);
@@ -53,11 +59,20 @@ extern "C" int cctki_onlyprintschedule;
    @endreturndesc
 
 @@*/
+
+#ifdef HAVE_CAPABILITY_FunHPC
+#  define main funhpc_main
+#endif
+
 int main(int argc, char **argv)
 {
   tFleshConfig ConfigData;
 
 
+#ifdef HAVE_CAPABILITY_FunHPC
+  // Disable FunHPC's multi-threaded MPI communication
+  funhpc::comm_lock();
+#endif
 
   /* Initialise any cactus specific stuff.
    */
@@ -92,6 +107,11 @@ int main(int argc, char **argv)
     CCTKi_ShutdownCactus(&ConfigData);
 
   }
+
+#ifdef HAVE_CAPABILITY_FunHPC
+  // Re-enable FunHPC's multi-threaded MPI communication
+  funhpc::comm_unlock();
+#endif
 
   return 0;
 }
