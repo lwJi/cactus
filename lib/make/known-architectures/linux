@@ -532,7 +532,7 @@ else
      ia64)
        CACHELINE_BYTES=128
        ;;
-     x86_64)
+     x86_64 | armv7l) # Most armv7l do have 32, but some may have 64. 64 is the 'safer' option.
        CACHELINE_BYTES=64
        ;;
      *)

@@ -236,6 +236,9 @@ from Fortran.
 \item[\code{CCTK\_FullName}] [\pageref{CCTK-FullName}]
   Given a variable index, returns the full name of the variable
 
+\item[\code{CCTK\_FullVarName}] [\pageref{CCTK-FullVarName}]
+  Given a variable index, returns the full name of the variable
+
 \item[\code{CCTK\_GetClockName}] [\pageref{CCTK-GetClockName}]
   Given a pointer to a clock {\t cTimerVal} structure, returns the name
   of the clock.
@@ -3700,6 +3703,63 @@ c
 \end{verbatim}
 \end{Example}
 \end{ExampleSection}
+\begin{SeeAlsoSection}
+\begin{SeeAlso}{CCTK\_FullVarName()}
+Given a variable index, returns the full name of the variable.
+\end{SeeAlso}
+\end{SeeAlsoSection}
+\end{FunctionDescription}
+
+
+
+\begin{FunctionDescription}{CCTK\_FullVarName}{Given a variable index, returns the full name of the variable}
+\label{CCTK-FullName}
+\begin{SynopsisSection}
+\begin{Synopsis}{C}
+\begin{verbatim}const char * fullname = CCTK_FullVarName( int index)\end{verbatim}
+\end{Synopsis}
+\begin{Synopsis}{Fortran}
+\begin{verbatim}
+#include "cctk.h"
+
+subroutine CCTK_FullVarName(nchars, index, fullname)
+   integer       nchars
+   integer       index
+   character*(*) fullname
+end subroutine CCTK_FullVarName
+\end{verbatim}
+\end{Synopsis}
+\end{SynopsisSection}
+\begin{ParameterSection}
+\begin{Parameter}{implementation}
+The full variable name
+\end{Parameter}
+\begin{Parameter}{index}
+The variable index
+\end{Parameter}
+\end{ParameterSection}
+\begin{Discussion}
+The full variable name must not be freed after it has been used since the
+storage is maintained by the flesh.
+
+The full variable name is in the form \code{<implementation>::<variable>} for
+\code{PUBLIC} or \code{PROTECTED} variables and \code{<thorn>::<variable>} for
+\code{PRIVATE} variables.
+\end{Discussion}
+\begin{ExampleSection}
+\begin{Example}{C}
+\begin{verbatim}
+index = CCTK_VarIndex("evolve::phi");
+name = CCTK_FullVarName(index);
+printf ("Variable name: %s", name);
+\end{verbatim}
+\end{Example}
+\end{ExampleSection}
+\begin{SeeAlsoSection}
+\begin{SeeAlso}{CCTK\_FullName()}
+Given a variable index, returns the full name of the variable.
+\end{SeeAlso}
+\end{SeeAlsoSection}
 \end{FunctionDescription}
 
 
@@ -3709,6 +3769,17 @@ c
 \begin{SynopsisSection}
 \begin{Synopsis}{C}
 \begin{verbatim}char * fullname = CCTK_FullName( int index)\end{verbatim}
+\end{Synopsis}
+\begin{Synopsis}{Fortran}
+\begin{verbatim}
+#include "cctk.h"
+
+subroutine CCTK_FullName(nchars, index, fullname)
+   integer       nchars
+   integer       index
+   character*(*) fullname
+end subroutine CCTK_FullName
+\end{verbatim}
 \end{Synopsis}
 \end{SynopsisSection}
 \begin{ParameterSection}
@@ -3722,8 +3793,9 @@ The variable index
 \begin{Discussion}
 The full variable name must be explicitly freed after it has been used.
 
-No Fortran routine exists at the moment. The full variable name is in
-the form \code{<implementation>::<variable>}
+The full variable name is in the form \code{<implementation>::<variable>} for
+\code{PUBLIC} or \code{PROTECTED} variables and \code{<thorn>::<variable>} for
+\code{PRIVATE} variables.
 \end{Discussion}
 \begin{ExampleSection}
 \begin{Example}{C}
@@ -13086,6 +13158,17 @@ call CCTK_VarIndex(index,"evolve::vect[0]")
 \begin{Synopsis}{C}
 \begin{verbatim}const char * name = CCTK_VarName( int index)\end{verbatim}
 \end{Synopsis}
+\begin{Synopsis}{Fortran}
+\begin{verbatim}
+#include "cctk.h"
+
+subroutine CCTK_VarName(nchars, index, fullname)
+   integer       nchars
+   integer       index
+   character*(*) name
+end subroutine CCTK_VarName
+\end{verbatim}
+\end{Synopsis}
 \end{SynopsisSection}
 \begin{ParameterSection}
 \begin{Parameter}{name}
@@ -13098,8 +13181,6 @@ The variable index
 \begin{Discussion}
 The pointer returned is part of a structure managed by Cactus
 and so must {\em not} be freed after use.
-
-No Fortran routine exists at the moment.
 \end{Discussion}
 \begin{ExampleSection}
 \begin{Example}{C}

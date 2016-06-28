@@ -885,8 +885,6 @@ int CCTKi_TriggerSaysGo (const cGH *GH, int variable)
                time to output the trigger
    @enddesc
    @calls      Util_GetHandledData
-               CCTK_FullName
-               CCTK_VarName
                IOMethod->TimeToOutput
                IOMethod->OutputVarAs
 

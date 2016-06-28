@@ -66,10 +66,10 @@ smart_ptr<Grammar> create_grammar() {
         "index = \\[ {int} \\]\n"
         "parindex = \\[ {expr} \\]\n"
         "active = (?i:ActiveThorns)\n"
-        "set = ({active} = ({quot}|{name})|{par}( {index}|) = ({array}|\\+?{expr})){-skipeol}\n"
-        "set_var = \\${name} = \\+?{expr}{-skipeol}\n"
+        "set = ({active} = ({quot}|{name})|{par}( {index}|) = ({array}|\\+?{expr}))\n"
+        "set_var = \\${name} = \\+?{expr}\n"
         "desc = !DESC {quot}\n"
-        "file = ^( ({desc}|{set_var}|{set}|{active}) )*$";
+        "file = ^ ({desc} |{set_var} |{set} |{active} )*$";
     //std::ofstream peg("/tmp/par.peg");
     //peg << par_file_src;
     //peg.close();

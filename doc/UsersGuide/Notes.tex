@@ -648,7 +648,7 @@ The location of include files, modules and Fortran module files is given via:
 The configuration process sets up various subdirectories and files in the
 configuration
 directory (this is either a directory
-\texttt{configs} insde the main Cactus directory, or the
+\texttt{configs} inside the main Cactus directory, or the
 directory pointed to by the \texttt{CACTUS\_CONFIGS\_DIR} environment
 variable).
 to contain the configuration specific files; these
@@ -812,7 +812,7 @@ thorns in this configuration
 
 \item [\texttt{gmake <\var{config}>-utils [UTILS$=$<\var{list}>]}] builds all
 utility programs provided by the thorns of a configuration. Individual
-utilities can be selected by giving their names (ie. name of the source file without extension) in the \texttt{UTILS} variable.
+utilities can be selected by giving their names (i.e. name of the source file without extension) in the \texttt{UTILS} variable.
 
 \end{Lentry}
 
@@ -1126,7 +1126,7 @@ If the directory doesn't exist yet, it will be created by Cactus.
   and is then written in large chunks.  This improves performance
   considerably.  Line buffering means that output is written whenever
   a newline character is encountered; full buffering means that output
-  is written, say, once 1000 characters have accmulated.  The default
+  is written, say, once 1000 characters have accumulated.  The default
   setting is line buffering for I/O that goes to a terminal, and full
   buffering for I/O that goes to a file.  For debugging purposes, it
   is sometimes useful to reduce the amount of buffering.  Error
@@ -1162,21 +1162,72 @@ as defined in the various thorns' \texttt{param.ccl} files
 The name of a parameter file is often given the suffix \texttt{.par}, but
 this is not mandatory.
 
-A parameter file is a text file whose lines are either comments
-or parameter statements.
-Comments are blank lines or lines that begin with 
-`\texttt{\#}'.
-A parameter statement
-consists of one or more parameter names, followed by
-an `\texttt{=}', followed by the value(s) for this (these) parameter(s).
-Note that all string parameters are case insensitive.
+A parameter file is a text file whose lines are either blank lines, or parameter
+statements. Comments may also be included and consist of a `\texttt{\#}' and
+all following characters. A parameter statement is an expression of the form
+\textit{Left-Hand-Side} = \textit{Right-Hand-Side}.
+The \textit{Left-Hand-Side} may be a fully qualified parameter name
+(i.e. a thorn or implementation name, two colons, and a name defined in a \verb=param.ccl= file),
+a variable name (the `\textit{\$}' character followed by a c-identifier), or
+the special variable \textit{ActiveThorns}.
+The \textit{Right-Hand-Side} is a value.
 
+Values can be any of the following (all of which are case insensitive):
+\begin{itemize}
+\item Booleans: Booleans are either \textit{true} (i.e. 1, \verb=true=, \verb=on=,
+\verb="true"=, or \verb="on"=) or \textit{false}
+(i.e. 0, \verb=false=, \verb=off=, \verb="false"=, or \verb="off"=).
+\item Integers: Integers can be positive or negative.
+\item Real numbers: Real numbers can be positive or negative and may be written
+ with exponents (e.g. \verb=1.0e-3=, or \verb=-2.94d+10=).
+\item Keywords: For keyword parameters, only the values enumerated in the parameter
+file are allowed. Like booleans, keywords may be put inside quotes. If they contain
+characters other than those found in c-identifiers, they must be.
+\item Strings: Sequences of characters delimited by quotes. If a quote is preceded by
+a backslash, it is not counted as a closing quote. A sequence of two backslashes will
+be interpreted as a single backslash.
+%\item expressions: e.g. \verb=3+4*(2-foo::bar)=. Expressions are evaluated in standard
+%order of precedenc (e.g. multiplication before addition). Expressions may contain other
+%parameters, a few basic functions (e.g. sin, cos). See detailed description below.
+%\end{itemize}
+\item Variables:
+Parameter values can also contain variables of the form
+\verb|${VARIABLE}| or \verb|$ENV{VARIABLE}|. In the first form, braces are
+required when \verb|VARIABLE| is followed by a character which is not to
+be interpreted as part of its name and optional otherwise. The second
+form provides access to all environment variables defined in the
+environment of the executable.  Table~\ref{tab:variable-expansions}
+provides a list of recognized variable strings.
+\begin{table}[htbp]
+\begin{tabular}{|ll|}
+    \hline
+    variable string & expands to\\
+    \hline
+    \verb|$ENV{envname}| &
+    the value of the environment variable \verb|$envname|\\
+    \verb|$parfile| &
+    the path to the variable file with \verb|.par| removed at the
+    end \\
+    \verb|$pi| & the numerical value of $\pi$ \\
+    \hline
+\end{tabular}
+\caption{Variable expansions recognized by the variable file parser when
+expanding variables in parameter files}\label{tab:variable-expansions}
+\end{table}
+
+In addition to the above, it is possible to create and use other variables
+by assignment, e.g.
+\begin{verbatim}
+$my_factor = 0.5
+CoordBase::dx = 3.0*$my_factor
+CoordBase::dy = 3.0*$my_factor
+\end{verbatim}
+\item Expressions:
 Parameters statements of numeric or boolean type can use arithmetic
 expressions in place of explicit values. The usual arithmetic operations
 as well as C-like transcendental functions and relational operations are
 supported. Integer division is handled as in C. Logical comparisons and
-variables expect a boolean type, but any non-null value is
-interpreted as logical true (although a warning is generated).
+variables expect a boolean type.
 The exponentiation operator \verb|**| is supported, but can only apply to two values.
 The expression \verb|3**4**2| is not supported, but \verb|(3**4)**2| or
 \verb|3**(4**2)| is supported. 
@@ -1186,9 +1237,16 @@ Table~\ref{tab:expression_functions} lists the supported functions.
 Expressions can refer to parameters which are already set by using the fully qualified
 name \texttt{thorn::parameter} as described below.
 
+The \verb|%| operator is applicable only to integers. In cases where this is
+clear, types will be converted, e.g. \verb|3.0| will convert to an integer, but not \verb|3.1|.
+If you wish to prevent the parser from evaluating an expression, you can put it
+in double quotes and make it a string.
+
+\item Array assignments:
+
 Arrays of parameters can be set by including an integer expression inside
 the square brackets following the name, e.g. \texttt{thorn::parameters[0]}.
-Optionally, an array of parameters may be set by means of a comma delimted
+Optionally, an array of parameters may be set by means of a comma delimited
 list of values inside square brackets. E.g. the following two examples
 are equivalent.
 
@@ -1203,14 +1261,9 @@ Example 2:
 thorn::parameters = [4.8, 3.2]
 \end{verbatim}
 
-The parameter parser knows about four types: integers, reals, booleans, and strings.
-The \verb|%| operator is applicable only to ints. In cases where this is
-clear, types will be converted, e.g. \verb|3.0| will convert to an integer, but not \verb|3.1|.
-If you wish to prevent the parser from evaluating an expression, you can put it
-in double quotes and make it a string.
-
 Please see the file \texttt{par.peg} in the directory
 \texttt{Cactus/src/piraha/pegs} for the full grammar describing the par file.
+\end{itemize}
 \begin{table}[htbp]
     \begin{tabular}{|ll@{\hspace{.5cm}}|ll|}
         \hline
@@ -1260,9 +1313,9 @@ Please see the file \texttt{par.peg} in the directory
     \label{tab:expression_functions}
 \end{table}
 
-The first parameter statement in any parameter file should set \texttt{ActiveThorns},
+Every parameter file should set \texttt{ActiveThorns},
 which is a special parameter that tells the
-program which \textit{thorns} are to be activated. However, one may set \texttt{ActiveThorns}
+program which \textit{thorns} are to be activated. One may set \texttt{ActiveThorns}
 on any line or lines of the par file. In the case where multiple specifications of
 ActiveThorns are supplied, the values will be concatenated.
 

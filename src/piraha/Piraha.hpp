@@ -371,6 +371,7 @@ public:
     int err_pos;
     void fail(Bracket *ex);
     void fail(char lo,char hi);
+    void fail(char lo);
     char foundChar() { return input[max_pos+1]; }
 };
 

@@ -180,6 +180,10 @@ sub ParseParFile
       $active .= " ".$1;
       $processing_active = 1;
     }
+    elsif ($line =~ m/^\s*ActiveThorns\s*=\s*(\S*)/i)
+    {
+      $active .= " ".$1;
+    }
   }
   close IN;
 
