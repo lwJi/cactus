@@ -60,8 +60,9 @@ schedule = (?i:
     )*
  \} {quote}
  )
+ifbody = {block} (else {if}|else {block}|)
 if = (?i:
-  if \( {boolexpr} \) {block} (else {if}|else {block}|)
+  if \( {boolexpr} \) {ifbody}
   )
 storage = (?i:storage: {vname}( , {vname}|([ \t]|\\\r?\n)+{vname})* )
 block = \{ (({statement}|{block}) )* \} | {statement}
