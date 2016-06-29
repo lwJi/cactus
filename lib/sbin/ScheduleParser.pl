@@ -92,6 +92,7 @@ sub create_schedule_database
     @indata = &read_file("$thorns{$thorn}/schedule.ccl");
 
     $ccl_file = "$thorns{$thorn}/schedule.ccl";
+    print "Parsing: $ccl_file\n";
     my $p=parse($ENV{CCTK_HOME}."/src/piraha/pegs/schedule.peg","$thorns{$thorn}/schedule.ccl");
     my $m = $p->matches();
     confess("Parse Error") unless($m);
@@ -115,6 +116,7 @@ sub vname
 {
   my $vname = shift;
   my $out = "";
+  confess("not a vname ".$vname->dump()) unless($vname->{name} eq "vname");
   for my $v (@{$vname->{children}}) {
     if($v->{name} eq "name") {
       $out .= "::" unless($out eq "");
@@ -129,6 +131,7 @@ sub vname
 sub qname
 {
   my $qname = shift;
+  confess("not a qname ".$qname->dump()) unless($qname->{name} eq "qname");
   my $out = vname($qname->{children}->[0]);
   if($#{$qname->{children}} > 0) {
     $out .= "(" . $qname->{children}->[1]->substring() . ")";
@@ -168,12 +171,12 @@ sub parse_schedule_statement
             if($prep_name eq "after") {
               for my $item (@{$prep->{children}->[1]->{children}}) {
                 $after_list .= "," unless($after_list eq "");
-                $after_list .= $item->substring();
+                $after_list .= vname($item);
               }
             } elsif($prep_name eq "before") {
               for my $item (@{$prep->{children}->[1]->{children}}) {
                 $before_list .= "," unless($before_list eq "");
-                $before_list .= $item->substring();
+                $before_list .= vname($item);
               }
             } elsif($prep_name eq "at") {
               $where = $prep->{children}->[1]->substring();
@@ -242,14 +245,7 @@ sub parse_schedule_statement
               for my $vname (@{$child->{children}}) {
                 if($vname->{name} eq "vname") {
                   $trigger_groups .= "," if(defined($trigger_groups));
-                  my $n = $#{$vname->{children}};
-                  if($n == 0) {
-                    $trigger_groups .= $vname->{children}->[0]->substring();
-                  } else {
-                    $trigger_groups .= $vname->{children}->[0]->substring();
-                    $trigger_groups .= "::";
-                    $trigger_groups .= $vname->{children}->[1]->substring();
-                  }
+                  $trigger_groups .= vname($vname);
                 }
               }
             } else {
@@ -257,9 +253,9 @@ sub parse_schedule_statement
             }
           }
           $description = $children[$#children]->substring();
+          # Trim off quote characters
           $description = substr($description,1,length($description)-2);
         } elsif($nm eq "storage") {
-          #($line_number, $type, $groups) = &ParseScheduleStatement($line_number, @data);
           $type = "STOR";
           my $groups = "";
           for my $vname (@{$schedule->{children}}) {
@@ -301,7 +297,7 @@ sub parse_schedule_statement
         $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks WRITES"}      = $writes_list;
         $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks READS"}       = $reads_list;
         $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks WHILE"}       = $while_list;
-        $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks IF"}          = $if_list;
+        $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks IF"}          = ""; #$if_list; is this not used?
         $$buffer .= "\@BLOCK\@$$n_blocks\n";
         $$n_blocks++;
       }
