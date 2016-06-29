@@ -31,7 +31,7 @@ boolterm = (?i:{boolneg}
 boolop = (&&|\|\|)
 boolcmp = (>=|<=|==|!=|<|>)
 boolexpr = {boolterm} ({boolop} {boolexpr} )+
-	     | {term} {boolcmp} {term} | {boolterm}
+     | {term} {boolcmp} {term} | {boolterm}
 
 lang = (?i:lang(uage|) : {name})
 group = (?i:group)
@@ -45,26 +45,26 @@ triggers = (?i:triggers?) : {vname}( , {vname}|[ \t]{vname})*
 reads = (?i:reads) : {qname}( , {qname}|[ \t]{qname})*
 writes = (?i:writes) : {qname}( , {qname}|[ \t]{qname})*
 qname = {vname}(\({region}(;{region})*\))?
-region = (everywhere|interior|boundary_ghostzones|boundary|all_timelevels|all_maps|all_reflevels)
+region = (?i:everywhere|interior|boundarywithghosts|boundary)
 tags = (?i:tags) : {assign}( , {assign}|[ \t]{assign})*
 schedule = (?i:
-	schedule ({group}|{nogroup}) {name} {prepositions} \{
-		( {storage}
+  schedule ({group}|{nogroup}) {name} {prepositions} \{
+    ( {storage}
         | {lang}
-		| {sync}
-		| {options}
-		| {triggers}
+        | {sync}
+        | {options}
+        | {triggers}
         | {reads}
         | {writes}
         | {tags}
-		)*
-	\} {quote}
-  )
+    )*
+ \} {quote}
+ )
 if = (?i:
-	if \( {boolexpr} \) {block} (else {if}|else {block}|)
+  if \( {boolexpr} \) {block} (else {if}|else {block}|)
   )
 storage = (?i:storage: {vname}( , {vname}|([ \t]|\\\r?\n)+{vname})* )
 block = \{ (({statement}|{block}) )* \} | {statement}
-	
+
 statement = ({schedule} |{if} |{storage} )
-sched = {-skipper}({statement}|{block})*$
+sched = ^ ({statement} |{block} )*$
