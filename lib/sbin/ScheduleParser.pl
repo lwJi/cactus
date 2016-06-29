@@ -102,8 +102,101 @@ sub create_schedule_database
   return @schedule_data;
 }
 
-sub parse_schedule_item
+sub parse_schedule_statement
 {
+  my $statement = shift;
+  my $schedule_db = shift;
+  my $n_blocks = shift;
+  my $buffer = shift;
+  my $thorn = shift;
+  my ($name, $as, $type, $description, $where, $language,
+       $mem_groups, $comm_groups, $trigger_groups, $sync_groups,
+       $options, $tags, $before_list, $after_list,
+       $writes_list, $reads_list, $while_list, $if_list);
+  for my $schedule (@{$statement->{children}}) {
+    my $nm = $schedule->{name};
+    $as = $nm;
+    my ($line_number,
+        $name, $as, $type, $description, $where, $language,
+        $mem_groups, $comm_groups, $trigger_groups, $sync_groups,
+        $options, $tags, $before_list, $after_list,
+        $writes_list, $reads_list, $while_list, $if_list);
+    if($nm eq "schedule") {
+      my @children = @{$schedule->{children}};
+      print "DUMP: ",$schedule->dump(),"\n";
+      $name = $children[1]->substring();
+      $as = $name;
+      if($children[0]->{name} eq "nogroup") {
+        $type = "FUNCTION"
+      } else {
+        $type = "GROUP"
+      }
+      # parse prepositions
+      for my $prep (@{$children[2]->{children}}) {
+        my $prep_name = $prep->{children}->[0]->substring();
+        $prep_name = "\L$prep_name";
+        if($prep_name eq "after") {
+          $after_list .= $prep->{children}->[1]->substring();
+        } elsif($prep_name eq "before") {
+          $before_list .= $prep->{children}->[1]->substring();
+        } elsif($prep_name eq "at") {
+          $where = $prep->{children}->[1]->substring();
+          $where =~ s/^(CCTK_|)/CCTK_/g;
+        } elsif($prep_name eq "in") {
+          $where = $prep->{children}->[1]->substring();
+        } elsif($prep_name eq "as") {
+          my $nas = $prep->{children}->[1]->substring();
+          confess("multiple use of 'as' keyword: name($name) as($as) nas($nas)")
+            if($as ne $name);
+          $as = $nas;
+          print "NAS: $$n_blocks $nas\n";
+        } else {
+          confess("unknown prep_name '$prep_name'");
+        }
+      }
+      for my $child (@children[3..$#children-1]) {
+        if($child->{name} eq "lang") {
+          $language = $child->{children}->[0]->substring();
+        } elsif($child->{name} eq "options") {
+          $options = $child->{children}->[0]->substring();
+        }
+      }
+      $description = $children[$#children]->substring();
+      $description = substr($description,1,length($description)-2);
+    } elsif($nm eq "storage") {
+      print "DUMP: ",$schedule->dump(),"\n";
+      my ($line_number, $type, $groups);# = &ParseScheduleStatement($line_number, @data);
+      #$schedule_db->{"\U$thorn\E STATEMENT_$n_statements TYPE"}        = $type;
+      #$schedule_db->{"\U$thorn\E STATEMENT_$n_statements GROUPS"}      = $groups;
+      #$buffer .= "\@STATEMENT\@$n_statements\n";
+      #$n_statements++;
+      next;
+    } elsif($nm eq "if") {
+      print "DUMP IF: ",$schedule->dump(),"\n";
+    } else {
+      confess("NOT FOUND: [".$schedule->{name}."]");
+    }
+    $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks NAME"}        = $name;
+    $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks AS"}          = $as;
+    $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks TYPE"}        = $type;
+    $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks DESCRIPTION"} = $description;
+    $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks WHERE"}       = $where;
+    $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks LANG"}        = $language;
+    $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks STOR"}        = $mem_groups;
+    $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks COMM"}        = $comm_groups;
+    $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks TRIG"}        = $trigger_groups;
+    $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks SYNC"}        = $sync_groups;
+    $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks OPTIONS"}     = $options;
+    $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks TAGS"}        = $tags;
+    $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks BEFORE"}      = $before_list;
+    $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks AFTER"}       = $after_list;
+    $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks WRITES"}      = $writes_list;
+    $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks READS"}       = $reads_list;
+    $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks WHILE"}       = $while_list;
+    $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks IF"}          = $if_list;
+    $$buffer .= "\@BLOCK\@$$n_blocks\n";
+    $$n_blocks++;
+  }
 }
 
 #/*@@
@@ -128,104 +221,21 @@ sub parse_schedule_ccl
   my($buffer);
   my($n_blocks);
   my($n_statements);
-  my($name, $as, $type, $description, $where, $language,
+  my($groups);
+  my ($name, $as, $type, $description, $where, $language,
        $mem_groups, $comm_groups, $trigger_groups, $sync_groups,
        $options, $tags, $before_list, $after_list,
        $writes_list, $reads_list, $while_list, $if_list);
-  my($groups);
 
   $buffer       = "";
   $n_blocks     = 0;
   $n_statements = 0;
 
   print "GROUP: $group\n";
-  my $nm;
   for my $statement (@{$group->{children}}) {
     if($statement->{name} eq "statement") {
-      for my $schedule (@{$statement->{children}}) {
-        $nm = $schedule->{name};
-        $as = $nm;
-        my ($line_number,
-            $name, $as, $type, $description, $where, $language,
-            $mem_groups, $comm_groups, $trigger_groups, $sync_groups,
-            $options, $tags, $before_list, $after_list,
-            $writes_list, $reads_list, $while_list, $if_list);
-        if($nm eq "schedule") {
-          my @children = @{$schedule->{children}};
-          print "DUMP: ",$schedule->dump(),"\n";
-          $name = $children[1]->substring();
-          $as = $name;
-          if($children[0]->{name} eq "nogroup") {
-            $type = "FUNCTION"
-          } else {
-            $type = "GROUP"
-          }
-          # parse prepositions
-          for my $prep (@{$children[2]->{children}}) {
-            my $prep_name = $prep->{children}->[0]->substring();
-            $prep_name = "\L$prep_name";
-            if($prep_name eq "after") {
-              $after_list .= $prep->{children}->[1]->substring();
-            } elsif($prep_name eq "before") {
-              $before_list .= $prep->{children}->[1]->substring();
-            } elsif($prep_name eq "at") {
-              $where = $prep->{children}->[1]->substring();
-              $where =~ s/^(CCTK_|)/CCTK_/g;
-            } elsif($prep_name eq "in") {
-              $where = $prep->{children}->[1]->substring();
-            } elsif($prep_name eq "as") {
-              my $nas = $prep->{children}->[1]->substring();
-              confess("multiple use of 'as' keyword: name($name) as($as) nas($nas)") if($as ne $name);
-              $as = $nas;
-              print "NAS: $n_blocks $nas\n";
-            } else {
-              confess("unknown prep_name '$prep_name'");
-            }
-          }
-          for my $child (@children[3..$#children-1]) {
-            if($child->{name} eq "lang") {
-              $language = $child->{children}->[0]->substring();
-            } elsif($child->{name} eq "options") {
-              $options = $child->{children}->[0]->substring();
-            }
-          }
-          $description = $children[$#children]->substring();
-          $description = substr($description,1,length($description)-2);
-        } elsif($nm eq "storage") {
-          print "DUMP: ",$schedule->dump(),"\n";
-          my ($line_number, $type, $groups);# = &ParseScheduleStatement($line_number, @data);
-          $schedule_db{"\U$thorn\E STATEMENT_$n_statements TYPE"}        = $type;
-          $schedule_db{"\U$thorn\E STATEMENT_$n_statements GROUPS"}      = $groups;
-          $buffer .= "\@STATEMENT\@$n_statements\n";
-          $n_statements++;
-          next;
-        } elsif($nm eq "if") {
-          print "DUMP IF: ",$schedule->dump(),"\n";
-        } else {
-          confess("NOT FOUND: [".$schedule->{name}."]");
-        }
-        $schedule_db{"\U$thorn\E BLOCK_$n_blocks NAME"}        = $name;
-        $schedule_db{"\U$thorn\E BLOCK_$n_blocks AS"}          = $as;
-        $schedule_db{"\U$thorn\E BLOCK_$n_blocks TYPE"}        = $type;
-        $schedule_db{"\U$thorn\E BLOCK_$n_blocks DESCRIPTION"} = $description;
-        $schedule_db{"\U$thorn\E BLOCK_$n_blocks WHERE"}       = $where;
-        $schedule_db{"\U$thorn\E BLOCK_$n_blocks LANG"}        = $language;
-        $schedule_db{"\U$thorn\E BLOCK_$n_blocks STOR"}        = $mem_groups;
-        $schedule_db{"\U$thorn\E BLOCK_$n_blocks COMM"}        = $comm_groups;
-        $schedule_db{"\U$thorn\E BLOCK_$n_blocks TRIG"}        = $trigger_groups;
-        $schedule_db{"\U$thorn\E BLOCK_$n_blocks SYNC"}        = $sync_groups;
-        $schedule_db{"\U$thorn\E BLOCK_$n_blocks OPTIONS"}     = $options;
-        $schedule_db{"\U$thorn\E BLOCK_$n_blocks TAGS"}        = $tags;
-        $schedule_db{"\U$thorn\E BLOCK_$n_blocks BEFORE"}      = $before_list;
-        $schedule_db{"\U$thorn\E BLOCK_$n_blocks AFTER"}       = $after_list;
-        $schedule_db{"\U$thorn\E BLOCK_$n_blocks WRITES"}      = $writes_list;
-        $schedule_db{"\U$thorn\E BLOCK_$n_blocks READS"}       = $reads_list;
-        $schedule_db{"\U$thorn\E BLOCK_$n_blocks WHILE"}       = $while_list;
-        $schedule_db{"\U$thorn\E BLOCK_$n_blocks IF"}          = $if_list;
-      }
+      &parse_schedule_statement($statement,\%schedule_db,\$n_blocks,\$buffer,$thorn);
     }
-    $buffer .= "\@BLOCK\@$n_blocks\n";
-    $n_blocks++ if($nm eq "schedule");
   }
   $schedule_db{"\U$thorn\E N_BLOCKS"}     = $n_blocks;
   $schedule_db{"\U$thorn\E FILE"}         = $buffer;
