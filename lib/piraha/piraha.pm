@@ -865,8 +865,22 @@ sub groupCount
 sub substring 
 {
   my $self = shift;
-  my $n = shift;
   return substr($self->{text},$self->{start},$self->{end}-$self->{start});
+}
+
+sub mkstring
+{
+  my $self = shift;
+  confess("bad self") unless(defined($self->{children}) and ref($self->{children}) eq "ARRAY");
+  if($#{$self->{children}} < 0) {
+    return $self->substring();
+  } else {
+    my $buf = "";
+    for my $child (@{$self->{children}}) {
+      $buf .= $child->mkstring();
+    }
+    return $buf;
+  }
 }
 
 sub esc

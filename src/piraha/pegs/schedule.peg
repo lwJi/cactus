@@ -44,7 +44,7 @@ storage = (?i:storage) : {vname}( , {vname}|[ \t]{vname})*
 triggers = (?i:triggers?) : {vname}( , {vname}|[ \t]{vname})*
 reads = (?i:reads) : {qname}( , {qname}|[ \t]{qname})*
 writes = (?i:writes) : {qname}( , {qname}|[ \t]{qname})*
-qname = {vname}(\({region}(;{region})*\))?
+qname = {vname}(\({region}\))?
 region = (?i:everywhere|interior|boundarywithghosts|boundary)
 tags = (?i:tags) : {assign}( , {assign}|[ \t]{assign})*
 schedule = (?i:
@@ -60,7 +60,8 @@ schedule = (?i:
     )*
  \} {quote}
  )
-ifbody = {block} (else {if}|else {block}|)
+else = else
+ifbody = {block} ({else} {if}|{else} {block}|)
 if = (?i:
   if \( {boolexpr} \) {ifbody}
   )

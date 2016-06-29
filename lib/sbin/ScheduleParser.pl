@@ -102,19 +102,49 @@ sub create_schedule_database
   return @schedule_data;
 }
 
+sub listify
+{
+  my $array = shift;
+  if($#$array < 0) {
+    return "";
+  } elsif($#$array == 0) {
+    return $array->[0];
+  } else {
+    return join(",",@$array);
+  }
+}
+
+sub vname
+{
+  my $vname = shift;
+  my $out = "";
+  for my $v (@{$vname->{children}}) {
+    if($v->{name} eq "name") {
+      $out .= "::" unless($out eq "");
+      $out .= $v->substring();
+    } else {
+      $out .= "[" . $v->substring() . "]";
+    }
+  }
+  return $out;
+}
+
 sub parse_schedule_statement
 {
   my $group = shift;
   my $schedule_db = shift;
   my $n_blocks = shift;
+  my $n_statements = shift;
   my $buffer = shift;
   my $thorn = shift;
-  my ($name, $as, $type, $description, $where, $language,
-       $mem_groups, $comm_groups, $trigger_groups, $sync_groups,
-       $options, $tags, $before_list, $after_list,
-       $writes_list, $reads_list, $while_list, $if_list);
   for my $statement (@{$group->{children}}) {
     if($statement->{name} eq "statement") {
+      my ($name, $as, $type, $description, $where, $language,
+       $mem_groups, $comm_groups, $trigger_groups, $sync_groups,
+       $options, $tags, $before_list, $after_list,
+       $writes_list, $reads_list, $while_list, $if_list,$qthorn);
+      $after_list = [];
+      $before_list = [];
       for my $schedule (@{$statement->{children}}) {
         my $nm = $schedule->{name};
         if($nm eq "schedule") {
@@ -132,15 +162,26 @@ sub parse_schedule_statement
             my $prep_name = $prep->{children}->[0]->substring();
             $prep_name = "\L$prep_name";
             if($prep_name eq "after") {
-              $after_list .= $prep->{children}->[1]->substring();
+              for my $item (@{$prep->{children}->[1]->{children}}) {
+                $after_list->[$#$after_list+1] = $item->substring();
+              }
             } elsif($prep_name eq "before") {
-              $before_list .= $prep->{children}->[1]->substring();
+              #$before_list->[$#$before_list+1] = $prep->{children}->[1]->substring();
+              for my $item (@{$prep->{children}->[1]->{children}}) {
+                $before_list->[$#$before_list+1] = $item->substring();
+              }
             } elsif($prep_name eq "at") {
               $where = $prep->{children}->[1]->substring();
-              $where =~ s/^(CCTK_|)/CCTK_/g;
+              $where =~ s/^(CCTK_|)/CCTK_/gi;
               $where = "\U$where";
             } elsif($prep_name eq "in") {
               $where = $prep->{children}->[1]->substring();
+            } elsif($prep_name eq "while") {
+              $while_list = "";
+              for my $w (@{$prep->{children}->[1]->{children}}) {
+                $while_list .= "," unless($while_list eq "");
+                $while_list .= vname($w);
+              }
             } elsif($prep_name eq "as") {
               my $nas = $prep->{children}->[1]->substring();
               confess("empty as ".$prep->dump()) if($nas eq "");
@@ -155,24 +196,125 @@ sub parse_schedule_statement
           for my $child (@children[3..$#children-1]) {
             if($child->{name} eq "lang") {
               $language = $child->{children}->[0]->substring();
-              print "SETTING LANG: $language for $name\n";
             } elsif($child->{name} eq "options") {
-              $options = $child->{children}->[0]->substring();
+              for my $opt (@{$child->{children}}) {
+                $options .= "," unless($options eq "");
+                $options .= $opt->substring(); #$child->{children}->[0]->substring();
+              }
+            } elsif($child->{name} eq "storage") {
+              for my $vname (@{$child->{children}}) {
+                if($vname->{name} eq "vname") {
+                  $mem_groups .= "," if(defined($mem_groups));
+                  $mem_groups .= vname($vname);
+                }
+              }
+            } elsif($child->{name} eq "writes") {
+              my $qthorn = "";
+              for my $qname (@{$child->{children}}) {
+                print "QNAME: ",$qname->dump(),"\n";
+                if($qname->{name} eq "qname") {
+                  $writes_list .= "," if(defined($writes_list));
+                  my $n = $#{$qname->{children}->[0]->{children}};
+                  if($n == 0) {
+                    #$writes_list .= $qthorn;
+                    #$writes_list .= "::";
+                    $writes_list .= $qname->{children}->[0]->{children}->[0]->substring();
+                  } else {
+                    $qthorn = $qname->{children}->[0]->{children}->[0]->substring();
+                    $writes_list .= $qthorn;
+                    $writes_list .= "::";
+                    $writes_list .= $qname->{children}->[0]->{children}->[1]->substring();
+                  }
+                }
+              }
+            } elsif($child->{name} eq "reads") {
+              my $qthorn = "";
+              for my $qname (@{$child->{children}}) {
+                print "QNAME: ",$qname->dump(),"\n";
+                if($qname->{name} eq "qname") {
+                  $reads_list .= "," if(defined($reads_list));
+                  my $n = $#{$qname->{children}->[0]->{children}};
+                  if($n == 0) {
+                    #$reads_list .= $qthorn;
+                    #$reads_list .= "::";
+                    $reads_list .= $qname->{children}->[0]->{children}->[0]->substring();
+                  } else {
+                    $qthorn = $qname->{children}->[0]->{children}->[0]->substring();
+                    $reads_list .= $qthorn;
+                    $reads_list .= "::";
+                    $reads_list .= $qname->{children}->[0]->{children}->[1]->substring();
+                  }
+                }
+              }
+            } elsif($child->{name} eq "sync") {
+              $sync_groups = undef;
+              print "SYNC: ",$child->dump(),"\n";
+              for my $vname (@{$child->{children}}) {
+                if($vname->{name} eq "vname") {
+                  $sync_groups .= "," if(defined($sync_groups));
+                  my $n = $#{$vname->{children}};
+                  if($n == 0) {
+                    $sync_groups .= $vname->{children}->[0]->substring();
+                  } else {
+                    $sync_groups .= $vname->{children}->[0]->substring();
+                    $sync_groups .= "::";
+                    $sync_groups .= $vname->{children}->[1]->substring();
+                  }
+                }
+              }
+            } elsif($child->{name} eq "triggers") {
+              $trigger_groups = undef;
+              print "TRIGGER: ",$child->dump(),"\n";
+              for my $vname (@{$child->{children}}) {
+                if($vname->{name} eq "vname") {
+                  $trigger_groups .= "," if(defined($trigger_groups));
+                  my $n = $#{$vname->{children}};
+                  if($n == 0) {
+                    $trigger_groups .= $vname->{children}->[0]->substring();
+                  } else {
+                    $trigger_groups .= $vname->{children}->[0]->substring();
+                    $trigger_groups .= "::";
+                    $trigger_groups .= $vname->{children}->[1]->substring();
+                  }
+                }
+              }
+            } else {
+              print "DUMP CHILD: ",$child->dump(),"\n";
+              confess("child error: ".$child->{name});
             }
           }
           $description = $children[$#children]->substring();
           $description = substr($description,1,length($description)-2);
         } elsif($nm eq "storage") {
-          print "DUMP: ",$schedule->dump(),"\n";
+          print "DUMP Store: ",$schedule->dump(),"\n";
+          #($line_number, $type, $groups) = &ParseScheduleStatement($line_number, @data);
+          $type = "STOR";
+          my $groups = "";
+          for my $vname (@{$schedule->{children}}) {
+            if($vname->{name} eq "vname") {
+              $groups .= " " unless($groups eq "");
+              $groups .= vname($vname);
+            }
+          }
+          $schedule_db->{"\U$thorn\E STATEMENT_$$n_statements TYPE"}        = $type;
+          $schedule_db->{"\U$thorn\E STATEMENT_$$n_statements GROUPS"}      = $groups;
+          $$buffer .= "\@STATEMENT\@$$n_statements\n";
+          $$n_statements++;
           next;
         } elsif($nm eq "if") {
           print "DUMP IF: ",$schedule->{children}->[1]->dump(),"\n";
           # Parse the ifbody group
+          $$buffer .= "if (".$schedule->{children}->[0]->substring().")\n";
           &parse_schedule_statement(
-            $schedule->{children}->[1],$schedule_db,$n_blocks,$buffer,$thorn);
+            $schedule->{children}->[1],$schedule_db,$n_blocks,$n_statements,$buffer,$thorn);
+          next;
         } else {
           confess("NOT FOUND: [".$schedule->{name}."]");
         }
+        if($type eq "FUNCTION") {
+          print "LANG: ($name) ($language)\n";
+        }
+        print "NAME-BLOCK: ($name) ($$n_blocks)\n";
         $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks NAME"}        = $name;
         $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks AS"}          = $as;
         $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks TYPE"}        = $type;
@@ -185,17 +327,29 @@ sub parse_schedule_statement
         $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks SYNC"}        = $sync_groups;
         $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks OPTIONS"}     = $options;
         $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks TAGS"}        = $tags;
-        $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks BEFORE"}      = $before_list;
-        $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks AFTER"}       = $after_list;
+        $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks BEFORE"}      = listify($before_list);
+        $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks AFTER"}       = listify($after_list);
         $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks WRITES"}      = $writes_list;
         $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks READS"}       = $reads_list;
         $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks WHILE"}       = $while_list;
         $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks IF"}          = $if_list;
         $$buffer .= "\@BLOCK\@$$n_blocks\n";
         $$n_blocks++;
+        print "NEW BLOCK: $$n_blocks\n";
       }
     } elsif($statement->{name} eq "block") {
-      &parse_schedule_statement($statement,$schedule_db,$n_blocks,$buffer,$thorn);
+      $$buffer .= "{\n";
+      &parse_schedule_statement($statement,$schedule_db,$n_blocks,$n_statements,$buffer,$thorn);
+      $$buffer .= "}\n";
+    } elsif($statement->{name} eq "if") {
+      # Parse the ifbody group
+      $$buffer .= "if (".$statement->{children}->[0]->substring().")\n";
+      &parse_schedule_statement(
+         $statement->{children}->[1],$schedule_db,$n_blocks,$n_statements,$buffer,$thorn);
+    } elsif($statement->{name} eq "else") {
+      $$buffer .= "else ";
+    } else {
+      confess("statement error: <".$statement->{name}.">");
     }
   }
 }
@@ -233,7 +387,7 @@ sub parse_schedule_ccl
   $n_statements = 0;
 
   print "GROUP: $group\n";
-  &parse_schedule_statement($group,\%schedule_db,\$n_blocks,\$buffer,$thorn);
+  &parse_schedule_statement($group,\%schedule_db,\$n_blocks,\$n_statements,\$buffer,$thorn);
   $schedule_db{"\U$thorn\E N_BLOCKS"}     = $n_blocks;
   $schedule_db{"\U$thorn\E FILE"}         = $buffer;
   $schedule_db{"\U$thorn\E N_STATEMENTS"} = $n_statements;
@@ -253,6 +407,9 @@ sub parse_schedule_ccl
        $options, $tags, $before_list, $after_list,
        $writes_list, $reads_list, $while_list, $if_list) =
            &ParseScheduleBlock($thorn,$line_number, @data);
+
+      $after_list =~ s/[\s,]+/,/g;
+      $before_list =~ s/[\s,]+/,/g;
 
       $schedule_db2{"\U$thorn\E BLOCK_$n_blocks NAME"}        = $name;
       $schedule_db2{"\U$thorn\E BLOCK_$n_blocks AS"}          = $as;
@@ -304,8 +461,28 @@ sub parse_schedule_ccl
   for my $k (sort keys %schedule_db2) {
     my $v1 = "".$schedule_db{$k};
     my $v2 = "".$schedule_db2{$k};
+    $v1 =~ s/\}\s+else/\} else/g;
+    $v2 =~ s/\}\s+else/\} else/g;
+    $v2 =~ s/\)\s+\{/)\n{/g;
+    $v2 =~ s/\n[ \t]+/\n/g;
+    $v2 =~ s/\bif\b\s*/if /g;
+    $v2 =~ s/\s+\n/\n/g;
+    $v2 =~ s/ $//;
+    $v2 =~ s/else\s+\{/else {/g;
+    my $fd = new FileHandle;
+    open($fd,">v1") or die;
+    print $fd $v1,"\n";
+    close($fd);
+    open($fd,">v2") or die;
+    print $fd $v2,"\n";
+    close($fd);
     if($v1 ne $v2) {
-      confess("key error($k): '$v1' != '$v2'");
+      my $nk = $k;
+      $nk =~ s/\s+[A-Z]+$/ NAME/;
+      my $name = $schedule_db{$nk};
+      my $name2 = $schedule_db2{$nk};
+      confess("key error($nk): new:'$name' != old:'$name2'") if($name ne $name2);
+      confess("key error($k)($name): new:'$v1' != old:'$v2'");
     }
   }
 
@@ -710,6 +887,7 @@ sub ParseScheduleStatement
   $type = "\U$1\E";
 
   $groups = $2;
+  $groups =~ s/[\s,]+/ /g;
 
   return ($line_number, $type, $groups);
 }
