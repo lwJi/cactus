@@ -92,7 +92,6 @@ sub create_schedule_database
     @indata = &read_file("$thorns{$thorn}/schedule.ccl");
 
     $ccl_file = "$thorns{$thorn}/schedule.ccl";
-    print "parse('$thorns{$thorn}/schedule.ccl');\n";
     my $p=parse($ENV{CCTK_HOME}."/src/piraha/pegs/schedule.peg","$thorns{$thorn}/schedule.ccl");
     my $m = $p->matches();
     confess("Parse Error") unless($m);
@@ -155,7 +154,6 @@ sub parse_schedule_statement
         my $nm = $schedule->{name};
         if($nm eq "schedule") {
           my @children = @{$schedule->{children}};
-          print "DUMP: ",$schedule->dump(),"\n";
           $name = $children[1]->substring();
           $as = $name;
           if($children[0]->{name} eq "nogroup") {
@@ -233,7 +231,6 @@ sub parse_schedule_statement
               }
             } elsif($child->{name} eq "sync") {
               $sync_groups = undef;
-              print "SYNC: ",$child->dump(),"\n";
               for my $vname (@{$child->{children}}) {
                 if($vname->{name} eq "vname") {
                   $sync_groups .= "," if(defined($sync_groups));
@@ -242,7 +239,6 @@ sub parse_schedule_statement
               }
             } elsif($child->{name} eq "triggers") {
               $trigger_groups = undef;
-              print "TRIGGER: ",$child->dump(),"\n";
               for my $vname (@{$child->{children}}) {
                 if($vname->{name} eq "vname") {
                   $trigger_groups .= "," if(defined($trigger_groups));
@@ -257,14 +253,12 @@ sub parse_schedule_statement
                 }
               }
             } else {
-              print "DUMP CHILD: ",$child->dump(),"\n";
               confess("child error: ".$child->{name});
             }
           }
           $description = $children[$#children]->substring();
           $description = substr($description,1,length($description)-2);
         } elsif($nm eq "storage") {
-          print "DUMP Store: ",$schedule->dump(),"\n";
           #($line_number, $type, $groups) = &ParseScheduleStatement($line_number, @data);
           $type = "STOR";
           my $groups = "";
@@ -280,7 +274,6 @@ sub parse_schedule_statement
           $$n_statements++;
           next;
         } elsif($nm eq "if") {
-          print "DUMP IF: ",$schedule->{children}->[1]->dump(),"\n";
           # Parse the ifbody group
           $$buffer .= "if (".$schedule->{children}->[0]->substring().")\n";
           &parse_schedule_statement(
@@ -290,9 +283,7 @@ sub parse_schedule_statement
           confess("NOT FOUND: [".$schedule->{name}."]");
         }
         if($type eq "FUNCTION") {
-          print "LANG: ($name) ($language)\n";
         }
-        print "NAME-BLOCK: ($name) ($$n_blocks)\n";
         $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks NAME"}        = $name;
         $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks AS"}          = $as;
         $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks TYPE"}        = $type;
@@ -313,7 +304,6 @@ sub parse_schedule_statement
         $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks IF"}          = $if_list;
         $$buffer .= "\@BLOCK\@$$n_blocks\n";
         $$n_blocks++;
-        print "NEW BLOCK: $$n_blocks\n";
       }
     } elsif($statement->{name} eq "block") {
       $$buffer .= "{\n";
@@ -364,7 +354,6 @@ sub parse_schedule_ccl
   $n_blocks     = 0;
   $n_statements = 0;
 
-  print "GROUP: $group\n";
   &parse_schedule_statement($group,\%schedule_db,\$n_blocks,\$n_statements,\$buffer,$thorn);
   $schedule_db{"\U$thorn\E N_BLOCKS"}     = $n_blocks;
   $schedule_db{"\U$thorn\E FILE"}         = $buffer;
