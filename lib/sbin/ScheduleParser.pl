@@ -182,15 +182,21 @@ sub parse_schedule_statement
               $where = $prep->{children}->[1]->substring();
               $where =~ s/^(CCTK_|)/CCTK_/gi;
               $where = "\U$where";
-              confess("Bad clause 'at $where' in $ccl_file") unless(defined($schedule_bins{$where}));
+              #confess("Bad clause 'at $where' in $ccl_file") unless(defined($schedule_bins{$where}));
             } elsif($prep_name eq "in") {
               $where = $prep->{children}->[1]->substring();
-              confess("Bad clause 'in $where' in $ccl_file") if(defined($schedule_bins{"\U$where"}));
+              #confess("Bad clause 'in $where' in $ccl_file") if(defined($schedule_bins{"\U$where"}));
             } elsif($prep_name eq "while") {
               $while_list = "";
               for my $w (@{$prep->{children}->[1]->{children}}) {
                 $while_list .= "," unless($while_list eq "");
                 $while_list .= vname($w);
+              }
+            } elsif($prep_name eq "if") {
+              $if_list = "";
+              for my $w (@{$prep->{children}->[1]->{children}}) {
+                $if_list .= "," unless($if_list eq "");
+                $if_list .= vname($w);
               }
             } elsif($prep_name eq "as") {
               my $nas = $prep->{children}->[1]->substring();
@@ -233,7 +239,6 @@ sub parse_schedule_statement
                 }
               }
             } elsif($child->{name} eq "sync") {
-              $sync_groups = undef;
               for my $vname (@{$child->{children}}) {
                 if($vname->{name} eq "vname") {
                   $sync_groups .= "," if(defined($sync_groups));
@@ -241,7 +246,6 @@ sub parse_schedule_statement
                 }
               }
             } elsif($child->{name} eq "triggers") {
-              $trigger_groups = undef;
               for my $vname (@{$child->{children}}) {
                 if($vname->{name} eq "vname") {
                   $trigger_groups .= "," if(defined($trigger_groups));
@@ -297,7 +301,7 @@ sub parse_schedule_statement
         $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks WRITES"}      = $writes_list;
         $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks READS"}       = $reads_list;
         $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks WHILE"}       = $while_list;
-        $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks IF"}          = ""; #$if_list; is this not used?
+        $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks IF"}          = $if_list;
         $$buffer .= "\@BLOCK\@$$n_blocks\n";
         $$n_blocks++;
       }
@@ -424,14 +428,19 @@ sub parse_schedule_ccl
   for my $k (sort keys %schedule_db2) {
     my $v1 = "".$schedule_db{$k};
     my $v2 = "".$schedule_db2{$k};
-    $v1 =~ s/\}\s+else/\} else/g;
-    $v2 =~ s/\}\s+else/\} else/g;
-    $v2 =~ s/\)\s+\{/)\n{/g;
-    $v2 =~ s/\n[ \t]+/\n/g;
+    #$v1 =~ s/\}\s+else/\} else/g;
+    #$v2 =~ s/\}\s+else/\} else/g;
+    #$v2 =~ s/\)\s+\{/)\n{/g;
+    #$v2 =~ s/\n[ \t]+/\n/g;
     $v2 =~ s/\bif\b\s*/if /g;
-    $v2 =~ s/\s+\n/\n/g;
+    #$v2 =~ s/\s+\n/\n/g;
     $v2 =~ s/ $//;
-    $v2 =~ s/else\s+\{/else {/g;
+    #$v2 =~ s/else\s+\{/else {/g;
+    $v1 =~ s/\(\s+/\(/g;
+    $v2 =~ s/\(\s+/\(/g;
+    $v1 =~ s/\s+/\n/g;
+    $v2 =~ s/\s+/\n/g;
+    $v2 =~ s/\)\{/\)\n\{/g;
     my $fd = new FileHandle;
     open($fd,">v1") or die;
     print $fd $v1,"\n";
