@@ -877,6 +877,7 @@ sub mkstring
   } else {
     my $buf = "";
     for my $child (@{$self->{children}}) {
+      $buf .= " " unless($buf eq "");
       $buf .= $child->mkstring();
     }
     return $buf;
@@ -969,7 +970,9 @@ sub matches
 {
   my $self = shift;
   confess("no pat") unless(defined($self->{pat}));
-  return $self->{pat}->match($self);
+  my $ret = $self->{pat}->match($self);
+  print "ret=",$ret,"\n";
+  return $ret;
 }
 
 sub groupCount
