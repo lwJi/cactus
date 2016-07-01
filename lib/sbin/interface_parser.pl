@@ -1,5 +1,5 @@
 #! /usr/bin/perl -w
-use strict;
+#use strict;
 
 my $ccl_file = undef;
 
@@ -764,52 +764,52 @@ sub parse_interface_ccl
       $interface_data_ref->{"\U$thorn\E IMPLEMENTS"} = $fin->{children}->[0]->substring();
     } elsif($fin->{name} eq "INHERITS") {
       for my $ch (@{$fin->{children}}) {
-        $interface_data_ref->{"\U$thorn\E INHERITS"} .= " ".$ch->substring();
+        $interface_data_ref->{"\U$thorn\E INHERITS"} .= $ch->substring()." ";
       }
     } elsif($fin->{name} eq "INCLUDE") {
       if($fin->{children}->[0]->{name} eq "what" and lc($fin->{children}->[0]->substring()) eq "header") {
         my $h1 = $fin->{children}->[1]->substring();
         my $h2 = $fin->{children}->[2]->substring();
-        $interface_data_ref->{"\U$thorn ADD HEADER\E"} .= " ".$h1;
+        $interface_data_ref->{"\U$thorn ADD HEADER\E"} .= $h1." ";
         $interface_data_ref->{"\U$thorn ADD HEADER $h1 TO\E"} = $h2;
       } elsif($fin->{children}->[0]->{name} eq "what" and lc($fin->{children}->[0]->substring()) eq "source") {
         my $h1 = $fin->{children}->[1]->substring();
         my $h2 = $fin->{children}->[2]->substring();
-        $interface_data_ref->{"\U$thorn ADD SOURCE\E"} .= " ".$h1;
+        $interface_data_ref->{"\U$thorn ADD SOURCE\E"} .= $h1." ";
         $interface_data_ref->{"\U$thorn ADD SOURCE $h1 TO\E"} = $h2;
       }
     } elsif($fin->{name} eq "FUNCTION") {
       my $func = $fin->{children}->[0];
       if($func->{name} eq "FUNCTION_ALIAS") {
         my $ret = uc($func->{children}->[0]->substring());
-        $ret = "void" if($ret eq "SUBROUTINE");
+        $ret = "void " if($ret eq "SUBROUTINE");
         my $name = $func->{children}->[1]->substring();
         my $args = $func->{children}->[2];
         die $func->dump() unless(defined($args));
-        $interface_data_ref->{"\U$thorn\E FUNCTIONS"} .= " ".$name;
+        $interface_data_ref->{"\U$thorn\E FUNCTIONS"} .= $name." ";
         $interface_data_ref->{"\U$thorn\E FUNCTION $name RET"} = $ret;
         $interface_data_ref->{"\U$thorn\E FUNCTION $name ARGS"} = print_args($args);
       } elsif($func->{name} eq "PROVIDES_FUN") {
         my $fname = $func->{children}->[0]->substring();
         my $with  = $func->{children}->[1]->substring();
         my $lang  = $func->{children}->[2]->substring();
-        $interface_data_ref->{"\U$thorn\E PROVIDES FUNCTION"} .= " ".$fname;
+        $interface_data_ref->{"\U$thorn\E PROVIDES FUNCTION"} .= $fname." ";
         $interface_data_ref->{"\U$thorn\E PROVIDES FUNCTION $fname LANG"} = uc($lang);
         $interface_data_ref->{"\U$thorn\E PROVIDES FUNCTION $fname WITH"} = $with;
       } elsif($func->{name} eq "REQUIRES_FUN") {
         my $fname = $func->{children}->[0]->substring();
-        $interface_data_ref->{"\U$thorn\E REQUIRES FUNCTION"} .= " ".$fname;
+        $interface_data_ref->{"\U$thorn\E REQUIRES FUNCTION"} .= $fname." ";
       } elsif($func->{name} eq "USES") {
         my $sub = $func->{children}->[0];
         if($sub->{name} eq "USES_FUN") {
           my $fname = $sub->{children}->[0]->substring();
-          $interface_data_ref->{"\U$thorn\E USES FUNCTION"} .= " ".$fname;
+          $interface_data_ref->{"\U$thorn\E USES FUNCTION"} .= $fname." ";
         } else { # USES_INC
           my @ch = @{$sub->{children}};
           my $what = uc($ch[0]->substring());
           if($what eq "HEADER" or $what eq "") {
             for(my $i=1;$i<=$#ch;$i++) {
-              $interface_data_ref->{"\U$thorn\E USES HEADER"} .= " ".$ch[$i]->substring();
+              $interface_data_ref->{"\U$thorn\E USES HEADER"} .= $ch[$i]->substring()." ";
             }
           }
         }
@@ -1394,16 +1394,18 @@ sub parse_interface_ccl
   for my $k (sort keys %{$interface_data_ref2}) {
     my $v1 = "".$interface_data_ref->{$k};
     my $v2 = "".$interface_data_ref2->{$k};
-    $v1 =~ s/\s+/\n/g;
-    $v2 =~ s/\s+/\n/g;
-    $v1 =~ s/\s+$//;
-    $v2 =~ s/\s+$//;
-    $v1 =~ s/^\s+//;
-    $v2 =~ s/^\s+//;
-    $v1 =~ s/\s\(/\(/g;
-    $v2 =~ s/\s\(/\(/g;
-    $v1 =~ s/\s*,\s*/,\n/g;
-    $v2 =~ s/\s*,\s*/,\n/g;
+    unless($v1 =~ /VOID/) {
+      $v1 =~ s/\s+/\n/g;
+      $v2 =~ s/\s+/\n/g;
+      $v1 =~ s/\s+$//;
+      $v2 =~ s/\s+$//;
+      $v1 =~ s/^\s+//;
+      $v2 =~ s/^\s+//;
+      $v1 =~ s/\s\(/\(/g;
+      $v2 =~ s/\s\(/\(/g;
+      $v1 =~ s/\s*,\s*/,\n/g;
+      $v2 =~ s/\s*,\s*/,\n/g;
+    }
     my $fd = new FileHandle;
     open($fd,">v1") or die;
     print $fd $v1,"\n";
@@ -1414,6 +1416,7 @@ sub parse_interface_ccl
     if($v1 ne $v2) {
       confess("key error:($k) new=($v1) old=($v2)");
     }
+    $interface_data_ref->{$k} = $interface_data_ref2->{$k};
   }
 }
 
