@@ -1,5 +1,5 @@
 #! /usr/bin/perl -w
-#use strict;
+use strict;
 
 my $ccl_file = undef;
 
@@ -15,6 +15,26 @@ sub trim_quotes
 {
   my $str = shift;
   return substr($str,1,length($str)-2);
+}
+
+sub expr
+{
+  my $expr = shift;
+  my $nm = $expr->{name};
+  if($nm eq "expr" or $nm eq "addexpr" or $nm eq "mulexpr" or $nm eq "powexpr") {
+    my $buf = "";
+    for my $c (@{$expr->{children}}) {
+      $buf .= expr($c);
+    }
+    return $buf;
+  } elsif($nm eq "parexpr") {
+    return "(".expr($expr->{children}->[0]).")";
+  } elsif($nm eq "negexpr") {
+    return "-".expr($expr->{children}->[0]);
+  } elsif($nm eq "addop" or $nm eq "mulop" or $nm eq "accname" or $nm eq "num") {
+    return $expr->substring();
+  }
+  confess("EXPR: $nm");
 }
 
 #/*@@
@@ -766,22 +786,34 @@ sub parse_interface_ccl
       for my $ch (@{$fin->{children}}) {
         $interface_data_ref->{"\U$thorn\E INHERITS"} .= $ch->substring()." ";
       }
+    } elsif($fin->{name} eq "FRIEND") {
+      for my $ch (@{$fin->{children}}) {
+        $interface_data_ref->{"\U$thorn\E FRIEND"} .= $ch->substring()." ";
+      }
     } elsif($fin->{name} eq "INCLUDE") {
-      if($fin->{children}->[0]->{name} eq "what" and lc($fin->{children}->[0]->substring()) eq "header") {
+      my $wh = lc($fin->{children}->[0]->substring());
+      if($fin->{children}->[0]->{name} eq "what" and ($wh eq "header" or $wh eq "")) {
         my $h1 = $fin->{children}->[1]->substring();
         my $h2 = $fin->{children}->[2]->substring();
-        $interface_data_ref->{"\U$thorn ADD HEADER\E"} .= $h1." ";
+        $interface_data_ref->{"\U$thorn ADD HEADER\E"} .= " ".$h1;
         $interface_data_ref->{"\U$thorn ADD HEADER $h1 TO\E"} = $h2;
-      } elsif($fin->{children}->[0]->{name} eq "what" and lc($fin->{children}->[0]->substring()) eq "source") {
+      } elsif($fin->{children}->[0]->{name} eq "what" and $wh eq "source") {
         my $h1 = $fin->{children}->[1]->substring();
         my $h2 = $fin->{children}->[2]->substring();
         $interface_data_ref->{"\U$thorn ADD SOURCE\E"} .= $h1." ";
         $interface_data_ref->{"\U$thorn ADD SOURCE $h1 TO\E"} = $h2;
+      } else {
+        die $fin->dump();
       }
     } elsif($fin->{name} eq "FUNCTION") {
       my $func = $fin->{children}->[0];
       if($func->{name} eq "FUNCTION_ALIAS") {
-        my $ret = uc($func->{children}->[0]->substring());
+        my $ret = $func->{children}->[0]->substring();
+        if($ret eq "void") {
+          $ret = "void ";
+        } else {
+          $ret = uc($ret);
+        }
         $ret = "void " if($ret eq "SUBROUTINE");
         my $name = $func->{children}->[1]->substring();
         my $args = $func->{children}->[2];
@@ -794,7 +826,7 @@ sub parse_interface_ccl
         my $with  = $func->{children}->[1]->substring();
         my $lang  = $func->{children}->[2]->substring();
         $interface_data_ref->{"\U$thorn\E PROVIDES FUNCTION"} .= $fname." ";
-        $interface_data_ref->{"\U$thorn\E PROVIDES FUNCTION $fname LANG"} = uc($lang);
+        $interface_data_ref->{"\U$thorn\E PROVIDES FUNCTION $fname LANG"} = $lang;
         $interface_data_ref->{"\U$thorn\E PROVIDES FUNCTION $fname WITH"} = $with;
       } elsif($func->{name} eq "REQUIRES_FUN") {
         my $fname = $func->{children}->[0]->substring();
@@ -811,6 +843,10 @@ sub parse_interface_ccl
             for(my $i=1;$i<=$#ch;$i++) {
               $interface_data_ref->{"\U$thorn\E USES HEADER"} .= $ch[$i]->substring()." ";
             }
+          } elsif($what eq "SOURCE") {
+            for(my $i=1;$i<=$#ch;$i++) {
+              $interface_data_ref->{"\U$thorn\E USES SOURCE"} .= $ch[$i]->substring()." ";
+            }
           }
         }
       }
@@ -821,15 +857,15 @@ sub parse_interface_ccl
       my $vtype = uc($ch[0]->substring());
       my $gname = $ch[1]->{children}->[0]->substring();
       my $desc = undef;
-      my $dim = -1;
-      my $distrib = "";
-      my $gtype = "";
+      my $dim = undef;
+      my $distrib = undef;
+      my $gtype = undef;
       my $tags = "";
       my $timelevels = 1;
       my $size = undef;
       my $var_array_size = undef;
       if($#{$ch[1]->{children}} == 1) {
-        $var_array_size = $ch[1]->{children}->[1]->mkstring();
+        $var_array_size = expr($ch[1]->{children}->[1]);
       }
       $interface_data_ref->{"\U$thorn $access GROUPS\E"} .= " ".$gname;
       $interface_data_ref->{"\U$thorn GROUP $gname\E"} = $gname;
@@ -837,7 +873,7 @@ sub parse_interface_ccl
       for(my $i=2;$i<=$#ch;$i++) {
         my $ch=$ch[$i];
         my $nm = $ch->{name};
-        confess("Repeated item: $nm") if(defined($items{$nm}));
+        confess("Repeated item: $nm in $gname") if(defined($items{$nm}) and $nm ne "tags");
         $items{$nm}++;
         if($nm eq "desc" or $nm eq "group_comment") {
           my $new_desc = trim_quotes($ch->substring());
@@ -847,7 +883,15 @@ sub parse_interface_ccl
         } elsif($nm eq "dim") {
           $dim = $ch->substring();
         } elsif($nm eq "size") {
-          $size = uc($ch->substring());
+          my $sz = "";
+          my $ndims = 0;
+          for my $c (@{$ch->{children}}) {
+            $sz .= "," unless($sz eq "");
+            $sz .= uc(expr($c));
+            $ndims++;
+          }
+          $size = $sz;
+          $dim = $ndims;
         } elsif($nm eq "distrib") {
           $distrib = uc($ch->substring());
         } elsif($nm eq "gtype") {
@@ -866,15 +910,18 @@ sub parse_interface_ccl
           my $ghost = uc($ch->substring()); # XXX TODO: NOT RIGHT!!!!
           $interface_data_ref->{"\U$thorn GROUP $gname GHOSTSIZE\E"} = $ghost;
         } elsif($nm eq "tags") {
-          $tags = trim_quotes($ch->substring());
-          $tags =~ s/"/\\"/g;
+          my $new_tags = trim_quotes($ch->substring());
+          $new_tags =~ s/"/\\"/g;
+          # XXX TODO: Really???
+          #$tags .= "," unless($tags eq "");
+          $tags = $new_tags;
         }
       }
-      $gtype = "SCALAR" if($gtype eq "");
-      $dim = 0 if($dim < 0 and $gtype eq "SCALAR");
-      $dim = 3 if($dim < 0 and $gtype eq "GF");
-      $distrib = "DEFAULT" if($distrib eq "" and $gtype eq "GF");
-      $distrib = "CONSTANT" if($distrib eq "" and $gtype ne "GF");
+      $gtype = "SCALAR" if(!defined($gtype));
+      $dim = 0 if(!defined($dim) and $gtype eq "SCALAR");
+      $dim = 3 if(!defined($dim) and $gtype eq "GF");
+      $distrib = "DEFAULT" if(!defined($distrib) and ($gtype eq "GF" or $gtype eq "ARRAY"));
+      $distrib = "CONSTANT" if(!defined($distrib));
       $interface_data_ref->{"\U$thorn GROUP $gname COMPACT\E"} = 0;
       $interface_data_ref->{"\U$thorn GROUP $gname DIM\E"} = $dim;
       $interface_data_ref->{"\U$thorn GROUP $gname DESCRIPTION\E"} = $desc;
