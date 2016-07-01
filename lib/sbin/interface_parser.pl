@@ -826,7 +826,7 @@ sub parse_interface_ccl
       my $gtype = "";
       my $tags = "";
       my $timelevels = 1;
-      my $size = 1;
+      my $size = undef;
       my $var_array_size = undef;
       if($#{$ch[1]->{children}} == 1) {
         $var_array_size = $ch[1]->{children}->[1]->mkstring();
@@ -1416,7 +1416,6 @@ sub parse_interface_ccl
     if($v1 ne $v2) {
       confess("key error:($k) new=($v1) old=($v2)");
     }
-    $interface_data_ref->{$k} = $interface_data_ref2->{$k};
   }
 }
 
