@@ -10,8 +10,7 @@
 #@@*/
 
 # Global parameter to track the number of errors from the CST
-# The file make.thornlist is only created if the number of errors
-# is zero.
+# The file make.thornlist is only created if the number of errors is zero.
 
 $CST_errors = 0;
 $error_string = '';
@@ -354,13 +353,13 @@ sub CreateMakeThornlist
   {
     next if $thorn eq 'Cactus';
 
-    if($config->{"\U$thorn\E OPTIONS"} ne 'NO_SOURCE')
+    if ($config->{"\U$thorn\E OPTIONS"} ne 'NO_SOURCE')
     {
       $thorns->{$thorn} =~ m:.*/(.*/.*):;
       $thornlist .= " $1";
     }
 
-    if(-r "$thorns->{$thorn}/configuration.ccl")
+    if (-r "$thorns->{$thorn}/configuration.ccl")
     {
       $thorns->{$thorn} =~ m:.*/(.*/.*):;
       $config_thornlist .= " $1";
@@ -469,7 +468,7 @@ sub RequiredThorns
   my(@requires, @result);
 
   @result = ();
-  foreach $i (split (' ', $config->{"\U$thorn\E USES THORNS"}) )
+  foreach $i (sort (split (' ', $config->{"\U$thorn\E USES THORNS"})))
   {
     if ($i eq $top)
     {
@@ -534,7 +533,7 @@ sub CreateThornsHeaders
   }
 
   $header1 .= "\"\"};\n\n";
-  $header1 .= "static int const nthorns = $nthorns;\n\n";
+  $header1 .= "static const int nthorns = $nthorns;\n\n";
   push @header3, {thorn=>"CactusBindings", body=>"#define THORN_IS_CactusBindings\n\n"};
 
   return ($header1, $header2, \@header3);

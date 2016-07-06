@@ -440,8 +440,8 @@ AC_SUBST(F77_OPENMP_FLAGS)
 
 # Set default Fortran compiler
 AC_SUBST(F90)
-if test -z "$F90" ; then
-  F90='none'
+if test -z "$F90" || test "$F90" = none ; then
+  F90="$CCTK_HOME/lib/sbin/no-fortran-compiler"
 fi
 
 AC_SUBST(F77)
@@ -589,7 +589,7 @@ fi
 # Various flags
 
 AC_SUBST(ARFLAGS)
-: ${ARFLAGS=rucs}
+: ${ARFLAGS=rcs}
 
 # Some architectures can't pass the 's' flag to ar so need to use ranlib
 # to create an index in an archive file.
@@ -945,6 +945,13 @@ CCTK_CXX_STATIC_ASSERT
 CCTK_CXX_AUTO_SPECIFIER
 CCTK_CXX_LAMBDA
 CCTK_CXX_RANGE_BASED_FOR
+
+if test "$cctk_cv_have_cxx_auto_specifier" = no -o \
+        "$cctk_cv_have_cxx_lambda" = no -o \
+        "$cctk_cv_have_cxx_range_based_for" = no; then
+  echo "Cactus requires a C++11 compiler -- check your C++ compiler and C++ compiler flags"
+  exit 1
+fi
 
 if test "x$REAL16_KIND" = 'x'; then
   REAL16_KIND=16

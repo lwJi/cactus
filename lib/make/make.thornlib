@@ -35,8 +35,11 @@ endif
 # Add appropriate include lines
 INC_DIRS += $(SYS_INC_DIRS) $(SRCDIR) $(wildcard $(SRCDIR)/include) $(CONFIG) $(BINDINGS_DIR)/include $(CCTK_HOME)/src/include $(CCTK_HOME)/arrangements $(BINDINGS_DIR)/Configuration/Thorns $(BINDINGS_DIR)/include/$(THORN)
 
+INC_DIRS_F = $(INC_DIRS)
+
 # Allow subdirectories to inherit these include directories
 export INC_DIRS
+export INC_DIRS_F
 
 # Define some make variables
 PRE_WRAPPER = make.pre

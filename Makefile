@@ -944,14 +944,6 @@ endif
 	@echo Parameter file copying aborted.
 
 
-# Checkout public thorns and arrangements
-
-.PHONY: checkout
-checkout:
-	$(NOTIFY_DIVIDER)
-	@echo Running app/arrangement/thorn checkout script
-	$(PERL) ./lib/sbin/checkout.pl
-
 # Show configuration information
 
 .PHONY: configinfo

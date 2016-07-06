@@ -233,4 +233,3 @@ function check_tools {
     esac
   done
 }
-

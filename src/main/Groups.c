@@ -49,6 +49,8 @@ void CCTK_FCALL CCTK_FNAME (CCTK_FirstVarIndexI)
                            (int *first, const int *group);
 void CCTK_FCALL CCTK_FNAME (CCTK_FullName)
                            (int *nchars, int *var, ONE_FORTSTRING_ARG);
+void CCTK_FCALL CCTK_FNAME (CCTK_FullVarName)
+                           (int *nchars, int *var, ONE_FORTSTRING_ARG);
 void CCTK_FCALL CCTK_FNAME (CCTK_GroupDimI)
                            (int *dim, const int *group);
 void CCTK_FCALL CCTK_FNAME (CCTK_GroupDimFromVarI)
@@ -139,6 +141,7 @@ void *CCTKi_VarDataPtr(const cGH *GH, int timelevel,
 typedef struct
 {
   char *name;
+  char *fullname;
   int number;
 
   /* dimensional_comm_array[dim] */
@@ -148,8 +151,7 @@ typedef struct
 typedef struct
 {
   /* The various names of the thing. */
-  char *thorn,
-       *implementation,
+  char *implementation,
        *name;
 
   /* The group number. */
@@ -702,13 +704,48 @@ void CCTK_FCALL CCTK_FNAME (CCTK_FullName) (int *nchars, int *var, ONE_FORTSTRIN
 {
   ONE_FORTSTRING_PTR (fullnameptr)
   ONE_FORTSTRING_LEN (fullnamelen)
-  char *fullname;
+  const char *fullname;
 
 
-  fullname = CCTK_FullName (*var);
+  fullname = CCTK_FullVarName (*var);
   *nchars = CCTK_FortranString (fullname ? fullname : "", fullnameptr,
                                 fullnamelen);
-  free (fullname);
+}
+
+
+ /*@@
+   @routine    CCTK_FullVarName
+   @date       Tue Aug  4 14:35:39 CEST 2015
+   @author     Roland Haas
+   @desc
+               Given a variable index return the variable's full name,
+               ie. <implementation name>::<variable name>.
+   @enddesc
+
+   @returntype const char *
+   @returndesc
+               the full name of the given variable
+   @endreturndesc
+@@*/
+const char *CCTK_FullVarName (int var)
+{
+  return ((0 <= var && var < total_variables) ?
+          groups[group_of_variable[var]]
+            .variables[var-groups[group_of_variable[var]].variables[0].number]
+            .fullname
+          : NULL);
+}
+
+void CCTK_FCALL CCTK_FNAME (CCTK_FullVarName) (int *nchars, int *var, ONE_FORTSTRING_ARG)
+{
+  ONE_FORTSTRING_PTR (fullnameptr)
+  ONE_FORTSTRING_LEN (fullnamelen)
+  const char *fullname;
+
+
+  fullname = CCTK_FullVarName (*var);
+  *nchars = CCTK_FortranString (fullname ? fullname : "", fullnameptr,
+                                fullnamelen);
 }
 
 
@@ -2000,6 +2037,7 @@ int CCTK_TraverseString (const char *traverse_string,
 
   /* parse it token by token */
   string = parse_string;
+  gindex = vindex = -1;
   while (string && *string)
   {
 
@@ -2341,6 +2379,8 @@ int CCTKi_CreateGroup (const char *gname,
       {
         assert (vectorlength == 1);
         group->variables[variable].name = Util_Strdup(variable_name);
+        Util_asprintf(&group->variables[variable].fullname, "%s::%s",
+                      group->implementation, variable_name);
       }
       else
       {
@@ -2350,6 +2390,9 @@ int CCTKi_CreateGroup (const char *gname,
           Util_asprintf(&name, "%s[%d]", variable_name, elem);
 
           group->variables[variable * vectorlength + elem].name = name;
+          Util_asprintf(
+            &group->variables[variable * vectorlength + elem].fullname,
+            "%s::%s[%d]", group->implementation, variable_name, elem);
         }
       }
     }

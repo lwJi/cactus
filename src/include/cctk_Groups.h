@@ -40,6 +40,7 @@ int         CCTK_DecomposeName(const char *fullname,
 int         CCTK_FirstVarIndex(const char *group);
 int         CCTK_FirstVarIndexI(int group);
 char      * CCTK_FullName(int var);
+const char *CCTK_FullVarName(int var);
 
 int         CCTK_GroupData(int group, cGroup *gp);
 int         CCTK_GroupDimI(int group);

@@ -20,7 +20,7 @@ int CactusStartup(void)
 
 #define B_1 "       10                                  "
 #define B_2 "  1   0101       ************************  "
-#define B_3 "  01  1010 10      The Cactus Code V4.0    "
+#define B_3 "  01  1010 10      The Cactus Code V4.2    "
 #define B_4 " 1010 1101 011      www.cactuscode.org     "
 #define B_5 "  1001 100101    ************************  "
 #define B_6 "    00010101                               "

@@ -443,26 +443,21 @@ B4  When running GetCactus it tells me it is refusing to update my thorn
 
 B5  Tell me how I can get thorns?
 
-    The best way is to use CVS, all the Cactus thorns and most other 
-    public community thorns are distributed this way.
+    The best way is using an annotated thorn list together with
+    the GetComponents script, which should then be as simple as
 
-    - If you already have the Cactus flesh installed and want to 
-      install a standard Cactus thorn just type 
+      ./GetComponents <thornlist>
 
-      gmake checkout
+    You can get to more documentation for GetComponents, and instructions
+    on how to download it here:
 
-      for a list of thorns you can then download
+      http://cactuscode.org/documentation/GetComponents.php
 
-    - If you have a thornlist annotated with CVS information get
-      hold of the GetCactus script, e.g.
-
-      wget http://www.cactuscode.org/Download/GetCactus
-
-      and use this with your thornlist, if you already have the flesh
-      installed it will just checkout the thorns (the script needs to be 
-      run in the directory above your checked out Cactus at the moment)
-
-      GetCactus <thornlist>
+    Note that you might already have used GetComponents to download the
+    Cactus flesh repository in the first place, which is the place the
+    documentation you are currently reading is located in. Most likely,
+    you then also already have a list of thorns downloaded alongside the
+    flesh.
 
 
 ------------------------------------------------------------------------------

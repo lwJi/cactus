@@ -39,69 +39,101 @@ bool Matcher::matchesTo(int match_to_) {
 }
 
 void Matcher::fail(Bracket *br) {
-    for(unsigned int i=0;i<br->ranges.size();i++) {
-        fail(br->ranges[i]->lo,br->ranges[i]->hi);
-    }
+  for(unsigned int i=0;i<br->ranges.size();i++) {
+    fail(br->ranges[i]->lo,br->ranges[i]->hi);
+  }
+}
+
+void Matcher::fail(char c) {
+  fail(c,c);
 }
 
 void Matcher::fail(char lo,char hi) {
-    if(pos == max_pos+1) {
-        if(err_pos < pos)
-            expected.ranges.clear();
-        expected.addRange(lo,hi);
-        inrule_max = inrule;
-        err_pos = pos;
+  if(err_pos > pos)
+    return;
+  if(lo == hi) {
+    if(lo == ' ' || lo == '\r' || lo == '\t' || lo == '\n' || lo == '#')
+      return;
+  }
+  if(pos < input_size) {
+    char c = input[pos];
+    if(c == '\n' || c == ' ' || c == '\r' || c == '\t') {
+      return;
     }
+  }
+  if(err_pos < pos)
+    expected.ranges.clear();
+  expected.addRange(lo,hi);
+  inrule_max = inrule;
+  err_pos = pos;
 }
 
 void Matcher::showError() {
     showError(std::cout);
 }
 
+const int num_previous_lines = 5;
+
+bool isHumanReadableRange(char c) {
+  return ('a' <= c && c <= 'y') or ('A' <= c && c <= 'Y') or ('0' <= c && c <= '8');
+}
+
 void Matcher::showError(std::ostream& out) {
-	int line = 1;
-	int error_pos = -1;
-	const int num_previous_lines = 4;
-	int start_of_line = 0;
-	int start_of_previous_line[num_previous_lines];
-	for(int i=0;i<num_previous_lines;i++)
-		start_of_previous_line[i] = 0;
-	for(int i=0;i<input_size;i++) {
-		if(i == max_pos) {
-			error_pos = i;
-			int column = i - start_of_previous_line[0]+1;
-		    out << "In rule '" << inrule_max
-			    <<  "' Line=" << line << ", Column=" << column << std::endl;
-			while(input[i] == '\n'||input[i] == '\r') {
-				line++;
-				for(int j=1;j<num_previous_lines;j++) {
-					start_of_previous_line[j-1] = start_of_previous_line[j];
-				}
-				start_of_previous_line[num_previous_lines-1] = start_of_line;
-				start_of_line = ++i;
-			}
-			break;
-		}
-		if(input[i] == '\n') {
-			line++;
-			for(int j=1;j<num_previous_lines;j++) {
-				start_of_previous_line[j-1] = start_of_previous_line[j];
-			}
-			start_of_previous_line[num_previous_lines-1] = start_of_line;
-			start_of_line = i+1;
-		}
-	}
-    bool eol = false;
-	for(int i=start_of_previous_line[0];i<input_size;i++) {
-		out << input[i];
-		if(i > error_pos && input[i] == '\n') {
-            eol = true;
-			break;
-        }
-	}
-    if(!eol) out << std::endl;
-	for(int i=start_of_line;i<=error_pos;i++)
-		out << ' ';
-	out << "^" << std::endl;
-    out << "Expected one of the following characters: " << expected << std::endl;
+  std::vector<char> expectedChars;
+  for(auto r = expected.ranges.begin(); r != expected.ranges.end(); ++r) {
+    for(int i = (*r)->lo; i <= (*r)->hi; ++i) {
+      expectedChars.push_back((char)i);
+    }
+  }
+  out << "Parse Error" << std::endl;
+  out << "Expected one of the following characters:";
+  bool first = true;
+  for(auto c=expectedChars.begin();c != expectedChars.end();++c) {
+    if(first) first = false;
+    else out << ',';
+    if(isHumanReadableRange(*c)) {
+      int n = 1;
+      while(c+n != expectedChars.end() && n+(*c) == *(c+n)) {
+        n++;
+      }
+      if(n >= 3) {
+        out << " '" << *c << "' to";
+        c += (n-1);
+      }
+    }
+    if(*c == '\'')
+      out << "single quote";
+    else if(*c == '"')
+      out << "double quote";
+    else
+      out << " '" << *c << "'";
+  }
+  int buf[num_previous_lines];
+  buf[0] = 0;
+  int line = 0;
+  for(int i=0;i < input_size;i++) {
+    char c = input[i];
+    if(c == '\n') {
+      line++;
+      int ln = line % num_previous_lines;
+      buf[ln] = i;
+      if(i >= err_pos)
+        break;
+    }
+  }
+  int ln = line % num_previous_lines;
+  int lo = line - num_previous_lines + 1;
+  if(lo < 0) lo = 0;
+  lo = lo % num_previous_lines;
+  for(int i=buf[lo];i<buf[ln];i++) {
+    char c = input[i];
+    if(c == '\r') ;
+    else if(c == '\n') out << std::endl;
+    else out << c;
+  }
+  out << std::endl;
+  int m = (line - 1) % num_previous_lines;
+  for(int i=buf[m]+1;i<err_pos;i++)
+    out << ' ';
+  out << '^' << std::endl;
 }

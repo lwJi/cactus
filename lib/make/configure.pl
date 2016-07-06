@@ -50,7 +50,8 @@ sub test_fortran_name
   $use_f77 = 0;
   $use_f90 = 0;
 
-  if ($compiler_f90 && $compiler_f90 ne "" && $compiler_f90 ne "none")
+  if ($compiler_f90 && $compiler_f90 ne "" && $compiler_f90 ne "none" &&
+      $compiler_f90 !~ /no-fortran-compiler/)
   {
     ($retcode,$case, $n_underscores) = &compile_fortran_name($compiler_f90,$opts_f90);
     if ($retcode <= 0)
@@ -58,7 +59,8 @@ sub test_fortran_name
       $use_f90 = 1;
     }
   }
-  elsif($compiler_f77 && $compiler_f77 ne "" && $compiler_f77 ne "none")
+  elsif($compiler_f77 && $compiler_f77 ne "" && $compiler_f77 ne "none" &&
+        $compiler_f77 !~ /no-fortran-compiler/)
   {
     ($retcode,$case, $n_underscores) = &compile_fortran_name($compiler_f77,$opts_f77);
     if ($retcode <= 0)
@@ -125,12 +127,14 @@ sub test_fortran_common_name
   $use_f77 = 0;
   $use_f90 = 0;
 
-  if ($compiler_f90 && $compiler_f90 ne "" && $compiler_f90 !~ /none/)
+  if ($compiler_f90 && $compiler_f90 ne "" && $compiler_f90 !~ /none/ &&
+      $compiler_f90 !~ /no-fortran-compiler/)
   {
     ($retcode,$case, $n_underscores) = &compile_fortran_common_name($compiler_f90,$opts_f90);
     if ($retcode<=0) {$use_f90 = 1};
   }
-  elsif($compiler_f77 && $compiler_f77 ne "" && $compiler_f77 !~ /none/)
+  elsif($compiler_f77 && $compiler_f77 ne "" && $compiler_f77 !~ /none/ &&
+        $compiler_f77 !~ /no-fortran-compiler/)
   {
     ($retcode,$case, $n_underscores) = &compile_fortran_common_name($compiler_f77,$opts_f77);
     if ($retcode <=0) {$use_f77 = 1};

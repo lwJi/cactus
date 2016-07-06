@@ -66,10 +66,10 @@ smart_ptr<Grammar> create_grammar() {
         "index = \\[ {int} \\]\n"
         "parindex = \\[ {expr} \\]\n"
         "active = (?i:ActiveThorns)\n"
-        "set = ({active} = ({quot}|{name})|{par}( {index}|) = ({array}|\\+?{expr})){-skipeol}\n"
-        "set_var = \\${name} = \\+?{expr}{-skipeol}\n"
+        "set = ({active} = ({quot}|{name})|{par}( {index}|) = ({array}|\\+?{expr}))\n"
+        "set_var = \\${name} = \\+?{expr}\n"
         "desc = !DESC {quot}\n"
-        "file = ^( ({desc}|{set_var}|{set}|{active}) )*$";
+        "file = ^ ({desc} |{set_var} |{set} |{active} )*$";
     //std::ofstream peg("/tmp/par.peg");
     //peg << par_file_src;
     //peg.close();
@@ -226,7 +226,7 @@ struct Value {
      */
     void integerize() {
         if(type == PIR_REAL) {
-            idata = ddata;
+            idata = std::lrint(ddata);
             if(idata == ddata) {
                 type = PIR_INT;
             }
@@ -426,7 +426,7 @@ smart_ptr<Value> meval(smart_ptr<Group> gr,ExpressionEvaluationData *eedata) {
         std::istringstream iss(s);
         if(iss >> ret->ddata) {
             ret->ddata = atof(s.c_str());
-            ret->idata = ret->ddata;
+            ret->idata = std::lrint(ret->ddata);
             if(ret->idata == ret->ddata && (s.find('.') == std::string::npos))
                 ret->type = PIR_INT;
             else
@@ -498,13 +498,13 @@ smart_ptr<Value> meval(smart_ptr<Group> gr,ExpressionEvaluationData *eedata) {
                 return val;
             } else if(fn == "bool") {
                 if(val->type == PIR_REAL) {
-                    val->idata = val->ddata;
+                    val->idata = std::lrint(val->ddata);
                 }
                 val->type = PIR_BOOL;
                 return val;
             } else if(fn == "int") {
                 if(val->type == PIR_REAL) {
-                    val->idata = val->ddata;
+                    val->idata = std::lrint(val->ddata);
                     val->type = PIR_INT;
                 }
                 return val;

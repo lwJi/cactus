@@ -673,7 +673,7 @@ int CCTK_VWarn (int level,
 
   if (level <= error_level)
   {
-    CCTK_Abort (NULL, 0);
+    CCTK_Abort (NULL, EXIT_FAILURE);
   }
 
   return 0;
@@ -799,7 +799,7 @@ void CCTK_VError (int line,
   va_end (ap);
   fprintf (stdout, "\n");
 
-  CCTK_Abort (NULL, 0);
+  CCTK_Abort (NULL, EXIT_FAILURE);
 }
 
 

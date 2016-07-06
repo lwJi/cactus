@@ -19,7 +19,7 @@
 #include "cctk_Parameters.h"
 #include "cctk_Schedule.h"
 
-#ifdef CCTK_MPI
+#ifdef HAVE_CAPABILITY_MPI
 #  include "mpi.h"
 #endif
 
@@ -27,18 +27,18 @@ static const char *rcsid = "$Header$";
 
 CCTK_FILEVERSION(main_ShutdownCactus_c);
 
-#ifdef CCTK_MPI
-extern char MPI_Active;
+#ifdef HAVE_CAPABILITY_MPI
+extern char cctki_MPI_Managing;
 #endif
 
-#ifdef CCTK_MPI
+#ifdef HAVE_CAPABILITY_MPI
 #define CACTUS_MPI_ERROR(xf)                                                  \
           do                                                                  \
           {                                                                   \
             int errcode;                                                      \
                                                                               \
                                                                               \
-            if((errcode = xf) != MPI_SUCCESS)                                 \
+            if ((errcode = (xf)) != MPI_SUCCESS)                              \
             {                                                                 \
               char mpi_error_string[MPI_MAX_ERROR_STRING+1];                  \
               int resultlen;                                                  \
@@ -89,11 +89,17 @@ int CCTKi_ShutdownCactus(tFleshConfig *ConfigData)
   printf("--------------------------------------------------------------------------------\n"); 
   printf("Done.\n");
   fflush(stdout);
+  fflush(stderr);
  
-#ifdef CCTK_MPI
-  if (MPI_Active)
+#ifdef HAVE_CAPABILITY_MPI
+  if (cctki_MPI_Managing)
   {
-    CACTUS_MPI_ERROR(MPI_Finalize());
+    int finalized;
+    CACTUS_MPI_ERROR(MPI_Finalized(&finalized));
+    if (!finalized)
+    {
+      CACTUS_MPI_ERROR(MPI_Finalize());
+    }
   }
 #endif
 

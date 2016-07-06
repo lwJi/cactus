@@ -14,7 +14,7 @@
 #include "cctk_Capabilities.h"
 #include "cctk_Flesh.h"
 
-#ifdef CCTK_MPI
+#ifdef HAVE_CAPABILITY_MPI
 #  include <mpi.h>
 #endif
 
@@ -39,7 +39,7 @@ int CCTKi_ProcessEnvironment (int *argc, char ***argv,tFleshConfig *ConfigData);
  *********************     Local Data   *****************************
  ********************************************************************/
 
-#ifdef CCTK_MPI
+#ifdef HAVE_CAPABILITY_MPI
 #define CACTUS_MPI_ERROR(xf)                                                  \
           do                                                                  \
           {                                                                   \
@@ -61,8 +61,9 @@ int CCTKi_ProcessEnvironment (int *argc, char ***argv,tFleshConfig *ConfigData);
           } while (0)
 #endif
 
-#ifdef CCTK_MPI
-char MPI_Active = 0;
+#ifdef HAVE_CAPABILITY_MPI
+char cctki_MPI_Active = 0;      /* We're using MPI */
+char cctki_MPI_Managing = 0;    /* We manage MPI */
 #endif
 
 
@@ -110,19 +111,29 @@ char MPI_Active = 0;
    @endreturndesc
 
 @@*/
-int CCTKi_ProcessEnvironment(int *argc, char ***argv, tFleshConfig *ConfigData)
+int CCTKi_ProcessEnvironment(int *argcp, char ***argvp,
+                             tFleshConfig *ConfigData)
 {
   /* avoid compiler warnings about unused arguments */
-  argc = argc;
-  argv = argv;
+  argcp = argcp;
+  argvp = argvp;
   ConfigData = ConfigData;
 
   /* Check if MPI compiled in but choosing not to use MPI. */  
-#ifdef CCTK_MPI
+#ifdef HAVE_CAPABILITY_MPI
   if (!getenv("CACTUS_NOMPI"))
   {
-    MPI_Active = 1;
-    CACTUS_MPI_ERROR(MPI_Init(argc, argv));
+    cctki_MPI_Active = 1;
+    int initialized;
+    CACTUS_MPI_ERROR(MPI_Initialized(&initialized));
+    if (!initialized)
+    {
+      cctki_MPI_Managing = 1;
+      /* CACTUS_MPI_ERROR(MPI_Init(argcp, argvp)); */
+      int provided;
+      CACTUS_MPI_ERROR(MPI_Init_thread(argcp, argvp,
+                                       MPI_THREAD_SERIALIZED, &provided));
+    }
   }
 #endif
 

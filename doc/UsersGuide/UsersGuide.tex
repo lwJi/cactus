@@ -23,6 +23,15 @@ citecolor=blue,
 urlcolor=blue
 ]{hyperref}
 
+% disable pdf compression to reduce patch size in version control system
+\ifx\pdfcompresslevel\undefined
+\relax
+\else
+\pdfobjcompresslevel=0
+\pdfcompresslevel=0
+\fi
+
+
 \usepackage{verbatim}
 \usepackage{alltt}
 \newcommand{ \var }[1]{\textsl{\texttt{#1}}}

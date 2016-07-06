@@ -191,21 +191,17 @@ else
       CXX_VERSION="`$CXX --version 2>&1 | head -n 1`"
       # : ${CXXFLAGS="-no-cpp-precomp -mlongcall"}
       # : ${CXXFLAGS="-mlongcall"}
-      # The setting below would be desirable, but isn't available on
-      # Darwin with the default compiler
-      # : ${CXXFLAGS=-std=gnu++0x}
+      : ${CXXFLAGS=-std=gnu++0x}
       ;;
     clang)
       CXX_VERSION="`$CXX --version 2>&1 | head -n 1`"
       # : ${CXXFLAGS="-no-cpp-precomp -mlongcall"}
       # : ${CXXFLAGS="-mlongcall"}
-      # The setting below would be desirable, but isn't available on
-      # Darwin with the default compiler
-      # : ${CXXFLAGS=-std=gnu++0x}
+      : ${CXXFLAGS=-std=gnu++0x}
       ;;
     intel)
       CXX_VERSION="`$CXX --version 2>&1 | head -n 1`"
-      : ${CXXFLAGS="-align"}
+      : ${CXXFLAGS="-align -std=c++0x"}
       : ${CXX_DEBUG_FLAGS='-g -fp'}
       : ${CXX_OPTIMISE_FLAGS="-O3 -xP"}
       if test "$DEBUG" = 'no'; then

@@ -23,6 +23,14 @@ citecolor=blue,
 urlcolor=blue
 ]{hyperref}
 
+% disable pdf compression to reduce patch size in version control system
+\ifx\pdfcompresslevel\undefined
+\relax
+\else
+\pdfobjcompresslevel=0
+\pdfcompresslevel=0
+\fi
+
 
 
 % This must come after most of the other \usepackages, because we

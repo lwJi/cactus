@@ -449,7 +449,7 @@ else
  case `basename $CXX` in
    # GNU
    gcc | [gc]++)
-     : ${CXXFLAGS='-pipe'}
+     : ${CXXFLAGS='-pipe -std=c++0x'}
      : ${CXX_OPTIMISE_FLAGS='-O3'}
      CXX_VERSION="`$CXX -v 2>&1 | grep -i "gcc version" | head -n1`"
      major_version=`echo $CXX_VERSION | cut -f3 -d' ' | cut -f1 -d'.'`
@@ -462,9 +462,9 @@ else
    # Intel
    [ei]cc | [ei]cpc)
      if test "$OPTIMISE" = 'no'; then
-       : ${CXXFLAGS='-restrict -O0'}
+       : ${CXXFLAGS='-restrict -std=c++0x -O0'}
      else
-       : ${CXXFLAGS='-restrict'}
+       : ${CXXFLAGS='-restrict -std=c++0x'}
      fi
      icpc_fullversion=`$CXX -V 2>&1 | grep Version | sed 's/.*Version //' | cut -c1-3`
      icpc_version=`echo $icpc_fullversion | cut -f1 -d.`
@@ -532,7 +532,7 @@ else
      ia64)
        CACHELINE_BYTES=128
        ;;
-     x86_64)
+     x86_64 | armv7l) # Most armv7l do have 32, but some may have 64. 64 is the 'safer' option.
        CACHELINE_BYTES=64
        ;;
      *)

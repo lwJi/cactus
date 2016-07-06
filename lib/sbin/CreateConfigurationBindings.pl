@@ -90,6 +90,15 @@ sub CreateConfigurationBindings
               {
                   $defs .= "INC_DIRS += $incdir\n";
               }
+              my $incdir_f = $cfg->{"\U$thorn $providedcap\E INCLUDE_DIRECTORY_FORTRAN"};
+              if ($incdir_f)
+              {
+                  $defs .= "INC_DIRS_F += $incdir_f\n";
+              }
+              elsif ($incdir)
+              {
+                  $defs .= "INC_DIRS_F += $incdir\n";
+              }
               
               my $makedef = $cfg->{"\U$thorn $providedcap\E MAKE_DEFINITION"};
               if ($makedef)

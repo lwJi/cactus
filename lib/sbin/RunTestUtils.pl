@@ -180,6 +180,10 @@ sub ParseParFile
       $active .= " ".$1;
       $processing_active = 1;
     }
+    elsif ($line =~ m/^\s*ActiveThorns\s*=\s*(\S*)/i)
+    {
+      $active .= " ".$1;
+    }
   }
   close IN;
 
@@ -1783,6 +1787,16 @@ sub CompareTestFiles
             print "TESTSUITE ERROR: Didn't catch case in CompareFiles\n";
           }
         } #while
+        while ($nline = <INNEW>)
+        {
+          # ignore trailing comment lines in new file
+          last unless ($nline =~ /^\s*(["#].*)?$/);
+        }
+        if (!eof(INNEW))
+        {
+          $rundata->{"$thorn $test $file NFAILWEAK"}++;
+          $rundata->{"$thorn $test $file NFAILSTRONG"}++;
+        }
 
       }
       elsif (!-e $newfile && -s $oldfile)

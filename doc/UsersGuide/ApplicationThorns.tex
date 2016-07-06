@@ -1270,7 +1270,13 @@ means the value must be an odd number between one and twenty-one
 (inclusive).
 
 A missing end of range (or a `\texttt{*}') indicates negative or positive
+
+Note that if \var{stride} is specified, then \var{upper} must be specified, or `\texttt{*}' (i.e.
+the specifier `\texttt{1::2}' is not legal)
+
 infinity, and the default stride is one.
+A `\texttt{(}' (or `\texttt{)}') before (or after) the lower (or upper) range specifies an open
+endpoint.
 
 \subsubsection{Real}
 
@@ -1280,9 +1286,11 @@ The range specification is of the form
 \end{alltt}
 where \var{lower} and \var{upper} specify the lower and upper allowed
 range.  A missing end of range (or a `\texttt{*}') implies negative or positive
-infinity.  The above is inclusive of the endpoints.  A `\texttt{(}'
-(or `\texttt{)}') before (or after) the lower (or upper) range specifies an open
+infinity.  The above is inclusive of the endpoints.
+A `\texttt{(}' (or `\texttt{)}') before (or after) the lower (or upper) range specifies an open
 endpoint.
+Likewise, a `\texttt{[} (or `\texttt{]}') before (or after) the lower
+(or upper) range specifies a closed endpoint.
 
 The numbers written in a \texttt{param.ccl} file are interpreted as C code.
 To express a number in `scientific notation', use,
