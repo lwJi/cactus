@@ -13,7 +13,9 @@ num = [0-9]+
 boolraw = (?i:true|t|yes|y|false|f|no|n|1|0)
 bool = {-boolraw}|"{-boolraw}"
 
-powexpr = \( {expr} \)|-{expr}|{accname}|{num}
+parexpr = \( {expr} \)
+negexpr = -{expr}
+powexpr = {parexpr}|{negexpr}|{accname}|{num}
 mulexpr = {powexpr}( \^ {powexpr})?
 mulop = [/*%]
 addexpr = {mulexpr}( {mulop} {mulexpr})*

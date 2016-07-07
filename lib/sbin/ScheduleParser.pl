@@ -84,6 +84,9 @@ sub create_schedule_database
   my(@new_schedule_data);
   my(@schedule_data);
 
+  my $peg_file = $ENV{CCTK_HOME}."/src/piraha/pegs/schedule.peg";
+  my($grammar,$rule)=parse_peg($peg_file);
+
   #  Loop through each implementation's schedule file.
   foreach $thorn (sort keys %thorns)
   {
@@ -93,7 +96,7 @@ sub create_schedule_database
 
     $ccl_file = "$thorns{$thorn}/schedule.ccl";
     print "Parsing: $ccl_file\n";
-    my $p=parse($ENV{CCTK_HOME}."/src/piraha/pegs/schedule.peg","$thorns{$thorn}/schedule.ccl");
+    my $p=parse_src($grammar,$rule,$ccl_file);
     my $m = $p->matches();
     confess("Parse Error") unless($m);
 

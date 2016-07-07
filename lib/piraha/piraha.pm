@@ -3,22 +3,39 @@ use array;
 
 $main::indent=0;
 
-sub parse
+sub parse_peg
 {
   my $peg = shift;
-  my $src = shift;
   local $/ = undef;
   my $fd = new FileHandle;
   open($fd,$peg) or die "cannot open $peg";
   my $peg_contents = <$fd>;
   close($fd);
+  my $g = new Grammar();
+  my $rule = compileFile($g,$peg_contents);
+  return ($g,$rule);
+}
+
+sub parse_src
+{
+  my $g = shift;
+  local $/ = undef;
+  my $rule = shift;
+  my $src = shift;
+  my $fd = new FileHandle;
   open($fd,$src) or die "cannot open $src";
   my $src_contents = <$fd>;
   close($fd);
-  my $g = new Grammar();
-  my $rule = compileFile($g,$peg_contents);
   my $m = new Matcher($g,$rule,$src_contents);
   return $m;
+}
+
+sub parse
+{
+  my $peg = shift;
+  my $src = shift;
+  my ($g,$rule) = parse_peg($peg);
+  return parse_src($g,$rule,$src);
 }
 
 sub applyChar
@@ -588,16 +605,21 @@ sub match
   confess "no such pattern '$pname'" unless(defined($pat));
   my $chSave = $m->{gr};
   my $start = $m->{textPos};
+  my $cap = $self->{capture};
+  if($cap) {
   $m->{gr} = new Group($pname,$chSave->{text},$start,-1);
+  }
   my $b = $pat->match($m);
   if($b) {
-    if($self->{capture}) {
+    if($cap) {
       $m->{gr}->{end} = $m->{textPos};
       #confess "empty literal" if($self->{name}="literal" and $m->{gr}->{start} == $m->{gr}->{end});
       array::append($chSave->{children},$m->{gr});
     }
   }
+  if($cap) {
   $m->{gr} = $chSave;
+  }
   return $b;
 }
 
@@ -971,7 +993,6 @@ sub matches
   my $self = shift;
   confess("no pat") unless(defined($self->{pat}));
   my $ret = $self->{pat}->match($self);
-  print "ret=",$ret,"\n";
   return $ret;
 }
 

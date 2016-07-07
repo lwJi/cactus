@@ -67,6 +67,9 @@ sub create_interface_database
   %thorns = @inargs[2*$n_system..$#inargs];
   @thorns = sort keys %thorns;
 
+  my $peg_file = $ENV{CCTK_HOME}."/src/piraha/pegs/interface.peg";
+  my ($grammar,$rule) = parse_peg($peg_file);
+
   #  Loop through each  thorn's interface file.
   foreach my $thorn (@thorns)
   {
@@ -78,8 +81,8 @@ sub create_interface_database
     #       Read the data
     $ccl_file = "$thorns{$thorn}/interface.ccl";
     my @indata = &read_file($ccl_file);
-    print "Parsing: $ccl_file\n";
-    my $p=parse($ENV{CCTK_HOME}."/src/piraha/pegs/interface.peg",$ccl_file);
+    print "   Parsing: $ccl_file\n";
+    my $p=parse_src($grammar,$rule,$ccl_file);
     my $m = $p->matches();
     unless($m) {
       my $line = 0;
@@ -883,6 +886,7 @@ sub parse_interface_ccl
         } elsif($nm eq "dim") {
           $dim = $ch->substring();
         } elsif($nm eq "size") {
+          #$size = uc($ch->mkstring());
           my $sz = "";
           my $ndims = 0;
           for my $c (@{$ch->{children}}) {
@@ -902,13 +906,12 @@ sub parse_interface_ccl
             $interface_data_ref->{"\U$thorn GROUP $gname\E"} .= " ".$c->substring();
           }
         } elsif($nm eq "ghostsize") {
-          #my $ghost = "";
-          #for my $c (@{$ch->{children}}) {
-          #  $ghost .= "," unless($ghost eq "");
-          #  $ghost .= $c->mkstring();
-          #}
-          my $ghost = uc($ch->substring()); # XXX TODO: NOT RIGHT!!!!
-          $interface_data_ref->{"\U$thorn GROUP $gname GHOSTSIZE\E"} = $ghost;
+          my $ghost = "";
+          for my $c (@{$ch->{children}}) {
+            $ghost .= "," unless($ghost eq "");
+            $ghost .= expr($c);
+          }
+          $interface_data_ref->{"\U$thorn GROUP $gname GHOSTSIZE\E"} = uc($ghost);
         } elsif($nm eq "tags") {
           my $new_tags = trim_quotes($ch->substring());
           $new_tags =~ s/"/\\"/g;

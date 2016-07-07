@@ -348,15 +348,16 @@ sub FunctionDatabase
       $Arguments = $interface_db->{"\U${thorn} FUNCTION\E $FunctionName ARGS"};
 
 #      &debug_print("FunctionDatabase: calling ParseArgumentsList with thorn=[$thorn] FunctionName=[$FunctionName] Arguments=[$Arguments]\n");
+#      Need to eliminate this
       ($warnings,$nstrings,$nstringptrs,@arglist)=&ParseArgumentsList($Arguments, $thorn, $FunctionName);
       $Function->{"Strings"} = $nstrings;
       $Function->{"String pointers"} = $nstringptrs;
 
       $ReturnType = $interface_db->{"\U${thorn} FUNCTION\E $FunctionName RET"};
       # turn 'VOID' into lower-case
-      $ReturnType = lc $ReturnType;
+      #$ReturnType = lc $ReturnType;
       # turn all return types except 'void' into upper-case CCTK types
-      $ReturnType = uc $ReturnType if ($ReturnType ne 'void ');
+      #$ReturnType = uc $ReturnType if ($ReturnType ne 'void ');
 
       $FunctionName =~ /([a-zA-Z][a-zA-Z0-9_]*)/;
       $Function->{"Name"}=$1;
@@ -430,7 +431,11 @@ sub FunctionDatabase
             if (!($KnownFunction{"Return Type"} eq
                   $Function->{"Return Type"}))
             {
-              &CST_error(0,"The prototypes for the aliased function \'".$KnownFunction{"Name"}."\'\n     given by thorns \' ".$thorn."\' and \'".$KnownThorn."\' are inconsistent.\n     The return types disagree.");
+              &CST_error(0,"The prototypes for the aliased function \'".
+                $KnownFunction{"Name"}.
+                "\'\n     given by thorns \' ".$thorn."\' and \'".$KnownThorn.
+                "\' are inconsistent.\n     The return types disagree.\n".
+                $KnownFunction{"Return Type"}." != ".$Function->{"Return Type"});
             }
             if (&CompareArguments($KnownFunction{"Arguments"},
                                  $Function->{"Arguments"}))
