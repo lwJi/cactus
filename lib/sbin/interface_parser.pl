@@ -3,12 +3,10 @@ use strict;
 
 my $ccl_file = undef;
 
+push @INC, "./lib/sbin";
 use Carp;
-$INC[1+$#INC] = $ENV{CCTK_HOME}."/lib/piraha";
 use FileHandle;
-require AutoGrammar;
-require reparse;
-require piraha;
+require Piraha;
 use Data::Dumper;
 
 sub trim_quotes
@@ -68,7 +66,7 @@ sub create_interface_database
   @thorns = sort keys %thorns;
 
   my $peg_file = $ENV{CCTK_HOME}."/src/piraha/pegs/interface.peg";
-  my ($grammar,$rule) = parse_peg($peg_file);
+  my ($grammar,$rule) = piraha::parse_peg_file($peg_file);
 
   #  Loop through each  thorn's interface file.
   foreach my $thorn (@thorns)
@@ -81,16 +79,12 @@ sub create_interface_database
     #       Read the data
     $ccl_file = "$thorns{$thorn}/interface.ccl";
     my @indata = &read_file($ccl_file);
-    print "   Parsing: $ccl_file\n";
-    my $p=parse_src($grammar,$rule,$ccl_file);
+    my $p=piraha::parse_src($grammar,$rule,$ccl_file);
     my $m = $p->matches();
     unless($m) {
-      my $line = 0;
-      my $mt = $p->{maxTextPos};
-      my $pre = substr($p->{text},0,$mt);
-      $pre =~ s/\n*$/\n/;
-      $pre =~ s/(.*)\n/$line++/ge;
-      confess("Parse Error in $ccl_file:$line($mt): {{{$1}}}");
+      print "CST ERROR IN FILE '$ccl_file' ";
+      $p->showError();
+      confess("Parse Error");
     }
 
     #       Get the interface data from it

@@ -54,13 +54,10 @@ for my $s (@schedule_bins) {
 
 my $ccl_file = undef;
 
+push @INC, "./lib/sbin";
 use Carp;
-$INC[$#INC] = $ENV{CCTK_HOME}."/lib/piraha";
-push @INC, ".";
 use FileHandle;
-require AutoGrammar;
-require reparse;
-require piraha;
+require Piraha;
 use Data::Dumper;
 
 #/*@@
@@ -85,7 +82,7 @@ sub create_schedule_database
   my(@schedule_data);
 
   my $peg_file = $ENV{CCTK_HOME}."/src/piraha/pegs/schedule.peg";
-  my($grammar,$rule)=parse_peg($peg_file);
+  my($grammar,$rule)=piraha::parse_peg_file($peg_file);
 
   #  Loop through each implementation's schedule file.
   foreach $thorn (sort keys %thorns)
@@ -95,10 +92,13 @@ sub create_schedule_database
     @indata = &read_file("$thorns{$thorn}/schedule.ccl");
 
     $ccl_file = "$thorns{$thorn}/schedule.ccl";
-    print "Parsing: $ccl_file\n";
-    my $p=parse_src($grammar,$rule,$ccl_file);
+    my $p=piraha::parse_src($grammar,$rule,$ccl_file);
     my $m = $p->matches();
-    confess("Parse Error") unless($m);
+    unless($m) {
+      print "CST ERROR IN FILE '$ccl_file' ";
+      $p->showError();
+      confess("Parse Error");
+    }
 
     #       Get the schedule stuff from it
     @new_schedule_data = &parse_schedule_ccl($thorn, $p->{gr}, @indata);

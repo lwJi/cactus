@@ -12,6 +12,8 @@
 #%implementations = ("flesh", "flesh", "test1", "test1", "test2", "test2");
 
 #%parameter_database = create_parameter_database(%implementations);
+push @INC, "./lib/sbin";
+use strict;
 
 #/*@@
 #  @routine    create_parameter_database
@@ -59,6 +61,7 @@ sub cross_index_parameters
   my($line);
   my(@data);
   my($thorn);
+  my(%public_parameters);
 
   @thorns = @indata[0..$n_thorns-1];
   %parameter_database = @indata[$n_thorns..$#indata];
@@ -67,7 +70,7 @@ sub cross_index_parameters
 
   foreach $thorn (@thorns)
   {
-    foreach $parameter (split(/ /, $parameter_database{"\U$thorn\E GLOBAL variables"}))
+    foreach my $parameter (split(/ /, $parameter_database{"\U$thorn\E GLOBAL variables"}))
     {
       if($public_parameters{"\U$parameter\E"})
       {
@@ -250,9 +253,9 @@ sub parse_param_ccl
         }
 
         # Parse the options
-        %options = split(/\s*=\s*|\s+/, $options);
+        my %options = split(/\s*=\s*|\s+/, $options);
 
-        foreach $option (sort keys %options)
+        foreach my $option (sort keys %options)
         {
           if($option =~ m:STEERABLE:i)
           {
@@ -363,6 +366,7 @@ sub parse_param_ccl
           # The (optional) description is seperated by ::
           while($data[$line_number] !~ m:^\s*\}:)
           {
+            my ($new_ranges, $delim, $new_desc);
             if($data[$line_number] =~ m/::/)
             {
               ($new_ranges, $delim, $new_desc) = $data[$line_number] =~ m/(.+?)(::)(.*)/;
@@ -447,7 +451,7 @@ sub parse_param_ccl
         {
           if($data[$line_number] =~ m:\s*\}\s*([^\s].*)\s*:)
           {
-            $default = $1;
+            my $default = $1;
             $default =~ m:^(.*[^\s])\s*:;
             $default = $1;
 
@@ -589,7 +593,7 @@ sub CheckParameterDefault
   }
   elsif ($parameter_db{"\U$thorn $variable\E type"} =~ /KEYWORD/)
   {
-    $nranges=$parameter_db{"\U$thorn $variable\E ranges"};
+    my $nranges=$parameter_db{"\U$thorn $variable\E ranges"};
     for ($i=1; $i<=$nranges; $i++)
     {
       # Keywords don't use pattern matching but are case insensitive
@@ -607,7 +611,7 @@ sub CheckParameterDefault
   }
   elsif ($parameter_db{"\U$thorn $variable\E type"} =~ /STRING/)
   {
-    $nranges=$parameter_db{"\U$thorn $variable\E ranges"};
+    my $nranges=$parameter_db{"\U$thorn $variable\E ranges"};
     for ($i=1; $i<=$nranges; $i++)
     {
       $range = $parameter_db{"\U$thorn $variable\E range $i range"};
@@ -628,15 +632,15 @@ sub CheckParameterDefault
   }
   elsif ($parameter_db{"\U$thorn $variable\E type"} =~ /INT/)
   {
-    $nranges=$parameter_db{"\U$thorn $variable\E ranges"};
-    for ($i=1; $i<=$nranges; $i++)
+    my $nranges=$parameter_db{"\U$thorn $variable\E ranges"};
+    for (my $i=1; $i<=$nranges; $i++)
     {
       $range = $parameter_db{"\U$thorn $variable\E range $i range"};
       $range =~ /^([\(]?)([\s\*0-9]*):([\s\*0-9]*)([\)]?)/;
-      $lower_bounds_excluded = $1 eq '(';
-      $min = $2;
-      $max = $3;
-      $upper_bounds_excluded = $4 eq ')';
+      my $lower_bounds_excluded = $1 eq '(';
+      my $min = $2;
+      my $max = $3;
+      my $upper_bounds_excluded = $4 eq ')';
       $foundit = 1 if ($min =~ /^\s*[\*\s]*\s*$/ or
                        ($lower_bounds_excluded ? $default >  $min :
                                                  $default >= $min))
@@ -656,15 +660,15 @@ sub CheckParameterDefault
   }
   elsif ($parameter_db{"\U$thorn $variable\E type"} =~ /REAL/)
   {
-    $nranges=$parameter_db{"\U$thorn $variable\E ranges"};
-    for ($i=1; $i<=$nranges; $i++)
+    my $nranges=$parameter_db{"\U$thorn $variable\E ranges"};
+    for (my $i=1; $i<=$nranges; $i++)
     {
       $range = $parameter_db{"\U$thorn $variable\E range $i range"};
       $range =~ /^([\(]?)([\s\*0-9\.eE+-]*):([\s\*0-9\.eE+-]*)([\)]?)/;
-      $lower_bounds_excluded = $1 eq '(';
-      $min = $2;
-      $max = $3;
-      $upper_bounds_excluded = $4 eq ')';
+      my $lower_bounds_excluded = $1 eq '(';
+      my $min = $2;
+      my $max = $3;
+      my $upper_bounds_excluded = $4 eq ')';
       $foundit = 1 if ($min =~ /^\s*[\*\s]*\s*$/ or
                        ($lower_bounds_excluded ? $default >  $min :
                                                  $default >= $min))
@@ -719,6 +723,7 @@ sub CheckExpression
 {
   my ($expression) = @_;
   my $retcode;
+  my $retval;
 
   if($expression =~ m,^[-\d/*()+xy^!<>=]+$, &&
      $expression =~ m/\bx\b/            &&
