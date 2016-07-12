@@ -12,7 +12,8 @@ use Data::Dumper;
 sub trim_quotes
 {
   my $str = shift;
-  return substr($str,1,length($str)-2);
+  $str =~ s/^(["'])(.*)\1$/$2/s;
+  return $str;
 }
 
 sub expr

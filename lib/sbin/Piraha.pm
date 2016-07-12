@@ -1538,7 +1538,29 @@ sub group
 {
   my $self = shift;
   my $n = shift;
-  return $self->{children}->[$n];
+  my $nm = shift;
+  my $ref = $self->{children}->[$n];
+  if(defined($nm)) {
+    my $m = $ref->{name};
+    confess("wrong group '$nm' != '$m'")
+      unless($m eq $nm);
+  }
+  return $ref;
+}
+
+sub has
+{
+  my $self = shift;
+  my $n = shift;
+  my $nm = shift;
+  my $ref = $self->{children}->[$n];
+  return 0 unless(defined($ref));
+  if(defined($nm)) {
+    my $m = $ref->{name};
+    return 0
+      unless($m eq $nm);
+  }
+  return 1;
 }
 
 sub groupCount
