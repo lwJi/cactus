@@ -110,6 +110,10 @@ sub create_schedule_database
 
   }
 
+  print "+===========================+\n";
+  print "| Schedule Parsing Complete |\n";
+  print "+===========================+\n";
+
 #  @schedule_data = &cross_index_schedule_data(scalar(keys %thorns), (sort keys %thorns), @schedule_data);
 
   return @schedule_data;
@@ -119,12 +123,13 @@ sub vname
 {
   my $vname = shift;
   my $out = "";
-  confess("not a vname ".$vname->dump()) unless($vname->{name} eq "vname");
+  confess("not a vname ".$vname->dump()) unless($vname->is("vname"));
   for my $v (@{$vname->{children}}) {
-    if($v->{name} eq "name") {
+    if($v->is("name")) {
       $out .= "::" unless($out eq "");
       $out .= $v->substring();
     } else {
+      # This will be an expression
       $out .= "[" . $v->substring() . "]";
     }
   }
@@ -134,10 +139,10 @@ sub vname
 sub qname
 {
   my $qname = shift;
-  confess("not a qname ".$qname->dump()) unless($qname->{name} eq "qname");
-  my $out = vname($qname->{children}->[0]);
-  if($#{$qname->{children}} > 0) {
-    $out .= "(" . $qname->{children}->[1]->substring() . ")";
+  confess("not a qname ".$qname->dump()) unless($qname->is("qname"));
+  my $out = vname($qname->group(0,"vname"));
+  if($qname->groupCount() > 1) {
+    $out .= "(" . $qname->group(1,"region")->substring() . ")";
   }
   return $out;
 }
@@ -151,7 +156,7 @@ sub parse_schedule_statement
   my $buffer = shift;
   my $thorn = shift;
   for my $statement (@{$group->{children}}) {
-    if($statement->{name} eq "statement") {
+    if($statement->is("statement")) {
       my ($name, $as, $type, $description, $where, $language,
        $mem_groups, $comm_groups, $trigger_groups, $sync_groups,
        $options, $tags, $before_list, $after_list,
@@ -160,49 +165,47 @@ sub parse_schedule_statement
         my $nm = $schedule->{name};
         if($nm eq "schedule") {
           my @children = @{$schedule->{children}};
-          $name = $children[1]->substring();
+          $name = $schedule->group(1,"name")->substring();
           $as = $name;
-          if($children[0]->{name} eq "nogroup") {
+          if($schedule->group(0)->is("nogroup")) {
             $type = "FUNCTION"
           } else {
             $type = "GROUP"
           }
           # parse prepositions
-          for my $prep (@{$children[2]->{children}}) {
-            my $prep_name = $prep->{children}->[0]->substring();
-            $prep_name = "\L$prep_name";
+          for my $prep (@{$schedule->group(2,"prepositions")->{children}}) {
+            my $prep_name = lc($prep->group(0,"par")->substring());
             if($prep_name eq "after") {
-              for my $item (@{$prep->{children}->[1]->{children}}) {
+              for my $item (@{$prep->group(1)->{children}}) {
                 $after_list .= "," unless($after_list eq "");
                 $after_list .= vname($item);
               }
             } elsif($prep_name eq "before") {
-              for my $item (@{$prep->{children}->[1]->{children}}) {
+              for my $item (@{$prep->group(1)->{children}}) {
                 $before_list .= "," unless($before_list eq "");
                 $before_list .= vname($item);
               }
             } elsif($prep_name eq "at") {
-              $where = $prep->{children}->[1]->substring();
+              $where = uc($prep->group(1,"pararg")->group(0,"vname")->substring());
               $where =~ s/^(CCTK_|)/CCTK_/gi;
-              $where = "\U$where";
               #confess("Bad clause 'at $where' in $ccl_file") unless(defined($schedule_bins{$where}));
             } elsif($prep_name eq "in") {
-              $where = $prep->{children}->[1]->substring();
+              $where = $prep->group(1,"pararg")->group(0,"vname")->substring();
               #confess("Bad clause 'in $where' in $ccl_file") if(defined($schedule_bins{"\U$where"}));
             } elsif($prep_name eq "while") {
               $while_list = "";
-              for my $w (@{$prep->{children}->[1]->{children}}) {
+              for my $w (@{$prep->group(1)->{children}}) {
                 $while_list .= "," unless($while_list eq "");
                 $while_list .= vname($w);
               }
             } elsif($prep_name eq "if") {
               $if_list = "";
-              for my $w (@{$prep->{children}->[1]->{children}}) {
+              for my $w (@{$prep->group(1)->{children}}) {
                 $if_list .= "," unless($if_list eq "");
                 $if_list .= vname($w);
               }
             } elsif($prep_name eq "as") {
-              my $nas = $prep->{children}->[1]->substring();
+              my $nas = $prep->group(1,"pararg")->group(0,"vname")->substring();
               confess("multiple use of 'as' keyword: name($name) as($as) nas($nas)")
                 if($as ne $name);
               $as = $nas;
@@ -211,46 +214,46 @@ sub parse_schedule_statement
             }
           }
           for my $child (@children[3..$#children-1]) {
-            if($child->{name} eq "lang") {
-              $language = $child->{children}->[0]->substring();
-            } elsif($child->{name} eq "options") {
+            if($child->is("lang")) {
+              $language = $child->group(0,"name")->substring();
+            } elsif($child->is("options")) {
               for my $opt (@{$child->{children}}) {
                 $options .= "," unless($options eq "");
                 $options .= $opt->substring(); 
               }
-            } elsif($child->{name} eq "storage") {
+            } elsif($child->is("storage")) {
               for my $vname (@{$child->{children}}) {
-                if($vname->{name} eq "vname") {
+                if($vname->is("vname")) {
                   $mem_groups .= "," if(defined($mem_groups));
                   $mem_groups .= vname($vname);
                 }
               }
-            } elsif($child->{name} eq "writes") {
+            } elsif($child->is("writes")) {
               my $qthorn = "";
               for my $qname (@{$child->{children}}) {
-                if($qname->{name} eq "qname") {
+                if($qname->is("qname")) {
                   $writes_list .= "," if(defined($writes_list));
                   $writes_list .= qname($qname);
                 }
               }
-            } elsif($child->{name} eq "reads") {
+            } elsif($child->is("reads")) {
               my $qthorn = "";
               for my $qname (@{$child->{children}}) {
-                if($qname->{name} eq "qname") {
+                if($qname->is("qname")) {
                   $reads_list .= "," if(defined($reads_list));
                   $reads_list .= qname($qname);
                 }
               }
-            } elsif($child->{name} eq "sync") {
+            } elsif($child->is("sync")) {
               for my $vname (@{$child->{children}}) {
-                if($vname->{name} eq "vname") {
+                if($vname->is("vname")) {
                   $sync_groups .= "," if(defined($sync_groups));
                   $sync_groups .= vname($vname);
                 }
               }
-            } elsif($child->{name} eq "triggers") {
+            } elsif($child->is("triggers")) {
               for my $vname (@{$child->{children}}) {
-                if($vname->{name} eq "vname") {
+                if($vname->is("vname")) {
                   $trigger_groups .= "," if(defined($trigger_groups));
                   $trigger_groups .= vname($vname);
                 }
@@ -266,7 +269,7 @@ sub parse_schedule_statement
           $type = "STOR";
           my $groups = "";
           for my $vname (@{$schedule->{children}}) {
-            if($vname->{name} eq "vname") {
+            if($vname->is("vname")) {
               $groups .= " " unless($groups eq "");
               $groups .= vname($vname);
             }
@@ -278,14 +281,12 @@ sub parse_schedule_statement
           next;
         } elsif($nm eq "if") {
           # Parse the ifbody group
-          $$buffer .= "if (".$schedule->{children}->[0]->substring().")\n";
+          $$buffer .= "if (".$schedule->group(0,"boolexpr")->substring().")\n";
           &parse_schedule_statement(
-            $schedule->{children}->[1],$schedule_db,$n_blocks,$n_statements,$buffer,$thorn);
+            $schedule->group(1,"ifbody"),$schedule_db,$n_blocks,$n_statements,$buffer,$thorn);
           next;
         } else {
           confess("NOT FOUND: [".$schedule->{name}."]");
-        }
-        if($type eq "FUNCTION") {
         }
         $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks NAME"}        = $name;
         $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks AS"}          = $as;
@@ -308,16 +309,16 @@ sub parse_schedule_statement
         $$buffer .= "\@BLOCK\@$$n_blocks\n";
         $$n_blocks++;
       }
-    } elsif($statement->{name} eq "block") {
+    } elsif($statement->is("block")) {
       $$buffer .= "{\n";
       &parse_schedule_statement($statement,$schedule_db,$n_blocks,$n_statements,$buffer,$thorn);
       $$buffer .= "}\n";
-    } elsif($statement->{name} eq "if") {
+    } elsif($statement->is("if")) {
       # Parse the ifbody group
-      $$buffer .= "if (".$statement->{children}->[0]->substring().")\n";
+      $$buffer .= "if (".$statement->group(0,"boolexpr")->substring().")\n";
       &parse_schedule_statement(
-         $statement->{children}->[1],$schedule_db,$n_blocks,$n_statements,$buffer,$thorn);
-    } elsif($statement->{name} eq "else") {
+         $statement->group(1,"ifbody"),$schedule_db,$n_blocks,$n_statements,$buffer,$thorn);
+    } elsif($statement->is("else")) {
       $$buffer .= "else ";
     } else {
       confess("statement error: <".$statement->{name}.">");

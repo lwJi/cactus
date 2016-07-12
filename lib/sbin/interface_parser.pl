@@ -27,9 +27,9 @@ sub expr
     }
     return $buf;
   } elsif($nm eq "parexpr") {
-    return "(".expr($expr->{children}->[0]).")";
+    return "(".expr($expr->group(0)).")";
   } elsif($nm eq "negexpr") {
-    return "-".expr($expr->{children}->[0]);
+    return "-".expr($expr->group(0));
   } elsif($nm eq "addop" or $nm eq "mulop" or $nm eq "accname" or $nm eq "num") {
     return $expr->substring();
   }
@@ -95,6 +95,10 @@ sub create_interface_database
   }
 
   &cross_index_interface_data (\@thorns, \%interface_data);
+
+  print "+============================+\n";
+  print "| Interface Parsing Complete |\n";
+  print "+============================+\n";
 
   return %interface_data;
 }
@@ -704,29 +708,26 @@ sub print_args
     return $arg->substring();
   } elsif($nm eq "args") {
     my $buf = "";
-    my @ch = @{$arg->{children}};
-    for(my $i=0;$i<=$#ch;$i++) {
+    for(my $i=0;$i < $arg->groupCount();$i++) {
       $buf .= ", " if($i > 0);
-      $buf .= print_args($ch[$i]);
+      $buf .= print_args($arg->group($i));
     }
     return $buf;
   } elsif($nm eq "arg") {
     my $buf = "";
-    my @ch = @{$arg->{children}};
-    for(my $i=0;$i<=$#ch;$i++) {
+    for(my $i=0;$i < $arg->groupCount();$i++) {
       $buf .= " " if($i > 0);
-      $buf .= print_args($ch[$i]);
+      $buf .= print_args($arg->group($i));
     }
     return $buf;
   } elsif($nm eq "fpointer") {
-    my @ch = @{$arg->{children}};
-    my $buf .= print_args($ch[$0]);
-    for(my $i=1;$i<$#ch;$i++) {
+    my $buf .= print_args($arg->group(0));
+    for(my $i=1;$i<$arg->groupCount()-1;$i++) {
       $buf .= " ";
-      $buf .= print_args($ch[$i]);
+      $buf .= print_args($arg->group($i));
     }
     $buf .= "(";
-    $buf .= print_args($ch[$#ch]);
+    $buf .= print_args($arg->group(-1));
     $buf .= ")";
     return $buf;
   }
@@ -778,82 +779,77 @@ sub parse_interface_ccl
 
   for my $fgroup (@{$group->{children}}) {
     my $fin =  $fgroup->{children}->[0];
-    if($fin->{name} eq "IMPLEMENTS") {
-      $interface_data_ref->{"\U$thorn\E IMPLEMENTS"} = $fin->{children}->[0]->substring();
-    } elsif($fin->{name} eq "INHERITS") {
+    if($fin->is("IMPLEMENTS")) {
+      $interface_data_ref->{"\U$thorn\E IMPLEMENTS"} = $fin->group(0,"name")->substring();
+    } elsif($fin->is("INHERITS")) {
       for my $ch (@{$fin->{children}}) {
         $interface_data_ref->{"\U$thorn\E INHERITS"} .= $ch->substring()." ";
       }
-    } elsif($fin->{name} eq "FRIEND") {
+    } elsif($fin->is("FRIEND")) {
       for my $ch (@{$fin->{children}}) {
         $interface_data_ref->{"\U$thorn\E FRIEND"} .= $ch->substring()." ";
       }
-    } elsif($fin->{name} eq "INCLUDE") {
-      my $wh = lc($fin->{children}->[0]->substring());
-      if($fin->{children}->[0]->{name} eq "what" and ($wh eq "header" or $wh eq "")) {
-        my $h1 = $fin->{children}->[1]->substring();
-        my $h2 = $fin->{children}->[2]->substring();
+    } elsif($fin->is("INCLUDE")) {
+      my $wh = lc($fin->group(0,"what")->substring());
+      my $h1 = $fin->group(1,"filename")->substring();
+      my $h2 = $fin->group(2,"filename")->substring();
+      if($wh eq "header" or $wh eq "") {
         $interface_data_ref->{"\U$thorn ADD HEADER\E"} .= " ".$h1;
         $interface_data_ref->{"\U$thorn ADD HEADER $h1 TO\E"} = $h2;
-      } elsif($fin->{children}->[0]->{name} eq "what" and $wh eq "source") {
-        my $h1 = $fin->{children}->[1]->substring();
-        my $h2 = $fin->{children}->[2]->substring();
+      } elsif($wh eq "source") {
         $interface_data_ref->{"\U$thorn ADD SOURCE\E"} .= $h1." ";
         $interface_data_ref->{"\U$thorn ADD SOURCE $h1 TO\E"} = $h2;
       } else {
-        die $fin->dump();
+        confess $fin->dump();
       }
-    } elsif($fin->{name} eq "FUNCTION") {
-      my $func = $fin->{children}->[0];
-      if($func->{name} eq "FUNCTION_ALIAS") {
-        my $ret = $func->{children}->[0]->substring();
-        if($ret eq "void") {
-          $ret = "void ";
-        } else {
+    } elsif($fin->is("FUNCTION")) {
+      my $func = $fin->group(0);
+      if($func->is("FUNCTION_ALIAS")) {
+        my $ret = $func->group(0)->substring();
+        if($ret ne "void") {
           $ret = uc($ret);
         }
-        $ret = "void " if($ret eq "SUBROUTINE");
-        my $name = $func->{children}->[1]->substring();
-        my $args = $func->{children}->[2];
+        $ret = "void" if($ret eq "SUBROUTINE");
+        my $name = $func->group(1,"name")->substring();
+        my $args = $func->group(2,"args");
         die $func->dump() unless(defined($args));
         $interface_data_ref->{"\U$thorn\E FUNCTIONS"} .= $name." ";
         $interface_data_ref->{"\U$thorn\E FUNCTION $name RET"} = $ret;
         $interface_data_ref->{"\U$thorn\E FUNCTION $name ARGS"} = print_args($args);
-      } elsif($func->{name} eq "PROVIDES_FUN") {
-        my $fname = $func->{children}->[0]->substring();
-        my $with  = $func->{children}->[1]->substring();
-        my $lang  = $func->{children}->[2]->substring();
+      } elsif($func->is("PROVIDES_FUN")) {
+        my $fname = $func->group(0,"name")->substring();
+        my $with  = $func->group(1,"name")->substring();
+        my $lang  = $func->group(2,"LANG")->substring();
         $interface_data_ref->{"\U$thorn\E PROVIDES FUNCTION"} .= $fname." ";
         $interface_data_ref->{"\U$thorn\E PROVIDES FUNCTION $fname LANG"} = $lang;
         $interface_data_ref->{"\U$thorn\E PROVIDES FUNCTION $fname WITH"} = $with;
-      } elsif($func->{name} eq "REQUIRES_FUN") {
-        my $fname = $func->{children}->[0]->substring();
+      } elsif($func->is("REQUIRES_FUN")) {
+        my $fname = $func->group(0,"name")->substring();
         $interface_data_ref->{"\U$thorn\E REQUIRES FUNCTION"} .= $fname." ";
-      } elsif($func->{name} eq "USES") {
-        my $sub = $func->{children}->[0];
-        if($sub->{name} eq "USES_FUN") {
-          my $fname = $sub->{children}->[0]->substring();
+      } elsif($func->is("USES")) {
+        my $sub = $func->group(0);
+        if($sub->is("USES_FUN")) {
+          my $fname = $sub->group(0,"name")->substring();
           $interface_data_ref->{"\U$thorn\E USES FUNCTION"} .= $fname." ";
         } else { # USES_INC
           my @ch = @{$sub->{children}};
-          my $what = uc($ch[0]->substring());
+          my $what = uc($sub->group(0,"what")->substring());
           if($what eq "HEADER" or $what eq "") {
-            for(my $i=1;$i<=$#ch;$i++) {
-              $interface_data_ref->{"\U$thorn\E USES HEADER"} .= $ch[$i]->substring()." ";
+            for(my $i=1;$i<$sub->groupCount();$i++) {
+              $interface_data_ref->{"\U$thorn\E USES HEADER"} .= $sub->group($i,"filename")->substring()." ";
             }
           } elsif($what eq "SOURCE") {
-            for(my $i=1;$i<=$#ch;$i++) {
-              $interface_data_ref->{"\U$thorn\E USES SOURCE"} .= $ch[$i]->substring()." ";
+            for(my $i=1;$i<$sub->groupCount();$i++) {
+              $interface_data_ref->{"\U$thorn\E USES SOURCE"} .= $sub->group($i,"filename")->substring()." ";
             }
           }
         }
       }
-    } elsif($fin->{name} eq "access") {
+    } elsif($fin->is("access")) {
       $access = $fin->substring();
-    } elsif($fin->{name} eq "GROUP_VARS") {
-      my @ch = @{$fin->{children}};
-      my $vtype = uc($ch[0]->substring());
-      my $gname = $ch[1]->{children}->[0]->substring();
+    } elsif($fin->is("GROUP_VARS")) {
+      my $vtype = uc($fin->group(0,"vtype")->substring());
+      my $gname = $fin->group(1,"gname")->group(0,"name")->substring();
       my $desc = undef;
       my $dim = undef;
       my $distrib = undef;
@@ -862,26 +858,25 @@ sub parse_interface_ccl
       my $timelevels = 1;
       my $size = undef;
       my $var_array_size = undef;
-      if($#{$ch[1]->{children}} == 1) {
-        $var_array_size = expr($ch[1]->{children}->[1]);
+      if($fin->group(1,"gname")->has(1,"expr")) {
+        $var_array_size = expr($fin->group(1)->group(1));
       }
       $interface_data_ref->{"\U$thorn $access GROUPS\E"} .= " ".$gname;
       $interface_data_ref->{"\U$thorn GROUP $gname\E"} = $gname;
       my %items = ();
-      for(my $i=2;$i<=$#ch;$i++) {
-        my $ch=$ch[$i];
+      for(my $i=2;$i<$fin->groupCount();$i++) {
+        my $ch=$fin->group($i);
         my $nm = $ch->{name};
         confess("Repeated item: $nm in $gname") if(defined($items{$nm}) and $nm ne "tags");
         $items{$nm}++;
         if($nm eq "desc" or $nm eq "group_comment") {
           my $new_desc = trim_quotes($ch->substring());
-          $desc .= $new_desc;# unless($new_desc eq "");
+          $desc .= $new_desc;
         } elsif($nm eq "timelevels") {
           $timelevels = $ch->substring();
         } elsif($nm eq "dim") {
           $dim = $ch->substring();
         } elsif($nm eq "size") {
-          #$size = uc($ch->mkstring());
           my $sz = "";
           my $ndims = 0;
           for my $c (@{$ch->{children}}) {
@@ -932,8 +927,6 @@ sub parse_interface_ccl
       if(defined($var_array_size)) {
         $interface_data_ref->{"\U$thorn GROUP $gname VARARRAY_SIZE\E"} = $var_array_size;
       }
-    } else {
-      ;#
     }
   }
 

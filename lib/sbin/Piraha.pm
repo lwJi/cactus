@@ -1539,7 +1539,11 @@ sub group
   my $self = shift;
   my $n = shift;
   my $nm = shift;
+  $n += $self->groupCount()+1+$n if($n < 0);
   my $ref = $self->{children}->[$n];
+  unless(defined($ref)) {
+    confess("invalid group index: $n");
+  }
   if(defined($nm)) {
     my $m = $ref->{name};
     confess("wrong group '$nm' != '$m'")
@@ -1553,6 +1557,7 @@ sub has
   my $self = shift;
   my $n = shift;
   my $nm = shift;
+  $n += $self->groupCount()+1+$n if($n < 0);
   my $ref = $self->{children}->[$n];
   return 0 unless(defined($ref));
   if(defined($nm)) {
@@ -1560,7 +1565,14 @@ sub has
     return 0
       unless($m eq $nm);
   }
-  return 1;
+  return $ref;
+}
+
+sub is
+{
+  my $self = shift;
+  my $nm = shift;
+  return $self->{name} eq $nm;
 }
 
 sub groupCount

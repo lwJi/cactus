@@ -15,6 +15,7 @@
 push @INC, "./lib/sbin";
 require Piraha;
 use strict;
+use Carp;
 my $ccl_file;
 
 #/*@@
@@ -67,6 +68,11 @@ sub create_parameter_database
   }
 
   @parameter_data = &cross_index_parameters(scalar(keys %thorns), (sort keys %thorns), @parameter_data);
+
+  print "\n";
+  print "+========================+\n";
+  print "| Param Parsing complete |\n";
+  print "+========================+\n";
 
   return @parameter_data;
 }
@@ -158,11 +164,9 @@ sub parse_param_ccl
       my $name = $name_num->group(0,"name")->substring();
       my $as_name = $name;
       my $num;
-      my $dbg = 0;
-      $dbg = 1 if(uc($thorn) eq "CARPETIOHDF5");# and uc($name) eq "IO_OUT_CRITERION");
       if($name_num->has(1)) {
         $num = $name_num->group(1,"num")->substring();
-        $parameter_db{"\U$thorn $name\E array_size"} = $num;
+        $parameter_db{"\U$thorn $as_name\E array_size"} = $num;
       }
       my $gutpars;
       if($guts->has(2,"gutpars")) {
@@ -174,19 +178,18 @@ sub parse_param_ccl
       for my $child (@{$gutpars->{children}}) {
         my $cname = $child->{name};
         if(defined($keys{$cname})) {
-          confess("Multiply defined value for $cname in thorn $thorn, parameter $name");
+          confess("Multiply defined value for $cname in thorn $thorn, parameter $as_name");
         }
         $keys{$cname}++;
         if($cname eq "steerable") {
           my $val = $child->substring();
-          $parameter_db{"\U$thorn $name\E steerable"}=$val;
+          $parameter_db{"\U$thorn $as_name\E steerable"}=$val;
         } elsif($cname eq "accumexpr") {
           my $val = $child->substring();
-          $parameter_db{"\U$thorn $name\E accumulator"}=$val;
-          $parameter_db{"\U$thorn $name\E accumulator-expression"}=$val;
+          $parameter_db{"\U$thorn $as_name\E accumulator-expression"}=$val;
         } elsif($cname eq "accname") {
           my $val = $child->substring();
-          $parameter_db{"\U$thorn $name\E accumulator-base"}=$val;
+          $parameter_db{"\U$thorn $as_name\E accumulator-base"}=$val;
         } elsif($cname eq "as") {
           my $val = $child->group(0,"name")->substring();
           $as_name = $val;
@@ -194,47 +197,40 @@ sub parse_param_ccl
       }
       my $desc = $guts->group(1,"description")->substring();
       $desc =~ s/\\\n//g;
-      if($gr->{name} eq "keywordpar") {
-        #if($uses_or_extends eq "uses") {
-        #  $parameter_db{"\U$thorn $name\E ranges"}=0;
-        #}
+      if($gr->is("keywordpar")) {
         $parameter_db{"\U$thorn $as_name\E type"}="KEYWORD";
-        $parameter_db{"\U$thorn $as_name\E ranges"}=0;
-        my @children = @{$gr->{children}};
         my $item_count = 1;
         my @items = ();
-        for(my $i=0;$i <= $#children;$i++) {
-          my $item = $gr->{children}->[$i];
+        for(my $i=0;$i < $gr->groupCount();$i++) {
+          my $item = $gr->group($i);
           if($item->{name} eq "keywordset") {
-            my @set = @{$item->{children}};
             my $item_desc = "";
-            my $end = $#set;
-            if($set[$end]->{name} eq "quote") {
-              $item_desc = $set[$end]->substring();
+            my $end = $item->groupCount()-1;
+            if($item->has($end,"quote"))
+            {
+              $item_desc = $item->group($end)->substring();
               $item_desc =~ s/\\\n//g;
               $end--;
             }
             for(my $i=0;$i<=$end;$i++) {
-              $parameter_db{"\U$thorn $name\E range $item_count description"} = $item_desc;
-              $parameter_db{"\U$thorn $name\E range $item_count range"} = trim_quotes($set[$i]->{children}->[0]->substring());
-              $parameter_db{"\U$thorn $as_name\E ranges"}++;
+              $parameter_db{"\U$thorn $as_name\E range $item_count description"} = $item_desc;
+              $parameter_db{"\U$thorn $as_name\E range $item_count range"} = trim_quotes($item->group($i)->substring());
               $item_count++;
             }
           }
         }
-      } elsif($gr->{name} eq "intpar") {
-        my @children = @{$gr->{children}};
-        my $item_count = 0;
+        $parameter_db{"\U$thorn $as_name\E ranges"} = $item_count-1;
+      } elsif($gr->is("intpar")) {
+        my $item_count = 1;
         my @items = ();
-        for(my $i=$n+1;$i < $#children;$i++) {
-          my $item = $gr->{children}->[$i];
-          if($item->{name} eq "intset") {
-            $item_count++;
+        for(my $i=$n+1;$i < $gr->groupCount()-1;$i++) {
+          my $item = $gr->group($i);
+          if($item->is("intset")) {
             my $item_desc = "";
             $item_desc = $item->group(1)->substring()
               if($item->has(1,"quote"));
             $item_desc =~ s/\\\n//g;
-            $parameter_db{"\U$thorn $name\E range $item_count description"} = $item_desc;
+            $parameter_db{"\U$thorn $as_name\E range $item_count description"} = $item_desc;
             my $intrange = $item->group(0,"intrange");
             my $intrange_str = "";
             if($intrange->has(0,"intbound")) {
@@ -250,23 +246,23 @@ sub parse_param_ccl
                 $intrange_str .= ":".$intrange->group(3,"intbound")->substring();
               }
             }
-            $parameter_db{"\U$thorn $name\E range $item_count range"} = $intrange_str;
+            $parameter_db{"\U$thorn $as_name\E range $item_count range"} = $intrange_str;
+            $item_count++;
           }
         }
-        $parameter_db{"\U$thorn $as_name\E ranges"} = $item_count;
+        $parameter_db{"\U$thorn $as_name\E ranges"} = $item_count-1;
         $parameter_db{"\U$thorn $as_name\E type"} = "INT";
-      } elsif($gr->{name} eq "realpar") {
-        my @children = @{$gr->{children}};
+      } elsif($gr->is("realpar")) {
         my $item_count = 1;
         my @items = ();
-        for(my $i=$n+1;$i < $#children;$i++) {
-          my $item = $gr->{children}->[$i];
-          if($item->{name} eq "realset") {
+        for(my $i=$n+1;$i < $gr->groupCount()-1;$i++) {
+          my $item = $gr->group($i);
+          if($item->is("realset")) {
             my $item_desc = "";
-            $item_desc = $item->{children}->[1]->substring()
-              if(defined($item->{children}->[1]));
+            $item_desc = $item->group(1)->substring()
+              if(defined($item->has(1,"quote")));
             $item_desc =~ s/\\\n//g;
-            $parameter_db{"\U$thorn $name\E range $item_count description"} = $item_desc;
+            $parameter_db{"\U$thorn $as_name\E range $item_count description"} = $item_desc;
             my $realrange = $item->group(0,"realrange");
             my $realrange_str = "";
             if($realrange->has(0,"realbound")) {
@@ -278,40 +274,40 @@ sub parse_param_ccl
               $realrange_str .= $realrange->group(2,"realbound")->substring();
               $realrange_str .= $realrange->group(3,"rbound")->substring();
             }
-            $parameter_db{"\U$thorn $name\E range $item_count range"} = $realrange_str;
+            $parameter_db{"\U$thorn $as_name\E range $item_count range"} = $realrange_str;
             $item_count++;
           }
         }
         $parameter_db{"\U$thorn $as_name\E ranges"} = $item_count-1;
         $parameter_db{"\U$thorn $as_name\E type"} = "REAL";
-      } elsif($gr->{name} eq "stringpar") {
-        if($uses_or_extends eq "uses") {
-          $parameter_db{"\U$thorn $as_name\E ranges"}=0;
-        }
+      } elsif($gr->is("stringpar")) {
         $parameter_db{"\U$thorn $as_name\E type"}="STRING";
         $parameter_db{"\U$thorn $as_name\E ranges"}=0;
-        my @children = @{$gr->{children}};
         my $item_count = 1;
         my @items = ();
-        for(my $i=$n+1;$i < $#children;$i++) {
-          my $item = $gr->{children}->[$i];
-          if($item->{name} eq "stringset") {
-            my @set = @{$item->{children}};
+        for(my $i=$n+1;$i < $gr->groupCount()-1;$i++) {
+          my $item = $gr->group($i);
+          if($item->is("stringset")) {
             my $item_desc = "";
-            my $end = $#set;
-            if($set[$#set]->{name} eq "quote") {
-              $item_desc = $set[$#set]->substring();
+            my $end = $item->groupCount()-1;
+            if($item->has($end,"quote")) {
+              $item_desc = $item->group($end)->substring();
               $item_desc =~ s/\\\n//g;
               $end--;
             }
             for(my $i=0;$i<=$end;$i++) {
-              $parameter_db{"\U$thorn $name\E range $item_count description"} = $item_desc;
-              $parameter_db{"\U$thorn $name\E range $item_count range"} = trim_quotes($set[$i]->{children}->[0]->substring());
+              $parameter_db{"\U$thorn $as_name\E range $item_count description"} = $item_desc;
+              my $range = $item->group($i)->group(0);
+              confess "Bad range '".$range->{name}."'"
+                unless($range->is("quote") or $range->is("char_seq"));
+              $parameter_db{"\U$thorn $as_name\E range $item_count range"} =
+                trim_quotes($range->substring());
               $parameter_db{"\U$thorn $as_name\E ranges"}++;
               $item_count++;
             }
           }
         }
+        $parameter_db{"\U$thorn $as_name\E ranges"}=$item_count-1;
       } elsif($gr->{name} eq "boolpar") {
         $parameter_db{"\U$thorn $as_name\E ranges"} = 0;
         $parameter_db{"\U$thorn $as_name\E type"} = "BOOLEAN";
@@ -325,9 +321,9 @@ sub parse_param_ccl
             $item_desc = $item->{children}->[1]->substring()
               if(defined($item->{children}->[1]));
             $item_desc =~ s/\\\n//g;
-            $parameter_db{"\U$thorn $name\E range $item_count description"} = $item_desc;
+            $parameter_db{"\U$thorn $as_name\E range $item_count description"} = $item_desc;
             my $bool = trim_quotes($item->group(0,"bool")->substring());
-            $parameter_db{"\U$thorn $name\E range $item_count range"} = $bool;
+            $parameter_db{"\U$thorn $as_name\E range $item_count range"} = $bool;
             $item_count++;
           }
         }
@@ -343,7 +339,7 @@ sub parse_param_ccl
         my @children = @{$gr->{children}};
         my $default = trim_quotes($children[$#children]->substring());
         $default =~ s/\\\n//g;
-        $parameter_db{"\U$thorn $name\E default"} = $default;
+        $parameter_db{"\U$thorn $as_name\E default"} = $default;
         $parameter_db{"\U$thorn SHARES $share\E variables"} .= "";
       }
       $parameter_db{"\U$thorn $as_name\E description"} = $desc;
