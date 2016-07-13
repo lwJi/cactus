@@ -1,0 +1,15 @@
+skipper = (\\\n|[ \t\r\n]|\#.*)*\b
+s = [ \t]*
+key = (?i:optional(_ifactive|)|provides)
+provopt = {key} {name}({-s}{name})* \{ ({script} |{options} |{lang} |{vname} )*\}
+script = (?i:script) {pname}
+options = (?i:options) ({name} )*
+lang = (?i:lang) {name}
+version = (?i:version) {vname}
+name_with_ver  = {name}( \( << {vname} \)|)
+thorns = (?i:thorns)
+requires = (?i:requires)({-s}{thorns}:({-s}{name})+|({-s}{name_with_ver})+)
+name = [A-Za-z][a-zA-Z0-9_]*
+pname = [A-Za-z0-9_./-]+
+vname = [A-Za-z0-9_-]+
+all = ^ ({provopt} |{requires} )*$
