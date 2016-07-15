@@ -97,13 +97,15 @@ sub create_schedule_database
     unless($m) {
       print "CST ERROR IN FILE '$ccl_file' ";
       $p->showError();
+      confess("Parse Error");
+    }
+    if(defined($ENV{MAKE_TREE})) {
       my $fd = new FileHandle;
       open($fd,">tree.txt");
       print $fd $ccl_file,"\n";
       print $fd "=" x 50,"\n";
       print $fd $p->{gr}->dump(),"\n";
       close($fd);
-      confess("Parse Error");
     }
 
     #       Get the schedule stuff from it

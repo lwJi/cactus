@@ -14,7 +14,7 @@ accumexpr = \( ([^()]+|{accumexpr}) \)
 
 # Note slop on shared
 access_spec = (?i:global|restricted|private)
-share = (?i:shares) : {name}
+share = (?i:shares)[ \t]*:[ \t]*{name}
 access = {access_spec} :|{share}
 #access = (?i:global : |restricted : |private : |shares :([\ \t]*{name}|) )
 #access = (?i: global : | restricted : | private : | shares : {name} )
@@ -32,9 +32,9 @@ rbound = [\)\]]?
 realrange = {lbound}{realbound} :(?!:) {realbound}{rbound} |{realbound}
 
 boolraw = (?i:true|t|yes|y|false|f|no|n|1|0)
-bool = {-boolraw}|"{-boolraw}"
+bool = {-boolraw}|"{-boolraw}"|:(?!:)
 
-char_seq = (\\[^]|[^\\ \t\r\n\b}])+
+char_seq = (?!::)(\\[^]|[^\\ \t\r\n\b}])+
 string = {quote}|{name}|{char_seq}
 
 name_num = {name}( \[{num}\]|)

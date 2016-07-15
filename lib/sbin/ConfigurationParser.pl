@@ -330,12 +330,14 @@ sub ParseConfigurationCCL
     $p->showError();
     confess("Parse Error");
   }
-  my $fd = new FileHandle;
-  open($fd,">tree.txt");
-  print $fd $ccl_file,"\n";
-  print $fd "=" x 50,"\n";
-  print $fd $p->{gr}->dump(),"\n";
-  close($fd);
+    if(defined($ENV{MAKE_TREE})) {
+      my $fd = new FileHandle;
+      open($fd,">tree.txt");
+      print $fd $ccl_file,"\n";
+      print $fd "=" x 50,"\n";
+      print $fd $p->{gr}->dump(),"\n";
+      close($fd);
+    }
 
   for my $node (@{$p->{gr}->{children}}) {
     if($node->is("requires")) {

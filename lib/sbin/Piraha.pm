@@ -1460,10 +1460,14 @@ sub diag
 sub match
 {
   my $self = shift;
-  my $m = shift;
-  my $p = $m->{textPos};
+  my $m  = shift;
+  my $p  = $m->{textPos};
+  my $h  = $m->{hash};
+  my $mx = $m->{maxTextPos};
   my $b = $self->{pat}->match($m);
   $m->{textPos}=$p;
+  $m->{maxTextPos}=$mx;
+  $m->{hash} = $h;
   return !$b;
 }
 
@@ -1722,6 +1726,15 @@ sub showError
   }
   $post =~ s/\n*$/\n/;
   my %hash = %{$self->{hash}};
+
+  # Don't worry about comment characters
+  delete $hash{" "};
+  delete $hash{"#"};
+  delete $hash{"\t"};
+  delete $hash{"\n"};
+  delete $hash{"\b"};
+  delete $hash{"\r"};
+
   my $c = substr($txt,$pos,1);
   #print $pre,"\e[1;37;41m",$c,"\e[0;m",$post;
   print $pre,$c,$post;
