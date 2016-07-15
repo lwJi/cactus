@@ -49,14 +49,14 @@ sub create_parameter_database
     unless($m) {
       print "CST ERROR IN FILE '$ccl_file' ";
       $p->showError();
+      my $fd = new FileHandle;
+      open($fd,">tree.txt");
+      print $fd $ccl_file,"\n";
+      print $fd "=" x 50,"\n";
+      print $fd $p->{gr}->dump(),"\n";
+      close($fd);
       confess("Parse Error");
     }
-    my $fd = new FileHandle;
-    open($fd,">tree.txt");
-    print $fd $ccl_file,"\n";
-    print $fd "=" x 50,"\n";
-    print $fd $p->{gr}->dump(),"\n";
-    close($fd);
 
     # Get the parameters from it
     @new_parameter_data = &parse_param_ccl($thorn, $p->{gr}, @indata);
@@ -71,7 +71,7 @@ sub create_parameter_database
 
   print "\n";
   print "+========================+\n";
-  print "| Param Parsing complete |\n";
+  print "| Param Parsing Complete |\n";
   print "+========================+\n";
 
   return @parameter_data;
@@ -139,17 +139,19 @@ sub parse_param_ccl
   #   The default block is private.
   $block = 'PRIVATE';
 
-  $parameter_db{"\U$thorn PRIVATE\E variables"} = '';
+  my %parameter_db1 = ();
+
+  $parameter_db1{"\U$thorn PRIVATE\E variables"} = '';
 
   for my $gr (@{$group->{children}}) {
     if($gr->{name} eq "access") {
       if($gr->has(0,"access_spec")) {
         $block = uc($gr->group(0)->substring());
-        $parameter_db{"\U$thorn $block\E variables"} .= "";
+        $parameter_db1{"\U$thorn $block\E variables"} .= "";
       }
       if($gr->{children}->[0]->{name} eq "share") {
         $share = $gr->group(0,"share")->group(0,"name")->substring();
-        #$parameter_db{"\U$thorn SHARES\E implementations"} .= "\U$share ";
+        #$parameter_db1{"\U$thorn SHARES\E implementations"} .= "\U$share ";
         $shares_implementations{uc($share)}++;
       }
     } else {
@@ -166,7 +168,7 @@ sub parse_param_ccl
       my $num;
       if($name_num->has(1)) {
         $num = $name_num->group(1,"num")->substring();
-        $parameter_db{"\U$thorn $as_name\E array_size"} = $num;
+        $parameter_db1{"\U$thorn $as_name\E array_size"} = $num;
       }
       my $gutpars;
       if($guts->has(2,"gutpars")) {
@@ -183,13 +185,13 @@ sub parse_param_ccl
         $keys{$cname}++;
         if($cname eq "steerable") {
           my $val = $child->substring();
-          $parameter_db{"\U$thorn $as_name\E steerable"}=$val;
+          $parameter_db1{"\U$thorn $as_name\E steerable"}=$val;
         } elsif($cname eq "accumexpr") {
           my $val = $child->substring();
-          $parameter_db{"\U$thorn $as_name\E accumulator-expression"}=$val;
+          $parameter_db1{"\U$thorn $as_name\E accumulator-expression"}=$val;
         } elsif($cname eq "accname") {
           my $val = $child->substring();
-          $parameter_db{"\U$thorn $as_name\E accumulator-base"}=$val;
+          $parameter_db1{"\U$thorn $as_name\E accumulator-base"}=$val;
         } elsif($cname eq "as") {
           my $val = $child->group(0,"name")->substring();
           $as_name = $val;
@@ -198,7 +200,7 @@ sub parse_param_ccl
       my $desc = $guts->group(1,"description")->substring();
       $desc =~ s/\\\n//g;
       if($gr->is("keywordpar")) {
-        $parameter_db{"\U$thorn $as_name\E type"}="KEYWORD";
+        $parameter_db1{"\U$thorn $as_name\E type"}="KEYWORD";
         my $item_count = 1;
         my @items = ();
         for(my $i=0;$i < $gr->groupCount();$i++) {
@@ -213,13 +215,13 @@ sub parse_param_ccl
               $end--;
             }
             for(my $i=0;$i<=$end;$i++) {
-              $parameter_db{"\U$thorn $as_name\E range $item_count description"} = $item_desc;
-              $parameter_db{"\U$thorn $as_name\E range $item_count range"} = trim_quotes($item->group($i)->substring());
+              $parameter_db1{"\U$thorn $as_name\E range $item_count description"} = $item_desc;
+              $parameter_db1{"\U$thorn $as_name\E range $item_count range"} = trim_quotes($item->group($i)->substring());
               $item_count++;
             }
           }
         }
-        $parameter_db{"\U$thorn $as_name\E ranges"} = $item_count-1;
+        $parameter_db1{"\U$thorn $as_name\E ranges"} = $item_count-1;
       } elsif($gr->is("intpar")) {
         my $item_count = 1;
         my @items = ();
@@ -230,7 +232,7 @@ sub parse_param_ccl
             $item_desc = $item->group(1)->substring()
               if($item->has(1,"quote"));
             $item_desc =~ s/\\\n//g;
-            $parameter_db{"\U$thorn $as_name\E range $item_count description"} = $item_desc;
+            $parameter_db1{"\U$thorn $as_name\E range $item_count description"} = $item_desc;
             my $intrange = $item->group(0,"intrange");
             my $intrange_str = "";
             if($intrange->has(0,"intbound")) {
@@ -246,12 +248,12 @@ sub parse_param_ccl
                 $intrange_str .= ":".$intrange->group(3,"intbound")->substring();
               }
             }
-            $parameter_db{"\U$thorn $as_name\E range $item_count range"} = $intrange_str;
+            $parameter_db1{"\U$thorn $as_name\E range $item_count range"} = $intrange_str;
             $item_count++;
           }
         }
-        $parameter_db{"\U$thorn $as_name\E ranges"} = $item_count-1;
-        $parameter_db{"\U$thorn $as_name\E type"} = "INT";
+        $parameter_db1{"\U$thorn $as_name\E ranges"} = $item_count-1;
+        $parameter_db1{"\U$thorn $as_name\E type"} = "INT";
       } elsif($gr->is("realpar")) {
         my $item_count = 1;
         my @items = ();
@@ -262,7 +264,7 @@ sub parse_param_ccl
             $item_desc = $item->group(1)->substring()
               if(defined($item->has(1,"quote")));
             $item_desc =~ s/\\\n//g;
-            $parameter_db{"\U$thorn $as_name\E range $item_count description"} = $item_desc;
+            $parameter_db1{"\U$thorn $as_name\E range $item_count description"} = $item_desc;
             my $realrange = $item->group(0,"realrange");
             my $realrange_str = "";
             if($realrange->has(0,"realbound")) {
@@ -274,15 +276,15 @@ sub parse_param_ccl
               $realrange_str .= $realrange->group(2,"realbound")->substring();
               $realrange_str .= $realrange->group(3,"rbound")->substring();
             }
-            $parameter_db{"\U$thorn $as_name\E range $item_count range"} = $realrange_str;
+            $parameter_db1{"\U$thorn $as_name\E range $item_count range"} = $realrange_str;
             $item_count++;
           }
         }
-        $parameter_db{"\U$thorn $as_name\E ranges"} = $item_count-1;
-        $parameter_db{"\U$thorn $as_name\E type"} = "REAL";
+        $parameter_db1{"\U$thorn $as_name\E ranges"} = $item_count-1;
+        $parameter_db1{"\U$thorn $as_name\E type"} = "REAL";
       } elsif($gr->is("stringpar")) {
-        $parameter_db{"\U$thorn $as_name\E type"}="STRING";
-        $parameter_db{"\U$thorn $as_name\E ranges"}=0;
+        $parameter_db1{"\U$thorn $as_name\E type"}="STRING";
+        $parameter_db1{"\U$thorn $as_name\E ranges"}=0;
         my $item_count = 1;
         my @items = ();
         for(my $i=$n+1;$i < $gr->groupCount()-1;$i++) {
@@ -296,21 +298,21 @@ sub parse_param_ccl
               $end--;
             }
             for(my $i=0;$i<=$end;$i++) {
-              $parameter_db{"\U$thorn $as_name\E range $item_count description"} = $item_desc;
+              $parameter_db1{"\U$thorn $as_name\E range $item_count description"} = $item_desc;
               my $range = $item->group($i)->group(0);
               confess "Bad range '".$range->{name}."'"
                 unless($range->is("quote") or $range->is("char_seq"));
-              $parameter_db{"\U$thorn $as_name\E range $item_count range"} =
+              $parameter_db1{"\U$thorn $as_name\E range $item_count range"} =
                 trim_quotes($range->substring());
-              $parameter_db{"\U$thorn $as_name\E ranges"}++;
+              $parameter_db1{"\U$thorn $as_name\E ranges"}++;
               $item_count++;
             }
           }
         }
-        $parameter_db{"\U$thorn $as_name\E ranges"}=$item_count-1;
+        $parameter_db1{"\U$thorn $as_name\E ranges"}=$item_count-1;
       } elsif($gr->{name} eq "boolpar") {
-        $parameter_db{"\U$thorn $as_name\E ranges"} = 0;
-        $parameter_db{"\U$thorn $as_name\E type"} = "BOOLEAN";
+        $parameter_db1{"\U$thorn $as_name\E ranges"} = 0;
+        $parameter_db1{"\U$thorn $as_name\E type"} = "BOOLEAN";
         my @children = @{$gr->{children}};
         my $item_count = 1;
         my @items = ();
@@ -321,34 +323,34 @@ sub parse_param_ccl
             $item_desc = $item->{children}->[1]->substring()
               if(defined($item->{children}->[1]));
             $item_desc =~ s/\\\n//g;
-            $parameter_db{"\U$thorn $as_name\E range $item_count description"} = $item_desc;
+            $parameter_db1{"\U$thorn $as_name\E range $item_count description"} = $item_desc;
             my $bool = trim_quotes($item->group(0,"bool")->substring());
-            $parameter_db{"\U$thorn $as_name\E range $item_count range"} = $bool;
+            $parameter_db1{"\U$thorn $as_name\E range $item_count range"} = $bool;
             $item_count++;
           }
         }
-        $parameter_db{"\U$thorn $as_name\E ranges"} = $item_count-1;
+        $parameter_db1{"\U$thorn $as_name\E ranges"} = $item_count-1;
       }
-      $parameter_db{"\U$thorn $as_name\E realname"} = $name;
+      $parameter_db1{"\U$thorn $as_name\E realname"} = $name;
       if($uses_or_extends eq "uses") {
-        $parameter_db{"\U$thorn SHARES $share\E variables"} .= $as_name . " ";
+        confess("share not set") if("$share" eq "");
+        $parameter_db1{"\U$thorn SHARES $share\E variables"} .= $as_name . " ";
       } elsif($uses_or_extends eq "extends") {
-        $parameter_db{"\U$thorn SHARES $share\E variables"} .= $as_name . " ";
+        confess("share not set") if("$share" eq "");
+        $parameter_db1{"\U$thorn SHARES $share\E variables"} .= $as_name . " ";
       } elsif($uses_or_extends eq "") {
-        $parameter_db{"\U$thorn $block\E variables"} .= $as_name."\n";
+        $parameter_db1{"\U$thorn $block\E variables"} .= $as_name."\n";
         my @children = @{$gr->{children}};
         my $default = trim_quotes($children[$#children]->substring());
         $default =~ s/\\\n//g;
-        $parameter_db{"\U$thorn $as_name\E default"} = $default;
-        $parameter_db{"\U$thorn SHARES $share\E variables"} .= "";
+        $parameter_db1{"\U$thorn $as_name\E default"} = $default;
+        #$parameter_db1{"\U$thorn SHARES $as_name\E variables"} .= "";
       }
-      $parameter_db{"\U$thorn $as_name\E description"} = $desc;
+      $parameter_db1{"\U$thorn $as_name\E description"} = $desc;
     }
   }
-  #yyy
-  $parameter_db{"\U$thorn SHARES\E implementations"} = 
+  $parameter_db1{"\U$thorn SHARES\E implementations"} = 
     join(" ",sort keys %shares_implementations);
-    #join(" ",sort split(/\s+/,$parameter_db{"\U$thorn SHARES\E implementations"}));
 
   # Initialise, to prevent perl -w from complaining.
   $parameter_db2{"\U$thorn PRIVATE\E variables"} = '';
@@ -767,9 +769,8 @@ sub parse_param_ccl
   $parameter_db2{"\U$thorn\E SHARES implementations"} = join(" ", sort keys %friends);
 
   for my $k (sort keys %parameter_db2) {
-    my $v = $parameter_db{$k};
-    die "File: $ccl_file; Missing key <<$k>>=<<$v>>" unless(defined($v));
-    my $v1 = $parameter_db{$k};
+    my $v1 = $parameter_db1{$k};
+    die "File: $ccl_file; Missing key <<$k>>=<<$v1>>" unless(defined($v1));
     my $v2 = $parameter_db2{$k};
     $v1 =~ s/\s+/\n/g;
     $v2 =~ s/\s+/\n/g;
@@ -793,6 +794,14 @@ sub parse_param_ccl
     if($v1 ne $v2) {
       confess("File: $ccl_file; par key error:($k) new=($v1) old=($v2)");
     }
+  }
+  for my $k (keys %parameter_db1) {
+    if(!defined($parameter_db2{$k})) {
+      confess("Extra key in parameter ($k) ($parameter_db1{$k})")
+    }
+  }
+  for my $k (keys %parameter_db1) {
+    $parameter_db{$k} = $parameter_db1{$k};
   }
 
   return %parameter_db;

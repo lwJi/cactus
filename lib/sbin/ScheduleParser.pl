@@ -97,6 +97,12 @@ sub create_schedule_database
     unless($m) {
       print "CST ERROR IN FILE '$ccl_file' ";
       $p->showError();
+      my $fd = new FileHandle;
+      open($fd,">tree.txt");
+      print $fd $ccl_file,"\n";
+      print $fd "=" x 50,"\n";
+      print $fd $p->{gr}->dump(),"\n";
+      close($fd);
       confess("Parse Error");
     }
 
@@ -293,7 +299,8 @@ sub parse_schedule_statement
         $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks TYPE"}        = $type;
         $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks DESCRIPTION"} = $description;
         $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks WHERE"}       = $where;
-        $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks LANG"}        = $language;
+        $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks LANG"}        = $language
+          if(defined($language));
         $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks STOR"}        = $mem_groups;
         $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks COMM"}        = $comm_groups;
         $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks TRIG"}        = $trigger_groups;
@@ -358,10 +365,11 @@ sub parse_schedule_ccl
   $n_blocks     = 0;
   $n_statements = 0;
 
-  &parse_schedule_statement($group,\%schedule_db,\$n_blocks,\$n_statements,\$buffer,$thorn);
-  $schedule_db{"\U$thorn\E N_BLOCKS"}     = $n_blocks;
-  $schedule_db{"\U$thorn\E FILE"}         = $buffer;
-  $schedule_db{"\U$thorn\E N_STATEMENTS"} = $n_statements;
+  my %schedule_db1 = ();
+  &parse_schedule_statement($group,\%schedule_db1,\$n_blocks,\$n_statements,\$buffer,$thorn);
+  $schedule_db1{"\U$thorn\E N_BLOCKS"}     = $n_blocks;
+  $schedule_db1{"\U$thorn\E FILE"}         = $buffer;
+  $schedule_db1{"\U$thorn\E N_STATEMENTS"} = $n_statements;
 
   $buffer       = "";
   $n_blocks     = 0;
@@ -430,7 +438,7 @@ sub parse_schedule_ccl
   $schedule_db2{"\U$thorn\E N_STATEMENTS"} = $n_statements;
 
   for my $k (sort keys %schedule_db2) {
-    my $v1 = "".$schedule_db{$k};
+    my $v1 = "".$schedule_db1{$k};
     my $v2 = "".$schedule_db2{$k};
     #$v1 =~ s/\}\s+else/\} else/g;
     #$v2 =~ s/\}\s+else/\} else/g;
@@ -455,11 +463,19 @@ sub parse_schedule_ccl
     if($v1 ne $v2) {
       my $nk = $k;
       $nk =~ s/\s+[A-Z]+$/ NAME/;
-      my $name = $schedule_db{$nk};
+      my $name = $schedule_db1{$nk};
       my $name2 = $schedule_db2{$nk};
       confess("key error($nk): new:'$name' != old:'$name2'") if($name ne $name2);
       confess("key error($k)($name): new:'$v1' != old:'$v2'");
     }
+  }
+  for my $k (keys %schedule_db1) {
+    if(!defined($schedule_db2{$k})) {
+      confess("Extra key in schedule ($k) ($schedule_db1{$k})")
+    }
+  }
+  for my $k (keys %schedule_db1) {
+    $schedule_db{$k} = $schedule_db1{$k};
   }
 
   return %schedule_db;

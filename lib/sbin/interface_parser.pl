@@ -85,6 +85,12 @@ sub create_interface_database
     unless($m) {
       print "CST ERROR IN FILE '$ccl_file' ";
       $p->showError();
+      my $fd = new FileHandle;
+      open($fd,">tree.txt");
+      print $fd $ccl_file,"\n";
+      print $fd "=" x 50,"\n";
+      print $fd $p->{gr}->dump(),"\n";
+      close($fd);
       confess("Parse Error");
     }
 
@@ -753,52 +759,46 @@ sub parse_interface_ccl
   my(%known_groups);
   my(%known_variables);
 
-  my $interface_data_ref2 = {};
-  my $fd = new FileHandle();
-  open($fd,">tree.txt") or die;
-  print $fd $ccl_file,"\n";
-  print $fd "=" x 50,"\n";
-  print $fd $group->dump(),"\n";
-  close($fd);
-
   # Initialise some stuff to prevent perl -w from complaining.
+  
+  my $interface_data_ref1 = {};
 
-  $interface_data_ref->{"\U$thorn INHERITS\E"} = "";
-  $interface_data_ref->{"\U$thorn FRIEND\E"} = "";
-  $interface_data_ref->{"\U$thorn PUBLIC GROUPS\E"} = "";
-  $interface_data_ref->{"\U$thorn PROTECTED GROUPS\E"} = "";
-  $interface_data_ref->{"\U$thorn PRIVATE GROUPS\E"} = "";
-  $interface_data_ref->{"\U$thorn USES HEADER\E"} = "";
-  $interface_data_ref->{"\U$thorn FUNCTIONS\E"} = "";
-  $interface_data_ref->{"\U$thorn PROVIDES FUNCTION\E"} = " ";
-  $interface_data_ref->{"\U$thorn REQUIRES FUNCTION\E"} = " ";
-  $interface_data_ref->{"\U$thorn USES FUNCTION\E"} = " ";
-  $interface_data_ref->{"\U$thorn ARRANGEMENT\E"} = "$arrangement";
+  $interface_data_ref1->{"\U$thorn INHERITS\E"} = "";
+  $interface_data_ref1->{"\U$thorn FRIEND\E"} = "";
+  $interface_data_ref1->{"\U$thorn PUBLIC GROUPS\E"} = "";
+  $interface_data_ref1->{"\U$thorn PROTECTED GROUPS\E"} = "";
+  $interface_data_ref1->{"\U$thorn PRIVATE GROUPS\E"} = "";
+  $interface_data_ref1->{"\U$thorn USES HEADER\E"} = "";
+  $interface_data_ref1->{"\U$thorn FUNCTIONS\E"} = "";
+  $interface_data_ref1->{"\U$thorn PROVIDES FUNCTION\E"} = " ";
+  $interface_data_ref1->{"\U$thorn REQUIRES FUNCTION\E"} = " ";
+  $interface_data_ref1->{"\U$thorn USES FUNCTION\E"} = " ";
+  $interface_data_ref1->{"\U$thorn ARRANGEMENT\E"} = "$arrangement";
 
   my $access = "PRIVATE";
 
   for my $fgroup (@{$group->{children}}) {
     my $fin =  $fgroup->{children}->[0];
     if($fin->is("IMPLEMENTS")) {
-      $interface_data_ref->{"\U$thorn\E IMPLEMENTS"} = $fin->group(0,"name")->substring();
+      $interface_data_ref1->{"\U$thorn\E IMPLEMENTS"} = $fin->group(0,"name")->substring();
     } elsif($fin->is("INHERITS")) {
       for my $ch (@{$fin->{children}}) {
-        $interface_data_ref->{"\U$thorn\E INHERITS"} .= $ch->substring()." ";
+        $interface_data_ref1->{"\U$thorn\E INHERITS"} .= $ch->substring()." ";
       }
     } elsif($fin->is("FRIEND")) {
       for my $ch (@{$fin->{children}}) {
-        $interface_data_ref->{"\U$thorn\E FRIEND"} .= $ch->substring()." ";
+        $interface_data_ref1->{"\U$thorn\E FRIEND"} .= $ch->substring()." ";
       }
     } elsif($fin->is("INCLUDE")) {
       my $wh = lc($fin->group(0,"what")->substring());
       my $h1 = $fin->group(1,"filename")->substring();
       my $h2 = $fin->group(2,"filename")->substring();
       if($wh eq "header" or $wh eq "") {
-        $interface_data_ref->{"\U$thorn ADD HEADER\E"} .= " ".$h1;
-        $interface_data_ref->{"\U$thorn ADD HEADER $h1 TO\E"} = $h2;
+        $interface_data_ref1->{"\U$thorn ADD HEADER\E"} .= " ".$h1;
+        $interface_data_ref1->{"\U$thorn ADD HEADER $h1 TO\E"} = $h2;
       } elsif($wh eq "source") {
-        $interface_data_ref->{"\U$thorn ADD SOURCE\E"} .= $h1." ";
-        $interface_data_ref->{"\U$thorn ADD SOURCE $h1 TO\E"} = $h2;
+        $interface_data_ref1->{"\U$thorn ADD SOURCE\E"} .= $h1." ";
+        $interface_data_ref1->{"\U$thorn ADD SOURCE $h1 TO\E"} = $h2;
       } else {
         confess $fin->dump();
       }
@@ -813,34 +813,34 @@ sub parse_interface_ccl
         my $name = $func->group(1,"name")->substring();
         my $args = $func->group(2,"args");
         die $func->dump() unless(defined($args));
-        $interface_data_ref->{"\U$thorn\E FUNCTIONS"} .= $name." ";
-        $interface_data_ref->{"\U$thorn\E FUNCTION $name RET"} = $ret;
-        $interface_data_ref->{"\U$thorn\E FUNCTION $name ARGS"} = print_args($args);
+        $interface_data_ref1->{"\U$thorn\E FUNCTIONS"} .= $name." ";
+        $interface_data_ref1->{"\U$thorn\E FUNCTION $name RET"} = $ret;
+        $interface_data_ref1->{"\U$thorn\E FUNCTION $name ARGS"} = print_args($args);
       } elsif($func->is("PROVIDES_FUN")) {
         my $fname = $func->group(0,"name")->substring();
         my $with  = $func->group(1,"name")->substring();
         my $lang  = $func->group(2,"LANG")->substring();
-        $interface_data_ref->{"\U$thorn\E PROVIDES FUNCTION"} .= $fname." ";
-        $interface_data_ref->{"\U$thorn\E PROVIDES FUNCTION $fname LANG"} = $lang;
-        $interface_data_ref->{"\U$thorn\E PROVIDES FUNCTION $fname WITH"} = $with;
+        $interface_data_ref1->{"\U$thorn\E PROVIDES FUNCTION"} .= $fname." ";
+        $interface_data_ref1->{"\U$thorn\E PROVIDES FUNCTION $fname LANG"} = $lang;
+        $interface_data_ref1->{"\U$thorn\E PROVIDES FUNCTION $fname WITH"} = $with;
       } elsif($func->is("REQUIRES_FUN")) {
         my $fname = $func->group(0,"name")->substring();
-        $interface_data_ref->{"\U$thorn\E REQUIRES FUNCTION"} .= $fname." ";
+        $interface_data_ref1->{"\U$thorn\E REQUIRES FUNCTION"} .= $fname." ";
       } elsif($func->is("USES")) {
         my $sub = $func->group(0);
         if($sub->is("USES_FUN")) {
           my $fname = $sub->group(0,"name")->substring();
-          $interface_data_ref->{"\U$thorn\E USES FUNCTION"} .= $fname." ";
+          $interface_data_ref1->{"\U$thorn\E USES FUNCTION"} .= $fname." ";
         } else { # USES_INC
           my @ch = @{$sub->{children}};
           my $what = uc($sub->group(0,"what")->substring());
           if($what eq "HEADER" or $what eq "") {
             for(my $i=1;$i<$sub->groupCount();$i++) {
-              $interface_data_ref->{"\U$thorn\E USES HEADER"} .= $sub->group($i,"filename")->substring()." ";
+              $interface_data_ref1->{"\U$thorn\E USES HEADER"} .= $sub->group($i,"filename")->substring()." ";
             }
           } elsif($what eq "SOURCE") {
             for(my $i=1;$i<$sub->groupCount();$i++) {
-              $interface_data_ref->{"\U$thorn\E USES SOURCE"} .= $sub->group($i,"filename")->substring()." ";
+              $interface_data_ref1->{"\U$thorn\E USES SOURCE"} .= $sub->group($i,"filename")->substring()." ";
             }
           }
         }
@@ -854,15 +854,15 @@ sub parse_interface_ccl
       my $dim = undef;
       my $distrib = undef;
       my $gtype = undef;
-      my $tags = "";
+      my $tags = undef;
       my $timelevels = 1;
       my $size = undef;
       my $var_array_size = undef;
       if($fin->group(1,"gname")->has(1,"expr")) {
         $var_array_size = expr($fin->group(1)->group(1));
       }
-      $interface_data_ref->{"\U$thorn $access GROUPS\E"} .= " ".$gname;
-      $interface_data_ref->{"\U$thorn GROUP $gname\E"} = $gname;
+      $interface_data_ref1->{"\U$thorn $access GROUPS\E"} .= " ".$gname;
+      $interface_data_ref1->{"\U$thorn GROUP $gname\E"} = $gname;
       my %items = ();
       for(my $i=2;$i<$fin->groupCount();$i++) {
         my $ch=$fin->group($i);
@@ -891,9 +891,9 @@ sub parse_interface_ccl
         } elsif($nm eq "gtype") {
           $gtype = uc($ch->substring());
         } elsif($nm eq "VARS") {
-          $interface_data_ref->{"\U$thorn GROUP $gname\E"} = "";
+          $interface_data_ref1->{"\U$thorn GROUP $gname\E"} = "";
           for my $c (@{$ch->{children}}) {
-            $interface_data_ref->{"\U$thorn GROUP $gname\E"} .= " ".$c->substring();
+            $interface_data_ref1->{"\U$thorn GROUP $gname\E"} .= " ".$c->substring();
           }
         } elsif($nm eq "ghostsize") {
           my $ghost = "";
@@ -901,7 +901,7 @@ sub parse_interface_ccl
             $ghost .= "," unless($ghost eq "");
             $ghost .= expr($c);
           }
-          $interface_data_ref->{"\U$thorn GROUP $gname GHOSTSIZE\E"} = uc($ghost);
+          $interface_data_ref1->{"\U$thorn GROUP $gname GHOSTSIZE\E"} = uc($ghost);
         } elsif($nm eq "tags") {
           my $new_tags = trim_quotes($ch->substring());
           $new_tags =~ s/"/\\"/g;
@@ -915,22 +915,30 @@ sub parse_interface_ccl
       $dim = 3 if(!defined($dim) and $gtype eq "GF");
       $distrib = "DEFAULT" if(!defined($distrib) and ($gtype eq "GF" or $gtype eq "ARRAY"));
       $distrib = "CONSTANT" if(!defined($distrib));
-      $interface_data_ref->{"\U$thorn GROUP $gname COMPACT\E"} = 0;
-      $interface_data_ref->{"\U$thorn GROUP $gname DIM\E"} = $dim;
-      $interface_data_ref->{"\U$thorn GROUP $gname DESCRIPTION\E"} = $desc;
-      $interface_data_ref->{"\U$thorn GROUP $gname DISTRIB\E"} = $distrib;
-      $interface_data_ref->{"\U$thorn GROUP $gname GTYPE\E"} = $gtype;
-      $interface_data_ref->{"\U$thorn GROUP $gname TAGS\E"} = $tags;
-      $interface_data_ref->{"\U$thorn GROUP $gname TIMELEVELS\E"} = $timelevels;
-      $interface_data_ref->{"\U$thorn GROUP $gname VTYPE\E"} = $vtype;
-      $interface_data_ref->{"\U$thorn GROUP $gname SIZE\E"} = $size;
+      $interface_data_ref1->{"\U$thorn GROUP $gname COMPACT\E"} = 0;
+      $interface_data_ref1->{"\U$thorn GROUP $gname DIM\E"} = $dim;
+      if(defined($desc) and $desc !~ /^\s*$/) {
+        $interface_data_ref1->{"\U$thorn GROUP $gname DESCRIPTION\E"} = $desc;
+      }
+      $interface_data_ref1->{"\U$thorn GROUP $gname DISTRIB\E"} = $distrib;
+      $interface_data_ref1->{"\U$thorn GROUP $gname GTYPE\E"} = $gtype;
+      if(defined($tags)) {
+        $interface_data_ref1->{"\U$thorn GROUP $gname TAGS\E"} = $tags;
+      }
+      $interface_data_ref1->{"\U$thorn GROUP $gname TIMELEVELS\E"} = $timelevels;
+      $interface_data_ref1->{"\U$thorn GROUP $gname VTYPE\E"} = $vtype;
+      if(defined($size)) {
+        $interface_data_ref1->{"\U$thorn GROUP $gname SIZE\E"} = $size;
+      }
       if(defined($var_array_size)) {
-        $interface_data_ref->{"\U$thorn GROUP $gname VARARRAY_SIZE\E"} = $var_array_size;
+        $interface_data_ref1->{"\U$thorn GROUP $gname VARARRAY_SIZE\E"} = $var_array_size;
       }
     }
   }
 
   # Initialise some stuff to prevent perl -w from complaining.
+
+  my $interface_data_ref2 = {};
 
   $interface_data_ref2->{"\U$thorn INHERITS\E"} = "";
   $interface_data_ref2->{"\U$thorn FRIEND\E"} = "";
@@ -1430,7 +1438,7 @@ sub parse_interface_ccl
     }
   }
   for my $k (sort keys %{$interface_data_ref2}) {
-    my $v1 = "".$interface_data_ref->{$k};
+    my $v1 = "".$interface_data_ref1->{$k};
     my $v2 = "".$interface_data_ref2->{$k};
     unless($v1 =~ /VOID/) {
       $v1 =~ s/\s+/\n/g;
@@ -1454,6 +1462,14 @@ sub parse_interface_ccl
     if($v1 ne $v2) {
       confess("key error:($k) new=($v1) old=($v2)");
     }
+  }
+  for my $k (sort keys %{$interface_data_ref1}) {
+    if(!defined($interface_data_ref2->{$k})) {
+      confess("Extra key in interface ($k) ($interface_data_ref1->{$k})")
+    }
+  }
+  for my $k (keys %{$interface_data_ref1}) {
+    $interface_data_ref->{$k} = $interface_data_ref1->{$k};
   }
 }
 
