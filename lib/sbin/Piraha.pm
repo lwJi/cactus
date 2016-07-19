@@ -1,5 +1,86 @@
 package piraha;
 use strict;
+##############################################################################
+# A minimal Piraha script loos like this:
+# +---------------------------------------------------------------------------
+# | use Piraha;
+# |
+# | die "usage: gram.pl peg_file src_file" unless($#ARGV==1);
+# |
+# | my ($peg_file, $src_file) = @ARGV;
+# |
+# | # Parse the patter (peg) file to create the grammar
+# | # and the rule to start matching with (the last in the file).
+# | my ($g,$rule) = piraha::parse_peg_file($peg_file);
+# |
+# | # Create a matcher from a grammar, a starting rule,
+# | # and a source file.
+# | my $matcher   = piraha::parse_src($g,$rule,$src_file);
+# |
+# | # Attempt the match
+# | if($matcher->matches()) {
+# |   # if successful dump a parse tree
+# |   # the parse tree is in $matcher->{gr}
+# |   print $matcher->{gr}->dump(),"\n";
+# | } else {
+# |   # if not successful, describe the failure
+# |   $matcher->showError();
+# | }
+# +---------------------------------------------------------------------------
+# 
+# If a match is successful, the parse tree is stored in a data
+# structure called a group. Properties of the groups:
+# Group: $g
+#
+# $g->{name}
+#   The name of the node in the parse tree this group
+#   represents, i.e. the name of the rule in the grammar file.
+#
+# Fields:
+# =======
+# $g->{children}
+#   A reference to an array of child Group objects.
+#
+# $g->{text}
+#   The text string that was matched.
+#
+# $g->{start}
+#   The start position of the match in the text file.
+#
+# $g->{end}
+#   The end position of the match in the text file.
+#
+# Methods:
+# ========
+# $g->groupCount()
+#   Returns the number of child groups.
+#
+# $g->substring()
+#   Returns the portion of the string matched by
+#   the group rule (i.e. the text from start to end).
+#
+# $g->mkstring($tween)
+#   Similar to substring(). This method concatenates
+#   all child elements that have no children themselves
+#
+# $g->has($num,$name)
+#   Returns true if $num is less than groupCount(). If
+#   $name is supplied, and child number $num does not
+#   have name $name, then this method returns false.
+#
+# $g->group($num,$name)
+#   Returns child group number $num. If no such child
+#   exists, or if $name is supplied and does not match
+#   the child name, then die.
+#
+# $g->is($name)
+#   Returns true if the name of the current Group is
+#   equal to $name. The equivalent of ($g->{name} eq $name).
+#
+# $g->dump()
+#   Create a string representation of the parse tree.
+#   This is useful for debugging.
+##############################################################################
 
 my $max_int = 2147483647;
 
@@ -1595,14 +1676,16 @@ sub substring
 sub mkstring
 {
   my $self = shift;
+  my $tween = shift;
+  $tween = " " unless(defined($tween));
   confess("bad self") unless(defined($self->{children}) and ref($self->{children}) eq "ARRAY");
   if($#{$self->{children}} < 0) {
     return $self->substring();
   } else {
     my $buf = "";
     for my $child (@{$self->{children}}) {
-      $buf .= " " unless($buf eq "");
-      $buf .= $child->mkstring();
+      $buf .= $tween unless($buf eq "");
+      $buf .= $child->mkstring($tween);
     }
     return $buf;
   }
