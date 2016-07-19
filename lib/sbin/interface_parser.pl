@@ -869,7 +869,13 @@ sub parse_interface_ccl
       for(my $i=2;$i<$fin->groupCount();$i++) {
         my $ch=$fin->group($i);
         my $nm = $ch->{name};
-        confess("Repeated item: $nm in $gname") if(defined($items{$nm}) and $nm ne "tags");
+        if(defined($items{$nm})) {
+          print "CST Error:\n";
+          print "Repeated element 'tag' in $gname\n";
+          print "Line: ",$ch->linenum(),"\n";
+          print "File: ",$ccl_file,"\n";
+          confess("Repeated item: $nm in $gname")
+        }
         $items{$nm}++;
         if($nm eq "desc" or $nm eq "group_comment") {
           my $new_desc = trim_quotes($ch->substring());
@@ -907,8 +913,6 @@ sub parse_interface_ccl
         } elsif($nm eq "tags") {
           my $new_tags = trim_quotes($ch->substring());
           $new_tags =~ s/"/\\"/g;
-          # XXX TODO: Really???
-          #$tags .= "," unless($tags eq "");
           $tags = $new_tags;
         }
       }

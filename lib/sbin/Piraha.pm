@@ -1673,6 +1673,15 @@ sub substring
   return substr($self->{text},$self->{start},$self->{end}-$self->{start});
 }
 
+sub linenum
+{
+  my $self = shift;
+  my $n = 1;
+  my $t = substr($self->{text},0,$self->{start});
+  while($t =~ s/\n/$n++/ge){}
+  return $n;
+}
+
 sub mkstring
 {
   my $self = shift;
