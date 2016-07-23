@@ -397,12 +397,20 @@
 #  define CCTK_BUILTIN_EXPECT(x,y) (x)
 #endif
 
+/* Whether __builtin_trap exists. */
+#undef HAVE_CCTK_C_BUILTIN_TRAP
+#ifdef HAVE_CCTK_C_BUILTIN_TRAP
+#  define CCTK_BUILTIN_TRAP __builtin_trap
+#else
+#  define CCTK_BUILTIN_TRAP() CCTK_Abort(0, 1)
+#endif
+
 /* Whether __builtin_unreachable exists. */
 #undef HAVE_CCTK_C_BUILTIN_UNREACHABLE
 #ifdef HAVE_CCTK_C_BUILTIN_UNREACHABLE
 #  define CCTK_BUILTIN_UNREACHABLE __builtin_unreachable
 #else
-#  define CCTK_BUILTIN_UNREACHABLE() CCTK_Abort(0, 1)
+#  define CCTK_BUILTIN_UNREACHABLE() assert(0)
 #endif
 
 /* Whether __builtin_assume_aligned exists. */
@@ -621,6 +629,18 @@
 #  define CCTK_BUILTIN_EXPECT(x,y) (x)
 #endif
 
+/* Whether __builtin_trap exists. */
+#undef HAVE_CCTK_CXX_BUILTIN_TRAP
+#ifdef __CUDACC__
+#  define CCTK_BUILTIN_TRAP() asm("trap;")
+#else
+#  ifdef HAVE_CCTK_CXX_BUILTIN_TRAP
+#    define CCTK_BUILTIN_TRAP __builtin_trap
+#  else
+#    define CCTK_BUILTIN_TRAP() CCTK_Abort(0, 1)
+#  endif
+#endif
+
 /* Whether __builtin_unreachable exists. */
 #undef HAVE_CCTK_CXX_BUILTIN_UNREACHABLE
 #ifdef __CUDACC__
@@ -629,7 +649,7 @@
 #  ifdef HAVE_CCTK_CXX_BUILTIN_UNREACHABLE
 #    define CCTK_BUILTIN_UNREACHABLE __builtin_unreachable
 #  else
-#    define CCTK_BUILTIN_UNREACHABLE() CCTK_Abort(0, 1)
+#    define CCTK_BUILTIN_UNREACHABLE() assert(0)
 #  endif
 #endif
 

@@ -930,6 +930,10 @@ CCTK_CXX_ATTRIBUTE_RETURNS_NONNULL
 CCTK_C_BUILTIN_EXPECT
 CCTK_CXX_BUILTIN_EXPECT
 
+# Find out whether the compiler supports __builtin_trap
+CCTK_C_BUILTIN_TRAP
+CCTK_CXX_BUILTIN_TRAP
+
 # Find out whether the compiler supports __builtin_unreachable
 CCTK_C_BUILTIN_UNREACHABLE
 CCTK_CXX_BUILTIN_UNREACHABLE

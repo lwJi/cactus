@@ -1181,6 +1181,31 @@ fi
 
 
 
+AC_DEFUN(CCTK_C_BUILTIN_TRAP,
+[AC_CACHE_CHECK([for C __builtin_trap], cctk_cv_have_c_builtin_trap,
+[cctk_cv_have_c_builtin_trap=no
+AC_TRY_LINK(, __builtin_trap();, cctk_cv_have_c_builtin_trap=yes, cctk_cv_have_c_builtin_trap=no)
+])
+if test "$cctk_cv_have_c_builtin_trap" = "yes" ; then
+   AC_DEFINE(HAVE_CCTK_C_BUILTIN_TRAP)
+fi
+])
+
+AC_DEFUN(CCTK_CXX_BUILTIN_TRAP,
+[AC_CACHE_CHECK([for C++ __builtin_trap], cctk_cv_have_cxx_builtin_trap,
+[cctk_cv_have_cxx_builtin_trap=no
+AC_LANG_SAVE
+AC_LANG_CPLUSPLUS
+AC_TRY_LINK(, __builtin_trap();, cctk_cv_have_cxx_builtin_trap=yes, cctk_cv_have_cxx_builtin_trap=no)
+AC_LANG_RESTORE
+])
+if test "$cctk_cv_have_cxx_builtin_trap" = "yes" ; then
+   AC_DEFINE(HAVE_CCTK_CXX_BUILTIN_TRAP)
+fi
+])
+
+
+
 AC_DEFUN(CCTK_C_BUILTIN_UNREACHABLE,
 [AC_CACHE_CHECK([for C __builtin_unreachable], cctk_cv_have_c_builtin_unreachable,
 [cctk_cv_have_c_builtin_unreachable=no
