@@ -266,7 +266,7 @@ int CCTK_VInfo (const char *thorn, const char *format, ...)
   char *message = NULL;
 
   /* Start generating message only if the infocallback list is not NULL */
-  if(infocallbacks)
+  if (infocallbacks)
   { 
     /* one way to get the final string size */
     va_start(ap,format);
@@ -274,13 +274,13 @@ int CCTK_VInfo (const char *thorn, const char *format, ...)
     va_end(ap);
 
     /* Empty string is ok */
-    if(msg_size >= 0)
+    if (msg_size >= 0)
     {
       message = (char *)malloc(msg_size+1);
     }
     
     /* Try to print in the allocated space. */
-    if(message)
+    if (message)
     {
       va_start(ap,format);
       vsnprintf(message,msg_size+1,format,ap);
@@ -543,23 +543,28 @@ int CCTK_VWarn (int level,
     cf_where = current_function->where;
     cf_routine = current_function->routine;
     cf_thorn = current_function->thorn;
+    if (!strcmp(cf_thorn, "src"))
+    {
+      /* The flesh is mis-identified as thorn "src" */
+      cf_thorn = "Cactus";
+    }
   }
 
-  /* Start generating message only if the warbcallback list is not NULL */
-  if(warncallbacks)
+  /* Start generating message only if the warncallback list is not NULL */
+  if (warncallbacks)
   {
     va_start(ap,format);
     msg_size = vsnprintf(NULL, 0, format, ap);
     va_end(ap);
 
     /* Empty string is ok */
-    if(msg_size >= 0)
+    if (msg_size >= 0)
     {
       message = (char *)malloc(msg_size+1);
     }
     
     /* Try to print in the allocated space. */
-    if(message)
+    if (message)
     {
       va_start(ap,format);
       vsnprintf(message,msg_size+1,format,ap);
@@ -710,21 +715,21 @@ void CCTK_VError (int line,
     cf_thorn = current_function->thorn;
   }
 
-  /* Start generating message only if the warbcallback list is not NULL */
-  if(warncallbacks)
+  /* Start generating message only if the warncallback list is not NULL */
+  if (warncallbacks)
   {
     va_start(ap,format);
     msg_size = vsnprintf(NULL, 0, format, ap);
     va_end(ap);
 
     /* Empty string is ok */
-    if(msg_size >= 0)
+    if (msg_size >= 0)
     {
       message = (char *)malloc(msg_size+1);
     }
     
     /* Try to print in the allocated space. */
-    if(message)
+    if (message)
     {
       va_start(ap,format);
       vsnprintf(message,msg_size+1,format,ap);
@@ -1005,7 +1010,7 @@ int CCTK_WarnCallbackRegister(int minlevel,
   newcallback = (t_warncallback *)malloc(sizeof(t_warncallback));
 
 /* Create a one way chain for all registered callbacks */
-  if(newcallback) 
+  if (newcallback) 
   {
     newcallback->next = warncallbacks;
     warncallbacks = newcallback;
@@ -1062,7 +1067,7 @@ int CCTK_InfoCallbackRegister(void *data, cctk_infofunc callback)
   newcallback = (t_infocallback *)malloc(sizeof(t_infocallback));
 
 /* Create a one way chain for all registered callbacks */
-  if(newcallback) 
+  if (newcallback) 
   {
     newcallback->next = infocallbacks;
     infocallbacks = newcallback;
@@ -1327,7 +1332,7 @@ int CCTKi_SetErrorLevel (int level)
 @@*/
 static void CCTKi_ExitIfParamCheckOnly(void)
 {
-    if(CCTKi_ExitAfterParamCheck()) {
+    if (CCTKi_ExitAfterParamCheck()) {
         printf("Exit after param check requested using the --exit-after-param-check option.\n");
         CCTK_Exit(NULL, 0);
     }
@@ -1553,8 +1558,8 @@ static void CCTKi_WarnCallbacksCall(int level,
   for(current=warncallbacks; current; current=current->next)
   {
 
-/* Check valid level */
-    if(level >= current->minlevel && level <= current->maxlevel)
+    /* Check valid level */
+    if (level >= current->minlevel && level <= current->maxlevel)
     {
       current->function(level,line,file,thorn,message,current->data);
     }
