@@ -523,49 +523,6 @@ else
  : ${C_DEBUG_FLAGS='-g'}
  : ${CXX_DEBUG_FLAGS='-g'}
 
- # Cache stuff
- if test -z "$CACHELINE_BYTES" ; then
-   case "$host_cpu" in
-     i?86 | powerpc | armv6l)
-       CACHELINE_BYTES=32
-       ;;
-     ia64)
-       CACHELINE_BYTES=128
-       ;;
-     x86_64 | armv7l) # Most armv7l do have 32, but some may have 64. 64 is the 'safer' option.
-       CACHELINE_BYTES=64
-       ;;
-     *)
-       echo "Don't know cacheline size for cpu $host_cpu"
-       ;;
-   esac
-   if test -n "$CACHELINE_BYTES" ; then
-     echo "Setting CACHELINE_BYTES to $CACHELINE_BYTES"
-   fi
- fi
-
- if test -z "$CACHE_SIZE" ; then
-   if test "x$cross_compiling" = "xno" ; then
-     if test "$host_cpu" = 'ia64'; then
-       # for IA64 set it to 2MB for now (actually it's the L3 cache size)
-       CACHE_SIZE=2*1024
-     else
-       CACHE_SIZE="`cat /proc/cpuinfo | perl -nae 'if(m:cache\D+(\d+): && ! $dunnit) {print $1; $dunnit=1}'`"
-       if test -z "$CACHE_SIZE"; then
-         CACHE_SIZE=0
-       fi
-     fi
-     if test -n "$CACHE_SIZE" ; then
-       CACHE_SIZE="$CACHE_SIZE*1024"
-       echo "Setting CACHE_SIZE to $CACHE_SIZE bytes"
-     else
-       echo 'Unable to determine Cache size on this machine.'
-     fi
-   else
-     echo 'Cross compiling - unable to determine cache size'
-   fi
- fi
-
  if test "x$cross_compiling" = 'xyes' ; then
    case "$host_cpu" in
      i?86)

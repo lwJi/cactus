@@ -88,9 +88,6 @@ else
 
   : ${LIBS='f90s f90 hf90pvmath hf90math m'}
 
-  : ${CACHELINE_BYTES='128'}
-  : ${CACHE_SIZE='128*1024'}
-
   # MPI stuff
   if test -n "$MPI" ; then
     NATIVE_MPI_LIBS='mpi'

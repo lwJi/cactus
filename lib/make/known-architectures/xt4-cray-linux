@@ -218,27 +218,6 @@ else
   : ${C_DEBUG_FLAGS='-g'}
   : ${CXX_DEBUG_FLAGS='-g'}
 
-  # Cache stuff
-  if test -z "$CACHELINE_BYTES" ; then
-    CACHELINE_BYTES=64
-    if test -n "$CACHELINE_BYTES" ; then
-      echo "Setting CACHELINE_BYTES to $CACHELINE_BYTES"
-    fi
-  fi
-
-  if test -z "$CACHE_SIZE" ; then
-     CACHE_SIZE="`cat /proc/cpuinfo | perl -nae 'if(m:cache\D+(\d+): && ! $dunnit) {print $1; $dunnit=1}'`"
-     if test -z "$CACHE_SIZE"; then
-       CACHE_SIZE=0
-     fi
-     if test -n "$CACHE_SIZE" ; then
-      CACHE_SIZE="$CACHE_SIZE*1024"
-      echo "Setting CACHE_SIZE to $CACHE_SIZE bytes"
-     else
-      echo 'Unable to determine Cache size on this machine.'
-     fi
-  fi
-
 # MPI stuff
 # Cray XT4 must always use MPI (caught at the top)
 echo "finishing Cray XT4 Script"
