@@ -68,10 +68,13 @@ cctk_ash1,cctk_ash2,cctk_ash3
         CCTK_DECLARE(INTEGER,cctk_ash2,)&&\
         CCTK_DECLARE(INTEGER,cctk_ash3,)&&
 
+#define CCTK_INFO(a) CCTK_Info(CCTK_THORNSTRING,a)
+#define CCTK_PARAMWARN(a) CCTK_ParamWarn(CCTK_THORNSTRING,a)
 #define CCTK_WARN(a,b) CCTK_Warn(a,__LINE__,__FORTRANFILE__,CCTK_THORNSTRING,b)
 #define CCTK_ERROR(b) CCTK_Error(__LINE__,__FORTRANFILE__,CCTK_THORNSTRING,b)
 
-#define CCTK_CoordRegisterSystem(a,b,c) CCTKi_CoordRegisterSystem(a,b,CCTK_THORNSTRING,c)
+#define CCTK_CoordRegisterSystem(a,b,c) \
+  CCTKi_CoordRegisterSystem(a,b,CCTK_THORNSTRING,c)
 
 /* John Shalf says that the operator .ne. needs to be enclosed by
    spaces, because ANSI C preprocessors otherwise interpret the
@@ -80,7 +83,9 @@ cctk_ash1,cctk_ash2,cctk_ash3
 
 #define CCTK_PASS_FTOF CCTK_FARGUMENTS
 
-#define CCTK_ORIGIN_SPACE(x) (cctk_origin_space(x)+cctk_delta_space(x)/cctk_levfac(x)*cctk_levoff(x)/cctk_levoffdenom(x))
+#define CCTK_ORIGIN_SPACE(x)                                            \
+  (cctk_origin_space(x) +                                               \
+   cctk_delta_space(x)/cctk_levfac(x)*cctk_levoff(x)/cctk_levoffdenom(x))
 #define CCTK_DELTA_SPACE(x) (cctk_delta_space(x)/cctk_levfac(x))
 #define CCTK_DELTA_TIME (cctk_delta_time/cctk_timefac)
 
@@ -370,19 +375,27 @@ static inline int CCTK_VECTGFINDEX4D (const cGH *restrict cctkGH,
 
 #define CCTK_PASS_CTOC cctkGH
 
-#define CCTK_ORIGIN_SPACE(x) (cctk_origin_space[x]+cctk_delta_space[x]/cctk_levfac[x]*cctk_levoff[x]/cctk_levoffdenom[x])
+#define CCTK_ORIGIN_SPACE(x)                                            \
+  (cctk_origin_space[x] +                                               \
+   cctk_delta_space[x]/cctk_levfac[x]*cctk_levoff[x]/cctk_levoffdenom[x])
 #define CCTK_DELTA_SPACE(x) (cctk_delta_space[x]/cctk_levfac[x])
 #define CCTK_DELTA_TIME (cctk_delta_time/cctk_timefac)
 
+#define CCTK_INFO(a) CCTK_Info(CCTK_THORNSTRING,a)
+#define CCTK_PARAMWARN(a) CCTK_ParamWarn(CCTK_THORNSTRING,a)
 #define CCTK_WARN(a,b) CCTK_Warn(a,__LINE__,__FILE__,CCTK_THORNSTRING,b)
 #define CCTK_ERROR(b) CCTK_Error(__LINE__,__FILE__,CCTK_THORNSTRING,b)
+
+#define CCTK_VINFO(a,...) CCTK_VInfo(CCTK_THORNSTRING,a,__VA_ARGS__)
+#define CCTK_VPARAMWARN(a,...) CCTK_VParamWarn(CCTK_THORNSTRING,a,__VA_ARGS__)
+#define CCTK_VWARN(a,b,...) \
+  CCTK_VWarn(a,__LINE__,__FILE__,CCTK_THORNSTRING,b,__VA_ARGS__)
+#define CCTK_VERROR(b,...) \
+  CCTK_VError(__LINE__,__FILE__,CCTK_THORNSTRING,b,__VA_ARGS__)
 
 #define CCTK_MALLOC(s) CCTKi_Malloc(s,__LINE__,__FILE__)
 #define CCTK_FREE(p) CCTKi_Free(p)
 
 #endif /*CCODE*/
-
-#define CCTK_INFO(a) CCTK_Info(CCTK_THORNSTRING,(a))
-#define CCTK_PARAMWARN(a) CCTK_ParamWarn(CCTK_THORNSTRING,(a))
 
 #endif
