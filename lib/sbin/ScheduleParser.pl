@@ -54,7 +54,7 @@ for my $s (@schedule_bins) {
 
 my $ccl_file = undef;
 
-push @INC, "./lib/sbin";
+push @INC, $ENV{CCTK_HOME}."/lib/sbin";
 use Carp;
 use FileHandle;
 require Piraha;
