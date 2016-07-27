@@ -3,10 +3,8 @@ use strict;
 
 my $ccl_file = undef;
 
-push @INC, $ENV{CCTK_HOME}."/lib/sbin";
 use Carp;
 use FileHandle;
-require Piraha;
 use Data::Dumper;
 
 sub trim_quotes

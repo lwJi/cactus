@@ -12,8 +12,6 @@
 #%implementations = ("flesh", "flesh", "test1", "test1", "test2", "test2");
 
 #%parameter_database = create_parameter_database(%implementations);
-push @INC, $ENV{CCTK_HOME}."/lib/sbin";
-require Piraha;
 use strict;
 use Carp;
 my $ccl_file;

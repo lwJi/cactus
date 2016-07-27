@@ -1141,6 +1141,29 @@ sub new
   return $self;
 }
 #***************************************
+package Break;
+use Carp;
+
+sub diag
+{
+  return "Break()";
+}
+
+sub match
+{
+  my $self = shift;
+  my $m = shift;
+  die $self;
+}
+
+sub new
+{
+  my $class = shift;
+  my $self = {};
+  bless $self, $class;
+  return $self;
+}
+#***************************************
 package ILiteral;
 use Carp;
 
@@ -1363,7 +1386,7 @@ sub match
     }
   }
   if($cap) {
-  $m->{gr} = $chSave;
+    $m->{gr} = $chSave;
   }
   return $b;
 }
@@ -1577,10 +1600,20 @@ sub match
   for(my $i=0;$i < $self->{mx};$i++) {
     my $save = $m->{textPos};
     my $nchildren = array::getlen($m->{gr}->{children});
-    if(!$self->{pattern}->match($m) or $m->{textPos}==$save) {
-      $m->{textPos}=$save;
-      array::setlen($m->{gr}->{children},$nchildren);
-      my $rc = $i >= $self->{mn};
+    my $rc = undef;
+    eval {
+      if(!$self->{pattern}->match($m) or 1*$m->{textPos}<=1*$save) {
+        die "fail";
+      }
+    };
+    if($@) {
+      if($@->isa("Break")) {
+        ;
+      } else {
+        $m->{textPos}=$save;
+        array::setlen($m->{gr}->{children},$nchildren);
+      }
+      $rc = $i >= $self->{mn};
       return $rc;
     }
   }
@@ -1829,6 +1862,8 @@ sub showError
 
   my $c = substr($txt,$pos,1);
   #print $pre,"\e[1;37;41m",$c,"\e[0;m",$post;
+  #print $pre,"<<<",$c,">>>",$post;
+  $post = "" if($c eq "\n");
   print $pre,$c,$post;
   $pre =~ /.*$/;
   print " " x length($&),"^\n";
@@ -1888,6 +1923,7 @@ sub matches
   my $self = shift;
   confess("no pat") unless(defined($self->{pat}));
   my $ret = $self->{pat}->match($self);
+  $self->{gr}->{end} = $self->{textPos};
   return $ret;
 }
 
