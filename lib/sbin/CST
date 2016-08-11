@@ -85,7 +85,6 @@ die "Unable to find CCTK sbin directory - tried $sbin_dir\n"
   if (! -e "$sbin_dir/parameter_parser.pl");
 
 require "$sbin_dir/Piraha.pm";
-require "$sbin_dir/edl_parser.pl";
 require "$sbin_dir/parameter_parser.pl";
 require "$sbin_dir/interface_parser.pl";
 require "$sbin_dir/ScheduleParser.pl";
