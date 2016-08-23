@@ -56,11 +56,10 @@ sub expr
 
 sub create_interface_database
 {
-  my $interface_data = shift;
   my($n_system,@inargs) = @_;
   my(%system_database);
   my(%thorns, @thorns);
-  die "BAD HASH" unless(ref($interface_data) eq "HASH");
+  my(%interface_data);
 
   %system_database = @inargs[0..2*$n_system-1];
   %thorns = @inargs[2*$n_system..$#inargs];
@@ -97,16 +96,18 @@ sub create_interface_database
     }
 
     #       Get the interface data from it
-    &parse_interface_ccl($arrangement, $thorn, \@indata, $p->{gr}, $interface_data);
+    &parse_interface_ccl($arrangement, $thorn, \@indata, $p->{gr}, \%interface_data);
 
-    &PrintInterfaceStatistics($thorn, $interface_data);
+    &PrintInterfaceStatistics($thorn, \%interface_data);
   }
 
-  &cross_index_interface_data (\@thorns, $interface_data);
+  &cross_index_interface_data (\@thorns, \%interface_data);
 
   print "+============================+\n";
   print "| Interface Parsing Complete |\n";
   print "+============================+\n";
+
+  return %interface_data;
 }
 
 
