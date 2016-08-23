@@ -354,6 +354,7 @@ sub FunctionDatabase
       $Function->{"String pointers"} = $nstringptrs;
 
       $ReturnType = $interface_db->{"\U${thorn} FUNCTION\E $FunctionName RET"};
+      # TODO: remove those commented lines
       # turn 'VOID' into lower-case
       #$ReturnType = lc $ReturnType;
       # turn all return types except 'void' into upper-case CCTK types
