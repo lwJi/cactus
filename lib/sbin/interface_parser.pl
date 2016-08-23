@@ -14,6 +14,7 @@ sub trim_quotes
   return $str;
 }
 
+# TODO: Still needed?
 sub expr
 {
   my $expr = shift;
@@ -55,10 +56,11 @@ sub expr
 
 sub create_interface_database
 {
+  my $interface_data = shift;
   my($n_system,@inargs) = @_;
   my(%system_database);
   my(%thorns, @thorns);
-  my(%interface_data);
+  die "BAD HASH" unless(ref($interface_data) eq "HASH");
 
   %system_database = @inargs[0..2*$n_system-1];
   %thorns = @inargs[2*$n_system..$#inargs];
@@ -95,18 +97,16 @@ sub create_interface_database
     }
 
     #       Get the interface data from it
-    &parse_interface_ccl($arrangement, $thorn, \@indata, $p->{gr}, \%interface_data);
+    &parse_interface_ccl($arrangement, $thorn, \@indata, $p->{gr}, $interface_data);
 
-    &PrintInterfaceStatistics($thorn, \%interface_data);
+    &PrintInterfaceStatistics($thorn, $interface_data);
   }
 
-  &cross_index_interface_data (\@thorns, \%interface_data);
+  &cross_index_interface_data (\@thorns, $interface_data);
 
   print "+============================+\n";
   print "| Interface Parsing Complete |\n";
   print "+============================+\n";
-
-  return %interface_data;
 }
 
 
@@ -914,11 +914,13 @@ sub parse_interface_ccl
           $tags = $new_tags;
         }
       }
+      # Fill in default values
       $gtype = "SCALAR" if(!defined($gtype));
       $dim = 0 if(!defined($dim) and $gtype eq "SCALAR");
       $dim = 3 if(!defined($dim) and $gtype eq "GF");
       $distrib = "DEFAULT" if(!defined($distrib) and ($gtype eq "GF" or $gtype eq "ARRAY"));
       $distrib = "CONSTANT" if(!defined($distrib));
+      # TODO: What is this?
       $interface_data_ref1->{"\U$thorn GROUP $gname COMPACT\E"} = 0;
       $interface_data_ref1->{"\U$thorn GROUP $gname DIM\E"} = $dim;
       if(defined($desc) and $desc !~ /^\s*$/) {
@@ -1400,7 +1402,7 @@ sub parse_interface_ccl
           $line_number--;
         }
         $interface_data_ref2->{"\U$thorn GROUP $current_group\E DESCRIPTION"} = $description;
-        $description = ""; # Hack to prevent re-use of description
+        $description = ""; # Prevent re-use of description
     }
     elsif ($line =~ m/^\s*(USES\s*INCLUDE)S?\s*(SOURCE)S?\s*:\s*(.*)\s*$/i)
     {
@@ -1473,7 +1475,7 @@ sub parse_interface_ccl
     }
   }
   for my $k (keys %{$interface_data_ref1}) {
-    $interface_data_ref->{$k} = $interface_data_ref1->{$k};
+    $interface_data_ref->{$k} .= $interface_data_ref1->{$k};
   }
 }
 

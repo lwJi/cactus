@@ -74,6 +74,7 @@ use Data::Dumper;
 #@@*/
 sub create_schedule_database
 {
+  # TODO: Why did I do this?
   my(%thorns,@indata) = @_;
   my($thorn);#, @indata);
   my(@new_schedule_data);
@@ -97,6 +98,8 @@ sub create_schedule_database
       $p->showError();
       confess("Parse Error");
     }
+    # Debugging
+    # TODO: MAKE_TREE -> CCTK_MAKE_TREE
     if(defined($ENV{MAKE_TREE})) {
       my $fd = new FileHandle;
       open($fd,">tree.txt");
@@ -125,6 +128,7 @@ sub create_schedule_database
   return @schedule_data;
 }
 
+# Process a parse tree element named "vname"
 sub vname
 {
   my $vname = shift;
@@ -142,6 +146,7 @@ sub vname
   return $out;
 }
 
+# Name qualified by region
 sub qname
 {
   my $qname = shift;
@@ -194,10 +199,8 @@ sub parse_schedule_statement
             } elsif($prep_name eq "at") {
               $where = uc($prep->group(1,"pararg")->group(0,"vname")->substring());
               $where =~ s/^(CCTK_|)/CCTK_/gi;
-              #confess("Bad clause 'at $where' in $ccl_file") unless(defined($schedule_bins{$where}));
             } elsif($prep_name eq "in") {
               $where = $prep->group(1,"pararg")->group(0,"vname")->substring();
-              #confess("Bad clause 'in $where' in $ccl_file") if(defined($schedule_bins{"\U$where"}));
             } elsif($prep_name eq "while") {
               $while_list = "";
               for my $w (@{$prep->group(1)->{children}}) {
@@ -212,11 +215,13 @@ sub parse_schedule_statement
               }
             } elsif($prep_name eq "as") {
               my $nas = $prep->group(1,"pararg")->group(0,"vname")->substring();
+              # TODO: Do we get a filename here?
               confess("multiple use of 'as' keyword: name($name) as($as) nas($nas)")
                 if($as ne $name);
               $as = $nas;
             } else {
-              confess("unknown prep_name '$prep_name'");
+              # Users shouldn't see this
+              confess("unknown preposition '$prep_name'");
             }
           }
           for my $child (@children[3..$#children-1]) {

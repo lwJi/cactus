@@ -257,6 +257,7 @@ sub parse_param_ccl
       } elsif($gr->is("realpar")) {
         my $item_count = 1;
         my @items = ();
+        # Parses the realpar element
         for(my $i=$n+1;$i < $gr->groupCount()-1;$i++) {
           my $item = $gr->group($i);
           if($item->is("realset")) {
@@ -768,6 +769,9 @@ sub parse_param_ccl
 
   $parameter_db2{"\U$thorn\E SHARES implementations"} = join(" ", sort keys %friends);
 
+  # Debugging code, check that db1 and db2 are the
+  # same apart from whitespace. If they are not, dump
+  # the two values in file v1 and v2.
   for my $k (sort keys %parameter_db2) {
     my $v1 = $parameter_db1{$k};
     die "File: $ccl_file; Missing key <<$k>>=<<$v1>>" unless(defined($v1));
