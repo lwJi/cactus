@@ -135,6 +135,7 @@ boolpar = (?i:
     \}|)|
 	{boolguts} 
     (\{
+    # TODO: remove old, commented lines?
     # Note the weird slop here
     #({bool} (:: {quote} |)|: :: {quote}|:: {quote})*
     #(:: {quote}|{bool} (:: {quote} |) )*
