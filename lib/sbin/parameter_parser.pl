@@ -795,7 +795,9 @@ sub parse_param_ccl
     open($fd,">v2") or die;
     print $fd $v2,"\n";
     close($fd);
-    if($v1 ne $v2) {
+    if($k =~ /range$/ and $v2 eq '"'.$v1.'"') {
+      ;
+    } elsif($v1 ne $v2) {
       confess("File: $ccl_file; par key error:($k) new=($v1) old=($v2)");
     }
   }
