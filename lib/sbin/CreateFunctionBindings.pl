@@ -348,7 +348,7 @@ sub FunctionDatabase
       $Arguments = $interface_db->{"\U${thorn} FUNCTION\E $FunctionName ARGS"};
 
 #      &debug_print("FunctionDatabase: calling ParseArgumentsList with thorn=[$thorn] FunctionName=[$FunctionName] Arguments=[$Arguments]\n");
-#      Need to eliminate this
+#     TODO: Need to eliminate this
       ($warnings,$nstrings,$nstringptrs,@arglist)=&ParseArgumentsList($Arguments, $thorn, $FunctionName);
       $Function->{"Strings"} = $nstrings;
       $Function->{"String pointers"} = $nstringptrs;
