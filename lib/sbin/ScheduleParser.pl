@@ -119,9 +119,11 @@ sub create_schedule_database
 
   }
 
-  print "+===========================+\n";
-  print "| Schedule Parsing Complete |\n";
-  print "+===========================+\n";
+  if (defined($ENV{VERBOSE}) and lc($ENV{VERBOSE}) eq "yes") {
+    print "+===========================+\n";
+    print "| Schedule Parsing Complete |\n";
+    print "+===========================+\n";
+  }
 
 #  @schedule_data = &cross_index_schedule_data(scalar(keys %thorns), (sort keys %thorns), @schedule_data);
 

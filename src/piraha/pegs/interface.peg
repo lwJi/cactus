@@ -7,6 +7,7 @@ accname = {-name}(::{-name})*
 inum = 16|[1248]
 rnum = [48]|16
 cnum = 8|16|32
+#TODO: remove next line?
 #type = (void|CCTK_INT{inum}?|CCTK_REAL{rnum}?|CCTK_COMPLEX{cnum}?|CCTK|CCTK_POINTER|CCTK_TO_CONST)
 
 num = [0-9]+

@@ -103,10 +103,11 @@ sub create_interface_database
 
   &cross_index_interface_data (\@thorns, \%interface_data);
 
-  print "+============================+\n";
-  print "| Interface Parsing Complete |\n";
-  print "+============================+\n";
-
+  if (defined($ENV{VERBOSE}) and lc($ENV{VERBOSE}) eq "yes") {
+    print "+============================+\n";
+    print "| Interface Parsing Complete |\n";
+    print "+============================+\n";
+  }
   return %interface_data;
 }
 

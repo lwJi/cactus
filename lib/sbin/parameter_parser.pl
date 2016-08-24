@@ -69,10 +69,12 @@ sub create_parameter_database
 
   @parameter_data = &cross_index_parameters(scalar(keys %thorns), (sort keys %thorns), @parameter_data);
 
-  print "\n";
-  print "+========================+\n";
-  print "| Param Parsing Complete |\n";
-  print "+========================+\n";
+  if (defined($ENV{VERBOSE}) and lc($ENV{VERBOSE}) eq "yes") {
+    print "\n";
+    print "+========================+\n";
+    print "| Param Parsing Complete |\n";
+    print "+========================+\n";
+  }
 
   return @parameter_data;
 }
@@ -795,7 +797,9 @@ sub parse_param_ccl
     open($fd,">v2") or die;
     print $fd $v2,"\n";
     close($fd);
-    if($v1 ne $v2) {
+    if($k =~ /range$/ and $v2 eq '"'.$v1.'"') {
+      ;
+    } elsif($v1 ne $v2) {
       confess("File: $ccl_file; par key error:($k) new=($v1) old=($v2)");
     }
   }

@@ -86,10 +86,12 @@ sub CreateConfigurationDatabase
     $cfg{"\U$thorn\E USES THORNS"} .= $cfg{"\U$thorn\E REQUIRES THORNS"} . ' ';
   }
 
-  print "\n";
-  print "+=========================+\n";
-  print "| Config Parsing Complete |\n";
-  print "+=========================+\n";
+  if (defined($ENV{VERBOSE}) and lc($ENV{VERBOSE}) eq "yes") {
+    print "\n";
+    print "+=========================+\n";
+    print "| Config Parsing Complete |\n";
+    print "+=========================+\n";
+  }
 
   # Turn optional capabilities into required capabilities, if the
   # capability is provided. This way we don't have to treat required

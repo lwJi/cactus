@@ -17,6 +17,7 @@ accumexpr = \({inparen}+\)
 access_spec = (?i:global|restricted|private)
 share = (?i:shares)[ \t]*:[ \t]*{name}
 access = {access_spec} :|{share}
+# TODO: remove old, commented lines?
 #access = (?i:global : |restricted : |private : |shares :([\ \t]*{name}|) )
 #access = (?i: global : | restricted : | private : | shares : {name} )
 
@@ -135,6 +136,7 @@ boolpar = (?i:
     \}|)|
 	{boolguts} 
     (\{
+    # TODO: remove old, commented lines?
     # Note the weird slop here
     #({bool} (:: {quote} |)|: :: {quote}|:: {quote})*
     #(:: {quote}|{bool} (:: {quote} |) )*
