@@ -10,7 +10,8 @@ name = (?i:[a-z_][a-z0-9_]*)
 kname = (?i:[a-z_][a-z0-9_-]*)
 accname = {-name}(::{-name})*
 steerable = (?i:never|always|recover)
-accumexpr = \( ([^()]+|{accumexpr}) \)
+inparen = [^\(\)]+|\({inparen}+\)
+accumexpr = \({inparen}+\)
 
 # Note slop on shared
 access_spec = (?i:global|restricted|private)
