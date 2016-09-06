@@ -347,18 +347,13 @@ sub FunctionDatabase
       my ($ReturnType,$Arguments,@arglist);
       $Arguments = $interface_db->{"\U${thorn} FUNCTION\E $FunctionName ARGS"};
 
-#      &debug_print("FunctionDatabase: calling ParseArgumentsList with thorn=[$thorn] FunctionName=[$FunctionName] Arguments=[$Arguments]\n");
-#     TODO: Need to eliminate this
+#     TODO: Piraha has already parsed the argument list,
+#     so the ParseArgumentsList function should be eliminated.
       ($warnings,$nstrings,$nstringptrs,@arglist)=&ParseArgumentsList($Arguments, $thorn, $FunctionName);
       $Function->{"Strings"} = $nstrings;
       $Function->{"String pointers"} = $nstringptrs;
 
       $ReturnType = $interface_db->{"\U${thorn} FUNCTION\E $FunctionName RET"};
-      # TODO: remove those commented lines
-      # turn 'VOID' into lower-case
-      #$ReturnType = lc $ReturnType;
-      # turn all return types except 'void' into upper-case CCTK types
-      #$ReturnType = uc $ReturnType if ($ReturnType ne 'void ');
 
       $FunctionName =~ /([a-zA-Z][a-zA-Z0-9_]*)/;
       $Function->{"Name"}=$1;

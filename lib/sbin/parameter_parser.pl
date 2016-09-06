@@ -49,7 +49,7 @@ sub create_parameter_database
       $p->showError();
       confess("Parse Error");
     }
-    if(defined($ENV{MAKE_TREE})) {
+    if(defined($ENV{CCTK_MAKE_TREE})) {
       my $fd = new FileHandle;
       open($fd,">tree.txt");
       print $fd $ccl_file,"\n";
@@ -1007,7 +1007,7 @@ sub CheckExpression
   my $retcode;
   my $retval;
 
-  if($expression =~ m,^[-\d/*()+xy^!<>=]+$, &&
+  if($expression =~ m,^[-\d/*()+xy^!<>=:?]+$, &&
      $expression =~ m/\bx\b/            &&
      $expression =~ m/\by\b/            &&
      $expression !~ m/\wx/              &&
@@ -1060,6 +1060,7 @@ sub CheckExpression
     $retval = 1;
   }
 
+  print "RETVAL=$retval\n";
   return $retval;
 }
 

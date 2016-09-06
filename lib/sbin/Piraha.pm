@@ -92,6 +92,7 @@ sub getChar
     if($gr->groupCount()==1) {
         my $sub = gr->group(0)->substring();
         my $n = 0;
+        # Parse a hexidecimal coded character
         for(my $i=0;$i<length($sub);$i++) {
             my $c = substr($sub,$i,1);
             if(ord($c) >= ord('0') && ord($c) <= ord('9')) {
@@ -105,6 +106,7 @@ sub getChar
     }
     my $gs = $gr->substring();
     if(length($gs)==2) {
+        # Parse an escaped character
         my $c = substr($gs,1,1);
         if($c eq 'n') {
             return "\n";
@@ -121,6 +123,7 @@ sub getChar
         return substr($gs,0,1);
     }
 }
+
 sub mkMulti
 {
     my $g = shift;
@@ -148,10 +151,13 @@ sub mkMulti
 }
 
 
+# Compile a file containing Piraha rules
 sub compileFile
 {
   my $g = shift;
   my $buffer = shift;
+  # The rules to compile a Piraha rule file
+  # stored as a Piraha parse tree.
 	my $grammar = fileparserGenerator();
 	my $m = new Matcher($grammar,"file",$buffer);
 	my $b = $m->matches();
@@ -161,24 +167,41 @@ sub compileFile
 
 	for(my $i=0;$i<$m->groupCount();$i++) {
 		my $rule = $m->group($i);
+    # Convert the parse tree for each Piraha rule
+    # into the Piraha data structures used to parse
+    # code.
 		my $ptmp = compile($rule->group(1), 0, $grammar);
     my $nm = $rule->group(0)->substring();
 		$g->{patterns}->{$nm} = $ptmp;
+    # Set the default rule.
     $g->{default_rule} = $nm;
 	}
   return $g->{default_rule};
 }
 
+# Compile an individual Piaraha pattern.
 sub compilePattern
 {
   my $pattern = shift;
+  # The rules to compile a Piraha pattern
+  # expression stored as a Piraha parse tree.
   my $grammar = reparserGenerator();
   my $m = new Matcher($grammar,"pattern",$pattern);
   if($m->matches()) {
+    # Convert a parse tree for a Piraha expression
+    # into the Piraha data structures used to parse
+    # code.
     return compile($m->{gr},0,$grammar);
   }
 }
 
+# Convert a piraha expression into the
+# data structures needed to parse piraha
+# code. Consider, for example, the pattern
+# "a". It would be passed in as a group
+# with name "literal" and a substring, "a".
+# This would then be converted to a
+# Literal() object, with $self->{c} = "a".
 sub compile
 {
     my $g = shift;
@@ -307,6 +330,8 @@ sub compile
 
 use strict;
 
+# This creates the grammar for parsing a
+# Piraha expression.
 sub reparserGenerator() {
   my $g = new Grammar();
   $g->{patterns}->{"boundary"}=(new Seq(
@@ -474,6 +499,8 @@ sub reparserGenerator() {
 }
 
 
+# This creates the grammar for parsing
+# a piraha rule file.
 sub fileparserGenerator() {
   my $g = new Grammar();
   $g->{patterns}->{"boundary"}=(new Seq(
@@ -701,12 +728,16 @@ package array;
 use Data::Dumper;
 use Carp;
 
+# Array utility: get the
+# length of an array ref
 sub getlen
 {
   my $arrayRef = shift;
   return $#$arrayRef;
 }
 
+# Array utility: set the
+# length of an array ref
 sub setlen
 {
   my $arrayRef = shift;
@@ -714,6 +745,8 @@ sub setlen
   return $#$arrayRef = $newlen;
 }
 
+# Array utility: append
+# to an array ref
 sub append
 {
   my $arrayRef = shift;
@@ -722,6 +755,8 @@ sub append
   $arrayRef->[$#$arrayRef+1]=$value;
 }
 
+# Array utility: Get a ref to the
+# slice of an array ref.
 sub slice
 {
   my $arrayRef = shift;
@@ -736,6 +771,7 @@ sub slice
 package fmt;
 use Carp;
 
+# Format a character for printing
 sub fmtc
 {
   my $c = shift;
@@ -750,8 +786,11 @@ package piraha;
 use strict;
 use FileHandle;
 
+# Track indentation level in generating
+# the parse tree string.
 $main::indent=0;
 
+# Open, read and parse a peg rule file.
 sub parse_peg_file
 {
   my $peg = shift;
@@ -763,6 +802,8 @@ sub parse_peg_file
   return parse_peg_src($peg_contents);
 }
 
+# Parse a peg rule file, return
+# a grammar and the default file
 sub parse_peg_src
 {
   my $peg_contents = shift;
@@ -771,6 +812,8 @@ sub parse_peg_src
   return ($g,$rule);
 }
 
+# Given a grammar and a rule, parse
+# a source string which should match the rule.
 sub parse_src
 {
   my $g = shift;
@@ -785,6 +828,11 @@ sub parse_src
   return $m;
 }
 
+# Combine the phases of parsing a peg, and
+# a string which should match that peg.
+# This is likely to be inefficient, as many
+# source strings can be parsed once the
+# grammar and rule are ready.
 sub parse
 {
   my $peg = shift;
@@ -793,6 +841,7 @@ sub parse
   return parse_src($g,$rule,$src);
 }
 
+## TODO: EXPERIMENTAL CODE
 sub applyChar
 {
   my $prevChar = shift;
@@ -808,13 +857,6 @@ sub applyChar
     }
   } elsif(ref($pat) eq "Seq") {
     my $npat = applyChar($prevChar,$currChar,$pat->{patternList}->[0]);
-    #if(ref($npat) eq "Nothing") {
-    #  $pat->{patternList} = array::slice($pat->{patternList},1,-1);
-    #} elsif(ref($npat) eq "Fail") {
-    #  return $npat;
-    #} else {
-    #  $pat->{patternList}->[0] = $npat;
-    #}
     my $seq = new Seq();
     $seq->{patternList}->[0] = $npat;
     for(my $i=1;$i<=array::getlen($pat->{patternList});$i++) {
@@ -1014,6 +1056,9 @@ sub new
 #***************************************
 package Bracket;
 use Carp;
+# Data structure used to parse expressions
+# in brackets. Brackets store a set of
+# ranges to match for a character value.
 
 sub addRange
 {
@@ -1021,15 +1066,24 @@ sub addRange
   my $lo = shift;
   my $hi = shift;
   my $igcase = shift;
+  # If ignorecase is on, call addRange()
+  # twice. Once with the lower, once with
+  # the upper, and don't set the igCase flag.
   if($igcase) {
     $self->addRange("\l$lo","\l$hi");
     $self->addRange("\u$lo","\u$hi");
     return;
   }
   my $a = $self->{ranges};
+  # Store the ascii value of the character,
+  # so that ranges can be compared numerically.
   my $r = [ord($lo), ord($hi)];
+  # We are expecting single characters here,
+  # not, e.g. \n, or \x{34af}.
   confess "bad len lo=$lo" if(length($lo) != 1);
   confess "bad len hi=$hi" if(length($hi) != 1);
+  # The upper range should be greater than or
+  # equal to the lower.
   confess "bad range" unless($r->[0] <= $r->[1]);
   $a->[1+$#$a] = $r;
   return $self;
@@ -1040,15 +1094,18 @@ sub match
   my $self = shift;
   my $m = shift;
   if($m->{textPos} >= length($m->{text})) {
+    # Fail if we're passed the end of the string
     return 0;
   }
   my $rc = substr($m->{text},$m->{textPos},1);
+  # We shouldn't have an empty string here
   confess "zero c" if(length($rc)==0);
   my $c = ord($rc);
   for my $r (@{$self->{ranges}}) {
     if($r->[0] <= $c and $c <= $r->[1]) {
       if(!$self->{neg}) {
-        #$m->{textPos}++;
+        # increment position in string
+        # after a successful match
         $m->inc_pos();
         return 1;
       } else {
@@ -1061,7 +1118,6 @@ sub match
     $m->fail($self->{ranges});
     return 0;
   } else {
-    #$m->{textPos}++;
     $m->inc_pos();
     return 1;
   }
@@ -1097,6 +1153,7 @@ sub new
 #***************************************
 package Literal;
 use Carp;
+# Match a literal character
 
 sub possibly_zero
 {
@@ -1119,7 +1176,6 @@ sub match
   my $c = substr($m->{text},$m->{textPos},1);
   confess "zero c" if(length($c)==0);
   if($c eq $self->{c}) {
-    #$m->{textPos}++;
     $m->inc_pos();
     return 1;
   } else {
@@ -1143,6 +1199,11 @@ sub new
 #***************************************
 package Break;
 use Carp;
+# Reprents a {brk} pattern element. This
+# pattern element triggers an exception to
+# be thrown, and allows the pattern matcher
+# to escape from processing a * pattern.
+# It's like a break from a for/while loop.
 
 sub diag
 {
@@ -1166,6 +1227,8 @@ sub new
 #***************************************
 package ILiteral;
 use Carp;
+# Match a literal character, but do so
+# in a case insensitive way.
 
 sub match
 {
@@ -1212,6 +1275,8 @@ sub new
 #***************************************
 package Seq;
 use Carp;
+# Match a sequence of patterns. For example,
+# "ab" is a sequence of two literals.
 
 sub possibly_zero
 {
@@ -1229,6 +1294,8 @@ sub match
   my $self = shift;
   my $m = shift;
   for my $pat (@{$self->{patternList}}) {
+    # If any pattern in the sequence fails
+    # to match, the sequence fails.
     if(!$pat->match($m)) {
       return 0;
     }
@@ -1252,7 +1319,6 @@ sub diag
     $tw = ",";
   }
   $out .= "}";
-  #$out .= "size=(".array::getlen($self->{patternList}).")";
   return $out;
 }
 
@@ -1287,6 +1353,9 @@ sub new
 package Or;
 use Carp;
 use Data::Dumper;
+# Match one of a sequence of alternatives
+# for a pattern, e.g. (a|b) matches either
+# the literal a or the literal b.
 
 sub possibly_zero
 {
@@ -1319,9 +1388,14 @@ sub match
   my $save = $m->{textPos};
   my $nchildren = array::getlen($m->{gr}->{children});
   for my $pat (@{$self->{patterns}}) {
+    # The position, as well as the length of the child
+    # nodes needs to be reset before every attempted
+    # match to prevent leftovers from failed attempted
+    # matches from lingering.
     $m->{textPos} = $save;
     array::setlen($m->{gr}->{children},$nchildren);
     if($pat->match($m)) {
+      # If any of the patterns works, we're done
       return 1;
     }
   }
@@ -1351,6 +1425,12 @@ sub new
 #***************************************
 package Lookup;
 use Carp;
+# Match a pattern by name. Thus, for the grammar
+# A = a
+# B = b
+# R = ({A}|{B})
+# The {A} and the {B} are both "Lookup" pattern
+# elements.
 
 sub possibly_zero
 {
@@ -1370,22 +1450,30 @@ sub match
   my $g = $m->{g}; # grammar;
   my $pname = $self->{name};
   my $pat = $g->{patterns}->{$pname};
+  # Fail if the pattern name is not in the grammar.
   confess "no such pattern '$pname'" unless(defined($pat));
+  # Save the child groups
   my $chSave = $m->{gr};
+  # Save the start position
   my $start = $m->{textPos};
+  # Lookup patterns that begin with a - do not capture, that
+  # is they do not produce a node in the parse tree.
   my $cap = $self->{capture};
+  # Replace the current groups with a new group
   if($cap) {
-  $m->{gr} = new Group($pname,$chSave->{text},$start,-1);
+    $m->{gr} = new Group($pname,$chSave->{text},$start,-1);
   }
   my $b = $pat->match($m);
   if($b) {
     if($cap) {
+      # Set the end of the current group
       $m->{gr}->{end} = $m->{textPos};
-      #confess "empty literal" if($self->{name}="literal" and $m->{gr}->{start} == $m->{gr}->{end});
+      # Append the current group the saved array of child groups
       array::append($chSave->{children},$m->{gr});
     }
   }
   if($cap) {
+    # Restore the child groups to what they were before matching
     $m->{gr} = $chSave;
   }
   return $b;
@@ -1406,6 +1494,8 @@ sub new
 }
 #***************************************
 package Nothing;
+# This pattern element matches nothing.
+# It always succeeds.
 
 sub match
 {
@@ -1427,6 +1517,8 @@ sub new
 }
 #***************************************
 package Fail;
+# When this pattern element is encounter,
+# the match fails.
 
 sub match
 {
@@ -1448,6 +1540,8 @@ sub new
 }
 #***************************************
 package Start;
+# This pattern element matches the start
+# of a string.
 
 sub match
 {
@@ -1471,6 +1565,8 @@ sub new
 }
 #***************************************
 package End;
+# This pattern element matches the end of
+# a string.
 
 sub match
 {
@@ -1493,6 +1589,10 @@ sub new
 }
 #***************************************
 package Boundary;
+# This pattern element matches a "boundary"
+# either the start of a string, the end of
+# a string, or a transition between a c-identifier
+# character and a non c-identifier character.
 
 sub match
 {
@@ -1520,6 +1620,7 @@ sub new
 #***************************************
 package Dot;
 use Carp;
+# Matches any character except \n
 
 sub diag
 {
@@ -1536,7 +1637,6 @@ sub match
   my $c = substr($m->{text},$m->{textPos},1);
   confess "zero c" if(length($c)==0);
   if($c =~ /./) {
-    #$m->{textPos}++;
     $m->inc_pos();
     return 1;
   } else {
@@ -1554,6 +1654,12 @@ sub new
 }
 #***************************************
 package NegLookAhead;
+# This pattern represents a negative
+# lookahead assertion. It is roughly
+# the same as it is in perl.
+# E.g. the pattern "cat(?!s)" will match
+# the word cat, but not if it's followed
+# by an s.
 
 sub diag
 {
@@ -1592,6 +1698,9 @@ sub new
 #***************************************
 package Multi;
 use Carp;
+# This pattern element is used to match the
+# pattern it contains multiple times. It is
+# used to implement the * and + pattern elements.
 
 sub match
 {
@@ -1651,6 +1760,8 @@ sub new
 #***************************************
 package Group;
 use Carp;
+# This class represents a node in the
+# parse tree.
 
 sub group
 {
@@ -1799,6 +1910,11 @@ sub new
 #***************************************
 package Matcher;
 use Carp;
+# The matcher holds data relevant to the
+# current match, i.e. the position in the
+# text, etc. In principle, two threads
+# could use the same pattern at the same
+# time, but not the same matcher.
 
 sub expand_char
 {

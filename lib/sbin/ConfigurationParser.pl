@@ -332,7 +332,7 @@ sub ParseConfigurationCCL
     $p->showError();
     confess("Parse Error");
   }
-    if(defined($ENV{MAKE_TREE})) {
+    if(defined($ENV{CCTK_MAKE_TREE})) {
       my $fd = new FileHandle;
       open($fd,">tree.txt");
       print $fd $ccl_file,"\n";

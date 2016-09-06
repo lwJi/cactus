@@ -74,9 +74,8 @@ use Data::Dumper;
 #@@*/
 sub create_schedule_database
 {
-  # TODO: Why did I do this?
-  my(%thorns,@indata) = @_;
-  my($thorn);#, @indata);
+  my(%thorns) = @_;
+  my($thorn, @indata);
   my(@new_schedule_data);
   my(@schedule_data);
 
@@ -99,8 +98,7 @@ sub create_schedule_database
       confess("Parse Error");
     }
     # Debugging
-    # TODO: MAKE_TREE -> CCTK_MAKE_TREE
-    if(defined($ENV{MAKE_TREE})) {
+    if(defined($ENV{CCTK_MAKE_TREE})) {
       my $fd = new FileHandle;
       open($fd,">tree.txt");
       print $fd $ccl_file,"\n";
@@ -216,8 +214,14 @@ sub parse_schedule_statement
                 $if_list .= vname($w);
               }
             } elsif($prep_name eq "as") {
-              my $nas = $prep->group(1,"pararg")->group(0,"vname")->substring();
-              # TODO: Do we get a filename here?
+              my $ngas = $prep->group(1,"pararg")->group(0,"vname");
+              my $nas = $ngas->substring();
+              my $line = $ngas->linenum();
+              print "CST ERROR IN FILE '$ccl_file'\n";
+              print "LINE $line\n";
+              print "Multiple values for 'as' keyword for schedule item $name.\n";
+              print "Value 1: $as\n";
+              print "Value 2: $nas\n";
               confess("multiple use of 'as' keyword: name($name) as($as) nas($nas)")
                 if($as ne $name);
               $as = $nas;

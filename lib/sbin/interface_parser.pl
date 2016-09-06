@@ -14,7 +14,10 @@ sub trim_quotes
   return $str;
 }
 
-# TODO: Still needed?
+# This function turns an expression to a string. It functions
+# similar to mkstring() documented at the top of Piraha.pm,
+# however, it needs some special code for parenthetical groups
+# of terms.
 sub expr
 {
   my $expr = shift;
@@ -86,7 +89,7 @@ sub create_interface_database
       $p->showError();
       confess("Parse Error");
     }
-    if(defined($ENV{MAKE_TREE})) {
+    if(defined($ENV{CCTK_MAKE_TREE})) {
       my $fd = new FileHandle;
       open($fd,">tree.txt");
       print $fd $ccl_file,"\n";
@@ -922,7 +925,8 @@ sub parse_interface_ccl
       $dim = 3 if(!defined($dim) and $gtype eq "GF");
       $distrib = "DEFAULT" if(!defined($distrib) and ($gtype eq "GF" or $gtype eq "ARRAY"));
       $distrib = "CONSTANT" if(!defined($distrib));
-      # TODO: What is this?
+      # Note that Compact groups are only documented in the FAQ, and
+      # are not supported by Carpet.
       $interface_data_ref1->{"\U$thorn GROUP $gname COMPACT\E"} = 0;
       $interface_data_ref1->{"\U$thorn GROUP $gname DIM\E"} = $dim;
       if(defined($desc) and $desc !~ /^\s*$/) {
