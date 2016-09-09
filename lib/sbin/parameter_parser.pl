@@ -805,7 +805,10 @@ sub parse_param_ccl
   }
   for my $k (keys %parameter_db1) {
     if(!defined($parameter_db2{$k})) {
-      confess("Extra key in parameter ($k) ($parameter_db1{$k})")
+      # Make an exception for accumulators
+      unless($k =~ / accumulator-expression$/) {
+        confess("Extra key in parameter ($k) ($parameter_db1{$k})")
+      }
     }
   }
   for my $k (keys %parameter_db1) {
@@ -1007,7 +1010,8 @@ sub CheckExpression
   my $retcode;
   my $retval;
 
-  if($expression =~ m,^[-\d/*()+xy^!<>=:?]+$, &&
+  # Don't limit accumulators to x and y
+  if($expression =~ m,^[-\d/*()+a-z^!<>=:?]+$, &&
      $expression =~ m/\bx\b/            &&
      $expression =~ m/\by\b/            &&
      $expression !~ m/\wx/              &&
