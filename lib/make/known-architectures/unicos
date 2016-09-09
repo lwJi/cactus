@@ -39,17 +39,6 @@ else
   CCTK_WriteLine cctk_Archdefs.h '/* T3E stuff */'
   CCTK_WriteLine cctk_Archdefs.h "#define T3E 1"
 
-# Cache stuff
-  if test -z "$CACHELINE_BYTES" ; then
-    CACHELINE_BYTES=64
-    echo "Setting CACHELINE_BYTES to $CACHELINE_BYTES"
-  fi
-
-  if test -z "$CACHE_SIZE" ; then
-    CACHE_SIZE="96*1024"
-    echo "Setting CACHE_SIZE to $CACHE_SIZE bytes"
-  fi
-
 # MPI stuff
 
   if test -n "$MPI" ; then

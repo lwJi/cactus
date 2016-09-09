@@ -22,19 +22,6 @@ else
   USE_RANLIB=yes
   RANLIBFLAGS=
 
-  # Cache stuff
-  # there doesn't seem to be any way to find out the cache size under OpenBSD
-  if test -z "$L2_CACHELINE_BYTES" ; then
-    L2_CACHELINE_BYTES=0
-    echo "Setting L2_CACHELINE_BYTES to $L2_CACHELINE_BYTES"
-  fi
-
-  if test -z "$L2_CACHE_SIZE" ; then
-    L2_CACHE_SIZE="0*1024"
-    echo "Setting L2_CACHE_SIZE to $L2_CACHE_SIZE bytes"
-  fi
-
-
   # MPI stuff
   #
   # FreeBSD has no native MPI, so we don't set any NATIVE_MPI_XXX variables.

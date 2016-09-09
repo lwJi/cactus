@@ -42,16 +42,6 @@ else
   # The -em flag makes it create a .mod file.
   : ${F90FLAGS="-em"} 
 
-# Cache stuff
-  if test -z "$CACHELINE_BYTES" ; then
-    CACHELINE_BYTES=16
-    echo "Setting CACHELINE_BYTES to $CACHELINE_BYTES"
-  fi
-
-  if test -z "$CACHE_SIZE" ; then
-    CACHE_SIZE="512*1024"
-    echo "Setting CACHE_SIZE to $CACHE_SIZE bytes"
-  fi
 
 # MPI stuff
 

@@ -146,22 +146,6 @@ else
   : ${F90_WARN_FLAGS='-fullwarn'}
   : ${F77_WARN_FLAGS='-fullwarn'}
 
-  # Cache stuff
-  if test -z "$CACHELINE_BYTES" ; then
-    CACHELINE_BYTES=128
-    echo "Setting CACHELINE_BYTES to $CACHELINE_BYTES"
-  fi
-
-  if test -z "$CACHE_SIZE" ; then
-    TEMP_CACHE_SIZE="`hinv | perl -ne 'if (m/Secondary.*cache/) { s/^.*: (.*)( on P.*)?$/$1/ ; s/ Mbyte.*/\*1024/ ; s/ Kbyte.*//; print}' | sort | head -n1`"
-    if test -n "$TEMP_CACHE_SIZE" ; then
-      CACHE_SIZE="$TEMP_CACHE_SIZE*1024"
-      echo "Setting CACHE_SIZE to $CACHE_SIZE bytes"
-    else
-      echo 'Unable to determine Cache size on this machine.'
-    fi
-  fi
-
   # MPI stuff
   if test -n "$MPI" ; then
     if test -e "/usr/lib${IRIX_BITS}/libmpi++.so" ; then

@@ -589,7 +589,7 @@ fi
 # Various flags
 
 AC_SUBST(ARFLAGS)
-: ${ARFLAGS=rucs}
+: ${ARFLAGS=rcs}
 
 # Some architectures can't pass the 's' flag to ar so need to use ranlib
 # to create an index in an archive file.
