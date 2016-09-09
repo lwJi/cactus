@@ -177,7 +177,7 @@ sub parse_schedule_statement
         if($nm eq "schedule") {
           my @children = @{$schedule->{children}};
           $name = $schedule->group(1,"name")->substring();
-          $as = $name;
+          $as = undef;
           if($schedule->group(0)->is("nogroup")) {
             $type = "FUNCTION"
           } else {
@@ -216,20 +216,22 @@ sub parse_schedule_statement
             } elsif($prep_name eq "as") {
               my $ngas = $prep->group(1,"pararg")->group(0,"vname");
               my $nas = $ngas->substring();
-              my $line = $ngas->linenum();
-              print "CST ERROR IN FILE '$ccl_file'\n";
-              print "LINE $line\n";
-              print "Multiple values for 'as' keyword for schedule item $name.\n";
-              print "Value 1: $as\n";
-              print "Value 2: $nas\n";
-              confess("multiple use of 'as' keyword: name($name) as($as) nas($nas)")
-                if($as ne $name);
+              if(defined($as)) {
+                my $line = $ngas->linenum();
+                print "CST ERROR IN FILE '$ccl_file'\n";
+                print "LINE $line\n";
+                print "Multiple values for 'as' keyword for schedule item $name.\n";
+                print "Value 1: $as\n";
+                print "Value 2: $nas\n";
+                confess("multiple use of 'as' keyword: name($name) as($as) nas($nas)")
+              }
               $as = $nas;
             } else {
               # Users shouldn't see this
               confess("unknown preposition '$prep_name'");
             }
           }
+          $as = $name unless(defined($as));
           for my $child (@children[3..$#children-1]) {
             if($child->is("lang")) {
               $language = $child->group(0,"name")->substring();
