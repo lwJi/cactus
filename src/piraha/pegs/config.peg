@@ -6,11 +6,12 @@ script = (?i:script)( {pname}|)
 options = (?i:options) ({name} )*
 lang = (?i:lang)( {name}|)
 version = (?i:version) {vname}
-name_with_ver  = {name}( \( << {vname} \)|)
+name_with_ver  = {name}( \( {vname} \)|)
 thorns = (?i:thorns):({-s}{name})+
 requires = (?i:requires)({-s}{thorns}|({-s}{name_with_ver})+)
 notkey = (?!(?i:lang|script|provides|requires|optional(_ifactive|)|version|options|thorns)\b)
 name = {-notkey}[A-Za-z][a-zA-Z0-9_]*
 pname = {-notkey}[A-Za-z0-9_./-]+
-vname = {-notkey}[A-Za-z0-9_-]+
+vop   = (<<|<=|=|>=|>>)
+vname = {vop} {-notkey}[A-Za-z0-9_-]+
 all = ^ ({provopt} |{requires} )*$

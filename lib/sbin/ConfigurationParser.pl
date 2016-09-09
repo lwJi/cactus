@@ -350,7 +350,7 @@ sub ParseConfigurationCCL
           $cfg1->{$key} .= $rname." ";
           if($ch->has(1,"vname")) {
             $version = $ch->group(1)->substring();
-            $cfg1->{"\U$thorn REQUIRES $rname VERSION\E"} = "<<".$version;
+            $cfg1->{"\U$thorn REQUIRES $rname VERSION\E"} = $version;
           }
         } elsif($ch->is("name")) {
           my $rname = $ch->substring();
