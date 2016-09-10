@@ -284,7 +284,7 @@ sub CheckForCompatibleVersion
 {
   my($v1,$fv2) = @_;
   my($op, $v2, $cmp);
-  $fv2 =~ m/(<<|<=|-|>=|>>)(.*)/;
+  $fv2 =~ m/(<<|<=|=|>=|>>)(.*)/;
   $op = $1;
   $v2 = $2;
   $cmp = &CompareVersionStrings($v1, $v2);
