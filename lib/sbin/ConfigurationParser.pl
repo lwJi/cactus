@@ -348,8 +348,8 @@ sub ParseConfigurationCCL
           my $rname = $ch->group(0,"name")->substring();
           my $key = "\U$thorn\E REQUIRES";
           $cfg1->{$key} .= $rname." ";
-          if($ch->has(1,"vname")) {
-            $version = $ch->group(1)->substring();
+          if($ch->has(1,"vop") and $ch->has(2,"vname")) {
+            $version = $ch->group(1)->substring() . $ch->group(2)->substring();
             $cfg1->{"\U$thorn REQUIRES $rname VERSION\E"} = $version;
           }
         } elsif($ch->is("name")) {
