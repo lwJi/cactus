@@ -444,7 +444,7 @@ smart_ptr<Value> meval(smart_ptr<Group> gr,ExpressionEvaluationData *eedata) {
         fn = mklower(fn);
         smart_ptr<Value> val = meval(gr->group(1),eedata);
         if (fn == "max" || fn == "min") {
-          if (gr->groupCount() < 1) {
+          if (gr->groupCount() < 2) {
             std::ostringstream msg;
             msg << fn << "() needs at least one argument." << std::endl;
             std::string par = get_parfile();
@@ -485,6 +485,13 @@ smart_ptr<Value> meval(smart_ptr<Group> gr,ExpressionEvaluationData *eedata) {
           }
         }
         if(val->type == PIR_REAL || val->type == PIR_INT) {
+          if (gr->groupCount() != 2) {
+            std::ostringstream msg;
+            msg << fn << "() needs exactly one argument, but got" << gr->groupCount()
+                << "." << std::endl;
+            std::string par = get_parfile();
+            CCTK_Error(gr->line(),par.c_str(),current_thorn.c_str(),msg.str().c_str());
+          }
             if(fn == "trunc") {
                 val->ddata = trunc(val->realValue());
                 val->type = PIR_REAL;
