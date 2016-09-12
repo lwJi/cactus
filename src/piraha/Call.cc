@@ -56,7 +56,7 @@ smart_ptr<Grammar> create_grammar() {
 
         "paren = \\( {expr} \\)\n"
         "par = {name} :: {name}( {parindex})?\n"
-        "func = {name} \\( {expr} \\)\n"
+        "func = {name} \\( {expr} (, {expr})* \\)\n"
         "array = \\[ {expr}( , {expr})* \\]\n"
 
         "value = {unop}?({par}|{func}|{paren}|{dname}|{num}|{quot}|{name}|{var})\n"
@@ -443,6 +443,47 @@ smart_ptr<Value> meval(smart_ptr<Group> gr,ExpressionEvaluationData *eedata) {
         std::string fn = gr->group(0)->substring();
         fn = mklower(fn);
         smart_ptr<Value> val = meval(gr->group(1),eedata);
+        if (fn == "max" || fn == "min") {
+          if (gr->groupCount() < 1) {
+            std::ostringstream msg;
+            msg << fn << "() needs at least one argument." << std::endl;
+            std::string par = get_parfile();
+            CCTK_Error(gr->line(),par.c_str(),current_thorn.c_str(),msg.str().c_str());
+          }
+          for (int i=1; i<=gr->groupCount(); i++) {
+            smart_ptr<Value> val_next = meval(gr->group(i),eedata);
+            if (val_next->type != PIR_REAL && val_next->type != PIR_INT) {
+              std::ostringstream msg;
+              msg << fn << "() only accepts real or integer arguments, got: "
+                  << val_next->sdata << "." << std::endl;
+              std::string par = get_parfile();
+              CCTK_Error(gr->line(),par.c_str(),current_thorn.c_str(),msg.str().c_str());
+            }
+            if (fn == "max") {
+              if (val_next->type == PIR_REAL || val->type == PIR_REAL) {
+                val->ddata = std::max(val->realValue(), val_next->realValue());
+                val->type = PIR_REAL;
+              } else {
+                val->idata = std::max(val->idata, val_next->idata);
+                val->type = PIR_INT;
+              }
+            }
+            else if (fn == "min") {
+              if (val_next->type == PIR_REAL || val->type == PIR_REAL) {
+                val->ddata = std::min(val->realValue(), val_next->realValue());
+                val->type = PIR_REAL;
+              } else {
+                val->idata = std::min(val->idata, val_next->idata);
+                val->type = PIR_INT;
+              }
+            }
+            else {
+              std::string par = get_parfile();
+              CCTK_Error(gr->line(),par.c_str(),current_thorn.c_str(),"internal error");
+            }
+            return val;
+          }
+        }
         if(val->type == PIR_REAL || val->type == PIR_INT) {
             if(fn == "trunc") {
                 val->ddata = trunc(val->realValue());
