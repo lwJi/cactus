@@ -444,189 +444,193 @@ smart_ptr<Value> meval(smart_ptr<Group> gr,ExpressionEvaluationData *eedata) {
         fn = mklower(fn);
         smart_ptr<Value> val = meval(gr->group(1),eedata);
         if (fn == "max" || fn == "min") {
-          if (gr->groupCount() < 2) {
-            std::ostringstream msg;
-            msg << fn << "() needs at least one argument." << std::endl;
-            std::string par = get_parfile();
-            CCTK_Error(gr->line(),par.c_str(),current_thorn.c_str(),msg.str().c_str());
-          }
-          for (int i=1; i<=gr->groupCount(); i++) {
-            smart_ptr<Value> val_next = meval(gr->group(i),eedata);
-            if (val_next->type != PIR_REAL && val_next->type != PIR_INT) {
-              std::ostringstream msg;
-              msg << fn << "() only accepts real or integer arguments, got: "
-                  << val_next->sdata << "." << std::endl;
-              std::string par = get_parfile();
-              CCTK_Error(gr->line(),par.c_str(),current_thorn.c_str(),msg.str().c_str());
+            if (gr->groupCount() < 2) {
+                std::ostringstream msg;
+                msg << fn << "() needs at least one argument." << std::endl;
+                std::string par = get_parfile();
+                CCTK_Error(gr->line(),par.c_str(),current_thorn.c_str(),msg.str().c_str());
             }
-            if (fn == "max") {
-              if (val_next->type == PIR_REAL || val->type == PIR_REAL) {
-                val->ddata = std::max(val->realValue(), val_next->realValue());
-                val->type = PIR_REAL;
-              } else {
-                val->idata = std::max(val->idata, val_next->idata);
-                val->type = PIR_INT;
-              }
+            for (int i=1; i<=gr->groupCount(); i++) {
+                smart_ptr<Value> val_next = meval(gr->group(i),eedata);
+                if (val_next->type != PIR_REAL && val_next->type != PIR_INT) {
+                    std::ostringstream msg;
+                    msg << fn << "() only accepts real or integer arguments, got: "
+                        << val_next->sdata << "." << std::endl;
+                    std::string par = get_parfile();
+                    CCTK_Error(gr->line(),par.c_str(),current_thorn.c_str(),msg.str().c_str());
+                }
+                if (fn == "max") {
+                    if (val_next->type == PIR_REAL || val->type == PIR_REAL) {
+                        val->ddata = std::max(val->realValue(), val_next->realValue());
+                        val->type = PIR_REAL;
+                    } else {
+                        val->idata = std::max(val->idata, val_next->idata);
+                        val->type = PIR_INT;
+                    }
+                }
+                else if (fn == "min") {
+                    if (val_next->type == PIR_REAL || val->type == PIR_REAL) {
+                        val->ddata = std::min(val->realValue(), val_next->realValue());
+                        val->type = PIR_REAL;
+                    } else {
+                        val->idata = std::min(val->idata, val_next->idata);
+                        val->type = PIR_INT;
+                    }
+                }
+                else {
+                    std::string par = get_parfile();
+                    CCTK_Error(gr->line(),par.c_str(),current_thorn.c_str(),"internal error");
+                }
+                return val;
             }
-            else if (fn == "min") {
-              if (val_next->type == PIR_REAL || val->type == PIR_REAL) {
-                val->ddata = std::min(val->realValue(), val_next->realValue());
-                val->type = PIR_REAL;
-              } else {
-                val->idata = std::min(val->idata, val_next->idata);
-                val->type = PIR_INT;
-              }
-            }
-            else {
-              std::string par = get_parfile();
-              CCTK_Error(gr->line(),par.c_str(),current_thorn.c_str(),"internal error");
-            }
-            return val;
-          }
         }
-        if(val->type == PIR_REAL || val->type == PIR_INT) {
-          if (gr->groupCount() != 2) {
+        else if (gr->groupCount() != 2) {
             std::ostringstream msg;
             msg << fn << "() needs exactly one argument, but got" << gr->groupCount()
                 << "." << std::endl;
             std::string par = get_parfile();
             CCTK_Error(gr->line(),par.c_str(),current_thorn.c_str(),msg.str().c_str());
-          }
-            if(fn == "trunc") {
-                val->ddata = trunc(val->realValue());
-                val->type = PIR_REAL;
-                return val;
-            } else if(fn == "floor") {
-                val->ddata = floor(val->realValue());
-                val->type = PIR_REAL;
-                return val;
-            } else if(fn == "ceil") {
-                val->ddata = ceil(val->realValue());
-                val->type = PIR_REAL;
-                return val;
-            } else if(fn == "sqrt") {
-                val->ddata = sqrt(val->realValue());
-                val->type = PIR_REAL;
-                return val;
-            } else if(fn == "atan") {
-                val->ddata = atan(val->realValue());
-                val->type = PIR_REAL;
-                return val;
-            } else if(fn == "sin") {
-                val->ddata = sin(val->realValue());
-                val->type = PIR_REAL;
-                return val;
-            } else if(fn == "cos") {
-                val->ddata = cos(val->realValue());
-                val->type = PIR_REAL;
-                return val;
-            } else if(fn == "tan") {
-                val->ddata = tan(val->realValue());
-                val->type = PIR_REAL;
-                return val;
-            } else if(fn == "exp") {
-                val->ddata = exp(val->realValue());
-                val->type = PIR_REAL;
-                return val;
-            } else if(fn == "log") {
-                val->ddata = log(val->realValue());
-                val->type = PIR_REAL;
-                return val;
-            } else if(fn == "abs") {
-                val->ddata = fabs(val->realValue());
-                val->type = PIR_REAL;
-                return val;
-            } else if(fn == "acos") {
-                val->ddata = acos(val->realValue());
-                val->type = PIR_REAL;
-                return val;
-            } else if(fn == "asin") {
-                val->ddata = asin(val->realValue());
-                val->type = PIR_REAL;
-                return val;
-            } else if(fn == "bool") {
-                if(val->type == PIR_REAL) {
-                    val->idata = std::lrint(val->ddata);
-                }
-                val->type = PIR_BOOL;
-                return val;
-            } else if(fn == "int") {
-                if(val->type == PIR_REAL) {
-                    val->idata = std::lrint(val->ddata);
-                    val->type = PIR_INT;
-                }
-                return val;
-            } else if(fn == "real") {
-                if(val->type == PIR_INT) {
-                    val->ddata = val->idata;
+        }
+        else {
+            if(val->type == PIR_REAL || val->type == PIR_INT) {
+                if(fn == "trunc") {
+                    val->ddata = trunc(val->realValue());
                     val->type = PIR_REAL;
+                    return val;
+                } else if(fn == "floor") {
+                    val->ddata = floor(val->realValue());
+                    val->type = PIR_REAL;
+                    return val;
+                } else if(fn == "ceil") {
+                    val->ddata = ceil(val->realValue());
+                    val->type = PIR_REAL;
+                    return val;
+                } else if(fn == "sqrt") {
+                    val->ddata = sqrt(val->realValue());
+                    val->type = PIR_REAL;
+                    return val;
+                } else if(fn == "atan") {
+                    val->ddata = atan(val->realValue());
+                    val->type = PIR_REAL;
+                    return val;
+                } else if(fn == "sin") {
+                    val->ddata = sin(val->realValue());
+                    val->type = PIR_REAL;
+                    return val;
+                } else if(fn == "cos") {
+                    val->ddata = cos(val->realValue());
+                    val->type = PIR_REAL;
+                    return val;
+                } else if(fn == "tan") {
+                    val->ddata = tan(val->realValue());
+                    val->type = PIR_REAL;
+                    return val;
+                } else if(fn == "exp") {
+                    val->ddata = exp(val->realValue());
+                    val->type = PIR_REAL;
+                    return val;
+                } else if(fn == "log") {
+                    val->ddata = log(val->realValue());
+                    val->type = PIR_REAL;
+                    return val;
+                } else if(fn == "abs") {
+                    val->ddata = fabs(val->realValue());
+                    val->type = PIR_REAL;
+                    return val;
+                } else if(fn == "acos") {
+                    val->ddata = acos(val->realValue());
+                    val->type = PIR_REAL;
+                    return val;
+                } else if(fn == "asin") {
+                    val->ddata = asin(val->realValue());
+                    val->type = PIR_REAL;
+                    return val;
+                } else if(fn == "bool") {
+                    if(val->type == PIR_REAL) {
+                        val->idata = std::lrint(val->ddata);
+                    }
+                    val->type = PIR_BOOL;
+                    return val;
+                } else if(fn == "int") {
+                    if(val->type == PIR_REAL) {
+                        val->idata = std::lrint(val->ddata);
+                        val->type = PIR_INT;
+                    }
+                    return val;
+                } else if(fn == "real") {
+                    if(val->type == PIR_INT) {
+                        val->ddata = val->idata;
+                        val->type = PIR_REAL;
+                    }
+                    return val;
                 }
-                return val;
+            } else if(val->type == PIR_BOOL) {
+                if(fn == "int") {
+                    val->type = PIR_INT;
+                    return val;
+                } else if(fn == "real") {
+                    val->type = PIR_REAL;
+                    val->ddata = val->idata;
+                    return val;
+                }
+            } else if(val->type == PIR_STRING) {
+                if(fn == "int") {
+                    val->type = PIR_INT;
+                    std::istringstream buf(val->sdata);
+                    if(!(buf >> val->idata)) {
+                        std::ostringstream msg;
+                        msg << "Invalid numerical value: " << val->sdata << std::endl;
+                        std::string par = get_parfile();
+                        CCTK_Error(gr->line(),par.c_str(),current_thorn.c_str(),msg.str().c_str());
+                    }
+                    std::string extra;
+                    if(buf >> extra) {
+                        std::ostringstream msg;
+                        msg << "Trailing input in numerical value: " << val->sdata << std::endl;
+                        std::string par = get_parfile();
+                        CCTK_Error(gr->line(),par.c_str(),current_thorn.c_str(),msg.str().c_str());
+                    }
+                    return val;
+                } else if(fn == "real") {
+                    val->type = PIR_REAL;
+                    std::istringstream buf(val->sdata);
+                    if(!(buf >> val->ddata)) {
+                        std::ostringstream msg;
+                        msg << "Invalid numerical value: " << val->sdata << std::endl;
+                        std::string par = get_parfile();
+                        CCTK_Error(gr->line(),par.c_str(),current_thorn.c_str(),msg.str().c_str());
+                    }
+                    std::string extra;
+                    if(buf >> extra) {
+                        std::ostringstream msg;
+                        msg << "Trailing input in numerical value: " << val->sdata << std::endl;
+                        std::string par = get_parfile();
+                        CCTK_Error(gr->line(),par.c_str(),current_thorn.c_str(),msg.str().c_str());
+                    }
+                    return val;
+                } else if(fn == "bool") {
+                    val->type = PIR_BOOL;
+                    std::string s = mklower(val->sdata);
+                    if(s == "no" || s == "false") {
+                        ret->idata = 0;
+                    } else if(s == "yes" || s == "true") {
+                        ret->idata = 1;
+                    } else {
+                        std::ostringstream msg;
+                        msg << "Invalid boolean value: " << val->sdata << std::endl;
+                        std::string par = get_parfile();
+                        CCTK_Error(gr->line(),par.c_str(),current_thorn.c_str(),msg.str().c_str());
+                    }
+                    return val;
+                }
             }
-        } else if(val->type == PIR_BOOL) {
-            if(fn == "int") {
-                val->type = PIR_INT;
-                return val;
-            } else if(fn == "real") {
-                val->type = PIR_REAL;
-                val->ddata = val->idata;
-                return val;
-            }
-        } else if(val->type == PIR_STRING) {
-            if(fn == "int") {
-                val->type = PIR_INT;
-                std::istringstream buf(val->sdata);
-                if(!(buf >> val->idata)) {
-                    std::ostringstream msg;
-                    msg << "Invalid numerical value: " << val->sdata << std::endl;
-                    std::string par = get_parfile();
-                    CCTK_Error(gr->line(),par.c_str(),current_thorn.c_str(),msg.str().c_str());
-                }
-                std::string extra;
-                if(buf >> extra) {
-                    std::ostringstream msg;
-                    msg << "Trailing input in numerical value: " << val->sdata << std::endl;
-                    std::string par = get_parfile();
-                    CCTK_Error(gr->line(),par.c_str(),current_thorn.c_str(),msg.str().c_str());
-                }
-                return val;
-            } else if(fn == "real") {
-                val->type = PIR_REAL;
-                std::istringstream buf(val->sdata);
-                if(!(buf >> val->ddata)) {
-                    std::ostringstream msg;
-                    msg << "Invalid numerical value: " << val->sdata << std::endl;
-                    std::string par = get_parfile();
-                    CCTK_Error(gr->line(),par.c_str(),current_thorn.c_str(),msg.str().c_str());
-                }
-                std::string extra;
-                if(buf >> extra) {
-                    std::ostringstream msg;
-                    msg << "Trailing input in numerical value: " << val->sdata << std::endl;
-                    std::string par = get_parfile();
-                    CCTK_Error(gr->line(),par.c_str(),current_thorn.c_str(),msg.str().c_str());
-                }
-                return val;
-            } else if(fn == "bool") {
-                val->type = PIR_BOOL;
-                std::string s = mklower(val->sdata);
-                if(s == "no" || s == "false") {
-                    ret->idata = 0;
-                } else if(s == "yes" || s == "true") {
-                    ret->idata = 1;
-                } else {
-                    std::ostringstream msg;
-                    msg << "Invalid boolean value: " << val->sdata << std::endl;
-                    std::string par = get_parfile();
-                    CCTK_Error(gr->line(),par.c_str(),current_thorn.c_str(),msg.str().c_str());
-                }
-                return val;
+            else {
+                std::ostringstream msg;
+                msg << "Unknown func: " << fn << "(" << val->type << ")" << std::endl;
+                std::string par = get_parfile();
+                CCTK_Error(gr->line(),par.c_str(),current_thorn.c_str(),msg.str().c_str());
             }
         }
-        std::ostringstream msg;
-        msg << "Unknown func: " << fn << "(" << val->type << ")" << std::endl;
-        std::string par = get_parfile();
-        CCTK_Error(gr->line(),par.c_str(),current_thorn.c_str(),msg.str().c_str());
     } else if(pn == "name"||pn == "dname") {
         std::string s = gr->substring();
         s = mklower(s);
