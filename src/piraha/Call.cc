@@ -443,6 +443,7 @@ smart_ptr<Value> meval(smart_ptr<Group> gr,ExpressionEvaluationData *eedata) {
         std::string fn = gr->group(0)->substring();
         fn = mklower(fn);
         smart_ptr<Value> val = meval(gr->group(1),eedata);
+        // First, functions with at least one, but potentially more than one argument
         if (fn == "max" || fn == "min") {
             if (gr->groupCount() < 2) {
                 std::ostringstream msg;
@@ -452,6 +453,7 @@ smart_ptr<Value> meval(smart_ptr<Group> gr,ExpressionEvaluationData *eedata) {
             }
             for (int i=1; i<=gr->groupCount(); i++) {
                 smart_ptr<Value> val_next = meval(gr->group(i),eedata);
+                // Make sure all arguments are either integer or real
                 if (val_next->type != PIR_REAL && val_next->type != PIR_INT) {
                     std::ostringstream msg;
                     msg << fn << "() only accepts real or integer arguments, got: "
@@ -484,6 +486,7 @@ smart_ptr<Value> meval(smart_ptr<Group> gr,ExpressionEvaluationData *eedata) {
                 return val;
             }
         }
+        // From here on only functions that take exactly one argument: the majority.
         else if (gr->groupCount() != 2) {
             std::ostringstream msg;
             msg << fn << "() needs exactly one argument, but got" << gr->groupCount()
