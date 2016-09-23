@@ -67,7 +67,7 @@ static int ActivateThorn(const char *name);
 static int ActivateImp(const char *implementation, const char *thorn);
 
 static int CompareStrings(const void *string1, const void *string2);
-static int JustPrintThornName(const char *key,void *input, void *dummy);
+static int BuildListOfThorns(const char *key,void *input, void *list);
 
 /********************************************************************
  ********************* Other Routine Prototypes *********************
@@ -165,7 +165,9 @@ int CCTKi_RegisterThorn(const struct iAttributeList *attributes)
     }
     else
     {
-      fprintf(stderr, "Unknown/unimplemented thorn attribute %s\n", attributes[i].attribute);
+      CCTK_VWarn(CCTK_WARN_COMPLAIN, __LINE__, __FILE__, "Cactus",
+                 "Unknown/unimplemented thorn attribute %s",
+                 attributes[i].attribute);
     }
   }
 
@@ -286,7 +288,7 @@ int CCTKi_ActivateThorn(const char *name)
   struct THORN *thorn;
   struct IMPLEMENTATION *imp;
 
-  printf("Activating thorn %s...", name);
+  CCTK_VInfo("Cactus", "Activating thorn %s...", name);
 
   /* Find the thorn */
   thornnode = SKTreeFindNode(thornlist, name);
@@ -305,7 +307,8 @@ int CCTKi_ActivateThorn(const char *name)
         if(!imp->active)
         {
           /* Activate the thorn. */
-          printf("Success -> active implementation %s\n", thorn->implementation);
+          CCTK_VInfo("Cactus", "Success -> active implementation %s",
+                     thorn->implementation);
           thorn->active = imp->active = 1;
 
           /* Remember which thorn activated this imp. */
@@ -314,25 +317,31 @@ int CCTKi_ActivateThorn(const char *name)
         }
         else
         {
-          printf("Failure -> Implementation %s already activated by %s\n", thorn->implementation, imp->activating_thorn);
+          CCTK_VWarn(CCTK_WARN_ALERT, __LINE__, __FILE__, "Cactus",
+                     "thorn %s provides implementation %s - already activated",
+                     name, thorn->implementation);
           retval = -4;
         }
       }
       else
       {
-        printf("Failure -> Thorn %s already active\n", name);
+        CCTK_VWarn(CCTK_WARN_PICKY, __LINE__, __FILE__, "Cactus",
+                   "thorn %s already active", name);
         retval = -3;
       }
     }
     else
     {
-      printf("Internal error - can't find imp %s from thorn %s\n", thorn->implementation, name);
+      CCTK_VWarn(CCTK_WARN_ALERT, __LINE__, __FILE__, "Cactus",
+                 "Internal error - can't find imp %s from thorn %s",
+                 thorn->implementation, name);
       retval = -2;
     }
   }
   else
   {
-    printf("Failure -> non-existent thorn.\n");
+    CCTK_VWarn(CCTK_WARN_ALERT, __LINE__, __FILE__, "Cactus",
+               "Thorn %s not found", name);
     retval = -1;
   }
 
@@ -930,7 +939,8 @@ int CCTKi_ActivateThorns(const char *activethornlist)
   required_imps    = Util_StringListCreate(n_imps);
   requested_imps   = Util_StringListCreate(n_imps);
 
-  printf("Activation requested for \n--->%s<---\n", activethornlist);
+  CCTK_VInfo("Cactus", "Activation requested for \n--->%s<---",
+             activethornlist);
 
   n_errors = 0;
   n_warnings = 0;
@@ -944,11 +954,12 @@ int CCTKi_ActivateThorns(const char *activethornlist)
       /* Thorn was added; do nothing */
       break;
     case 0:
-      printf("Warning: thorn %s already scheduled for activation\n", token);
+      CCTK_VWarn(CCTK_WARN_PICKY, __LINE__, __FILE__, "Cactus",
+                 "thorn %s already scheduled for activation", token);
       n_warnings++;
       break;
     default:
-      CCTK_Warn(0, __LINE__, __FILE__, "Cactus", "Internal error");
+      CCTK_Error(__LINE__, __FILE__, "Cactus", "Internal error");
     }
   }
 
@@ -984,8 +995,9 @@ int CCTKi_ActivateThorns(const char *activethornlist)
                 /* Thorn already scheduled for activation */
                 break;
               case 1:
-                printf("Thorn %s requests automatic activation of %s\n",
-                       thorn, new_thorn);
+                CCTK_VInfo("Cactus",
+                           "Thorn %s requests automatic activation of %s",
+                           thorn, new_thorn);
                 did_add_thorns = 1;
                 break;
               default:
@@ -1006,39 +1018,46 @@ int CCTKi_ActivateThorns(const char *activethornlist)
   {
     if(CCTK_IsThornActive(thorn))
     {
-      printf("Warning: thorn %s already active\n", thorn);
+      CCTK_VWarn(CCTK_WARN_PICKY, __LINE__, __FILE__, "Cactus",
+                 "thorn %s already active", thorn);
       n_warnings++;
     }
     else if (! (this_imp = CCTK_ThornImplementation(thorn)))
     {
-      printf("Error: Thorn %s not found\n", thorn);
+      CCTK_VWarn(CCTK_WARN_ALERT, __LINE__, __FILE__, "Cactus",
+                 "Thorn %s not found", thorn);
       n_errors++;
       /*  Give some more help */
       if (CCTK_IsImplementationCompiled(thorn))
       {
         impthornlist = CCTK_ImpThornList(thorn);
 
-        printf("       However, implementation %s was found and is\n",thorn);
-        printf("       provided by thorn(s):");
-        SKTreeTraverseInorder(impthornlist, JustPrintThornName, NULL);
-        printf("\n");
+        char *thorns = NULL;
+        SKTreeTraverseInorder(impthornlist, BuildListOfThorns, &thorns);
+        CCTK_VInfo("Cactus",
+                   "However, implementation %s was found and is provided by thorn(s): %s",
+                   thorn, thorns);
+        free(thorns);
       }
     }
     else if (CCTK_IsImplementationActive(this_imp))
     {
-      printf("Error: thorn %s provides implementation %s - already active\n",
-             thorn, this_imp);
+      CCTK_VWarn(CCTK_WARN_ALERT, __LINE__, __FILE__, "Cactus",
+                 "thorn %s provides implementation %s - already active",
+                 thorn, this_imp);
       n_errors++;
     }
     else if (! Util_StringListAdd(required_thorns,thorn))
     {
-      printf("Warning: thorn %s already scheduled for activation\n", thorn);
+      CCTK_VWarn(CCTK_WARN_PICKY, __LINE__, __FILE__, "Cactus",
+                 "thorn %s already scheduled for activation", thorn);
       n_warnings++;
     }
     else if (! Util_StringListAdd(requested_imps,this_imp))
     {
-      printf("Error: thorn %s provides implementation %s which is already "
-             "scheduled for activation\n", thorn, this_imp);
+      CCTK_VWarn(CCTK_WARN_ALERT, __LINE__, __FILE__, "Cactus",
+                 "thorn %s provides implementation %s which is already scheduled for activation",
+                 thorn, this_imp);
       n_errors++;
     }
     else if ((impnode = SKTreeFindNode(implist, this_imp)))
@@ -1096,9 +1115,9 @@ int CCTKi_ActivateThorns(const char *activethornlist)
       {
         if(Util_StrCmpi(imp1,imp2))
         {
-          printf("Error: Implementation '%s' not activated.\n", imp2);
-          printf("       This implementation is required by activated "
-                 "thorn(s):\n");
+          CCTK_VWarn(CCTK_WARN_ALERT, __LINE__, __FILE__, "Cactus",
+                     "Implementation '%s' not activated. This implementation is required by activated thorn(s):",
+                     imp2);
 
           for (thorn = Util_StringListNext (required_thorns, 1);
                thorn;
@@ -1121,8 +1140,8 @@ int CCTKi_ActivateThorns(const char *activethornlist)
 
             if (j == 0)
             {
-              printf ("           %s (implementing %s)\n",
-                      CCTK_ImplementationThorn (this_imp), this_imp);
+              CCTK_VInfo("Cactus", "%s (implementing %s)",
+                          CCTK_ImplementationThorn (this_imp), this_imp);
             }
           }
 
@@ -1131,20 +1150,19 @@ int CCTKi_ActivateThorns(const char *activethornlist)
           {
             impthornlist = CCTK_ImpThornList(imp2);
 
-            printf("       This implementation is provided by compiled "
-                   "thorn(s):\n");
-            printf("          ");
-            SKTreeTraverseInorder(impthornlist, JustPrintThornName, NULL);
-            printf("\n");
+            char *thorns = NULL;
+            SKTreeTraverseInorder(impthornlist, BuildListOfThorns, &thorns);
+            CCTK_VInfo("Cactus",
+                       "This implementation is provided by compiled thorn(s): %s",
+                       thorns);
+            free(thorns);
           }
           else
           {
-            printf("       This implementation is not provided by any "
-                   "compiled thorn\n");
+            CCTK_Info("Cactus", "This implementation is not provided by any compiled thorn");
           }
 
-          printf("       Add a thorn providing this implementation to the "
-                 "ActiveThorns parameter.\n");
+          CCTK_Info("Cactus", "Add a thorn providing this implementation to the ActiveThorns parameter");
           n_errors++;
         }
         else
@@ -1158,24 +1176,26 @@ int CCTKi_ActivateThorns(const char *activethornlist)
      */
     while(imp2)
     {
-      printf("Error: Required implementation %s was not requested\n", imp2);
-      printf("       Add a thorn providing this implementation to the ActiveThorns "
-             "parameter.\n");
+      CCTK_VWarn(CCTK_WARN_ALERT, __LINE__, __FILE__, "Cactus",
+                 "Required implementation %s was not requested. Add a thorn providing this implementation to the ActiveThorns parameter.",
+                 imp2);
       n_errors++;
       /*  Give some more help */
       if (CCTK_IsImplementationCompiled(imp2))
       {
         impthornlist = CCTK_ImpThornList(imp2);
 
-        printf("       For example, this implementation is provided by compiled thorns:\n");
-        printf("          ");
-        SKTreeTraverseInorder(impthornlist, JustPrintThornName, NULL);
-        printf("\n");
+        char *thorns = NULL;
+        SKTreeTraverseInorder(impthornlist, BuildListOfThorns, &thorns);
+        CCTK_VInfo("Cactus",
+                   "For example, this implementation is provided by compiled thorns: %s",
+                   thorns);
+        free(thorns);
       }
       else
       {
-        printf("       This implementation is not provided by any "
-               "compiled thorn\n");
+        CCTK_Info("Cactus",
+                  "This implementation is not provided by any compiled thorn");
       }
       imp2=Util_StringListNext(required_imps,0);
     }
@@ -1207,9 +1227,9 @@ int CCTKi_ActivateThorns(const char *activethornlist)
         }
         if (! thorn)
         {
-          printf ("Error: Thorn %s requires thorn %s to be active.\n"
-                  "       Please add this thorn to the ActiveThorns "
-                  "parameter.\n", this, this_thorn->requires_thorns[i]);
+          CCTK_VWarn(CCTK_WARN_ALERT, __LINE__, __FILE__, "Cactus",
+                     "Thorn %s requires thorn %s to be active. Please add this thorn to the ActiveThorns parameter",
+                     this, this_thorn->requires_thorns[i]);
           n_errors++;
         }
       }
@@ -1240,7 +1260,9 @@ int CCTKi_ActivateThorns(const char *activethornlist)
   }
   else
   {
-    printf("Activation failed - %d errors in activation sequence\n", n_errors);
+    CCTK_VWarn(CCTK_WARN_ALERT, __LINE__, __FILE__, "Cactus",
+               "Activation failed - %d errors in activation sequence",
+               n_errors);
     retval = -n_errors;
   }
 
@@ -1409,7 +1431,7 @@ static int ActivateThorn(const char *name)
 
   struct THORN *thorn;
 
-  printf("Activating thorn %s...", name);
+  CCTK_VInfo("Cactus", "Activating thorn %s...", name);
 
   /* Find the thorn */
   thornnode = SKTreeFindNode(thornlist, name);
@@ -1419,7 +1441,8 @@ static int ActivateThorn(const char *name)
 
     thorn->active = 1;
 
-    printf("Success -> active implementation %s\n", thorn->implementation);
+    CCTK_VInfo("Cactus", "Success -> active implementation %s",
+               thorn->implementation);
 
     retval = ActivateImp(thorn->implementation, name);
   }
@@ -1490,19 +1513,27 @@ static int CompareStrings(const void *string1, const void *string2)
 }
 
  /*@@
-   @routine    JustPrintThornName
-   @date       Mon Jun  4 19:05:45 2001
-   @author     Tom Goodale
+   @routine    BuildListOfThorns
+   @date       Fri Sep 23 11:26:00 CDT 2016
+   @author     Roland Haas
    @desc
-   Print the name of a thorn if it is passed from an sktree.
+   Append a thorn name to the string given in the last argument.
    @enddesc
 @@*/
-static int JustPrintThornName(const char *key, void *input, void *dummy)
+static int BuildListOfThorns(const char *key, void *input, void *calldata)
 {
   input = input;
-  dummy = dummy;
 
-  printf(" %s", key);
+  char *old_string = *(char**)calldata;
+  if(old_string)
+  {
+    Util_asprintf(calldata, "%s %s", old_string, key);
+  }
+  else
+  {
+    Util_asprintf(calldata, "%s", key);
+  }
+  free(old_string);
 
   return 0;
 }
