@@ -540,6 +540,9 @@ sub CreateThornsHeaders
     $thorns{$thorn} =~ m:.*/(.*)/(.*):;
     my ($arr,$th) = ($1,$2);
 
+    # the flesh's "thorn" directory ends up being "src"
+    $th = "Cactus" if ($thorn eq 'Cactus');
+
     push @header3, {thorn => $thorn, body=>
                 "\/* Defines for thorn this file is part of *\/\n\n".
                 "#ifndef DEFINE_THIS_THORN_H\n".
