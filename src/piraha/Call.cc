@@ -56,7 +56,7 @@ smart_ptr<Grammar> create_grammar() {
 
         "paren = \\( {expr} \\)\n"
         "par = {name} :: {name}( {parindex})?\n"
-        "func = {name} \\( {expr} (, {expr})* \\)\n"
+        "func = {name} \\( {expr} (, {expr} )*\\)\n"
         "array = \\[ {expr}( , {expr})* \\]\n"
 
         "value = {unop}?({par}|{func}|{paren}|{dname}|{num}|{quot}|{name}|{var})\n"
