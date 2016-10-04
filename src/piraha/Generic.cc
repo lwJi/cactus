@@ -1,7 +1,7 @@
 #include "Piraha.hpp"
 #include <fstream>
 #include <stdlib.h>
-#include "GrammarDef.hh"
+#include "ParFileGrammar.hh"
 
 using namespace cctki_piraha;
 

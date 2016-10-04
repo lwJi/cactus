@@ -18,4 +18,4 @@ generic : libpiraha.a Piraha.hpp smart_ptr.hpp
 clean :
 	rm -f $(BIN)/generic libpiraha.a $(OBJS)
 
-Generic.cc : GrammarDef.hh
+Generic.cc : ParFileGrammar.hh
