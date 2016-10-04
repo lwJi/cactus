@@ -2,6 +2,12 @@ package piraha;
 use strict;
 ##############################################################################
 # A minimal Piraha script loos like this:
+# For a definitions of Piraha syntax and grammar
+# files, see the documentation at
+# https://github.com/stevenrbrandt/piraha-peg
+#
+# For use of the perl interface to Piraha, read
+# the comments below:
 # +---------------------------------------------------------------------------
 # | use Piraha;
 # |
