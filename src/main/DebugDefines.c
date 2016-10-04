@@ -48,12 +48,12 @@ CCTK_FILEVERSION(main_DebugDefines_c);
                the linear index for the given spatial indices
    @endreturndesc
 @@*/
-int CCTK_GFIndex0D (const cGH *GH)
+ptrdiff_t CCTK_GFIndex0D (const cGH *GH)
 {
   return (0);
 }
 
-int CCTK_GFIndex1D (const cGH *GH, int i)
+ptrdiff_t CCTK_GFIndex1D (const cGH *GH, int i)
 {
 #ifdef CCTK_DEBUG
   if (i < 0 || i >= GH->cctk_lsh[0])
@@ -63,10 +63,10 @@ int CCTK_GFIndex1D (const cGH *GH, int i)
                  i, GH->cctk_lsh[0]);
   }
 #endif
-  return (i);
+  return ((ptrdiff_t)i);
 }
 
-int CCTK_GFIndex2D (const cGH *GH, int i, int j)
+ptrdiff_t CCTK_GFIndex2D (const cGH *GH, int i, int j)
 {
 #ifdef CCTK_DEBUG
   if (i < 0 || i >= GH->cctk_lsh[0] ||
@@ -77,10 +77,10 @@ int CCTK_GFIndex2D (const cGH *GH, int i, int j)
                  i, j, GH->cctk_lsh[0], GH->cctk_lsh[1]);
   }
 #endif
-  return (i + GH->cctk_ash[0]*j);
+  return (i + GH->cctk_ash[0]*(ptrdiff_t)j);
 }
 
-int CCTK_GFIndex3D (const cGH *GH, int i, int j, int k)
+ptrdiff_t CCTK_GFIndex3D (const cGH *GH, int i, int j, int k)
 {
 #ifdef CCTK_DEBUG
   if (i < 0 || i >= GH->cctk_lsh[0] ||
@@ -92,10 +92,10 @@ int CCTK_GFIndex3D (const cGH *GH, int i, int j, int k)
                  i, j, k, GH->cctk_lsh[0], GH->cctk_lsh[1], GH->cctk_lsh[2]);
   }
 #endif
-  return (i + GH->cctk_ash[0]*(j + GH->cctk_ash[1]*k));
+  return (i + GH->cctk_ash[0]*(j + GH->cctk_ash[1]*(ptrdiff_t)k));
 }
 
-int CCTK_GFIndex4D (const cGH *GH, int i, int j, int k, int l)
+ptrdiff_t CCTK_GFIndex4D (const cGH *GH, int i, int j, int k, int l)
 {
 #ifdef CCTK_DEBUG
   if (i < 0 || i >= GH->cctk_lsh[0] ||
@@ -108,10 +108,11 @@ int CCTK_GFIndex4D (const cGH *GH, int i, int j, int k, int l)
                  i, j, k, l, GH->cctk_lsh[0], GH->cctk_lsh[1], GH->cctk_lsh[2], GH->cctk_lsh[3]);
   }
 #endif
-  return (i + GH->cctk_ash[0]*(j + GH->cctk_ash[1]*(k + GH->cctk_ash[2] * l)));
+  return (i + GH->cctk_ash[0]*(j + GH->cctk_ash[1]*
+                               (k + GH->cctk_ash[2] * (ptrdiff_t)l)));
 }
 
-int CCTK_VectGFIndex0D (const cGH *GH, int n)
+ptrdiff_t CCTK_VectGFIndex0D (const cGH *GH, int n)
 {
 #ifdef CCTK_DEBUG
   if (n < 0)
@@ -121,10 +122,10 @@ int CCTK_VectGFIndex0D (const cGH *GH, int n)
                  n);
   }
 #endif
-  return (n);
+  return ((ptrdiff_t)n);
 }
 
-int CCTK_VectGFIndex1D (const cGH *GH, int i, int n)
+ptrdiff_t CCTK_VectGFIndex1D (const cGH *GH, int i, int n)
 {
 #ifdef CCTK_DEBUG
   if (i < 0 || i >= GH->cctk_lsh[0])
@@ -140,10 +141,10 @@ int CCTK_VectGFIndex1D (const cGH *GH, int i, int n)
                  n);
   }
 #endif
-  return (i + GH->cctk_ash[0]*n);
+  return (i + GH->cctk_ash[0]*(ptrdiff_t)n);
 }
 
-int CCTK_VectGFIndex2D (const cGH *GH, int i, int j, int n)
+ptrdiff_t CCTK_VectGFIndex2D (const cGH *GH, int i, int j, int n)
 {
 #ifdef CCTK_DEBUG
   if (i < 0 || i >= GH->cctk_lsh[0] ||
@@ -160,10 +161,10 @@ int CCTK_VectGFIndex2D (const cGH *GH, int i, int j, int n)
                  n);
   }
 #endif
-  return (i + GH->cctk_ash[0]*(j + GH->cctk_ash[1]*n));
+  return (i + GH->cctk_ash[0]*(j + GH->cctk_ash[1]*(ptrdiff_t)n));
 }
 
-int CCTK_VectGFIndex3D (const cGH *GH, int i, int j, int k, int n)
+ptrdiff_t CCTK_VectGFIndex3D (const cGH *GH, int i, int j, int k, int n)
 {
 #ifdef CCTK_DEBUG
   if (i < 0 || i >= GH->cctk_lsh[0] ||
@@ -181,10 +182,11 @@ int CCTK_VectGFIndex3D (const cGH *GH, int i, int j, int k, int n)
                  n);
   }
 #endif
-  return (i + GH->cctk_ash[0]*(j + GH->cctk_ash[1]*(k + GH->cctk_ash[2]*n)));
+  return (i + GH->cctk_ash[0]*(j + GH->cctk_ash[1]*
+                               (k + GH->cctk_ash[2]*(ptrdiff_t)n)));
 }
 
-int CCTK_VectGFIndex4D (const cGH *GH, int i, int j, int k, int l, int n)
+ptrdiff_t CCTK_VectGFIndex4D (const cGH *GH, int i, int j, int k, int l, int n)
 {
 #ifdef CCTK_DEBUG
   if (i < 0 || i >= GH->cctk_lsh[0] ||
@@ -204,5 +206,6 @@ int CCTK_VectGFIndex4D (const cGH *GH, int i, int j, int k, int l, int n)
   }
 #endif
   return (i + GH->cctk_ash[0]*(j + GH->cctk_ash[1]*(k + GH->cctk_ash[2]*
-                                                    (l + GH->cctk_ash[3]*n))));
+                                                    (l + GH->cctk_ash[3]*
+                                                     (ptrdiff_t)n))));
 }

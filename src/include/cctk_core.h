@@ -198,101 +198,101 @@ cctk_ash1,cctk_ash2,cctk_ash3
  * Without CCTK_DEBUG, define the calculations directly
  */
 
-static inline int CCTK_GFINDEX0D (const cGH *restrict cctkGH)
+static inline ptrdiff_t CCTK_GFINDEX0D (const cGH *restrict cctkGH)
   CCTK_ATTRIBUTE_NONNULL(1);
-static inline int CCTK_GFINDEX0D (const cGH *restrict cctkGH)
+static inline ptrdiff_t CCTK_GFINDEX0D (const cGH *restrict cctkGH)
 {
   return 0;
 }
 
-static inline int CCTK_GFINDEX1D (const cGH *restrict cctkGH,
+static inline ptrdiff_t CCTK_GFINDEX1D (const cGH *restrict cctkGH,
                                   int i)
   CCTK_ATTRIBUTE_NONNULL(1);
-static inline int CCTK_GFINDEX1D (const cGH *restrict cctkGH,
+static inline ptrdiff_t CCTK_GFINDEX1D (const cGH *restrict cctkGH,
                                   int i)
 {
-  return i;
+  return (ptrdiff_t)i;
 }
 
-static inline int CCTK_GFINDEX2D (const cGH *restrict cctkGH,
+static inline ptrdiff_t CCTK_GFINDEX2D (const cGH *restrict cctkGH,
                                   int i, int j)
   CCTK_ATTRIBUTE_NONNULL(1);
-static inline int CCTK_GFINDEX2D (const cGH *restrict cctkGH,
+static inline ptrdiff_t CCTK_GFINDEX2D (const cGH *restrict cctkGH,
                                   int i, int j)
 {
-  return i + cctkGH->cctk_ash[0] * j;
+  return i + cctkGH->cctk_ash[0] * (ptrdiff_t)j;
 }
 
-static inline int CCTK_GFINDEX3D (const cGH *restrict cctkGH,
+static inline ptrdiff_t CCTK_GFINDEX3D (const cGH *restrict cctkGH,
                                   int i, int j, int k)
   CCTK_ATTRIBUTE_NONNULL(1);
-static inline int CCTK_GFINDEX3D (const cGH *restrict cctkGH,
+static inline ptrdiff_t CCTK_GFINDEX3D (const cGH *restrict cctkGH,
                                   int i, int j, int k)
 {
   return (i + cctkGH->cctk_ash[0] *
-          (j + cctkGH->cctk_ash[1] * k));
+          (j + cctkGH->cctk_ash[1] * (ptrdiff_t)k));
 }
 
-static inline int CCTK_GFINDEX4D (const cGH *restrict cctkGH,
+static inline ptrdiff_t CCTK_GFINDEX4D (const cGH *restrict cctkGH,
                                   int i, int j, int k, int l)
   CCTK_ATTRIBUTE_NONNULL(1);
-static inline int CCTK_GFINDEX4D (const cGH *restrict cctkGH,
+static inline ptrdiff_t CCTK_GFINDEX4D (const cGH *restrict cctkGH,
                                   int i, int j, int k, int l)
 {
   return (i + cctkGH->cctk_ash[0] *
           (j + cctkGH->cctk_ash[1] *
-           (k + cctkGH->cctk_ash[2] * l)));
+           (k + cctkGH->cctk_ash[2] * (ptrdiff_t)l)));
 }
 
-static inline int CCTK_VECTGFINDEX0D (const cGH *restrict cctkGH,
+static inline ptrdiff_t CCTK_VECTGFINDEX0D (const cGH *restrict cctkGH,
                                       int n)
   CCTK_ATTRIBUTE_NONNULL(1);
-static inline int CCTK_VECTGFINDEX0D (const cGH *restrict cctkGH,
+static inline ptrdiff_t CCTK_VECTGFINDEX0D (const cGH *restrict cctkGH,
                                       int n)
 {
-  return n;
+  return (ptrdiff_t)n;
 }
 
-static inline int CCTK_VECTGFINDEX1D (const cGH *restrict cctkGH,
+static inline ptrdiff_t CCTK_VECTGFINDEX1D (const cGH *restrict cctkGH,
                                       int i, int n)
   CCTK_ATTRIBUTE_NONNULL(1);
-static inline int CCTK_VECTGFINDEX1D (const cGH *restrict cctkGH,
+static inline ptrdiff_t CCTK_VECTGFINDEX1D (const cGH *restrict cctkGH,
                                       int i, int n)
 {
-  return i + cctkGH->cctk_ash[0] * n;
+  return i + cctkGH->cctk_ash[0] * (ptrdiff_t)n;
 }
 
-static inline int CCTK_VECTGFINDEX2D (const cGH *restrict cctkGH,
+static inline ptrdiff_t CCTK_VECTGFINDEX2D (const cGH *restrict cctkGH,
                                       int i, int j, int n)
   CCTK_ATTRIBUTE_NONNULL(1);
-static inline int CCTK_VECTGFINDEX2D (const cGH *restrict cctkGH,
+static inline ptrdiff_t CCTK_VECTGFINDEX2D (const cGH *restrict cctkGH,
                                       int i, int j, int n)
 {
   return (i + cctkGH->cctk_ash[0] *
-          (j + cctkGH->cctk_ash[1] * n));
+          (j + cctkGH->cctk_ash[1] * (ptrdiff_t)n));
 }
 
-static inline int CCTK_VECTGFINDEX3D (const cGH *restrict cctkGH,
+static inline ptrdiff_t CCTK_VECTGFINDEX3D (const cGH *restrict cctkGH,
                                       int i, int j, int k, int n)
   CCTK_ATTRIBUTE_NONNULL(1);
-static inline int CCTK_VECTGFINDEX3D (const cGH *restrict cctkGH,
+static inline ptrdiff_t CCTK_VECTGFINDEX3D (const cGH *restrict cctkGH,
                                       int i, int j, int k, int n)
 {
   return (i + cctkGH->cctk_ash[0] *
           (j + cctkGH->cctk_ash[1] *
-           (k + cctkGH->cctk_ash[2] * n)));
+           (k + cctkGH->cctk_ash[2] * (ptrdiff_t)n)));
 }
 
-static inline int CCTK_VECTGFINDEX4D (const cGH *restrict cctkGH,
+static inline ptrdiff_t CCTK_VECTGFINDEX4D (const cGH *restrict cctkGH,
                                       int i, int j, int k, int l, int n)
   CCTK_ATTRIBUTE_NONNULL(1);
-static inline int CCTK_VECTGFINDEX4D (const cGH *restrict cctkGH,
+static inline ptrdiff_t CCTK_VECTGFINDEX4D (const cGH *restrict cctkGH,
                                       int i, int j, int k, int l, int n)
 {
   return (i + cctkGH->cctk_ash[0] *
           (j + cctkGH->cctk_ash[1] *
            (k + cctkGH->cctk_ash[2] *
-            (l + cctkGH->cctk_ash[3] * n))));
+            (l + cctkGH->cctk_ash[3] * (ptrdiff_t)n))));
 }
 
 #endif
