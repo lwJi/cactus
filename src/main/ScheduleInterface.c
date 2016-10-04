@@ -43,6 +43,8 @@ CCTK_FILEVERSION(main_ScheduleInterface_c);
  *********************     Local Data Types   ***********************
  ********************************************************************/
 
+#define ALLOW_RECURSIVE_SCHEDULE_CALLS 1
+
 typedef enum {sched_none, sched_group, sched_function} iSchedType;
 typedef enum {schedpoint_misc, schedpoint_analysis} iSchedPoint;
 
@@ -282,6 +284,9 @@ int CCTK_CallFunction(void *function,
 
   int (*oneargfunc)(void *);
 
+#if ALLOW_RECURSIVE_SCHEDULE_CALLS
+  const cFunctionData *previous_scheduled_function = current_scheduled_function;
+#else
   if(current_scheduled_function != NULL)
   {
     CCTK_VWarn(CCTK_WARN_PICKY, __LINE__, __FILE__, "Cactus",
@@ -292,6 +297,7 @@ int CCTK_CallFunction(void *function,
                current_scheduled_function->thorn,
                current_scheduled_function->routine);
   }
+#endif
   current_scheduled_function = fdata;
 
   switch(fdata->type)
@@ -327,7 +333,11 @@ int CCTK_CallFunction(void *function,
                 "CCTK_CallFunction: Unknown function type.");
   }
 
+#if ALLOW_RECURSIVE_SCHEDULE_CALLS
+  current_scheduled_function = previous_scheduled_function;
+#else
   current_scheduled_function = NULL;
+#endif
 
   /* Return 0, meaning didn't synchronise */
   return 0;
