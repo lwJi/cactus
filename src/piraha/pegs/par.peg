@@ -11,7 +11,7 @@ dname = [0-9][a-zA-Z_]{2,}
 inquot = ({var}|\\.|[^\\"])*
 fname = \.?/[-\./0-9a-zA-Z_]+
 quot = "{inquot}"|{fname}
-num = ([0-9]+(\.[0-9]*|)|\.[0-9]+)([ed][+-]?[0-9]+|)
+num = ([0-9]+(\.[0-9]*|)|\.[0-9]+)([edDE][+-]?[0-9]+|)
 env = ENV\{{name}\}
 var = \$({env}|{name}|\{{name}\})
 powexpr = {value}( \*\* {value})?
@@ -28,7 +28,7 @@ expr = {andexpr}( \|\| {andexpr})?
 eval = {expr}
 paren = \( {expr} \)
 par = {name} :: {name}( {parindex})?
-func = {name} \( {expr} (, {expr})* \)
+func = {name} \( {expr} (, {expr} )*\)
 array = \[ {expr}( , {expr})* \]
 value = {unop}?({par}|{func}|{paren}|{dname}|{num}|{quot}|{name}|{var})
 unop = [-!]
@@ -36,6 +36,7 @@ int = [0-9]+
 index = \[ {int} \]
 parindex = \[ {expr} \]
 active = (?i:ActiveThorns)
-set = ({active} = ({quot}|{name})|{par}( {index}|) = ({array}|\+?{expr})){-skipeol}
+set = ({active} = ({quot}|{name})|{par}( {index}|) = ({array}|\+?{expr}))
+set_var = \${name} = \+?{expr}
 desc = !DESC {quot}
-file = ^( ({desc}|{set}|{active}) )*$
+file = ^ ({desc} |{set_var} |{set} |{active} )*$

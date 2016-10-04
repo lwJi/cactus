@@ -12,6 +12,7 @@
 #include <limits>
 #include <fstream>
 #include "util_Expression.h"
+#include "GrammarDef.hh"
 
 namespace cctki_piraha {
 
@@ -21,55 +22,6 @@ extern "C" int CCTK_ParameterFilename(int len, char *filename);
 
 smart_ptr<Grammar> create_grammar() {
     smart_ptr<Grammar> grammar = new Grammar();
-    const char *par_file_src =
-        "skipper = ([ \\t\\r\\n]|\\#.*)*\n"
-        "# comment\n"
-        "skipeol = ([ \\t\\r]|\\#.*)*($|\\n)\n"
-        "any = [^]\n"
-        "stringcomment = #.*\n"
-        "stringparser = ^({stringcomment}|{var}|{name}|{any})*$\n"
-
-        "# Note that / occurs in some par files. It is my\n"
-        "# feeling that this should require quote marks.\n"
-
-        "name = [a-zA-Z][a-zA-Z0-9_]*\n"
-        "dname = [0-9][a-zA-Z_]{2,}\n"
-        "inquot = ({var}|\\\\.|[^\\\\\"])*\n"
-        "fname = \\.?/[-\\./0-9a-zA-Z_]+\n"
-        "quot = \"{inquot}\"|{fname}\n"
-        "num = ([0-9]+(\\.[0-9]*|)|\\.[0-9]+)([edDE][+-]?[0-9]+|)\n"
-        "env = ENV\\{{name}\\}\n"
-        "var = \\$({env}|{name}|\\{{name}\\})\n"
-
-        "powexpr = {value}( \\*\\* {value})?\n"
-        "mulop = [*/%]\n"
-        "mexpr = {powexpr}( {mulop} {powexpr})*\n"
-        "addop = [+-]\n"
-        "aexpr = {mexpr}( {addop} {mexpr})*\n"
-        "compop = [<>]=?\n"
-        "compexpr = {aexpr}( {compop} {aexpr})?\n"
-        "eqop = [!=]=\n"
-        "eqexpr = {compexpr}( {eqop} {eqexpr})?\n"
-        "andexpr = {eqexpr}( && {eqexpr})?\n"
-        "expr = {andexpr}( \\|\\| {andexpr})?\n"
-        "eval = {expr}\n"
-
-        "paren = \\( {expr} \\)\n"
-        "par = {name} :: {name}( {parindex})?\n"
-        "func = {name} \\( {expr} (, {expr} )*\\)\n"
-        "array = \\[ {expr}( , {expr})* \\]\n"
-
-        "value = {unop}?({par}|{func}|{paren}|{dname}|{num}|{quot}|{name}|{var})\n"
-        "unop = [-!]\n"
-
-        "int = [0-9]+\n"
-        "index = \\[ {int} \\]\n"
-        "parindex = \\[ {expr} \\]\n"
-        "active = (?i:ActiveThorns)\n"
-        "set = ({active} = ({quot}|{name})|{par}( {index}|) = ({array}|\\+?{expr}))\n"
-        "set_var = \\${name} = \\+?{expr}\n"
-        "desc = !DESC {quot}\n"
-        "file = ^ ({desc} |{set_var} |{set} |{active} )*$";
     //std::ofstream peg("/tmp/par.peg");
     //peg << par_file_src;
     //peg.close();

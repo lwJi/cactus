@@ -197,9 +197,18 @@ configuration options of this thorn.
 
 \subsubsection{General Syntax of CCL Files}
 
-\textit{Cactus Configuration Language} (CCL) files are simple text files
-used to define configuration information for a thorn.  CCL files are
-case independent, and may contain comments introduced by the hash `\texttt{\#}'
+\textit{Cactus Configuration Language} (CCL) files are text files
+used to define configuration information for a thorn. Their formal
+syntax is described using Piraha, a parsing expression grammar engine
+that supports multiple languages (see https://github.com/stevenrbrandt/piraha-peg
+for a description of Piraha patterns and Grammar Files).
+
+A Grammar File for each type of CCL file is provided in the src/piraha/pegs
+directory of the Cactus source tree. These may be consulted for the precise
+details of any given Cactus CCL file.
+
+CCL files are
+(mostly) case independent, and may contain comments introduced by the hash `\texttt{\#}'
 character, which indicates that the rest of the line is a comment. If the last
 non-blank character of a line in a CCL file is a backslash
 `\texttt{$\backslash$}', the
