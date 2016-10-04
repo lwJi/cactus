@@ -166,7 +166,7 @@ sub CreateConfigurationDatabase
       elsif ( $cfg{"\U$thorn\E REQUIRES \U$requiredcap\E VERSION"} )
       {
         if ( &CheckForCompatibleVersion(
-                $cfg{"\U".$found[0]."\E PROVIDES \U$requiredcap\E VERSION"},
+                $cfg{"\U$found[0]\E PROVIDES \U$requiredcap\E VERSION"},
                 $cfg{"\U$thorn\E REQUIRES \U$requiredcap\E VERSION"}) == 0 )
         {
           &CST_error (0, "Thorn '$thorn' requires the capability " .
@@ -174,7 +174,7 @@ sub CreateConfigurationDatabase
                        $cfg{"\U$thorn\E REQUIRES \U$requiredcap\E VERSION"}.
                        ". Thorn ".$found[0]." provides $requiredcap, but ".
                        "in version ".
-                       $cfg{"\U".$found[0]."\E PROVIDES \U$requiredcap\E VERSION"}.
+                       $cfg{"\U$found[0]\E PROVIDES \U$requiredcap\E VERSION"}.
                        ".\n");
         }
         $cfg{"\U$thorn\E USES THORNS"} .= $found[0] . ' ';
@@ -272,7 +272,7 @@ sub CheckForCompatibleVersion
 {
   my($v1,$fv2) = @_;
   my($op, $v2, $cmp);
-  $fv2 =~ m/(<<|<=|-|>=|>>)(.*)/;
+  $fv2 =~ m/(<<|<=|=|>=|>>)(.*)/;
   $op = $1;
   $v2 = $2;
   $cmp = &CompareVersionStrings($v1, $v2);
@@ -408,6 +408,9 @@ sub ParseConfigurationCCL
       &CST_error (0, "Unrecognised line '$line' in configure.ccl of thorn '$thorn'");
     }
   }
+  # Cactus automatically provides its own version
+  $cfg->{"\UCactus PROVIDES"} = "\UCactus ";
+  $cfg->{"\UCactus PROVIDES Cactus VERSION"} = $ENV{CCTK_VERSION};
 }
 
 

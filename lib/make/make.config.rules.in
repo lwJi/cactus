@@ -27,24 +27,29 @@ DIVIDER =  $(DIVEL)$(DIVEL)$(DIVEL)$(DIVEL)
 
 INCLUDE_LINE   = $(patsubst %,-I"%",$(call TRANSFORM_DIRS,$(INC_DIRS)))
 INCLUDE_LINE_F = $(patsubst %,-I"%",$(call TRANSFORM_DIRS,$(INC_DIRS_F)))
+PRINTTIME      = perl -e 'eval { require("Time/HiRes.pm"); print(&Time::HiRes::gettimeofday()+0," "); }; if($$@) { print time(); }'
 
 #####################################################################
 
 ifeq ($(shell echo $(VERBOSE) | tr '[:upper:]' '[:lower:]'),yes)
 define NOTIFY_PREPROCESSING
-	echo Preprocessing $<
+	@$(PRINTTIME)
+	@echo Preprocessing $<
 endef
 define NOTIFY_COPYING
-	echo Copying $<
+	@$(PRINTTIME)
+	@echo Copying $<
 endef
 define NOTIFY_COMPILING
-	echo Compiling $<
+	@$(PRINTTIME)
+	@echo Compiling $<
 endef
 define NOTIFY_POSTPROCESSING
-	echo Postprocessing $<
+	@$(PRINTTIME)
+	@echo Postprocessing $<
 endef
 define NOTIFY_DIVIDER
-	echo $(DIVIDER)
+	@echo $(DIVIDER)
 endef
 else
 define NOTIFY_PREPROCESSING
@@ -52,7 +57,7 @@ endef
 define NOTIFY_COPYING
 endef
 define NOTIFY_COMPILING
-	echo COMPILING $(subst $(CCTK_HOME)/,,$<)
+	@echo COMPILING $(subst $(CCTK_HOME)/,,$<)
 endef
 define NOTIFY_POSTPROCESSING
 endef
