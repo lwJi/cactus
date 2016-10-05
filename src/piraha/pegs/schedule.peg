@@ -1,3 +1,4 @@
+# The grammar for the schedule.ccl file
 skipper = \b([\ \t\n\r\b]|{-ccomment}|\#[^\n]*|\\[\r\n])*
 
 any = [^]

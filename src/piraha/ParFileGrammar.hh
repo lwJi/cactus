@@ -1,4 +1,5 @@
 const char *par_file_src =
+    "#The grammar for par files\n\n"
     "skipper = ([ \\t\\r\\n]|\\#.*)*\n"
     "# comment\n"
     "skipeol = ([ \\t\\r]|\\#.*)*($|\\n)\n"

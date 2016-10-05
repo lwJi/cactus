@@ -1,3 +1,5 @@
+#The grammar for par files
+
 skipper = ([ \t\r\n]|\#.*)*
 # comment
 skipeol = ([ \t\r]|\#.*)*($|\n)

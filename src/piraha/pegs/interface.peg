@@ -1,3 +1,4 @@
+# The grammar for the interface.ccl file
 skipper = (([ \t\n\r\b]|\#[^\n\r]*|\\[\r\n])+|\b)
 
 any = [^]
@@ -7,8 +8,6 @@ accname = {-name}(::{-name})*
 inum = 16|[1248]
 rnum = [48]|16
 cnum = 8|16|32
-#TODO: remove next line?
-#type = (void|CCTK_INT{inum}?|CCTK_REAL{rnum}?|CCTK_COMPLEX{cnum}?|CCTK|CCTK_POINTER|CCTK_TO_CONST)
 
 num = [0-9]+
 boolraw = (?i:true|t|yes|y|false|f|no|n|1|0)
@@ -75,10 +74,15 @@ GROUP_VARS = (?i:CCTK_|){vtype} {gname} (?i:TYPE = {gtype} |DIM = {dim}
  )?
  
 
+# Contents of the file:
 FUNC_GROUP = ({FUNCTION} |{access}: |{GROUP_VARS} |{INCLUDE} |{IMPLEMENTS} |{INHERITS} |{FRIEND} )
 
+# double-quoted string
 dquote = "(\\{-any}|[^"])*"
+
+# single-quoted string
 squote = '(\\{-any}|[^'])*'
+
 quote = {dquote}|{squote}
 
 intr = ^(?i: {FUNC_GROUP}*)$
