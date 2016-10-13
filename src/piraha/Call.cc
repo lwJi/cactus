@@ -12,7 +12,7 @@
 #include <limits>
 #include <fstream>
 #include "util_Expression.h"
-#include "ParFileGrammar.hh"
+#include "ParGrammar.hh"
 
 namespace cctki_piraha {
 
