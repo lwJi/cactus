@@ -1,0 +1,12 @@
+#! /bin/sh
+# /*@@
+#   @file    darwin16.1.0
+#   @date    2016-10-25
+#   @author  Erik Schnetter
+#   @desc
+#            Known architecture stuff for OS X (Darwin) release 16.1.0
+#   @enddesc
+#   @version $Header$
+# @@*/
+
+. $srcdir/known-architectures/darwin
