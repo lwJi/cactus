@@ -10,6 +10,7 @@
 
 #include "cctk.h"
 
+#include <assert.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -55,7 +56,7 @@ void CCTK_FCALL CCTK_FNAME (CCTK_CreateDirectory)
    @date       Tue May  2 21:38:48 2000
    @author     Tom Goodale
    @desc
-               Makes all directories necessary for the path to exist.
+               Creates all directories necessary for the path to exist.
    @enddesc
    @calls      mkdir
 
@@ -83,12 +84,14 @@ int CCTK_CreateDirectory (int mode, const char *pathname)
 {
   int retval;
   const char *path;
+  size_t maxlength_current;
   char *current;
   const char *token;
   struct stat statbuf;
 
 
-  current = (char *) malloc (strlen (pathname) + 1);
+  maxlength_current = strlen (pathname);
+  current = (char *) malloc (maxlength_current + 1);
   if (current)
   {
     retval = 0;
@@ -100,10 +103,12 @@ int CCTK_CreateDirectory (int mode, const char *pathname)
       /* Treat first token carefully. */
       if (*current)
       {
-        sprintf (current, "%s/%s", current, token);
+        assert (strlen(current) + 1 + strlen(token) <= maxlength_current);
+        sprintf (current + strlen(current), "/%s", token);
       }
       else
       {
+        assert ((*token ? strlen(token) : 1) <= maxlength_current);
         strcpy (current, *token ? token : "/");
       }
 
