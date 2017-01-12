@@ -850,16 +850,18 @@ char *CCTK_ParameterValString (const char *param_name, const char *thorn)
         break;
 
       case PARAMETER_BOOLEAN:
-        retval = strdup ((int) (*(const CCTK_INT *) param_data) ? "yes" : "no");
+        retval = strdup (*(const CCTK_INT *) param_data ? "yes" : "no");
         break;
 
       case PARAMETER_INT:
-        sprintf (buffer, "%d", (int) (*(const CCTK_INT *) param_data));
+        snprintf (buffer, sizeof buffer,
+                  "%ld", (long) *(const CCTK_INT *) param_data);
         retval = strdup (buffer);
         break;
 
       case PARAMETER_REAL:
-        sprintf (buffer, "%.20g", (double) (*(const CCTK_REAL *) param_data));
+        snprintf (buffer, sizeof buffer,
+                  "%.20g", (double) *(const CCTK_REAL *) param_data);
         retval = strdup (buffer);
         break;
 
@@ -998,15 +1000,15 @@ int CCTK_ParameterWalk (int first,
                         char **pfullname,
                         const cParamData **pdata)
 {
-  int             return_found;
-  const char     *prefix;
-  t_sktree        *tnode;
-  t_paramtreenode *node;
-  t_paramlist     *paramlist;
-  t_param         *startpoint;
-  static t_param  *prev_startpoint_all = NULL;
-  static t_param  *prev_startpoint_thorn = NULL;
-  static int      next_index = 0;
+  int                   return_found;
+  const char            *prefix;
+  const t_sktree        *tnode;
+  const t_paramtreenode *node;
+  const t_paramlist     *paramlist;
+  const t_param         *startpoint;
+  static const t_param  *prev_startpoint_all;
+  static const t_param  *prev_startpoint_thorn;
+  static int            next_index = 0;
   /* FIXME : This routine has become extremely ugly:
    *         It should only have one return in it.
    *         The malloc failure should be flagged.
@@ -1048,7 +1050,7 @@ int CCTK_ParameterWalk (int first,
   for (tnode = SKTreeFindFirst (paramtree) ; tnode ; tnode = tnode->next)
   {
     /* get node data */
-    node  = (t_paramtreenode *) tnode->data;
+    node  = (const t_paramtreenode *) tnode->data;
 
     /* iterate over parameters in list */
     for (paramlist = node->paramlist; paramlist; paramlist = paramlist->next)
@@ -1089,10 +1091,9 @@ int CCTK_ParameterWalk (int first,
 
             *pfullname = malloc (strlen (prefix) +
                                  strlen (startpoint->props->name) + 3);
-            if(*pfullname)
+            if (*pfullname)
             {
-                sprintf (*pfullname, "%s::%s",
-                         prefix, startpoint->props->name);
+              sprintf (*pfullname, "%s::%s", prefix, startpoint->props->name);
             }
           }
 
@@ -1147,7 +1148,7 @@ void CCTKi_ParameterActivateThornParameters(const char *thorn)
     {
       current = paramlist->param;
 
-      if(CCTK_Equals(current->props->thorn, thorn))
+      if (CCTK_Equals(current->props->thorn, thorn))
       {
         ParameterActivate(current);
       }
