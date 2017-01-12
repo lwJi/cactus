@@ -35,50 +35,61 @@ sub CreateConfigurationDatabase
     # Get the configuration data from it
     &ParseConfigurationCCL($config_dir, $thorn, \%cfg, \%thorns, $filename);
 
-#    my $debug = 1;
-#    if($debug)
-#    {
-#      print "   $thorn\n";
-#      print "           Provides:          ", $cfg{"\U$thorn\E PROVIDES"}, "\n"
-#        if ($cfg{"\U$thorn\E PROVIDES"});
-#      foreach my $provides (split (' ', $cfg{"\U$thorn\E PROVIDES"}))
-#      {
-#        print "           as version:        ", $cfg{"\U$thorn\E PROVIDES \U$provides\E VERSION"}, "\n"
-#          if ($cfg{"\U$thorn\E PROVIDES \U$provides\E VERSION"});
-#      }
-#      print "           Requires:          ", $cfg{"\U$thorn\E REQUIRES"}, "\n"
-#        if ($cfg{"\U$thorn\E REQUIRES"});
-#      print "           Optional:          ", $cfg{"\U$thorn\E OPTIONAL"}, "\n"
-#        if ($cfg{"\U$thorn\E OPTIONAL"});
-#      print "           Optional-ifactive: ", $cfg{"\U$thorn\E OPTIONAL_IFACTIVE"}, "\n"
-#        if ($cfg{"\U$thorn\E OPTIONAL_IFACTIVE"});
-#    }
-
     $cfg{"\U$thorn\E USES THORNS"} = '';
 
-    # verify that all required thorns are there in the ThornList
-    next if (! $cfg{"\U$thorn\E REQUIRES THORNS"});
+    # Verify that all required thorns are there in the ThornList
+    if ($cfg{"\U$thorn\E REQUIRES THORNS"})
+    {
+        my @missing = ();
+        foreach my $required (split (' ', $cfg{"\U$thorn\E REQUIRES THORNS"}))
+        {
+            push (@missing, $required)
+                if ((! $thorns{"$required"}) && (! $thorns{"\U$required\E"}));
+        }
+        if (@missing == 1)
+        {
+            &CST_error (0, "Thorn '$thorn' requires thorn '@missing'. " .
+                        'Please add this thorn to your ThornList or remove ' .
+                        "'$thorn' from it !");
+        }
+        elsif (@missing > 1)
+        {
+            &CST_error (0, "Thorn '$thorn' requires thorns '@missing'. " .
+                        'Please add these thorns to your ThornList or ' .
+                        "remove '$thorn' from it !");
+        }
 
-    my @missing = ();
-    foreach my $required (split (' ', $cfg{"\U$thorn\E REQUIRES THORNS"}))
-    {
-      push (@missing, $required)
-        if ((! $thorns{"$required"}) && (! $thorns{"\U$required\E"}));
-    }
-    if (@missing == 1)
-    {
-      &CST_error (0, "Thorn '$thorn' requires thorn '@missing'. " .
-                     'Please add this thorn to your ThornList or remove ' .
-                     "'$thorn' from it !");
-    }
-    elsif (@missing > 1)
-    {
-      &CST_error (0, "Thorn '$thorn' requires thorns '@missing'. " .
-                     'Please add these thorns to your ThornList or ' .
-                     "remove '$thorn' from it !");
+        $cfg{"\U$thorn\E USES THORNS"} .=
+            $cfg{"\U$thorn\E REQUIRES THORNS"} . ' ';
     }
 
-    $cfg{"\U$thorn\E USES THORNS"} .= $cfg{"\U$thorn\E REQUIRES THORNS"} . ' ';
+    # Output statistics
+    print "   $thorn\n";
+    if ($cfg{"\U$thorn\E PROVIDES"})
+    {
+        print "           Provides:          ",
+            $cfg{"\U$thorn\E PROVIDES"}, "\n";
+    }
+    if ($cfg{"\U$thorn\E REQUIRES"})
+    {
+        print "           Requires:          ",
+            $cfg{"\U$thorn\E REQUIRES"}, "\n";
+    }
+    if ($cfg{"\U$thorn\E OPTIONAL"})
+    {
+        print "           Optional:          ",
+            $cfg{"\U$thorn\E OPTIONAL"}, "\n";
+    }
+    if ($cfg{"\U$thorn\E OPTIONAL_IFACTIVE"})
+    {
+        print "           Optional-ifactive: ",
+            $cfg{"\U$thorn\E OPTIONAL_IFACTIVE"}, "\n";
+    }
+    if ($cfg{"\U$thorn\E REQUIRES THORNS"})
+    {
+        print "           Requires thorns:   ",
+            $cfg{"\U$thorn\E REQUIRES THORNS"}, "\n";
+    }
   }
 
   # Turn optional capabilities into required capabilities, if the
