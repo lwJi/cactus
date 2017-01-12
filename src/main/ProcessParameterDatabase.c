@@ -18,6 +18,7 @@
 #include "cctk_Parameter.h"
 #include "cctk_WarnLevel.h"
 
+#include "cctki_ActiveThorns.h"
 #include "cctki_Parameter.h"
 
 static const char *rcsid = "$Header$";
@@ -155,6 +156,8 @@ int CCTKi_ProcessParameterDatabase (tFleshConfig *ConfigData)
 
   if (parameter_file)
   {
+    /* Activate flesh, then parse parameter file and activate thorns */
+    CCTKi_ActivateThorns ("Cactus");
     parse_errors = ParseFile (parameter_file, CCTKi_SetParameter, ConfigData);
 
     if (strcmp (ConfigData->parameter_file_name, "-"))

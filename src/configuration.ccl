@@ -5,3 +5,7 @@ OPTIONAL FunHPC
 OPTIONAL MPI
 {
 }
+
+OPTIONAL SystemTopology
+{
+}
