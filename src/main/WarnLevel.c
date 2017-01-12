@@ -302,8 +302,7 @@ int CCTK_VInfo (const char *thorn, const char *format, ...)
   {
     /* get cactus::info_format  and decode it into Boolean flags */
     const char* const info_format =
-      * ( (const char*const *)
-          CCTK_ParameterGet("info_format", "Cactus", NULL) );
+      * (const char *const *) CCTK_ParameterGet("info_format", "Cactus", NULL);
 
     if      (CCTK_Equals(info_format, "basic"))
     {
@@ -329,7 +328,15 @@ int CCTK_VInfo (const char *thorn, const char *format, ...)
       info_format_numeric = 1;
       info_format_human_readable = 1;
     }
-    info_format_decoded = 1;
+
+    /* This routine is called before the parameter file has been read,
+       and thus before Cactus::info_format has received its final
+       value. As a work-around, we re-decode this value until we have
+       been called from a thorn. */
+    if (! CCTK_Equals(thorn, "Cactus"))
+    {
+      info_format_decoded = 1;
+    }
   }
 
   /*
