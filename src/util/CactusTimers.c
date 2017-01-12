@@ -8,6 +8,7 @@
    @version   $Id$
  @@*/
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1232,6 +1233,7 @@ static void CCTKi_Timer (int this_timer, t_Timer *timer, cTimerData *info)
       funcs->get (this_timer, timer->data[handle], &(info->vals[total_vars]));
 
       total_vars += funcs->n_vals;
+      assert (total_vars <= n_clock_vals);
     }
   }
   info->n_vals = total_vars;
