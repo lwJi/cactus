@@ -34,7 +34,8 @@
   print '("--------------------------------------------------------------------------------")'
 
 #define _CCTK_FARGUMENTS \
-cctk_dim,cctk_gsh,cctk_lsh,cctk_lbnd,cctk_ubnd,cctk_ash,cctk_from,cctk_to,\
+  cctk_dim,cctk_gsh,cctk_lsh,cctk_lbnd,cctk_ubnd,cctk_ash,\
+cctk_alignment,cctk_alignment_offset,cctk_from,cctk_to,\
 cctk_bbox,cctk_delta_time,cctk_time,cctk_delta_space,cctk_origin_space,\
 cctk_levfac,cctk_levoff,cctk_levoffdenom,cctk_timefac,cctk_convlevel,\
 cctk_convfac,cctk_nghostzones,cctk_iteration,cctkGH,\
@@ -48,6 +49,8 @@ cctk_ash1,cctk_ash2,cctk_ash3
         CCTK_DECLARE(INTEGER,cctk_lbnd,(cctk_dim))&&\
         CCTK_DECLARE(INTEGER,cctk_ubnd,(cctk_dim))&&\
         CCTK_DECLARE(INTEGER,cctk_ash,(cctk_dim))&&\
+        CCTK_DECLARE(INTEGER,cctk_alignment,)&&\
+        CCTK_DECLARE(INTEGER,cctk_alignment_offset,)&&\
         CCTK_DECLARE(INTEGER,cctk_from,(cctk_dim))&&\
         CCTK_DECLARE(INTEGER,cctk_to,(cctk_dim))&&\
         CCTK_DECLARE(INTEGER,cctk_bbox,(2*cctk_dim))&&\
@@ -312,6 +315,8 @@ static inline ptrdiff_t CCTK_VECTGFINDEX4D (const cGH *restrict cctkGH,
         CCTK_DECLARE_INIT(int const *restrict const,cctk_lbnd,cctkGH->cctk_lbnd);\
         CCTK_DECLARE_INIT(int const *restrict const,cctk_ubnd,cctkGH->cctk_ubnd);\
         CCTK_DECLARE_INIT(int const *restrict const,cctk_ash,cctkGH->cctk_ash);\
+        CCTK_DECLARE_INIT(int const,cctk_alignment,cctkGH->cctk_alignment); \
+        CCTK_DECLARE_INIT(int const,cctk_alignment_offset,cctkGH->cctk_alignment_offset); \
         CCTK_DECLARE_INIT(int const *restrict const,cctk_from,cctkGH->cctk_from);\
         CCTK_DECLARE_INIT(int const *restrict const,cctk_to,cctkGH->cctk_to);\
         CCTK_DECLARE_INIT(int const *restrict const,cctk_bbox,cctkGH->cctk_bbox);\
@@ -334,6 +339,8 @@ static inline ptrdiff_t CCTK_VECTGFINDEX4D (const cGH *restrict cctkGH,
                             (xGH)->cctk_gsh,(xGH)->cctk_lsh,\
                             (xGH)->cctk_lbnd,(xGH)->cctk_ubnd,\
                             (xGH)->cctk_ash,\
+                            (xGH)->cctk_alignment,\
+                            (xGH)->cctk_alignment_offset,\
                             (xGH)->cctk_from,(xGH)->cctk_to,\
                             (xGH)->cctk_bbox,\
                             &((xGH)->cctk_delta_time), &((xGH)->cctk_time),\
@@ -353,6 +360,8 @@ static inline ptrdiff_t CCTK_VECTGFINDEX4D (const cGH *restrict cctkGH,
 #define _CCTK_C2F_PROTO     int const *,\
                             int const *, int const *,\
                             int const *, int const *,\
+                            int const *,\
+                            int const *,\
                             int const *,\
                             int const *, int const *,\
                             int const *,\

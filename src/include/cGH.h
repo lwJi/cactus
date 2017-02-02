@@ -30,8 +30,12 @@ typedef struct _cGH
   int *cctk_lbnd;
   int *cctk_ubnd;
 
-  /* allocated shape */
+  /* Allocated shape */
   int *cctk_ash;
+
+  /* Grid function alignment:
+     size_t(gf[0]) % cctk_alignment == cctk_alignment_offset */
+  int cctk_alignment, cctk_alignment_offset;
 
   /* unused */
   int *cctk_to;

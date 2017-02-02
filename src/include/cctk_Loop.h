@@ -67,7 +67,8 @@
                           (cctki0_imin_), \
                           (cctki0_imax_), \
                           (cctki0_iash_), \
-                          imin,imax, (cctki0_istr_), 0) \
+                          (cctki0_istr_), 0, \
+                          imin,imax, (cctki0_istr_)) \
 
 #define CCTK_ENDLOOP1STR_NORMAL(name) \
   CCTK_ENDLOOP1STROFF_NORMAL(name) \
@@ -79,17 +80,20 @@
                                 cctki0_imin_, \
                                 cctki0_imax_, \
                                 cctki0_iash_, \
-                                imin,imax, cctki0_istr_,cctki0_ioff_) \
+                                cctki0_ialn_,cctki0_ioff_, \
+                                imin,imax, cctki0_istr_) \
   do { \
     typedef int cctki0_loop1_normal_##name; \
     const int cctki0_idir = (cctki0_idir_); \
     const int cctki0_imin = (cctki0_imin_); \
     const int cctki0_imax = (cctki0_imax_); \
     const int cctki0_iash CCTK_ATTRIBUTE_UNUSED = (cctki0_iash_); \
-    const int cctki0_istr = (cctki0_istr_); \
+    const int cctki0_ialn = (cctki0_ialn_); \
     const int cctki0_ioff = (cctki0_ioff_); \
+    const int cctki0_istr = (cctki0_istr_); \
+    assert(cctki0_ialn>0); \
+    assert(cctki0_ioff>=0 && cctki0_ioff<cctki0_ialn); \
     assert(cctki0_istr>0); \
-    assert(cctki0_ioff>=0 && cctki0_ioff<cctki0_istr); \
     const int imin CCTK_ATTRIBUTE_UNUSED = cctki0_imin; \
     const int imax CCTK_ATTRIBUTE_UNUSED = cctki0_imax; \
      \
@@ -137,7 +141,8 @@
                    (cctki1_imin_), \
                    (cctki1_imax_), \
                    (cctki1_iash_), \
-                   imin,imax, (cctki1_istr_), 0) \
+                   (cctki1_istr_), 0, \
+                   imin,imax, (cctki1_istr_)) \
 
 #define CCTK_ENDLOOP1STR(name) \
   CCTK_ENDLOOP1STROFF(name) \
@@ -147,7 +152,8 @@
                          cctki1_imin_, \
                          cctki1_imax_, \
                          cctki1_iash_, \
-                         imin,imax, cctki1_istr_,cctki1_ioff_) \
+                         cctki1_ialn_,cctki1_ioff_, \
+                         imin,imax, cctki1_istr_) \
   CCTK_LOOP1STROFF_NORMAL(name, \
                           i, \
                           cctki1_ni, \
@@ -155,7 +161,8 @@
                           (cctki1_imin_), \
                           (cctki1_imax_), \
                           (cctki1_iash_), \
-                          imin,imax, (cctki1_istr_),(cctki1_ioff_)) \
+                          (cctki1_ialn_),(cctki1_ioff_), \
+                          imin,imax, (cctki1_istr_)) \
 
 #define CCTK_ENDLOOP1STROFF(name) \
   CCTK_ENDLOOP1STROFF_NORMAL(name) \
@@ -186,7 +193,8 @@
                             i, \
                             (cctki2_iblo_), \
                             (cctki2_ibhi_), \
-                            imin,imax, (cctki2_istr_), 0) \
+                            (cctki2_istr_), 0, \
+                            imin,imax, (cctki2_istr_)) \
 
 #define CCTK_ENDLOOP1STR_INTERIOR(name) \
   CCTK_ENDLOOP1STROFF_INTERIOR(name) \
@@ -195,7 +203,8 @@
                                   i, \
                                   cctki2_iblo_, \
                                   cctki2_ibhi_, \
-                                  imin,imax, cctki2_istr_,cctki2_ioff_) \
+                                  cctki2_ialn_,cctki2_ioff_, \
+                                  imin,imax, cctki2_istr_) \
   do { \
     typedef int cctki2_loop1_interior_##name; \
     cGH const *restrict const cctki2_cctkGH = (cctki2_cctkGH_); \
@@ -208,7 +217,8 @@
                      (cctki2_iblo_), \
                      cctki2_cctkGH->cctk_lsh[0]-(cctki2_ibhi_), \
                      cctki2_cctkGH->cctk_ash[0], \
-                     imin,imax, (cctki2_istr_),(cctki2_ioff_)) { \
+                     (cctki2_ialn_),(cctki2_ioff_), \
+                     imin,imax, (cctki2_istr_)) { \
 
 #define CCTK_ENDLOOP1STROFF_INTERIOR(name) \
     } CCTK_ENDLOOP1STROFF(name##_interior); \
@@ -253,7 +263,8 @@
                               (cctki2_ibhi_), \
                               (cctki2_ibboxlo_), \
                               (cctki2_ibboxhi_), \
-                              imin,imax, (cctki2_istr_), 0) \
+                              (cctki2_istr_),0, \
+                              imin,imax, (cctki2_istr_)) \
 
 #define CCTK_ENDLOOP1STR_BOUNDARIES(name) \
   CCTK_ENDLOOP1STROFF_BOUNDARIES(name) \
@@ -265,7 +276,8 @@
                                     cctki2_ibhi_, \
                                     cctki2_ibboxlo_, \
                                     cctki2_ibboxhi_, \
-                                    imin,imax, cctki2_istr_,cctki2_ioff_) \
+                                    cctki2_ialn_,cctki2_ioff_, \
+                                    imin,imax, cctki2_istr_) \
   do { \
     typedef int cctki2_loop1_boundaries_##name; \
     cGH const *restrict const cctki2_cctkGH = (cctki2_cctkGH_); \
@@ -277,8 +289,9 @@
     const int cctki2_bhi[] = { (int)(cctki2_ibhi_) }; \
     const int cctki2_bbox[] = { (int)(cctki2_ibboxlo_), (int)(cctki2_ibboxhi_) }; \
     const int cctki2_lsh[] = { (int)cctki2_cctkGH->cctk_lsh[0] }; \
-    const int cctki2_istr CCTK_ATTRIBUTE_UNUSED = (cctki2_istr_); \
+    const int cctki2_ialn CCTK_ATTRIBUTE_UNUSED = (cctki2_ialn_); \
     const int cctki2_ioff CCTK_ATTRIBUTE_UNUSED = (cctki2_ioff_); \
+    const int cctki2_istr CCTK_ATTRIBUTE_UNUSED = (cctki2_istr_); \
     for (int cctki2_idir=-1; cctki2_idir<=+1; ++cctki2_idir) { \
       const int cctki2_any_bbox = \
         (cctki2_idir<0 ? cctki2_bbox[0] : 0) || (cctki2_idir>0 ? cctki2_bbox[1] : 0); \
@@ -296,7 +309,8 @@
                                 cctki2_bmin[0], \
                                 cctki2_bmax[0], \
                                 cctki2_cctkGH->cctk_ash[0], \
-                                imin,imax, cctki2_istr,cctki2_ioff) { \
+                                cctki2_ialn,cctki2_ioff, \
+                                imin,imax, cctki2_istr) { \
 
 #define CCTK_ENDLOOP1STROFF_BOUNDARIES(name) \
         } CCTK_ENDLOOP1STROFF_NORMAL(name##_boundaries); \
@@ -343,7 +357,8 @@
                                  (cctki2_ibhi_), \
                                  (cctki2_ibboxlo_), \
                                  (cctki2_ibboxhi_), \
-                                 imin,imax, (cctki2_str_), 0) \
+                                 (cctki2_str_),0, \
+                                 imin,imax, (cctki2_str_)) \
 
 #define CCTK_ENDLOOP1STR_INTBOUNDARIES(name) \
   CCTK_ENDLOOP1STROFF_INTBOUNDARIES(name) \
@@ -355,7 +370,8 @@
                                        cctki2_ibhi_, \
                                        cctki2_ibboxlo_, \
                                        cctki2_ibboxhi_, \
-                                       imin,imax, cctki2_istr_,cctki2_ioff_) \
+                                       cctki2_ialn_,cctki2_ioff_, \
+                                       imin,imax, cctki2_istr_) \
   do { \
     typedef int cctki2_loop1_intboundaries_##name; \
     cGH const *restrict const cctki2_cctkGH = (cctki2_cctkGH_); \
@@ -367,8 +383,9 @@
     const int cctki2_bhi[] = { (int)(cctki2_ibhi_) }; \
     const int cctki2_bbox[] = { (int)(cctki2_ibboxlo_), (int)(cctki2_ibboxhi_) }; \
     const int cctki2_lsh[] = { (int)cctki2_cctkGH->cctk_lsh[0] }; \
-    const int cctki2_istr CCTK_ATTRIBUTE_UNUSED = (cctki2_istr_); \
+    const int cctki2_ialn CCTK_ATTRIBUTE_UNUSED = (cctki2_ialn_); \
     const int cctki2_ioff CCTK_ATTRIBUTE_UNUSED = (cctki2_ioff_); \
+    const int cctki2_istr CCTK_ATTRIBUTE_UNUSED = (cctki2_istr_); \
     for (int cctki2_idir=-1; cctki2_idir<=+1; ++cctki2_idir) { \
       const int cctki2_any_bbox = \
         (cctki2_idir<0 ? cctki2_bbox[0] : 0) || (cctki2_idir>0 ? cctki2_bbox[1] : 0); \
@@ -388,7 +405,8 @@
                                 cctki2_bmin[0], \
                                 cctki2_bmax[0], \
                                 cctki2_cctkGH->cctk_ash[0], \
-                                imin,imax, cctki2_istr,cctki2_ioff) { \
+                                cctki2_ialn,cctki2_ioff, \
+                                imin,imax, cctki2_istr) { \
 
 #define CCTK_ENDLOOP1STROFF_INTBOUNDARIES(name) \
         } CCTK_ENDLOOP1STROFF_NORMAL(name##_intboundaries); \
@@ -413,16 +431,6 @@
 #define CCTK_LOOP1STR_ALL(name, cctki3_cctkGH_, \
                           i, \
                           imin,imax, cctki3_istr_) \
-  CCTK_LOOP1STROFF_ALL(name, (cctki3_cctkGH_), \
-                       i, \
-                       imin,imax, (cctki3_istr_), 0) \
-
-#define CCTK_ENDLOOP1STR_ALL(name) \
-  CCTK_ENDLOOP1STROFF_ALL(name) \
-
-#define CCTK_LOOP1STROFF_ALL(name, cctki3_cctkGH_, \
-                             i, \
-                             imin,imax, cctki3_istr_,cctki3_ioff_) \
   do { \
     typedef int cctki3_loop1_all_##name; \
     cGH const *restrict const cctki3_cctkGH = (cctki3_cctkGH_); \
@@ -435,9 +443,10 @@
                      0, \
                      cctki3_cctkGH->cctk_lsh[0], \
                      cctki3_cctkGH->cctk_ash[0], \
-                     imin,imax, (cctki3_istr_),(cctki3_ioff_)) { \
+                     cctki3_cctkGH->cctk_alignment,cctki3_cctkGH->cctk_alignment_offset, \
+                     imin,imax, (cctki3_istr_)) { \
 
-#define CCTK_ENDLOOP1STROFF_ALL(name) \
+#define CCTK_ENDLOOP1STR_ALL(name) \
     } CCTK_ENDLOOP1STROFF(name##_all); \
     typedef cctki3_loop1_all_##name cctki3_ensure_proper_nesting CCTK_ATTRIBUTE_UNUSED; \
   } while (0) \
@@ -458,16 +467,6 @@
 #define CCTK_LOOP1STR_INT(name, cctki3_cctkGH_, \
                           i, \
                           imin,imax, cctki3_istr_) \
-  CCTK_LOOP1STROFF_INT(name, (cctki3_cctkGH_), \
-                       i, \
-                       imin,imax, (cctki3_istr_), 0) \
-
-#define CCTK_ENDLOOP1STR_INT(name) \
-  CCTK_ENDLOOP1STROFF_INT(name) \
-
-#define CCTK_LOOP1STROFF_INT(name, cctki3_cctkGH_, \
-                             i, \
-                             imin,imax, cctki3_istr_,cctki3_ioff_) \
   do { \
     typedef int cctki3_loop1_int_##name; \
     cGH const *restrict const cctki3_cctkGH = (cctki3_cctkGH_); \
@@ -487,9 +486,10 @@
                               i, \
                               cctki3_bndsize[0], \
                               cctki3_bndsize[1], \
-                              imin,imax, (cctki3_istr_),(cctki3_ioff_)) { \
+                              cctki3_cctkGH->cctk_alignment,cctki3_cctkGH->cctk_alignment_offset, \
+                              imin,imax, (cctki3_istr_)) { \
 
-#define CCTK_ENDLOOP1STROFF_INT(name) \
+#define CCTK_ENDLOOP1STR_INT(name) \
     } CCTK_ENDLOOP1STROFF_INTERIOR(name##_int); \
     typedef cctki3_loop1_int_##name cctki3_ensure_proper_nesting CCTK_ATTRIBUTE_UNUSED; \
   } while (0) \
@@ -513,18 +513,6 @@
                           i, \
                           ni, \
                           imin,imax, cctki3_istr_) \
-  CCTK_LOOP1STROFF_BND(name, (cctki3_cctkGH_), \
-                       i, \
-                       ni, \
-                       imin,imax, (cctki3_istr_), 0) \
-
-#define CCTK_ENDLOOP1STR_BND(name) \
-  CCTK_ENDLOOP1STROFF_BND(name) \
-
-#define CCTK_LOOP1STROFF_BND(name, cctki3_cctkGH_, \
-                             i, \
-                             ni, \
-                             imin,imax, cctki3_istr_,cctki3_ioff_) \
   do { \
     typedef int cctki3_loop1_bnd_##name; \
     cGH const *restrict const cctki3_cctkGH = (cctki3_cctkGH_); \
@@ -547,9 +535,10 @@
                                 cctki3_bndsize[1], \
                                 cctki3_is_physbnd[0], \
                                 cctki3_is_physbnd[1], \
-                                imin,imax, (cctki3_istr_),(cctki3_ioff_)) { \
+                                cctki3_cctkGH->cctk_alignment,cctki3_cctkGH->cctk_alignment_offset, \
+                                imin,imax, (cctki3_istr_)) { \
 
-#define CCTK_ENDLOOP1STROFF_BND(name) \
+#define CCTK_ENDLOOP1STR_BND(name) \
     } CCTK_ENDLOOP1STROFF_BOUNDARIES(name##_bnd); \
     typedef cctki3_loop1_bnd_##name cctki3_ensure_proper_nesting CCTK_ATTRIBUTE_UNUSED; \
   } while (0) \
@@ -573,18 +562,6 @@
                               i, \
                               ni, \
                               imin,imax, cctki3_istr_) \
-  CCTK_LOOP1STROFF_INTBND(name, (cctki3_cctkGH_), \
-                           i, \
-                           ni, \
-                           imin,imax, (cctki3_istr_), 0) \
-
-#define CCTK_ENDLOOP1STR_INTBND(name) \
-  CCTK_ENDLOOP1STROFF_INTBND(name) \
-
-#define CCTK_LOOP1STROFF_INTBND(name, cctki3_cctkGH_, \
-                                 i, \
-                                 ni, \
-                                 imin,imax, cctki3_istr_,cctki3_ioff_) \
   do { \
     typedef int cctki3_loop1_intbnd_##name; \
     cGH const *restrict const cctki3_cctkGH = (cctki3_cctkGH_); \
@@ -607,9 +584,10 @@
                                    cctki3_bndsize[1], \
                                    cctki3_is_physbnd[0], \
                                    cctki3_is_physbnd[1], \
-                                   imin,imax, (cctki3_istr_),(cctki3_ioff_)) { \
+                                   cctki3_cctkGH->cctk_alignment,cctki3_cctkGH->cctk_alignment_offset, \
+                                   imin,imax, (cctki3_istr_)) { \
 
-#define CCTK_ENDLOOP1STROFF_INTBND(name) \
+#define CCTK_ENDLOOP1STR_INTBND(name) \
     } CCTK_ENDLOOP1STROFF_INTBOUNDARIES(name##_intbnd); \
     typedef cctki3_loop1_intbnd_##name cctki3_ensure_proper_nesting CCTK_ATTRIBUTE_UNUSED; \
   } while (0) \
@@ -1185,7 +1163,8 @@
                           (cctki0_imin_),(cctki0_jmin_), \
                           (cctki0_imax_),(cctki0_jmax_), \
                           (cctki0_iash_),(cctki0_jash_), \
-                          imin,imax, (cctki0_istr_), 0) \
+                          (cctki0_istr_), 0, \
+                          imin,imax, (cctki0_istr_)) \
 
 #define CCTK_ENDLOOP2STR_NORMAL(name) \
   CCTK_ENDLOOP2STROFF_NORMAL(name) \
@@ -1197,7 +1176,8 @@
                                 cctki0_imin_,cctki0_jmin_, \
                                 cctki0_imax_,cctki0_jmax_, \
                                 cctki0_iash_,cctki0_jash_, \
-                                imin,imax, cctki0_istr_,cctki0_ioff_) \
+                                cctki0_ialn_,cctki0_ioff_, \
+                                imin,imax, cctki0_istr_) \
   do { \
     typedef int cctki0_loop2_normal_##name; \
     const int cctki0_idir = (cctki0_idir_); \
@@ -1208,10 +1188,12 @@
     const int cctki0_jmax = (cctki0_jmax_); \
     const int cctki0_iash CCTK_ATTRIBUTE_UNUSED = (cctki0_iash_); \
     const int cctki0_jash CCTK_ATTRIBUTE_UNUSED = (cctki0_jash_); \
-    const int cctki0_istr = (cctki0_istr_); \
+    const int cctki0_ialn = (cctki0_ialn_); \
     const int cctki0_ioff = (cctki0_ioff_); \
+    const int cctki0_istr = (cctki0_istr_); \
+    assert(cctki0_ialn>0); \
+    assert(cctki0_ioff>=0 && cctki0_ioff<cctki0_ialn); \
     assert(cctki0_istr>0); \
-    assert(cctki0_ioff>=0 && cctki0_ioff<cctki0_istr); \
     const int imin CCTK_ATTRIBUTE_UNUSED = cctki0_imin; \
     const int imax CCTK_ATTRIBUTE_UNUSED = cctki0_imax; \
     CCTK_PRAGMA_OMP_FOR_COLLAPSE_1 \
@@ -1262,7 +1244,8 @@
                    (cctki1_imin_),(cctki1_jmin_), \
                    (cctki1_imax_),(cctki1_jmax_), \
                    (cctki1_iash_),(cctki1_jash_), \
-                   imin,imax, (cctki1_istr_), 0) \
+                   (cctki1_istr_), 0, \
+                   imin,imax, (cctki1_istr_)) \
 
 #define CCTK_ENDLOOP2STR(name) \
   CCTK_ENDLOOP2STROFF(name) \
@@ -1272,7 +1255,8 @@
                          cctki1_imin_,cctki1_jmin_, \
                          cctki1_imax_,cctki1_jmax_, \
                          cctki1_iash_,cctki1_jash_, \
-                         imin,imax, cctki1_istr_,cctki1_ioff_) \
+                         cctki1_ialn_,cctki1_ioff_, \
+                         imin,imax, cctki1_istr_) \
   CCTK_LOOP2STROFF_NORMAL(name, \
                           i,j, \
                           cctki1_ni,cctki1_nj, \
@@ -1280,7 +1264,8 @@
                           (cctki1_imin_),(cctki1_jmin_), \
                           (cctki1_imax_),(cctki1_jmax_), \
                           (cctki1_iash_),(cctki1_jash_), \
-                          imin,imax, (cctki1_istr_),(cctki1_ioff_)) \
+                          (cctki1_ialn_),(cctki1_ioff_), \
+                          imin,imax, (cctki1_istr_)) \
 
 #define CCTK_ENDLOOP2STROFF(name) \
   CCTK_ENDLOOP2STROFF_NORMAL(name) \
@@ -1311,7 +1296,8 @@
                             i,j, \
                             (cctki2_iblo_),(cctki2_jblo_), \
                             (cctki2_ibhi_),(cctki2_jbhi_), \
-                            imin,imax, (cctki2_istr_), 0) \
+                            (cctki2_istr_), 0, \
+                            imin,imax, (cctki2_istr_)) \
 
 #define CCTK_ENDLOOP2STR_INTERIOR(name) \
   CCTK_ENDLOOP2STROFF_INTERIOR(name) \
@@ -1320,7 +1306,8 @@
                                   i,j, \
                                   cctki2_iblo_,cctki2_jblo_, \
                                   cctki2_ibhi_,cctki2_jbhi_, \
-                                  imin,imax, cctki2_istr_,cctki2_ioff_) \
+                                  cctki2_ialn_,cctki2_ioff_, \
+                                  imin,imax, cctki2_istr_) \
   do { \
     typedef int cctki2_loop2_interior_##name; \
     cGH const *restrict const cctki2_cctkGH = (cctki2_cctkGH_); \
@@ -1335,7 +1322,8 @@
                      cctki2_cctkGH->cctk_lsh[1]-(cctki2_jbhi_), \
                      cctki2_cctkGH->cctk_ash[0], \
                      cctki2_cctkGH->cctk_ash[1], \
-                     imin,imax, (cctki2_istr_),(cctki2_ioff_)) { \
+                     (cctki2_ialn_),(cctki2_ioff_), \
+                     imin,imax, (cctki2_istr_)) { \
 
 #define CCTK_ENDLOOP2STROFF_INTERIOR(name) \
     } CCTK_ENDLOOP2STROFF(name##_interior); \
@@ -1380,7 +1368,8 @@
                               (cctki2_ibhi_),(cctki2_jbhi_), \
                               (cctki2_ibboxlo_),(cctki2_jbboxlo_), \
                               (cctki2_ibboxhi_),(cctki2_jbboxhi_), \
-                              imin,imax, (cctki2_istr_), 0) \
+                              (cctki2_istr_),0, \
+                              imin,imax, (cctki2_istr_)) \
 
 #define CCTK_ENDLOOP2STR_BOUNDARIES(name) \
   CCTK_ENDLOOP2STROFF_BOUNDARIES(name) \
@@ -1392,7 +1381,8 @@
                                     cctki2_ibhi_,cctki2_jbhi_, \
                                     cctki2_ibboxlo_,cctki2_jbboxlo_, \
                                     cctki2_ibboxhi_,cctki2_jbboxhi_, \
-                                    imin,imax, cctki2_istr_,cctki2_ioff_) \
+                                    cctki2_ialn_,cctki2_ioff_, \
+                                    imin,imax, cctki2_istr_) \
   do { \
     typedef int cctki2_loop2_boundaries_##name; \
     cGH const *restrict const cctki2_cctkGH = (cctki2_cctkGH_); \
@@ -1404,8 +1394,9 @@
     const int cctki2_bhi[] = { (int)(cctki2_ibhi_), (int)(cctki2_jbhi_) }; \
     const int cctki2_bbox[] = { (int)(cctki2_ibboxlo_), (int)(cctki2_ibboxhi_), (int)(cctki2_jbboxlo_), (int)(cctki2_jbboxhi_) }; \
     const int cctki2_lsh[] = { (int)cctki2_cctkGH->cctk_lsh[0], (int)cctki2_cctkGH->cctk_lsh[1] }; \
-    const int cctki2_istr CCTK_ATTRIBUTE_UNUSED = (cctki2_istr_); \
+    const int cctki2_ialn CCTK_ATTRIBUTE_UNUSED = (cctki2_ialn_); \
     const int cctki2_ioff CCTK_ATTRIBUTE_UNUSED = (cctki2_ioff_); \
+    const int cctki2_istr CCTK_ATTRIBUTE_UNUSED = (cctki2_istr_); \
     for (int cctki2_jdir=-1; cctki2_jdir<=+1; ++cctki2_jdir) { \
     for (int cctki2_idir=-1; cctki2_idir<=+1; ++cctki2_idir) { \
       const int cctki2_any_bbox = \
@@ -1428,7 +1419,8 @@
                                 cctki2_bmax[0],cctki2_bmax[1], \
                                 cctki2_cctkGH->cctk_ash[0], \
                                 cctki2_cctkGH->cctk_ash[1], \
-                                imin,imax, cctki2_istr,cctki2_ioff) { \
+                                cctki2_ialn,cctki2_ioff, \
+                                imin,imax, cctki2_istr) { \
 
 #define CCTK_ENDLOOP2STROFF_BOUNDARIES(name) \
         } CCTK_ENDLOOP2STROFF_NORMAL(name##_boundaries); \
@@ -1476,7 +1468,8 @@
                                  (cctki2_ibhi_),(cctki2_jbhi_), \
                                  (cctki2_ibboxlo_),(cctki2_jbboxlo_), \
                                  (cctki2_ibboxhi_),(cctki2_jbboxhi_), \
-                                 imin,imax, (cctki2_str_), 0) \
+                                 (cctki2_str_),0, \
+                                 imin,imax, (cctki2_str_)) \
 
 #define CCTK_ENDLOOP2STR_INTBOUNDARIES(name) \
   CCTK_ENDLOOP2STROFF_INTBOUNDARIES(name) \
@@ -1488,7 +1481,8 @@
                                        cctki2_ibhi_,cctki2_jbhi_, \
                                        cctki2_ibboxlo_,cctki2_jbboxlo_, \
                                        cctki2_ibboxhi_,cctki2_jbboxhi_, \
-                                       imin,imax, cctki2_istr_,cctki2_ioff_) \
+                                       cctki2_ialn_,cctki2_ioff_, \
+                                       imin,imax, cctki2_istr_) \
   do { \
     typedef int cctki2_loop2_intboundaries_##name; \
     cGH const *restrict const cctki2_cctkGH = (cctki2_cctkGH_); \
@@ -1500,8 +1494,9 @@
     const int cctki2_bhi[] = { (int)(cctki2_ibhi_), (int)(cctki2_jbhi_) }; \
     const int cctki2_bbox[] = { (int)(cctki2_ibboxlo_), (int)(cctki2_ibboxhi_), (int)(cctki2_jbboxlo_), (int)(cctki2_jbboxhi_) }; \
     const int cctki2_lsh[] = { (int)cctki2_cctkGH->cctk_lsh[0], (int)cctki2_cctkGH->cctk_lsh[1] }; \
-    const int cctki2_istr CCTK_ATTRIBUTE_UNUSED = (cctki2_istr_); \
+    const int cctki2_ialn CCTK_ATTRIBUTE_UNUSED = (cctki2_ialn_); \
     const int cctki2_ioff CCTK_ATTRIBUTE_UNUSED = (cctki2_ioff_); \
+    const int cctki2_istr CCTK_ATTRIBUTE_UNUSED = (cctki2_istr_); \
     for (int cctki2_jdir=-1; cctki2_jdir<=+1; ++cctki2_jdir) { \
     for (int cctki2_idir=-1; cctki2_idir<=+1; ++cctki2_idir) { \
       const int cctki2_any_bbox = \
@@ -1527,7 +1522,8 @@
                                 cctki2_bmax[0],cctki2_bmax[1], \
                                 cctki2_cctkGH->cctk_ash[0], \
                                 cctki2_cctkGH->cctk_ash[1], \
-                                imin,imax, cctki2_istr,cctki2_ioff) { \
+                                cctki2_ialn,cctki2_ioff, \
+                                imin,imax, cctki2_istr) { \
 
 #define CCTK_ENDLOOP2STROFF_INTBOUNDARIES(name) \
         } CCTK_ENDLOOP2STROFF_NORMAL(name##_intboundaries); \
@@ -1553,16 +1549,6 @@
 #define CCTK_LOOP2STR_ALL(name, cctki3_cctkGH_, \
                           i,j, \
                           imin,imax, cctki3_istr_) \
-  CCTK_LOOP2STROFF_ALL(name, (cctki3_cctkGH_), \
-                       i,j, \
-                       imin,imax, (cctki3_istr_), 0) \
-
-#define CCTK_ENDLOOP2STR_ALL(name) \
-  CCTK_ENDLOOP2STROFF_ALL(name) \
-
-#define CCTK_LOOP2STROFF_ALL(name, cctki3_cctkGH_, \
-                             i,j, \
-                             imin,imax, cctki3_istr_,cctki3_ioff_) \
   do { \
     typedef int cctki3_loop2_all_##name; \
     cGH const *restrict const cctki3_cctkGH = (cctki3_cctkGH_); \
@@ -1577,9 +1563,10 @@
                      cctki3_cctkGH->cctk_lsh[1], \
                      cctki3_cctkGH->cctk_ash[0], \
                      cctki3_cctkGH->cctk_ash[1], \
-                     imin,imax, (cctki3_istr_),(cctki3_ioff_)) { \
+                     cctki3_cctkGH->cctk_alignment,cctki3_cctkGH->cctk_alignment_offset, \
+                     imin,imax, (cctki3_istr_)) { \
 
-#define CCTK_ENDLOOP2STROFF_ALL(name) \
+#define CCTK_ENDLOOP2STR_ALL(name) \
     } CCTK_ENDLOOP2STROFF(name##_all); \
     typedef cctki3_loop2_all_##name cctki3_ensure_proper_nesting CCTK_ATTRIBUTE_UNUSED; \
   } while (0) \
@@ -1600,16 +1587,6 @@
 #define CCTK_LOOP2STR_INT(name, cctki3_cctkGH_, \
                           i,j, \
                           imin,imax, cctki3_istr_) \
-  CCTK_LOOP2STROFF_INT(name, (cctki3_cctkGH_), \
-                       i,j, \
-                       imin,imax, (cctki3_istr_), 0) \
-
-#define CCTK_ENDLOOP2STR_INT(name) \
-  CCTK_ENDLOOP2STROFF_INT(name) \
-
-#define CCTK_LOOP2STROFF_INT(name, cctki3_cctkGH_, \
-                             i,j, \
-                             imin,imax, cctki3_istr_,cctki3_ioff_) \
   do { \
     typedef int cctki3_loop2_int_##name; \
     cGH const *restrict const cctki3_cctkGH = (cctki3_cctkGH_); \
@@ -1629,9 +1606,10 @@
                               i,j, \
                               cctki3_bndsize[0],cctki3_bndsize[2], \
                               cctki3_bndsize[1],cctki3_bndsize[3], \
-                              imin,imax, (cctki3_istr_),(cctki3_ioff_)) { \
+                              cctki3_cctkGH->cctk_alignment,cctki3_cctkGH->cctk_alignment_offset, \
+                              imin,imax, (cctki3_istr_)) { \
 
-#define CCTK_ENDLOOP2STROFF_INT(name) \
+#define CCTK_ENDLOOP2STR_INT(name) \
     } CCTK_ENDLOOP2STROFF_INTERIOR(name##_int); \
     typedef cctki3_loop2_int_##name cctki3_ensure_proper_nesting CCTK_ATTRIBUTE_UNUSED; \
   } while (0) \
@@ -1655,18 +1633,6 @@
                           i,j, \
                           ni,nj, \
                           imin,imax, cctki3_istr_) \
-  CCTK_LOOP2STROFF_BND(name, (cctki3_cctkGH_), \
-                       i,j, \
-                       ni,nj, \
-                       imin,imax, (cctki3_istr_), 0) \
-
-#define CCTK_ENDLOOP2STR_BND(name) \
-  CCTK_ENDLOOP2STROFF_BND(name) \
-
-#define CCTK_LOOP2STROFF_BND(name, cctki3_cctkGH_, \
-                             i,j, \
-                             ni,nj, \
-                             imin,imax, cctki3_istr_,cctki3_ioff_) \
   do { \
     typedef int cctki3_loop2_bnd_##name; \
     cGH const *restrict const cctki3_cctkGH = (cctki3_cctkGH_); \
@@ -1689,9 +1655,10 @@
                                 cctki3_bndsize[1],cctki3_bndsize[3], \
                                 cctki3_is_physbnd[0],cctki3_is_physbnd[2], \
                                 cctki3_is_physbnd[1],cctki3_is_physbnd[3], \
-                                imin,imax, (cctki3_istr_),(cctki3_ioff_)) { \
+                                cctki3_cctkGH->cctk_alignment,cctki3_cctkGH->cctk_alignment_offset, \
+                                imin,imax, (cctki3_istr_)) { \
 
-#define CCTK_ENDLOOP2STROFF_BND(name) \
+#define CCTK_ENDLOOP2STR_BND(name) \
     } CCTK_ENDLOOP2STROFF_BOUNDARIES(name##_bnd); \
     typedef cctki3_loop2_bnd_##name cctki3_ensure_proper_nesting CCTK_ATTRIBUTE_UNUSED; \
   } while (0) \
@@ -1715,18 +1682,6 @@
                               i,j, \
                               ni,nj, \
                               imin,imax, cctki3_istr_) \
-  CCTK_LOOP2STROFF_INTBND(name, (cctki3_cctkGH_), \
-                           i,j, \
-                           ni,nj, \
-                           imin,imax, (cctki3_istr_), 0) \
-
-#define CCTK_ENDLOOP2STR_INTBND(name) \
-  CCTK_ENDLOOP2STROFF_INTBND(name) \
-
-#define CCTK_LOOP2STROFF_INTBND(name, cctki3_cctkGH_, \
-                                 i,j, \
-                                 ni,nj, \
-                                 imin,imax, cctki3_istr_,cctki3_ioff_) \
   do { \
     typedef int cctki3_loop2_intbnd_##name; \
     cGH const *restrict const cctki3_cctkGH = (cctki3_cctkGH_); \
@@ -1749,9 +1704,10 @@
                                    cctki3_bndsize[1],cctki3_bndsize[3], \
                                    cctki3_is_physbnd[0],cctki3_is_physbnd[2], \
                                    cctki3_is_physbnd[1],cctki3_is_physbnd[3], \
-                                   imin,imax, (cctki3_istr_),(cctki3_ioff_)) { \
+                                   cctki3_cctkGH->cctk_alignment,cctki3_cctkGH->cctk_alignment_offset, \
+                                   imin,imax, (cctki3_istr_)) { \
 
-#define CCTK_ENDLOOP2STROFF_INTBND(name) \
+#define CCTK_ENDLOOP2STR_INTBND(name) \
     } CCTK_ENDLOOP2STROFF_INTBOUNDARIES(name##_intbnd); \
     typedef cctki3_loop2_intbnd_##name cctki3_ensure_proper_nesting CCTK_ATTRIBUTE_UNUSED; \
   } while (0) \
@@ -2362,7 +2318,8 @@
                           (cctki0_imin_),(cctki0_jmin_),(cctki0_kmin_), \
                           (cctki0_imax_),(cctki0_jmax_),(cctki0_kmax_), \
                           (cctki0_iash_),(cctki0_jash_),(cctki0_kash_), \
-                          imin,imax, (cctki0_istr_), 0) \
+                          (cctki0_istr_), 0, \
+                          imin,imax, (cctki0_istr_)) \
 
 #define CCTK_ENDLOOP3STR_NORMAL(name) \
   CCTK_ENDLOOP3STROFF_NORMAL(name) \
@@ -2374,7 +2331,8 @@
                                 cctki0_imin_,cctki0_jmin_,cctki0_kmin_, \
                                 cctki0_imax_,cctki0_jmax_,cctki0_kmax_, \
                                 cctki0_iash_,cctki0_jash_,cctki0_kash_, \
-                                imin,imax, cctki0_istr_,cctki0_ioff_) \
+                                cctki0_ialn_,cctki0_ioff_, \
+                                imin,imax, cctki0_istr_) \
   do { \
     typedef int cctki0_loop3_normal_##name; \
     const int cctki0_idir = (cctki0_idir_); \
@@ -2389,10 +2347,12 @@
     const int cctki0_iash CCTK_ATTRIBUTE_UNUSED = (cctki0_iash_); \
     const int cctki0_jash CCTK_ATTRIBUTE_UNUSED = (cctki0_jash_); \
     const int cctki0_kash CCTK_ATTRIBUTE_UNUSED = (cctki0_kash_); \
-    const int cctki0_istr = (cctki0_istr_); \
+    const int cctki0_ialn = (cctki0_ialn_); \
     const int cctki0_ioff = (cctki0_ioff_); \
+    const int cctki0_istr = (cctki0_istr_); \
+    assert(cctki0_ialn>0); \
+    assert(cctki0_ioff>=0 && cctki0_ioff<cctki0_ialn); \
     assert(cctki0_istr>0); \
-    assert(cctki0_ioff>=0 && cctki0_ioff<cctki0_istr); \
     const int imin CCTK_ATTRIBUTE_UNUSED = cctki0_imin; \
     const int imax CCTK_ATTRIBUTE_UNUSED = cctki0_imax; \
     CCTK_PRAGMA_OMP_FOR_COLLAPSE_2 \
@@ -2446,7 +2406,8 @@
                    (cctki1_imin_),(cctki1_jmin_),(cctki1_kmin_), \
                    (cctki1_imax_),(cctki1_jmax_),(cctki1_kmax_), \
                    (cctki1_iash_),(cctki1_jash_),(cctki1_kash_), \
-                   imin,imax, (cctki1_istr_), 0) \
+                   (cctki1_istr_), 0, \
+                   imin,imax, (cctki1_istr_)) \
 
 #define CCTK_ENDLOOP3STR(name) \
   CCTK_ENDLOOP3STROFF(name) \
@@ -2456,7 +2417,8 @@
                          cctki1_imin_,cctki1_jmin_,cctki1_kmin_, \
                          cctki1_imax_,cctki1_jmax_,cctki1_kmax_, \
                          cctki1_iash_,cctki1_jash_,cctki1_kash_, \
-                         imin,imax, cctki1_istr_,cctki1_ioff_) \
+                         cctki1_ialn_,cctki1_ioff_, \
+                         imin,imax, cctki1_istr_) \
   CCTK_LOOP3STROFF_NORMAL(name, \
                           i,j,k, \
                           cctki1_ni,cctki1_nj,cctki1_nk, \
@@ -2464,7 +2426,8 @@
                           (cctki1_imin_),(cctki1_jmin_),(cctki1_kmin_), \
                           (cctki1_imax_),(cctki1_jmax_),(cctki1_kmax_), \
                           (cctki1_iash_),(cctki1_jash_),(cctki1_kash_), \
-                          imin,imax, (cctki1_istr_),(cctki1_ioff_)) \
+                          (cctki1_ialn_),(cctki1_ioff_), \
+                          imin,imax, (cctki1_istr_)) \
 
 #define CCTK_ENDLOOP3STROFF(name) \
   CCTK_ENDLOOP3STROFF_NORMAL(name) \
@@ -2495,7 +2458,8 @@
                             i,j,k, \
                             (cctki2_iblo_),(cctki2_jblo_),(cctki2_kblo_), \
                             (cctki2_ibhi_),(cctki2_jbhi_),(cctki2_kbhi_), \
-                            imin,imax, (cctki2_istr_), 0) \
+                            (cctki2_istr_), 0, \
+                            imin,imax, (cctki2_istr_)) \
 
 #define CCTK_ENDLOOP3STR_INTERIOR(name) \
   CCTK_ENDLOOP3STROFF_INTERIOR(name) \
@@ -2504,7 +2468,8 @@
                                   i,j,k, \
                                   cctki2_iblo_,cctki2_jblo_,cctki2_kblo_, \
                                   cctki2_ibhi_,cctki2_jbhi_,cctki2_kbhi_, \
-                                  imin,imax, cctki2_istr_,cctki2_ioff_) \
+                                  cctki2_ialn_,cctki2_ioff_, \
+                                  imin,imax, cctki2_istr_) \
   do { \
     typedef int cctki2_loop3_interior_##name; \
     cGH const *restrict const cctki2_cctkGH = (cctki2_cctkGH_); \
@@ -2521,7 +2486,8 @@
                      cctki2_cctkGH->cctk_ash[0], \
                      cctki2_cctkGH->cctk_ash[1], \
                      cctki2_cctkGH->cctk_ash[2], \
-                     imin,imax, (cctki2_istr_),(cctki2_ioff_)) { \
+                     (cctki2_ialn_),(cctki2_ioff_), \
+                     imin,imax, (cctki2_istr_)) { \
 
 #define CCTK_ENDLOOP3STROFF_INTERIOR(name) \
     } CCTK_ENDLOOP3STROFF(name##_interior); \
@@ -2566,7 +2532,8 @@
                               (cctki2_ibhi_),(cctki2_jbhi_),(cctki2_kbhi_), \
                               (cctki2_ibboxlo_),(cctki2_jbboxlo_),(cctki2_kbboxlo_), \
                               (cctki2_ibboxhi_),(cctki2_jbboxhi_),(cctki2_kbboxhi_), \
-                              imin,imax, (cctki2_istr_), 0) \
+                              (cctki2_istr_),0, \
+                              imin,imax, (cctki2_istr_)) \
 
 #define CCTK_ENDLOOP3STR_BOUNDARIES(name) \
   CCTK_ENDLOOP3STROFF_BOUNDARIES(name) \
@@ -2578,7 +2545,8 @@
                                     cctki2_ibhi_,cctki2_jbhi_,cctki2_kbhi_, \
                                     cctki2_ibboxlo_,cctki2_jbboxlo_,cctki2_kbboxlo_, \
                                     cctki2_ibboxhi_,cctki2_jbboxhi_,cctki2_kbboxhi_, \
-                                    imin,imax, cctki2_istr_,cctki2_ioff_) \
+                                    cctki2_ialn_,cctki2_ioff_, \
+                                    imin,imax, cctki2_istr_) \
   do { \
     typedef int cctki2_loop3_boundaries_##name; \
     cGH const *restrict const cctki2_cctkGH = (cctki2_cctkGH_); \
@@ -2590,8 +2558,9 @@
     const int cctki2_bhi[] = { (int)(cctki2_ibhi_), (int)(cctki2_jbhi_), (int)(cctki2_kbhi_) }; \
     const int cctki2_bbox[] = { (int)(cctki2_ibboxlo_), (int)(cctki2_ibboxhi_), (int)(cctki2_jbboxlo_), (int)(cctki2_jbboxhi_), (int)(cctki2_kbboxlo_), (int)(cctki2_kbboxhi_) }; \
     const int cctki2_lsh[] = { (int)cctki2_cctkGH->cctk_lsh[0], (int)cctki2_cctkGH->cctk_lsh[1], (int)cctki2_cctkGH->cctk_lsh[2] }; \
-    const int cctki2_istr CCTK_ATTRIBUTE_UNUSED = (cctki2_istr_); \
+    const int cctki2_ialn CCTK_ATTRIBUTE_UNUSED = (cctki2_ialn_); \
     const int cctki2_ioff CCTK_ATTRIBUTE_UNUSED = (cctki2_ioff_); \
+    const int cctki2_istr CCTK_ATTRIBUTE_UNUSED = (cctki2_istr_); \
     for (int cctki2_kdir=-1; cctki2_kdir<=+1; ++cctki2_kdir) { \
     for (int cctki2_jdir=-1; cctki2_jdir<=+1; ++cctki2_jdir) { \
     for (int cctki2_idir=-1; cctki2_idir<=+1; ++cctki2_idir) { \
@@ -2619,7 +2588,8 @@
                                 cctki2_cctkGH->cctk_ash[0], \
                                 cctki2_cctkGH->cctk_ash[1], \
                                 cctki2_cctkGH->cctk_ash[2], \
-                                imin,imax, cctki2_istr,cctki2_ioff) { \
+                                cctki2_ialn,cctki2_ioff, \
+                                imin,imax, cctki2_istr) { \
 
 #define CCTK_ENDLOOP3STROFF_BOUNDARIES(name) \
         } CCTK_ENDLOOP3STROFF_NORMAL(name##_boundaries); \
@@ -2668,7 +2638,8 @@
                                  (cctki2_ibhi_),(cctki2_jbhi_),(cctki2_kbhi_), \
                                  (cctki2_ibboxlo_),(cctki2_jbboxlo_),(cctki2_kbboxlo_), \
                                  (cctki2_ibboxhi_),(cctki2_jbboxhi_),(cctki2_kbboxhi_), \
-                                 imin,imax, (cctki2_str_), 0) \
+                                 (cctki2_str_),0, \
+                                 imin,imax, (cctki2_str_)) \
 
 #define CCTK_ENDLOOP3STR_INTBOUNDARIES(name) \
   CCTK_ENDLOOP3STROFF_INTBOUNDARIES(name) \
@@ -2680,7 +2651,8 @@
                                        cctki2_ibhi_,cctki2_jbhi_,cctki2_kbhi_, \
                                        cctki2_ibboxlo_,cctki2_jbboxlo_,cctki2_kbboxlo_, \
                                        cctki2_ibboxhi_,cctki2_jbboxhi_,cctki2_kbboxhi_, \
-                                       imin,imax, cctki2_istr_,cctki2_ioff_) \
+                                       cctki2_ialn_,cctki2_ioff_, \
+                                       imin,imax, cctki2_istr_) \
   do { \
     typedef int cctki2_loop3_intboundaries_##name; \
     cGH const *restrict const cctki2_cctkGH = (cctki2_cctkGH_); \
@@ -2692,8 +2664,9 @@
     const int cctki2_bhi[] = { (int)(cctki2_ibhi_), (int)(cctki2_jbhi_), (int)(cctki2_kbhi_) }; \
     const int cctki2_bbox[] = { (int)(cctki2_ibboxlo_), (int)(cctki2_ibboxhi_), (int)(cctki2_jbboxlo_), (int)(cctki2_jbboxhi_), (int)(cctki2_kbboxlo_), (int)(cctki2_kbboxhi_) }; \
     const int cctki2_lsh[] = { (int)cctki2_cctkGH->cctk_lsh[0], (int)cctki2_cctkGH->cctk_lsh[1], (int)cctki2_cctkGH->cctk_lsh[2] }; \
-    const int cctki2_istr CCTK_ATTRIBUTE_UNUSED = (cctki2_istr_); \
+    const int cctki2_ialn CCTK_ATTRIBUTE_UNUSED = (cctki2_ialn_); \
     const int cctki2_ioff CCTK_ATTRIBUTE_UNUSED = (cctki2_ioff_); \
+    const int cctki2_istr CCTK_ATTRIBUTE_UNUSED = (cctki2_istr_); \
     for (int cctki2_kdir=-1; cctki2_kdir<=+1; ++cctki2_kdir) { \
     for (int cctki2_jdir=-1; cctki2_jdir<=+1; ++cctki2_jdir) { \
     for (int cctki2_idir=-1; cctki2_idir<=+1; ++cctki2_idir) { \
@@ -2725,7 +2698,8 @@
                                 cctki2_cctkGH->cctk_ash[0], \
                                 cctki2_cctkGH->cctk_ash[1], \
                                 cctki2_cctkGH->cctk_ash[2], \
-                                imin,imax, cctki2_istr,cctki2_ioff) { \
+                                cctki2_ialn,cctki2_ioff, \
+                                imin,imax, cctki2_istr) { \
 
 #define CCTK_ENDLOOP3STROFF_INTBOUNDARIES(name) \
         } CCTK_ENDLOOP3STROFF_NORMAL(name##_intboundaries); \
@@ -2752,16 +2726,6 @@
 #define CCTK_LOOP3STR_ALL(name, cctki3_cctkGH_, \
                           i,j,k, \
                           imin,imax, cctki3_istr_) \
-  CCTK_LOOP3STROFF_ALL(name, (cctki3_cctkGH_), \
-                       i,j,k, \
-                       imin,imax, (cctki3_istr_), 0) \
-
-#define CCTK_ENDLOOP3STR_ALL(name) \
-  CCTK_ENDLOOP3STROFF_ALL(name) \
-
-#define CCTK_LOOP3STROFF_ALL(name, cctki3_cctkGH_, \
-                             i,j,k, \
-                             imin,imax, cctki3_istr_,cctki3_ioff_) \
   do { \
     typedef int cctki3_loop3_all_##name; \
     cGH const *restrict const cctki3_cctkGH = (cctki3_cctkGH_); \
@@ -2778,9 +2742,10 @@
                      cctki3_cctkGH->cctk_ash[0], \
                      cctki3_cctkGH->cctk_ash[1], \
                      cctki3_cctkGH->cctk_ash[2], \
-                     imin,imax, (cctki3_istr_),(cctki3_ioff_)) { \
+                     cctki3_cctkGH->cctk_alignment,cctki3_cctkGH->cctk_alignment_offset, \
+                     imin,imax, (cctki3_istr_)) { \
 
-#define CCTK_ENDLOOP3STROFF_ALL(name) \
+#define CCTK_ENDLOOP3STR_ALL(name) \
     } CCTK_ENDLOOP3STROFF(name##_all); \
     typedef cctki3_loop3_all_##name cctki3_ensure_proper_nesting CCTK_ATTRIBUTE_UNUSED; \
   } while (0) \
@@ -2801,16 +2766,6 @@
 #define CCTK_LOOP3STR_INT(name, cctki3_cctkGH_, \
                           i,j,k, \
                           imin,imax, cctki3_istr_) \
-  CCTK_LOOP3STROFF_INT(name, (cctki3_cctkGH_), \
-                       i,j,k, \
-                       imin,imax, (cctki3_istr_), 0) \
-
-#define CCTK_ENDLOOP3STR_INT(name) \
-  CCTK_ENDLOOP3STROFF_INT(name) \
-
-#define CCTK_LOOP3STROFF_INT(name, cctki3_cctkGH_, \
-                             i,j,k, \
-                             imin,imax, cctki3_istr_,cctki3_ioff_) \
   do { \
     typedef int cctki3_loop3_int_##name; \
     cGH const *restrict const cctki3_cctkGH = (cctki3_cctkGH_); \
@@ -2830,9 +2785,10 @@
                               i,j,k, \
                               cctki3_bndsize[0],cctki3_bndsize[2],cctki3_bndsize[4], \
                               cctki3_bndsize[1],cctki3_bndsize[3],cctki3_bndsize[5], \
-                              imin,imax, (cctki3_istr_),(cctki3_ioff_)) { \
+                              cctki3_cctkGH->cctk_alignment,cctki3_cctkGH->cctk_alignment_offset, \
+                              imin,imax, (cctki3_istr_)) { \
 
-#define CCTK_ENDLOOP3STROFF_INT(name) \
+#define CCTK_ENDLOOP3STR_INT(name) \
     } CCTK_ENDLOOP3STROFF_INTERIOR(name##_int); \
     typedef cctki3_loop3_int_##name cctki3_ensure_proper_nesting CCTK_ATTRIBUTE_UNUSED; \
   } while (0) \
@@ -2856,18 +2812,6 @@
                           i,j,k, \
                           ni,nj,nk, \
                           imin,imax, cctki3_istr_) \
-  CCTK_LOOP3STROFF_BND(name, (cctki3_cctkGH_), \
-                       i,j,k, \
-                       ni,nj,nk, \
-                       imin,imax, (cctki3_istr_), 0) \
-
-#define CCTK_ENDLOOP3STR_BND(name) \
-  CCTK_ENDLOOP3STROFF_BND(name) \
-
-#define CCTK_LOOP3STROFF_BND(name, cctki3_cctkGH_, \
-                             i,j,k, \
-                             ni,nj,nk, \
-                             imin,imax, cctki3_istr_,cctki3_ioff_) \
   do { \
     typedef int cctki3_loop3_bnd_##name; \
     cGH const *restrict const cctki3_cctkGH = (cctki3_cctkGH_); \
@@ -2890,9 +2834,10 @@
                                 cctki3_bndsize[1],cctki3_bndsize[3],cctki3_bndsize[5], \
                                 cctki3_is_physbnd[0],cctki3_is_physbnd[2],cctki3_is_physbnd[4], \
                                 cctki3_is_physbnd[1],cctki3_is_physbnd[3],cctki3_is_physbnd[5], \
-                                imin,imax, (cctki3_istr_),(cctki3_ioff_)) { \
+                                cctki3_cctkGH->cctk_alignment,cctki3_cctkGH->cctk_alignment_offset, \
+                                imin,imax, (cctki3_istr_)) { \
 
-#define CCTK_ENDLOOP3STROFF_BND(name) \
+#define CCTK_ENDLOOP3STR_BND(name) \
     } CCTK_ENDLOOP3STROFF_BOUNDARIES(name##_bnd); \
     typedef cctki3_loop3_bnd_##name cctki3_ensure_proper_nesting CCTK_ATTRIBUTE_UNUSED; \
   } while (0) \
@@ -2916,18 +2861,6 @@
                               i,j,k, \
                               ni,nj,nk, \
                               imin,imax, cctki3_istr_) \
-  CCTK_LOOP3STROFF_INTBND(name, (cctki3_cctkGH_), \
-                           i,j,k, \
-                           ni,nj,nk, \
-                           imin,imax, (cctki3_istr_), 0) \
-
-#define CCTK_ENDLOOP3STR_INTBND(name) \
-  CCTK_ENDLOOP3STROFF_INTBND(name) \
-
-#define CCTK_LOOP3STROFF_INTBND(name, cctki3_cctkGH_, \
-                                 i,j,k, \
-                                 ni,nj,nk, \
-                                 imin,imax, cctki3_istr_,cctki3_ioff_) \
   do { \
     typedef int cctki3_loop3_intbnd_##name; \
     cGH const *restrict const cctki3_cctkGH = (cctki3_cctkGH_); \
@@ -2950,9 +2883,10 @@
                                    cctki3_bndsize[1],cctki3_bndsize[3],cctki3_bndsize[5], \
                                    cctki3_is_physbnd[0],cctki3_is_physbnd[2],cctki3_is_physbnd[4], \
                                    cctki3_is_physbnd[1],cctki3_is_physbnd[3],cctki3_is_physbnd[5], \
-                                   imin,imax, (cctki3_istr_),(cctki3_ioff_)) { \
+                                   cctki3_cctkGH->cctk_alignment,cctki3_cctkGH->cctk_alignment_offset, \
+                                   imin,imax, (cctki3_istr_)) { \
 
-#define CCTK_ENDLOOP3STROFF_INTBND(name) \
+#define CCTK_ENDLOOP3STR_INTBND(name) \
     } CCTK_ENDLOOP3STROFF_INTBOUNDARIES(name##_intbnd); \
     typedef cctki3_loop3_intbnd_##name cctki3_ensure_proper_nesting CCTK_ATTRIBUTE_UNUSED; \
   } while (0) \
@@ -3598,7 +3532,8 @@
                           (cctki0_imin_),(cctki0_jmin_),(cctki0_kmin_),(cctki0_lmin_), \
                           (cctki0_imax_),(cctki0_jmax_),(cctki0_kmax_),(cctki0_lmax_), \
                           (cctki0_iash_),(cctki0_jash_),(cctki0_kash_),(cctki0_lash_), \
-                          imin,imax, (cctki0_istr_), 0) \
+                          (cctki0_istr_), 0, \
+                          imin,imax, (cctki0_istr_)) \
 
 #define CCTK_ENDLOOP4STR_NORMAL(name) \
   CCTK_ENDLOOP4STROFF_NORMAL(name) \
@@ -3610,7 +3545,8 @@
                                 cctki0_imin_,cctki0_jmin_,cctki0_kmin_,cctki0_lmin_, \
                                 cctki0_imax_,cctki0_jmax_,cctki0_kmax_,cctki0_lmax_, \
                                 cctki0_iash_,cctki0_jash_,cctki0_kash_,cctki0_lash_, \
-                                imin,imax, cctki0_istr_,cctki0_ioff_) \
+                                cctki0_ialn_,cctki0_ioff_, \
+                                imin,imax, cctki0_istr_) \
   do { \
     typedef int cctki0_loop4_normal_##name; \
     const int cctki0_idir = (cctki0_idir_); \
@@ -3629,10 +3565,12 @@
     const int cctki0_jash CCTK_ATTRIBUTE_UNUSED = (cctki0_jash_); \
     const int cctki0_kash CCTK_ATTRIBUTE_UNUSED = (cctki0_kash_); \
     const int cctki0_lash CCTK_ATTRIBUTE_UNUSED = (cctki0_lash_); \
-    const int cctki0_istr = (cctki0_istr_); \
+    const int cctki0_ialn = (cctki0_ialn_); \
     const int cctki0_ioff = (cctki0_ioff_); \
+    const int cctki0_istr = (cctki0_istr_); \
+    assert(cctki0_ialn>0); \
+    assert(cctki0_ioff>=0 && cctki0_ioff<cctki0_ialn); \
     assert(cctki0_istr>0); \
-    assert(cctki0_ioff>=0 && cctki0_ioff<cctki0_istr); \
     const int imin CCTK_ATTRIBUTE_UNUSED = cctki0_imin; \
     const int imax CCTK_ATTRIBUTE_UNUSED = cctki0_imax; \
     CCTK_PRAGMA_OMP_FOR_COLLAPSE_3 \
@@ -3689,7 +3627,8 @@
                    (cctki1_imin_),(cctki1_jmin_),(cctki1_kmin_),(cctki1_lmin_), \
                    (cctki1_imax_),(cctki1_jmax_),(cctki1_kmax_),(cctki1_lmax_), \
                    (cctki1_iash_),(cctki1_jash_),(cctki1_kash_),(cctki1_lash_), \
-                   imin,imax, (cctki1_istr_), 0) \
+                   (cctki1_istr_), 0, \
+                   imin,imax, (cctki1_istr_)) \
 
 #define CCTK_ENDLOOP4STR(name) \
   CCTK_ENDLOOP4STROFF(name) \
@@ -3699,7 +3638,8 @@
                          cctki1_imin_,cctki1_jmin_,cctki1_kmin_,cctki1_lmin_, \
                          cctki1_imax_,cctki1_jmax_,cctki1_kmax_,cctki1_lmax_, \
                          cctki1_iash_,cctki1_jash_,cctki1_kash_,cctki1_lash_, \
-                         imin,imax, cctki1_istr_,cctki1_ioff_) \
+                         cctki1_ialn_,cctki1_ioff_, \
+                         imin,imax, cctki1_istr_) \
   CCTK_LOOP4STROFF_NORMAL(name, \
                           i,j,k,l, \
                           cctki1_ni,cctki1_nj,cctki1_nk,cctki1_nl, \
@@ -3707,7 +3647,8 @@
                           (cctki1_imin_),(cctki1_jmin_),(cctki1_kmin_),(cctki1_lmin_), \
                           (cctki1_imax_),(cctki1_jmax_),(cctki1_kmax_),(cctki1_lmax_), \
                           (cctki1_iash_),(cctki1_jash_),(cctki1_kash_),(cctki1_lash_), \
-                          imin,imax, (cctki1_istr_),(cctki1_ioff_)) \
+                          (cctki1_ialn_),(cctki1_ioff_), \
+                          imin,imax, (cctki1_istr_)) \
 
 #define CCTK_ENDLOOP4STROFF(name) \
   CCTK_ENDLOOP4STROFF_NORMAL(name) \
@@ -3738,7 +3679,8 @@
                             i,j,k,l, \
                             (cctki2_iblo_),(cctki2_jblo_),(cctki2_kblo_),(cctki2_lblo_), \
                             (cctki2_ibhi_),(cctki2_jbhi_),(cctki2_kbhi_),(cctki2_lbhi_), \
-                            imin,imax, (cctki2_istr_), 0) \
+                            (cctki2_istr_), 0, \
+                            imin,imax, (cctki2_istr_)) \
 
 #define CCTK_ENDLOOP4STR_INTERIOR(name) \
   CCTK_ENDLOOP4STROFF_INTERIOR(name) \
@@ -3747,7 +3689,8 @@
                                   i,j,k,l, \
                                   cctki2_iblo_,cctki2_jblo_,cctki2_kblo_,cctki2_lblo_, \
                                   cctki2_ibhi_,cctki2_jbhi_,cctki2_kbhi_,cctki2_lbhi_, \
-                                  imin,imax, cctki2_istr_,cctki2_ioff_) \
+                                  cctki2_ialn_,cctki2_ioff_, \
+                                  imin,imax, cctki2_istr_) \
   do { \
     typedef int cctki2_loop4_interior_##name; \
     cGH const *restrict const cctki2_cctkGH = (cctki2_cctkGH_); \
@@ -3766,7 +3709,8 @@
                      cctki2_cctkGH->cctk_ash[1], \
                      cctki2_cctkGH->cctk_ash[2], \
                      cctki2_cctkGH->cctk_ash[3], \
-                     imin,imax, (cctki2_istr_),(cctki2_ioff_)) { \
+                     (cctki2_ialn_),(cctki2_ioff_), \
+                     imin,imax, (cctki2_istr_)) { \
 
 #define CCTK_ENDLOOP4STROFF_INTERIOR(name) \
     } CCTK_ENDLOOP4STROFF(name##_interior); \
@@ -3811,7 +3755,8 @@
                               (cctki2_ibhi_),(cctki2_jbhi_),(cctki2_kbhi_),(cctki2_lbhi_), \
                               (cctki2_ibboxlo_),(cctki2_jbboxlo_),(cctki2_kbboxlo_),(cctki2_lbboxlo_), \
                               (cctki2_ibboxhi_),(cctki2_jbboxhi_),(cctki2_kbboxhi_),(cctki2_lbboxhi_), \
-                              imin,imax, (cctki2_istr_), 0) \
+                              (cctki2_istr_),0, \
+                              imin,imax, (cctki2_istr_)) \
 
 #define CCTK_ENDLOOP4STR_BOUNDARIES(name) \
   CCTK_ENDLOOP4STROFF_BOUNDARIES(name) \
@@ -3823,7 +3768,8 @@
                                     cctki2_ibhi_,cctki2_jbhi_,cctki2_kbhi_,cctki2_lbhi_, \
                                     cctki2_ibboxlo_,cctki2_jbboxlo_,cctki2_kbboxlo_,cctki2_lbboxlo_, \
                                     cctki2_ibboxhi_,cctki2_jbboxhi_,cctki2_kbboxhi_,cctki2_lbboxhi_, \
-                                    imin,imax, cctki2_istr_,cctki2_ioff_) \
+                                    cctki2_ialn_,cctki2_ioff_, \
+                                    imin,imax, cctki2_istr_) \
   do { \
     typedef int cctki2_loop4_boundaries_##name; \
     cGH const *restrict const cctki2_cctkGH = (cctki2_cctkGH_); \
@@ -3835,8 +3781,9 @@
     const int cctki2_bhi[] = { (int)(cctki2_ibhi_), (int)(cctki2_jbhi_), (int)(cctki2_kbhi_), (int)(cctki2_lbhi_) }; \
     const int cctki2_bbox[] = { (int)(cctki2_ibboxlo_), (int)(cctki2_ibboxhi_), (int)(cctki2_jbboxlo_), (int)(cctki2_jbboxhi_), (int)(cctki2_kbboxlo_), (int)(cctki2_kbboxhi_), (int)(cctki2_lbboxlo_), (int)(cctki2_lbboxhi_) }; \
     const int cctki2_lsh[] = { (int)cctki2_cctkGH->cctk_lsh[0], (int)cctki2_cctkGH->cctk_lsh[1], (int)cctki2_cctkGH->cctk_lsh[2], (int)cctki2_cctkGH->cctk_lsh[3] }; \
-    const int cctki2_istr CCTK_ATTRIBUTE_UNUSED = (cctki2_istr_); \
+    const int cctki2_ialn CCTK_ATTRIBUTE_UNUSED = (cctki2_ialn_); \
     const int cctki2_ioff CCTK_ATTRIBUTE_UNUSED = (cctki2_ioff_); \
+    const int cctki2_istr CCTK_ATTRIBUTE_UNUSED = (cctki2_istr_); \
     for (int cctki2_ldir=-1; cctki2_ldir<=+1; ++cctki2_ldir) { \
     for (int cctki2_kdir=-1; cctki2_kdir<=+1; ++cctki2_kdir) { \
     for (int cctki2_jdir=-1; cctki2_jdir<=+1; ++cctki2_jdir) { \
@@ -3869,7 +3816,8 @@
                                 cctki2_cctkGH->cctk_ash[1], \
                                 cctki2_cctkGH->cctk_ash[2], \
                                 cctki2_cctkGH->cctk_ash[3], \
-                                imin,imax, cctki2_istr,cctki2_ioff) { \
+                                cctki2_ialn,cctki2_ioff, \
+                                imin,imax, cctki2_istr) { \
 
 #define CCTK_ENDLOOP4STROFF_BOUNDARIES(name) \
         } CCTK_ENDLOOP4STROFF_NORMAL(name##_boundaries); \
@@ -3919,7 +3867,8 @@
                                  (cctki2_ibhi_),(cctki2_jbhi_),(cctki2_kbhi_),(cctki2_lbhi_), \
                                  (cctki2_ibboxlo_),(cctki2_jbboxlo_),(cctki2_kbboxlo_),(cctki2_lbboxlo_), \
                                  (cctki2_ibboxhi_),(cctki2_jbboxhi_),(cctki2_kbboxhi_),(cctki2_lbboxhi_), \
-                                 imin,imax, (cctki2_str_), 0) \
+                                 (cctki2_str_),0, \
+                                 imin,imax, (cctki2_str_)) \
 
 #define CCTK_ENDLOOP4STR_INTBOUNDARIES(name) \
   CCTK_ENDLOOP4STROFF_INTBOUNDARIES(name) \
@@ -3931,7 +3880,8 @@
                                        cctki2_ibhi_,cctki2_jbhi_,cctki2_kbhi_,cctki2_lbhi_, \
                                        cctki2_ibboxlo_,cctki2_jbboxlo_,cctki2_kbboxlo_,cctki2_lbboxlo_, \
                                        cctki2_ibboxhi_,cctki2_jbboxhi_,cctki2_kbboxhi_,cctki2_lbboxhi_, \
-                                       imin,imax, cctki2_istr_,cctki2_ioff_) \
+                                       cctki2_ialn_,cctki2_ioff_, \
+                                       imin,imax, cctki2_istr_) \
   do { \
     typedef int cctki2_loop4_intboundaries_##name; \
     cGH const *restrict const cctki2_cctkGH = (cctki2_cctkGH_); \
@@ -3943,8 +3893,9 @@
     const int cctki2_bhi[] = { (int)(cctki2_ibhi_), (int)(cctki2_jbhi_), (int)(cctki2_kbhi_), (int)(cctki2_lbhi_) }; \
     const int cctki2_bbox[] = { (int)(cctki2_ibboxlo_), (int)(cctki2_ibboxhi_), (int)(cctki2_jbboxlo_), (int)(cctki2_jbboxhi_), (int)(cctki2_kbboxlo_), (int)(cctki2_kbboxhi_), (int)(cctki2_lbboxlo_), (int)(cctki2_lbboxhi_) }; \
     const int cctki2_lsh[] = { (int)cctki2_cctkGH->cctk_lsh[0], (int)cctki2_cctkGH->cctk_lsh[1], (int)cctki2_cctkGH->cctk_lsh[2], (int)cctki2_cctkGH->cctk_lsh[3] }; \
-    const int cctki2_istr CCTK_ATTRIBUTE_UNUSED = (cctki2_istr_); \
+    const int cctki2_ialn CCTK_ATTRIBUTE_UNUSED = (cctki2_ialn_); \
     const int cctki2_ioff CCTK_ATTRIBUTE_UNUSED = (cctki2_ioff_); \
+    const int cctki2_istr CCTK_ATTRIBUTE_UNUSED = (cctki2_istr_); \
     for (int cctki2_ldir=-1; cctki2_ldir<=+1; ++cctki2_ldir) { \
     for (int cctki2_kdir=-1; cctki2_kdir<=+1; ++cctki2_kdir) { \
     for (int cctki2_jdir=-1; cctki2_jdir<=+1; ++cctki2_jdir) { \
@@ -3982,7 +3933,8 @@
                                 cctki2_cctkGH->cctk_ash[1], \
                                 cctki2_cctkGH->cctk_ash[2], \
                                 cctki2_cctkGH->cctk_ash[3], \
-                                imin,imax, cctki2_istr,cctki2_ioff) { \
+                                cctki2_ialn,cctki2_ioff, \
+                                imin,imax, cctki2_istr) { \
 
 #define CCTK_ENDLOOP4STROFF_INTBOUNDARIES(name) \
         } CCTK_ENDLOOP4STROFF_NORMAL(name##_intboundaries); \
@@ -4010,16 +3962,6 @@
 #define CCTK_LOOP4STR_ALL(name, cctki3_cctkGH_, \
                           i,j,k,l, \
                           imin,imax, cctki3_istr_) \
-  CCTK_LOOP4STROFF_ALL(name, (cctki3_cctkGH_), \
-                       i,j,k,l, \
-                       imin,imax, (cctki3_istr_), 0) \
-
-#define CCTK_ENDLOOP4STR_ALL(name) \
-  CCTK_ENDLOOP4STROFF_ALL(name) \
-
-#define CCTK_LOOP4STROFF_ALL(name, cctki3_cctkGH_, \
-                             i,j,k,l, \
-                             imin,imax, cctki3_istr_,cctki3_ioff_) \
   do { \
     typedef int cctki3_loop4_all_##name; \
     cGH const *restrict const cctki3_cctkGH = (cctki3_cctkGH_); \
@@ -4038,9 +3980,10 @@
                      cctki3_cctkGH->cctk_ash[1], \
                      cctki3_cctkGH->cctk_ash[2], \
                      cctki3_cctkGH->cctk_ash[3], \
-                     imin,imax, (cctki3_istr_),(cctki3_ioff_)) { \
+                     cctki3_cctkGH->cctk_alignment,cctki3_cctkGH->cctk_alignment_offset, \
+                     imin,imax, (cctki3_istr_)) { \
 
-#define CCTK_ENDLOOP4STROFF_ALL(name) \
+#define CCTK_ENDLOOP4STR_ALL(name) \
     } CCTK_ENDLOOP4STROFF(name##_all); \
     typedef cctki3_loop4_all_##name cctki3_ensure_proper_nesting CCTK_ATTRIBUTE_UNUSED; \
   } while (0) \
@@ -4061,16 +4004,6 @@
 #define CCTK_LOOP4STR_INT(name, cctki3_cctkGH_, \
                           i,j,k,l, \
                           imin,imax, cctki3_istr_) \
-  CCTK_LOOP4STROFF_INT(name, (cctki3_cctkGH_), \
-                       i,j,k,l, \
-                       imin,imax, (cctki3_istr_), 0) \
-
-#define CCTK_ENDLOOP4STR_INT(name) \
-  CCTK_ENDLOOP4STROFF_INT(name) \
-
-#define CCTK_LOOP4STROFF_INT(name, cctki3_cctkGH_, \
-                             i,j,k,l, \
-                             imin,imax, cctki3_istr_,cctki3_ioff_) \
   do { \
     typedef int cctki3_loop4_int_##name; \
     cGH const *restrict const cctki3_cctkGH = (cctki3_cctkGH_); \
@@ -4090,9 +4023,10 @@
                               i,j,k,l, \
                               cctki3_bndsize[0],cctki3_bndsize[2],cctki3_bndsize[4],cctki3_bndsize[6], \
                               cctki3_bndsize[1],cctki3_bndsize[3],cctki3_bndsize[5],cctki3_bndsize[7], \
-                              imin,imax, (cctki3_istr_),(cctki3_ioff_)) { \
+                              cctki3_cctkGH->cctk_alignment,cctki3_cctkGH->cctk_alignment_offset, \
+                              imin,imax, (cctki3_istr_)) { \
 
-#define CCTK_ENDLOOP4STROFF_INT(name) \
+#define CCTK_ENDLOOP4STR_INT(name) \
     } CCTK_ENDLOOP4STROFF_INTERIOR(name##_int); \
     typedef cctki3_loop4_int_##name cctki3_ensure_proper_nesting CCTK_ATTRIBUTE_UNUSED; \
   } while (0) \
@@ -4116,18 +4050,6 @@
                           i,j,k,l, \
                           ni,nj,nk,nl, \
                           imin,imax, cctki3_istr_) \
-  CCTK_LOOP4STROFF_BND(name, (cctki3_cctkGH_), \
-                       i,j,k,l, \
-                       ni,nj,nk,nl, \
-                       imin,imax, (cctki3_istr_), 0) \
-
-#define CCTK_ENDLOOP4STR_BND(name) \
-  CCTK_ENDLOOP4STROFF_BND(name) \
-
-#define CCTK_LOOP4STROFF_BND(name, cctki3_cctkGH_, \
-                             i,j,k,l, \
-                             ni,nj,nk,nl, \
-                             imin,imax, cctki3_istr_,cctki3_ioff_) \
   do { \
     typedef int cctki3_loop4_bnd_##name; \
     cGH const *restrict const cctki3_cctkGH = (cctki3_cctkGH_); \
@@ -4150,9 +4072,10 @@
                                 cctki3_bndsize[1],cctki3_bndsize[3],cctki3_bndsize[5],cctki3_bndsize[7], \
                                 cctki3_is_physbnd[0],cctki3_is_physbnd[2],cctki3_is_physbnd[4],cctki3_is_physbnd[6], \
                                 cctki3_is_physbnd[1],cctki3_is_physbnd[3],cctki3_is_physbnd[5],cctki3_is_physbnd[7], \
-                                imin,imax, (cctki3_istr_),(cctki3_ioff_)) { \
+                                cctki3_cctkGH->cctk_alignment,cctki3_cctkGH->cctk_alignment_offset, \
+                                imin,imax, (cctki3_istr_)) { \
 
-#define CCTK_ENDLOOP4STROFF_BND(name) \
+#define CCTK_ENDLOOP4STR_BND(name) \
     } CCTK_ENDLOOP4STROFF_BOUNDARIES(name##_bnd); \
     typedef cctki3_loop4_bnd_##name cctki3_ensure_proper_nesting CCTK_ATTRIBUTE_UNUSED; \
   } while (0) \
@@ -4176,18 +4099,6 @@
                               i,j,k,l, \
                               ni,nj,nk,nl, \
                               imin,imax, cctki3_istr_) \
-  CCTK_LOOP4STROFF_INTBND(name, (cctki3_cctkGH_), \
-                           i,j,k,l, \
-                           ni,nj,nk,nl, \
-                           imin,imax, (cctki3_istr_), 0) \
-
-#define CCTK_ENDLOOP4STR_INTBND(name) \
-  CCTK_ENDLOOP4STROFF_INTBND(name) \
-
-#define CCTK_LOOP4STROFF_INTBND(name, cctki3_cctkGH_, \
-                                 i,j,k,l, \
-                                 ni,nj,nk,nl, \
-                                 imin,imax, cctki3_istr_,cctki3_ioff_) \
   do { \
     typedef int cctki3_loop4_intbnd_##name; \
     cGH const *restrict const cctki3_cctkGH = (cctki3_cctkGH_); \
@@ -4210,9 +4121,10 @@
                                    cctki3_bndsize[1],cctki3_bndsize[3],cctki3_bndsize[5],cctki3_bndsize[7], \
                                    cctki3_is_physbnd[0],cctki3_is_physbnd[2],cctki3_is_physbnd[4],cctki3_is_physbnd[6], \
                                    cctki3_is_physbnd[1],cctki3_is_physbnd[3],cctki3_is_physbnd[5],cctki3_is_physbnd[7], \
-                                   imin,imax, (cctki3_istr_),(cctki3_ioff_)) { \
+                                   cctki3_cctkGH->cctk_alignment,cctki3_cctkGH->cctk_alignment_offset, \
+                                   imin,imax, (cctki3_istr_)) { \
 
-#define CCTK_ENDLOOP4STROFF_INTBND(name) \
+#define CCTK_ENDLOOP4STR_INTBND(name) \
     } CCTK_ENDLOOP4STROFF_INTBOUNDARIES(name##_intbnd); \
     typedef cctki3_loop4_intbnd_##name cctki3_ensure_proper_nesting CCTK_ATTRIBUTE_UNUSED; \
   } while (0) \

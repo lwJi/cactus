@@ -19,6 +19,8 @@ typedef struct GROUPDYNAMICDATA
   const int *lbnd;
   const int *ubnd;
   const int *ash;
+  int alignment;
+  int alignment_offset;
   const int *bbox;
   const int *nghostzones;
   int maxtimelevels;
