@@ -8,6 +8,7 @@
 #  @version   $Header$
 #@@*/
 
+use lib ".";
 require "$sbin_dir/CSTUtils.pl";
 
 #/*@@

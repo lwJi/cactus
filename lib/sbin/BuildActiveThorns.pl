@@ -9,6 +9,8 @@
 #  @version $Id$
 #@@*/
 
+use lib ".";
+
 if ($ENV{'CCTK_HOME'})
 {
   require "$ENV{'CCTK_HOME'}/lib/sbin/MakeUtils.pl";

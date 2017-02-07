@@ -1,6 +1,7 @@
 #include "Piraha.hpp"
 #include <fstream>
 #include <stdlib.h>
+#include "ParFileGrammar.hh"
 
 using namespace cctki_piraha;
 
@@ -63,6 +64,9 @@ int main(int argc,char **argv) {
     	} else if(arg == "-o") {
     		outFile = argv[++n];
     		oFlag = true;
+      } else if(arg == "--par") {
+        std::cout << par_file_src << std::endl;
+        exit(0);
     	} else if(arg.size()>2 && arg[0]=='-' && arg[1]=='o') {
     		outFile = arg.substr(2,arg.size());
     		oFlag = true;

@@ -9,6 +9,8 @@
 #  @version   $Header: /mnt/data2/cvs2svn/cvs-repositories/Cactus/lib/sbin/CST,v 1.81 2009-09-11 22:15:48 knarf Exp $
 #@@*/
 
+use lib ".";
+
 # Global parameter to track the number of errors from the CST
 # The file make.thornlist is only created if the number of errors is zero.
 
@@ -84,6 +86,7 @@ $sbin_dir = "$cctk_home/lib/sbin";
 die "Unable to find CCTK sbin directory - tried $sbin_dir\n"
   if (! -e "$sbin_dir/parameter_parser.pl");
 
+require "$sbin_dir/Piraha.pm";
 require "$sbin_dir/parameter_parser.pl";
 require "$sbin_dir/interface_parser.pl";
 require "$sbin_dir/ScheduleParser.pl";

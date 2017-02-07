@@ -1,19 +1,21 @@
+# The grammar for the interface.ccl file
 skipper = (([ \t\n\r\b]|\#[^\n\r]*|\\[\r\n])+|\b)
 
 any = [^]
 name = (?i:[a-z_][a-z0-9_]*)
 filename = (?i:([/.a-z0-9_]|\\[^])*)
 accname = {-name}(::{-name})*
-inum = [1248]
+inum = 16|[1248]
 rnum = [48]|16
 cnum = 8|16|32
-type = (void|CCTK_INT{inum}?|CCTK_REAL{rnum}?|CCTK_COMPLEX{cnum}?|CCTK|CCTK_POINTER|CCTK_TO_CONST)
 
 num = [0-9]+
 boolraw = (?i:true|t|yes|y|false|f|no|n|1|0)
 bool = {-boolraw}|"{-boolraw}"
 
-powexpr = \( {expr} \)|-{expr}|{accname}|{num}
+parexpr = \( {expr} \)
+negexpr = -{expr}
+powexpr = {parexpr}|{negexpr}|{accname}|{num}
 mulexpr = {powexpr}( \^ {powexpr})?
 mulop = [/*%]
 addexpr = {mulexpr}( {mulop} {mulexpr})*
@@ -25,23 +27,28 @@ IMPLEMENTS = (?i:implements):{-n}{name}
 INHERITS = (?i:inherits):{-n}({name}({-n},?{-n}{name})*)?
 FRIEND = (?i:friend):{-n}({name}({-n},?{-n}{name})*)?
 
-what = (?i:SOURCE|HEADER)
-INCLUDE = (?i:INCLUDE(S)? {what}?: {filename} in {filename})
+what = (?i:SOURCE|HEADER)?
+INCLUDE = (?i:INCLUDE(S)? {what}: {filename} in {filename})
 
-ret_type = (?i:void|CCTK_INT{num}?|CCTK_REAL|CCTK_COMPLEX|CCTK_POINTER_TO_CONST|CCTK_POINTER)
-arg_type = (?i:CCTK_STRING|CCTK_INT{num}?|CCTK_REAL|CCTK_COMPLEX|CCTK_POINTER_TO_CONST|CCTK_POINTER|STRING)
-intent = (?i:INOUT|OUT|IN)
+ret_type = (?i:void|CCTK_(INT{num}?|REAL|COMPLEX|POINTER_TO_CONST|POINTER))
+arg_type = (?i:CCTK_(STRING|INT{num}?|REAL|COMPLEX|POINTER_TO_CONST|POINTER)|STRING)
+intent = (?i:IN(OUT|)|OUT)
 array = (?i:array)
-fpointer = ({intent} (?i:CCTK_FPOINTER)|(?i:CCTK_FPOINTER) {intent}|(?i:CCTK_FPOINTER)) {name} {args}
+cctk_fpointer = (?i:CCTK_FPOINTER)
+fpointer = ({intent} {cctk_fpointer} |{cctk_fpointer} {intent} ){name} {args}
 arg = {arg_type} ({fpointer}|{array} {intent} {name}|{intent} {array} {name}|{intent} {name})
 args = \( ({arg}( , {arg})* )?\)
 
-FUNCTION_ALIAS = (?i:{ret_type} FUNCTION | SUBROUTINE ) {name} {args}
+SUBROUTINE = (?i:SUBROUTINE)
+FUNCTION_ALIAS = (?i:{ret_type} FUNCTION | {SUBROUTINE} ) {name} {args}
 FUNCTION_PTR = (?i:CCTK_FPOINTER {name} \( {arg_type} {intent} {name} (, {arg_type} {intent} {name} )*\))
 REQUIRES_FUN = (?i:REQUIRES FUNCTION {name})
-USES_FUN = (?i:USES FUNCTION {name}|USES INCLUDE {what}?: {filename}([ \t]+{filename})*)
-PROVIDES_FUN = (?i:PROVIDES FUNCTION {name} WITH {name} LANGUAGE (?i:C|FORTRAN))
-FUNCTION = ({FUNCTION_ALIAS}|{FUNCTION_PTR}|{REQUIRES_FUN}|{USES_FUN}|{PROVIDES_FUN})
+PROVIDES_FUN = (?i:PROVIDES FUNCTION {name} WITH {name} LANGUAGE {LANG})
+USES_FUN = (?i:FUNCTION {name})
+USES_INC = (?i:INCLUDE {what}: {filename}([ \t]+{filename})*)
+USES = (?i:USES )({USES_FUN}|{USES_INC})
+LANG = (?i:C|FORTRAN)
+FUNCTION = ({FUNCTION_ALIAS}|{FUNCTION_PTR}|{REQUIRES_FUN}|{USES}|{PROVIDES_FUN})
 
 access = (?i:protected|public|private)
 vtype = (?i:(CHAR|BYTE|INT{inum}?|REAL{rnum}?|COMPLEX{cnum}?))
@@ -54,20 +61,28 @@ distrib = (?i:CONSTANT|DEFAULT)
 ghostsize = {-size}
 stagger = (?i:[MCP](,[MCP])*)
 tags = {-quote}
+gname = {name} (\[ {expr} \] )?
+group_comment = {dquote}?
+desc = {dquote}?
 
-GROUP_VARS = (?i:CCTK_|){vtype} {name}( \[ {expr} \])? (?i:TYPE = {gtype} | DIM = {dim} | 
-             TIMELEVELS = {timelevels} | SIZE = {size} | DISTRIB = {distrib} | 
-             GHOSTSIZE = {ghostsize} | STAGGER = {stagger} | TAGS = {tags})* {dquote}? (
+GROUP_VARS = (?i:CCTK_|){vtype} {gname} (?i:TYPE = {gtype} |DIM = {dim}
+             |TIMELEVELS = {timelevels} |SIZE = {size} |DISTRIB = {distrib}
+             |GHOSTSIZE = {ghostsize} |STAGGER = {stagger} |TAGS = {tags} )*{desc} (
  \{
     {VARS}
- \} {dquote}?
+ \} {group_comment}
  )?
  
 
+# Contents of the file:
 FUNC_GROUP = ({FUNCTION} |{access}: |{GROUP_VARS} |{INCLUDE} |{IMPLEMENTS} |{INHERITS} |{FRIEND} )
 
+# double-quoted string
 dquote = "(\\{-any}|[^"])*"
+
+# single-quoted string
 squote = '(\\{-any}|[^'])*'
+
 quote = {dquote}|{squote}
 
 intr = ^(?i: {FUNC_GROUP}*)$

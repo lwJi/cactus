@@ -78,7 +78,7 @@ int         CCTK_NumVars(void);
 int         CCTK_NumVarsInGroup(const char *group);
 int         CCTK_NumVarsInGroupI(int group);
 
-int         CCTK_VarIndex(const char *variablename);
+int         CCTK_VarIndex(const char *variablename) CCTK_ATTRIBUTE_PURE;
 const char *CCTK_VarName(int varnum);
 int         CCTK_VarTypeI(int var);
 int         CCTK_VarTypeNumber(const char *type);

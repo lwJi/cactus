@@ -4,6 +4,7 @@
 # the following variables in the 'use vars' statement, that can be passed in from 
 # the command.
 use strict;
+use lib ".";
 use vars qw($h $help $cctk_home $thornlist $outdir $verbose $debug $arrangements_dir $document_type $thorn);
 
 #########################

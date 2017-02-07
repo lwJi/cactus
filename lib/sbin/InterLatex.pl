@@ -1,6 +1,7 @@
 #!/usr/bin/perl -s
 
 #use strict;
+use lib ".";
 use vars qw($cctk_home $debug $verbose $h $help $document_type $outdir $directory $thornlist $thorn);
 
 #/*@@

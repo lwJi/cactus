@@ -17,7 +17,7 @@
 extern "C" {
 #endif
 
-void *CCTKi_VarDataPtrI(const cGH *GH, int timelevel, int varindex);
+void *CCTKi_VarDataPtrI(const cGH *GH, int timelevel, int varindex) CCTK_ATTRIBUTE_PURE;
 
 #ifdef __cplusplus 
 }

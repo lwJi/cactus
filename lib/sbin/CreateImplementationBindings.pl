@@ -1,3 +1,5 @@
+use lib ".";
+
 #/*@@
 #  @file      CreateImplementationBindings.pl
 #  @date      Sun Jul  4 17:09:54 1999

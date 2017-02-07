@@ -1,4 +1,42 @@
 #! /usr/bin/perl -w
+use strict;
+
+my $ccl_file = undef;
+
+use Carp;
+use FileHandle;
+use Data::Dumper;
+
+sub trim_quotes
+{
+  my $str = shift;
+  $str =~ s/^(["'])(.*)\1$/$2/s;
+  return $str;
+}
+
+# This function turns an expression to a string. It functions
+# similar to mkstring() documented at the top of Piraha.pm,
+# however, it needs some special code for parenthetical groups
+# of terms.
+sub expr
+{
+  my $expr = shift;
+  my $nm = $expr->{name};
+  if($nm eq "expr" or $nm eq "addexpr" or $nm eq "mulexpr" or $nm eq "powexpr") {
+    my $buf = "";
+    for my $c (@{$expr->{children}}) {
+      $buf .= expr($c);
+    }
+    return $buf;
+  } elsif($nm eq "parexpr") {
+    return "(".expr($expr->group(0)).")";
+  } elsif($nm eq "negexpr") {
+    return "-".expr($expr->group(0));
+  } elsif($nm eq "addop" or $nm eq "mulop" or $nm eq "accname" or $nm eq "num") {
+    return $expr->substring();
+  }
+  confess("EXPR: $nm");
+}
 
 #/*@@
 #  @file    interface_parser.pl
@@ -30,6 +68,9 @@ sub create_interface_database
   %thorns = @inargs[2*$n_system..$#inargs];
   @thorns = sort keys %thorns;
 
+  my $peg_file = $ENV{CCTK_HOME}."/src/piraha/pegs/interface.peg";
+  my ($grammar,$rule) = piraha::parse_peg_file($peg_file);
+
   #  Loop through each  thorn's interface file.
   foreach my $thorn (@thorns)
   {
@@ -39,16 +80,37 @@ sub create_interface_database
     my $arrangement = $1;
 
     #       Read the data
-    my @indata = &read_file("$thorns{$thorn}/interface.ccl");
+    $ccl_file = "$thorns{$thorn}/interface.ccl";
+    my @indata = &read_file($ccl_file);
+    my $p=piraha::parse_src($grammar,$rule,$ccl_file);
+    my $m = $p->matches();
+    unless($m) {
+      print "CST ERROR IN FILE '$ccl_file' ";
+      $p->showError();
+      confess("Parse Error");
+    }
+    if(defined($ENV{CCTK_MAKE_TREE})) {
+      my $fd = new FileHandle;
+      open($fd,">tree.txt");
+      print $fd $ccl_file,"\n";
+      print $fd "=" x 50,"\n";
+      print $fd $p->{gr}->dump(),"\n";
+      close($fd);
+    }
 
     #       Get the interface data from it
-    &parse_interface_ccl($arrangement, $thorn, \@indata, \%interface_data);
+    &parse_interface_ccl($arrangement, $thorn, \@indata, $p->{gr}, \%interface_data);
 
     &PrintInterfaceStatistics($thorn, \%interface_data);
   }
 
   &cross_index_interface_data (\@thorns, \%interface_data);
 
+  if (defined($ENV{VERBOSE}) and lc($ENV{VERBOSE}) eq "yes") {
+    print "+============================+\n";
+    print "| Interface Parsing Complete |\n";
+    print "+============================+\n";
+  }
   return %interface_data;
 }
 
@@ -62,6 +124,7 @@ sub cross_index_interface_data
   my(%ancestors);
   my(%friends);
   my($thorn,$thorn_implements,$ancestor_imp,$thorn_ancestor,$message,$hint);
+  my(%thorn_ancestor);
 
   foreach $thorn (@$thorns_ref)
   {
@@ -200,6 +263,8 @@ sub get_implementation_friends
 sub get_implementation_ancestors
 {
   my($implementation, $interface_data_ref, $ancestors_ref) = @_;
+  my(%info);
+  my $cctk_home = $ENV{CCTK_HOME};
 
   $interface_data_ref->{"IMPLEMENTATION \U$implementation\E THORNS"} =~ m:(\w+):;
 
@@ -215,17 +280,17 @@ sub get_implementation_ancestors
       {
         # Implementation not found; give extensive information
         %info = &buildthorns("$cctk_home/arrangements","thorns");
-        $suggest_thorns = "";
-        foreach $thorninfo (sort keys %info)
+        my $suggest_thorns = "";
+        foreach my $thorninfo (sort keys %info)
         {
          $info{"$thorninfo"} =~ /^([^\s]+)/;
-         $testimp = $1;
+         my $testimp = $1;
          if ($testimp =~ m:^$ancestor$:i)
          {
            $suggest_thorns .= "\n        $thorninfo";
          }
         }
-        $message = "$implementation (thorn $thorn) inherits from $ancestor\n";
+        my $message = "$implementation (thorn $thorn) inherits from $ancestor\n";
         $message .= "     No thorn in your current ThornList implements $ancestor\n";
         $message .= "     Either remove $thorn, or add a thorn to your\n";
         $message .= "      ThornList implementing $ancestor\n";
@@ -258,6 +323,7 @@ sub check_implementation_consistency
   my(%friend);
   my(%public_groups);
   my(%private_groups);
+  my(%protected_groups);
   my(%variables);
   my($n_errors);
   my($group);
@@ -339,7 +405,7 @@ sub check_implementation_consistency
       }
     }
 
-    $n_thorns = @thorns;
+    my $n_thorns = @thorns;
 
     # Check the consistency of the inheritance
     foreach $thing (sort keys %inherits)
@@ -359,7 +425,7 @@ sub check_implementation_consistency
     {
       if(split(" ", $friend{$thing}) != $n_thorns)
       {
-        $message  = "Inconsistent implementations of $implementation\n";
+        my $message  = "Inconsistent implementations of $implementation\n";
         $message .= "Implemented by thorns " . join(" ", @thorns) . "\n";
         $message .= "Not all are friends of: $thing";
         &CST_error(0,$message,"",__LINE__,__FILE__);
@@ -372,7 +438,7 @@ sub check_implementation_consistency
     {
       if(split(" ", $public_groups{$thing}) != $n_thorns)
       {
-          $message  = "Inconsistent implementations of $implementation\n";
+          my $message  = "Inconsistent implementations of $implementation\n";
           $message .= "Implemented by thorns " . join(" ", @thorns) . "\n";
           $message .= "Not all declare public group: $thing";
           &CST_error(0,$message,"",__LINE__,__FILE__);
@@ -385,7 +451,7 @@ sub check_implementation_consistency
     {
       if(split(" ", $protected_groups{$thing}) != $n_thorns)
       {
-        $message  = "Inconsistent implementations of $implementation\n";
+        my $message  = "Inconsistent implementations of $implementation\n";
         $message .= "Implemented by thorns " . join(" ", @thorns) . "\n";
         $message .= "Not all declare protected group: $thing";
         &CST_error(0,$message,"",__LINE__,__FILE__);
@@ -420,10 +486,10 @@ sub check_implementation_consistency
         {
           if($attributes{"VTYPE"} ne $interface_data_ref->{"\U$thorn GROUP $group\E VTYPE"})
           {
-            $message  = "Inconsistent implementations of $implementation";
+            my $message  = "Inconsistent implementations of $implementation";
             $message .= " in thorns " . join(" ", @thorns) . ". ";
             $message .= "Group $group has inconsistent variable type ($attributes{\"VTYPE\"} and $interface_data_ref->{\"\\U$thorn GROUP $group\\E VTYPE\"}). ";
-            $hint = "All public and protected groups implementing $implementation must have groups with consistent properties";
+            my $hint = "All public and protected groups implementing $implementation must have groups with consistent properties";
             &CST_error(0,$message,$hint,__LINE__,__FILE__);
             $n_errors++;
           }
@@ -438,10 +504,10 @@ sub check_implementation_consistency
         {
           if($attributes{"GTYPE"} ne $interface_data_ref->{"\U$thorn GROUP $group\E GTYPE"})
           {
-            $message  = "Inconsistent implementations of $implementation";
+            my $message  = "Inconsistent implementations of $implementation";
             $message .= " in thorns " . join(" ", @thorns) . ". ";
             $message .= "Group $group has inconsistent group type ($attributes{\"GTYPE\"} and $interface_data_ref->{\"\U$thorn GROUP $group\E GTYPE\"}). ";
-            $hint = "All public and protected groups implementing $implementation must have groups with consistent properties";
+            my $hint = "All public and protected groups implementing $implementation must have groups with consistent properties";
             &CST_error(0,$message,$hint,__LINE__,__FILE__);
             $n_errors++;
           }
@@ -456,7 +522,7 @@ sub check_implementation_consistency
         {
           if($attributes{"TIMELEVELS"} ne $interface_data_ref->{"\U$thorn GROUP $group\E TIMELEVELS"})
           {
-            $message  = "Inconsistent implementations of $implementation\n";
+            my $message  = "Inconsistent implementations of $implementation\n";
             $message .= "Implemented by thorns " . join(" ", @thorns) . "\n";
             $message .= "Group $group has inconsistent time levels";
             &CST_error(0,$message,"",__LINE__,__FILE__);
@@ -473,7 +539,7 @@ sub check_implementation_consistency
         {
           if($attributes{"SIZE"} ne $interface_data_ref->{"\U$thorn GROUP $group\E SIZE"})
           {
-            $message  = "Inconsistent implementations of $implementation\n";
+            my $message  = "Inconsistent implementations of $implementation\n";
             $message .= "Implemented by thorns " . join(" ", @thorns) . "\n";
             $message .= "Group $group has inconsistent size";
             &CST_error(0,$message,"",__LINE__,__FILE__);
@@ -490,7 +556,7 @@ sub check_implementation_consistency
         {
           if($attributes{"GHOSTSIZE"} ne $interface_data_ref->{"\U$thorn GROUP $group\E GHOSTSIZE"})
           {
-            $message  = "Inconsistent implementations of $implementation\n";
+            my $message  = "Inconsistent implementations of $implementation\n";
             $message .= "Implemented by thorns " . join(" ", @thorns) . "\n";
             $message .= "Group $group has inconsistent ghostsize";
             &CST_error(0,$message,"",__LINE__,__FILE__);
@@ -507,7 +573,7 @@ sub check_implementation_consistency
         {
           if($attributes{"DISTRIB"} ne $interface_data_ref->{"\U$thorn GROUP $group\E DISTRIB"})
           {
-            $message  = "Inconsistent implementations of $implementation\n";
+            my $message  = "Inconsistent implementations of $implementation\n";
             $message .= "Implemented by thorns " . join(" ", @thorns) . "\n";
             $message .= "      Group $group has inconsistent distribution";
             &CST_error(0,$message,"",__LINE__,__FILE__);
@@ -524,7 +590,7 @@ sub check_implementation_consistency
         {
           if($attributes{"DIM"} ne $interface_data_ref->{"\U$thorn GROUP $group\E DIM"})
           {
-            $message  = "Inconsistent implementations of $implementation\n";
+            my $message  = "Inconsistent implementations of $implementation\n";
             $message .= "Implemented by thorns " . join(" ", @thorns) . "\n";
             $message .= "Group $group has inconsistent dimension";
             &CST_error(0,$message,"",__LINE__,__FILE__);
@@ -623,13 +689,13 @@ sub check_interface_consistency
         $message = "Group $group in thorn $thorn has same name as \n     public group in ancestor implementation $ancestor_imp (e.g. thorn $ancestor_thorn)";
         &CST_error(0,$message,"",__LINE__,__FILE__);
       }
-      foreach $var (split " ", $interface_data_ref->{"\U$thorn\E GROUP \U$group\E"})
+      foreach my $var (split " ", $interface_data_ref->{"\U$thorn\E GROUP \U$group\E"})
       {
-        foreach $pub_anc(split " ", $interface_data_ref->{"\U$ancestor_thorn\E PUBLIC GROUPS"})
+        foreach my $pub_anc (split " ", $interface_data_ref->{"\U$ancestor_thorn\E PUBLIC GROUPS"})
         {
           if ($interface_data_ref->{"\U$ancestor_thorn\E GROUP \U$pub_anc\E"} =~  m/\b$var\b/i)
           {
-            $message = "Variable $var in group $group in thorn $thorn has same name as \n     a variable in public group: $pub_anc in ancestor implementation $ancestor_imp (e.g. thorn $ancestor_thorn)";
+            my $message = "Variable $var in group $group in thorn $thorn has same name as \n     a variable in public group: $pub_anc in ancestor implementation $ancestor_imp (e.g. thorn $ancestor_thorn)";
             &CST_error(0,$message,"",__LINE__,__FILE__);
           }
 
@@ -643,6 +709,41 @@ sub check_interface_consistency
 }
 
 
+sub print_args
+{
+  my $arg = shift;
+  my $nm = $arg->{name};
+  if($nm eq "intent" or $nm eq "arg_type" or $nm eq "cctk_fpointer" or $nm eq "array") {
+    return uc($arg->substring());
+  } elsif($nm eq "name") {
+    return $arg->substring();
+  } elsif($nm eq "args") {
+    my $buf = "";
+    for(my $i=0;$i < $arg->groupCount();$i++) {
+      $buf .= ", " if($i > 0);
+      $buf .= print_args($arg->group($i));
+    }
+    return $buf;
+  } elsif($nm eq "arg") {
+    my $buf = "";
+    for(my $i=0;$i < $arg->groupCount();$i++) {
+      $buf .= " " if($i > 0);
+      $buf .= print_args($arg->group($i));
+    }
+    return $buf;
+  } elsif($nm eq "fpointer") {
+    my $buf .= print_args($arg->group(0));
+    for(my $i=1;$i<$arg->groupCount()-1;$i++) {
+      $buf .= " ";
+      $buf .= print_args($arg->group($i));
+    }
+    $buf .= "(";
+    $buf .= print_args($arg->group(-1));
+    $buf .= ")";
+    return $buf;
+  }
+  confess("not support arg($nm):$arg");
+}
 
 #/*@@
 #  @routine    parse_interface_ccl
@@ -655,7 +756,7 @@ sub check_interface_consistency
 
 sub parse_interface_ccl
 {
-  my($arrangement, $thorn, $data_ref, $interface_data_ref) = @_;
+  my($arrangement, $thorn, $data_ref, $group, $interface_data_ref) = @_;
   my($line_number, $line, $block, $type, $variable, $description);
   my($data);
   my($implementation);
@@ -663,20 +764,205 @@ sub parse_interface_ccl
   my(%known_groups);
   my(%known_variables);
 
+  # Initialise some stuff to prevent perl -w from complaining.
+  
+  my $interface_data_ref1 = {};
+
+  $interface_data_ref1->{"\U$thorn INHERITS\E"} = "";
+  $interface_data_ref1->{"\U$thorn FRIEND\E"} = "";
+  $interface_data_ref1->{"\U$thorn PUBLIC GROUPS\E"} = "";
+  $interface_data_ref1->{"\U$thorn PROTECTED GROUPS\E"} = "";
+  $interface_data_ref1->{"\U$thorn PRIVATE GROUPS\E"} = "";
+  $interface_data_ref1->{"\U$thorn USES HEADER\E"} = "";
+  $interface_data_ref1->{"\U$thorn FUNCTIONS\E"} = "";
+  $interface_data_ref1->{"\U$thorn PROVIDES FUNCTION\E"} = " ";
+  $interface_data_ref1->{"\U$thorn REQUIRES FUNCTION\E"} = " ";
+  $interface_data_ref1->{"\U$thorn USES FUNCTION\E"} = " ";
+  $interface_data_ref1->{"\U$thorn ARRANGEMENT\E"} = "$arrangement";
+
+  my $access = "PRIVATE";
+
+  for my $fgroup (@{$group->{children}}) {
+    my $fin =  $fgroup->{children}->[0];
+    if($fin->is("IMPLEMENTS")) {
+      $interface_data_ref1->{"\U$thorn\E IMPLEMENTS"} = $fin->group(0,"name")->substring();
+    } elsif($fin->is("INHERITS")) {
+      for my $ch (@{$fin->{children}}) {
+        $interface_data_ref1->{"\U$thorn\E INHERITS"} .= $ch->substring()." ";
+      }
+    } elsif($fin->is("FRIEND")) {
+      for my $ch (@{$fin->{children}}) {
+        $interface_data_ref1->{"\U$thorn\E FRIEND"} .= $ch->substring()." ";
+      }
+    } elsif($fin->is("INCLUDE")) {
+      my $wh = lc($fin->group(0,"what")->substring());
+      my $h1 = $fin->group(1,"filename")->substring();
+      my $h2 = $fin->group(2,"filename")->substring();
+      if($wh eq "header" or $wh eq "") {
+        $interface_data_ref1->{"\U$thorn ADD HEADER\E"} .= " ".$h1;
+        $interface_data_ref1->{"\U$thorn ADD HEADER $h1 TO\E"} = $h2;
+      } elsif($wh eq "source") {
+        $interface_data_ref1->{"\U$thorn ADD SOURCE\E"} .= $h1." ";
+        $interface_data_ref1->{"\U$thorn ADD SOURCE $h1 TO\E"} = $h2;
+      } else {
+        confess $fin->dump();
+      }
+    } elsif($fin->is("FUNCTION")) {
+      my $func = $fin->group(0);
+      if($func->is("FUNCTION_ALIAS")) {
+        my $ret = $func->group(0)->substring();
+        if($ret ne "void") {
+          $ret = uc($ret);
+        }
+        $ret = "void" if($ret eq "SUBROUTINE");
+        my $name = $func->group(1,"name")->substring();
+        my $args = $func->group(2,"args");
+        die $func->dump() unless(defined($args));
+        $interface_data_ref1->{"\U$thorn\E FUNCTIONS"} .= $name." ";
+        $interface_data_ref1->{"\U$thorn\E FUNCTION $name RET"} = $ret;
+        $interface_data_ref1->{"\U$thorn\E FUNCTION $name ARGS"} = print_args($args);
+      } elsif($func->is("PROVIDES_FUN")) {
+        my $fname = $func->group(0,"name")->substring();
+        my $with  = $func->group(1,"name")->substring();
+        my $lang  = $func->group(2,"LANG")->substring();
+        $interface_data_ref1->{"\U$thorn\E PROVIDES FUNCTION"} .= $fname." ";
+        $interface_data_ref1->{"\U$thorn\E PROVIDES FUNCTION $fname LANG"} = $lang;
+        $interface_data_ref1->{"\U$thorn\E PROVIDES FUNCTION $fname WITH"} = $with;
+      } elsif($func->is("REQUIRES_FUN")) {
+        my $fname = $func->group(0,"name")->substring();
+        $interface_data_ref1->{"\U$thorn\E REQUIRES FUNCTION"} .= $fname." ";
+      } elsif($func->is("USES")) {
+        my $sub = $func->group(0);
+        if($sub->is("USES_FUN")) {
+          my $fname = $sub->group(0,"name")->substring();
+          $interface_data_ref1->{"\U$thorn\E USES FUNCTION"} .= $fname." ";
+        } else { # USES_INC
+          my @ch = @{$sub->{children}};
+          my $what = uc($sub->group(0,"what")->substring());
+          if($what eq "HEADER" or $what eq "") {
+            for(my $i=1;$i<$sub->groupCount();$i++) {
+              $interface_data_ref1->{"\U$thorn\E USES HEADER"} .= $sub->group($i,"filename")->substring()." ";
+            }
+          } elsif($what eq "SOURCE") {
+            for(my $i=1;$i<$sub->groupCount();$i++) {
+              $interface_data_ref1->{"\U$thorn\E USES SOURCE"} .= $sub->group($i,"filename")->substring()." ";
+            }
+          }
+        }
+      }
+    } elsif($fin->is("access")) {
+      $access = $fin->substring();
+    } elsif($fin->is("GROUP_VARS")) {
+      my $vtype = uc($fin->group(0,"vtype")->substring());
+      my $gname = $fin->group(1,"gname")->group(0,"name")->substring();
+      my $desc = undef;
+      my $dim = undef;
+      my $distrib = undef;
+      my $gtype = undef;
+      my $tags = undef;
+      my $timelevels = 1;
+      my $size = undef;
+      my $var_array_size = undef;
+      if($fin->group(1,"gname")->has(1,"expr")) {
+        $var_array_size = expr($fin->group(1)->group(1));
+      }
+      $interface_data_ref1->{"\U$thorn $access GROUPS\E"} .= " ".$gname;
+      $interface_data_ref1->{"\U$thorn GROUP $gname\E"} = $gname;
+      my %items = ();
+      for(my $i=2;$i<$fin->groupCount();$i++) {
+        my $ch=$fin->group($i);
+        my $nm = $ch->{name};
+        if(defined($items{$nm})) {
+          print "CST Error:\n";
+          print "Repeated element 'tag' in $gname\n";
+          print "Line: ",$ch->linenum(),"\n";
+          print "File: ",$ccl_file,"\n";
+          confess("Repeated item: $nm in $gname")
+        }
+        $items{$nm}++;
+        if($nm eq "desc" or $nm eq "group_comment") {
+          my $new_desc = trim_quotes($ch->substring());
+          $desc .= $new_desc;
+        } elsif($nm eq "timelevels") {
+          $timelevels = $ch->substring();
+        } elsif($nm eq "dim") {
+          $dim = $ch->substring();
+        } elsif($nm eq "size") {
+          my $sz = "";
+          my $ndims = 0;
+          for my $c (@{$ch->{children}}) {
+            $sz .= "," unless($sz eq "");
+            $sz .= uc(expr($c));
+            $ndims++;
+          }
+          $size = $sz;
+          $dim = $ndims;
+        } elsif($nm eq "distrib") {
+          $distrib = uc($ch->substring());
+        } elsif($nm eq "gtype") {
+          $gtype = uc($ch->substring());
+        } elsif($nm eq "VARS") {
+          $interface_data_ref1->{"\U$thorn GROUP $gname\E"} = "";
+          for my $c (@{$ch->{children}}) {
+            $interface_data_ref1->{"\U$thorn GROUP $gname\E"} .= " ".$c->substring();
+          }
+        } elsif($nm eq "ghostsize") {
+          my $ghost = "";
+          for my $c (@{$ch->{children}}) {
+            $ghost .= "," unless($ghost eq "");
+            $ghost .= expr($c);
+          }
+          $interface_data_ref1->{"\U$thorn GROUP $gname GHOSTSIZE\E"} = uc($ghost);
+        } elsif($nm eq "tags") {
+          my $new_tags = trim_quotes($ch->substring());
+          $new_tags =~ s/"/\\"/g;
+          $tags = $new_tags;
+        }
+      }
+      # Fill in default values
+      $gtype = "SCALAR" if(!defined($gtype));
+      $dim = 0 if(!defined($dim) and $gtype eq "SCALAR");
+      $dim = 3 if(!defined($dim) and $gtype eq "GF");
+      $distrib = "DEFAULT" if(!defined($distrib) and ($gtype eq "GF" or $gtype eq "ARRAY"));
+      $distrib = "CONSTANT" if(!defined($distrib));
+      # Note that Compact groups are only documented in the FAQ, and
+      # are not supported by Carpet.
+      $interface_data_ref1->{"\U$thorn GROUP $gname COMPACT\E"} = 0;
+      $interface_data_ref1->{"\U$thorn GROUP $gname DIM\E"} = $dim;
+      if(defined($desc) and $desc !~ /^\s*$/) {
+        $interface_data_ref1->{"\U$thorn GROUP $gname DESCRIPTION\E"} = $desc;
+      }
+      $interface_data_ref1->{"\U$thorn GROUP $gname DISTRIB\E"} = $distrib;
+      $interface_data_ref1->{"\U$thorn GROUP $gname GTYPE\E"} = $gtype;
+      if(defined($tags)) {
+        $interface_data_ref1->{"\U$thorn GROUP $gname TAGS\E"} = $tags;
+      }
+      $interface_data_ref1->{"\U$thorn GROUP $gname TIMELEVELS\E"} = $timelevels;
+      $interface_data_ref1->{"\U$thorn GROUP $gname VTYPE\E"} = $vtype;
+      if(defined($size)) {
+        $interface_data_ref1->{"\U$thorn GROUP $gname SIZE\E"} = $size;
+      }
+      if(defined($var_array_size)) {
+        $interface_data_ref1->{"\U$thorn GROUP $gname VARARRAY_SIZE\E"} = $var_array_size;
+      }
+    }
+  }
 
   # Initialise some stuff to prevent perl -w from complaining.
 
-  $interface_data_ref->{"\U$thorn INHERITS\E"} = "";
-  $interface_data_ref->{"\U$thorn FRIEND\E"} = "";
-  $interface_data_ref->{"\U$thorn PUBLIC GROUPS\E"} = "";
-  $interface_data_ref->{"\U$thorn PROTECTED GROUPS\E"} = "";
-  $interface_data_ref->{"\U$thorn PRIVATE GROUPS\E"} = "";
-  $interface_data_ref->{"\U$thorn USES HEADER\E"} = "";
-  $interface_data_ref->{"\U$thorn FUNCTIONS\E"} = "";
-  $interface_data_ref->{"\U$thorn PROVIDES FUNCTION\E"} = " ";
-  $interface_data_ref->{"\U$thorn REQUIRES FUNCTION\E"} = " ";
-  $interface_data_ref->{"\U$thorn USES FUNCTION\E"} = " ";
-  $interface_data_ref->{"\U$thorn ARRANGEMENT\E"} = "$arrangement";
+  my $interface_data_ref2 = {};
+
+  $interface_data_ref2->{"\U$thorn INHERITS\E"} = "";
+  $interface_data_ref2->{"\U$thorn FRIEND\E"} = "";
+  $interface_data_ref2->{"\U$thorn PUBLIC GROUPS\E"} = "";
+  $interface_data_ref2->{"\U$thorn PROTECTED GROUPS\E"} = "";
+  $interface_data_ref2->{"\U$thorn PRIVATE GROUPS\E"} = "";
+  $interface_data_ref2->{"\U$thorn USES HEADER\E"} = "";
+  $interface_data_ref2->{"\U$thorn FUNCTIONS\E"} = "";
+  $interface_data_ref2->{"\U$thorn PROVIDES FUNCTION\E"} = " ";
+  $interface_data_ref2->{"\U$thorn REQUIRES FUNCTION\E"} = " ";
+  $interface_data_ref2->{"\U$thorn USES FUNCTION\E"} = " ";
+  $interface_data_ref2->{"\U$thorn ARRANGEMENT\E"} = "$arrangement";
 
   #   The default block is private.
   $block = "PRIVATE";
@@ -698,27 +984,27 @@ sub parse_interface_ccl
         if(!$implementation)
         {
           $implementation = $1;
-          $interface_data_ref->{"\U$thorn\E IMPLEMENTS"} = $implementation;
+          $interface_data_ref2->{"\U$thorn\E IMPLEMENTS"} = $implementation;
         }
         else
         {
-          $message = "Multiple implementations specified in $thorn";
-          $hint = "A thorn can only specify one implementation in its interface.ccl file, with the format implements:<implementation>";
+          my $message = "Multiple implementations specified in $thorn";
+          my $hint = "A thorn can only specify one implementation in its interface.ccl file, with the format implements:<implementation>";
           &CST_error(0,$message,$hint,__LINE__,__FILE__);
         }
       }
       else
       {
-        $message = "Implementation line has wrong format in $thorn";
-        $hint = "A thorn must specify one implementation in its interface.ccl file with the format IMPLEMENTS: <implementation>";
+        my $message = "Implementation line has wrong format in $thorn";
+        my $hint = "A thorn must specify one implementation in its interface.ccl file with the format IMPLEMENTS: <implementation>";
         &CST_error(0,$message,$hint,__LINE__,__FILE__);
       }
     }
     # implementation names can be separated by ,\s, where , are stripped out below
     elsif ($line =~ m/^\s*(INHERITS|FRIEND)\s*:(([,\s]*[a-zA-Z]+[a-zA-Z_0-9]*)*[,\s]*)$/i)
     {
-      $interface_data_ref->{"\U$thorn $1\E"} .= $2;
-      $interface_data_ref->{"\U$thorn $1\E"}=~s/,/ /g;
+      $interface_data_ref2->{"\U$thorn $1\E"} .= $2;
+      $interface_data_ref2->{"\U$thorn $1\E"}=~s/,/ /g;
     }
     elsif ($line =~ m/^\s*(PUBLIC|PROTECTED|PRIVATE)\s*:\s*$/i)
     {
@@ -726,8 +1012,9 @@ sub parse_interface_ccl
     }
     elsif ($line =~ m/^\s*PROVIDES\s*FUNCTION\s*([a-zA-Z_0-9]+)\s*WITH\s*(.+)\s*$/i)
     {
-      $funcname = $1;
-      $provided_by = $2;
+      my $funcname = $1;
+      my $provided_by = $2;
+      my $provided_by_language;
 
       if($provided_by =~ m/^(.*)\s+LANGUAGE\s+(.*\S)\s*$/i)
       {
@@ -749,7 +1036,7 @@ sub parse_interface_ccl
       {
 #        $provided_by_language = "Fortran";
 #        $provided_by_language = "C";
-        $message = "The providing function $provided_by in thorn $thorn does not have a specified language. Please add, e.g., \"LANGUAGE C\"";
+        my $message = "The providing function $provided_by in thorn $thorn does not have a specified language. Please add, e.g., \"LANGUAGE C\"";
         &CST_error(0,$message,"",__LINE__,__FILE__);
 
       }
@@ -763,44 +1050,44 @@ sub parse_interface_ccl
         &CST_error(0, $message, $hint, __LINE__, __FILE__);
       }
 
-      $interface_data_ref->{"\U$thorn PROVIDES FUNCTION\E"} .= "$funcname ";
-      $interface_data_ref->{"\U$thorn PROVIDES FUNCTION\E $funcname WITH"} .= "$provided_by ";
-      $interface_data_ref->{"\U$thorn PROVIDES FUNCTION\E $funcname LANG"} .= "$provided_by_language ";
+      $interface_data_ref2->{"\U$thorn PROVIDES FUNCTION\E"} .= "$funcname ";
+      $interface_data_ref2->{"\U$thorn PROVIDES FUNCTION\E $funcname WITH"} .= "$provided_by ";
+      $interface_data_ref2->{"\U$thorn PROVIDES FUNCTION\E $funcname LANG"} .= "$provided_by_language ";
 
     }
     elsif ($line =~ m/^\s*REQUIRES\s*FUNCTION\s*([a-zA-Z_0-9]+)\s*$/i)
     {
-      $funcname = $1;
-      $interface_data_ref->{"\U$thorn REQUIRES FUNCTION\E"} .= "$funcname ";
+      my$funcname = $1;
+      $interface_data_ref2->{"\U$thorn REQUIRES FUNCTION\E"} .= "$funcname ";
     }
     elsif ($line =~ m/^\s*USES\s*FUNCTION\s*([a-zA-Z_0-9]+)\s*$/i)
     {
-      $funcname = $1;
-      $interface_data_ref->{"\U$thorn USES FUNCTION\E"} .= "$funcname ";
+      my $funcname = $1;
+      $interface_data_ref2->{"\U$thorn USES FUNCTION\E"} .= "$funcname ";
     }
     elsif ($line =~ m/^\s*([a-zA-Z][a-zA-Z_0-9:]+)\s*FUNCTION\s*([a-zA-Z_0-9]+)\s*\((.*)\)\s*$/i)
     {
-      $rettype  = $1;
-      $funcname = $2;
-      $rest     = $3;
+      my $rettype  = $1;
+      my $funcname = $2;
+      my $rest     = $3;
 
-      $funcargs = $rest;
+      my $funcargs = $rest;
 
-      $interface_data_ref->{"\U$thorn FUNCTIONS\E"} .= "${funcname} ";
-      $interface_data_ref->{"\U$thorn FUNCTION\E $funcname ARGS"} .= "${funcargs} ";
-      $interface_data_ref->{"\U$thorn FUNCTION\E $funcname RET"} .= "${rettype} ";
+      $interface_data_ref2->{"\U$thorn FUNCTIONS\E"} .= "${funcname} ";
+      $interface_data_ref2->{"\U$thorn FUNCTION\E $funcname ARGS"} .= "${funcargs} ";
+      $interface_data_ref2->{"\U$thorn FUNCTION\E $funcname RET"} .= "${rettype} ";
     }
     elsif ($line =~ m/^\s*SUBROUTINE\s*([a-zA-Z_0-9]+)\s*\((.*)\)\s*$/i)
     {
-      $rettype  = "void";
-      $funcname = $1;
-      $rest     = $2;
+      my $rettype  = "void";
+      my $funcname = $1;
+      my $rest     = $2;
 
-      $funcargs = $rest;
+      my $funcargs = $rest;
 
-      $interface_data_ref->{"\U$thorn FUNCTIONS\E"} .= "${funcname} ";
-      $interface_data_ref->{"\U$thorn FUNCTION\E $funcname ARGS"} .= "${funcargs} ";
-      $interface_data_ref->{"\U$thorn FUNCTION\E $funcname RET"} .= "${rettype} ";
+      $interface_data_ref2->{"\U$thorn FUNCTIONS\E"} .= "${funcname} ";
+      $interface_data_ref2->{"\U$thorn FUNCTION\E $funcname ARGS"} .= "${funcargs} ";
+      $interface_data_ref2->{"\U$thorn FUNCTION\E $funcname RET"} .= "${rettype} ";
     }
     elsif ($line =~ m/^\s*(CCTK_)?(CHAR|BYTE|INT|INT1|INT2|INT4|INT8|INT16|REAL|REAL4|REAL8|REAL16|COMPLEX|COMPLEX8|COMPLEX16|COMPLEX32)\s*(([a-zA-Z][a-zA-Z_0-9]*)\s*(\[([^]]+)\])?)\s*(.*)\s*$/i)
     {
@@ -834,11 +1121,11 @@ sub parse_interface_ccl
         $known_groups{"\U$current_group\E"} = 1;
 
         # Initialise some stuff to prevent perl -w from complaining.
-        $interface_data_ref->{"\U$thorn GROUP $current_group\E"} = "";
+        $interface_data_ref2->{"\U$thorn GROUP $current_group\E"} = "";
       }
 
-      $interface_data_ref->{"\U$thorn $block GROUPS\E"} .= " $current_group";
-      $interface_data_ref->{"\U$thorn GROUP $current_group\E VTYPE"} = "\U$vtype\E";
+      $interface_data_ref2->{"\U$thorn $block GROUPS\E"} .= " $current_group";
+      $interface_data_ref2->{"\U$thorn GROUP $current_group\E VTYPE"} = "\U$vtype\E";
 
       # Grab optional group description from end of $options_list
       if ($options_list =~ /(=?)\s*"([^"]*)"\s*$/)
@@ -854,7 +1141,7 @@ sub parse_interface_ccl
           } else
           {
             $description = $2;
-            $quoted_description = quotemeta ($description);
+            my $quoted_description = quotemeta ($description);
             $options_list =~ s/\s*"$quoted_description"//;
           }
         }
@@ -871,27 +1158,27 @@ sub parse_interface_ccl
 
         if($option =~ m:DIM|DIMENSION:i)
         {
-          $interface_data_ref->{"\U$thorn GROUP $current_group\E DIM"} = $options{$option};
+          $interface_data_ref2->{"\U$thorn GROUP $current_group\E DIM"} = $options{$option};
         }
         elsif($option =~ m:TYPE:i)
         {
-          $interface_data_ref->{"\U$thorn GROUP $current_group\E GTYPE"} = "\U$options{$option}\E";
+          $interface_data_ref2->{"\U$thorn GROUP $current_group\E GTYPE"} = "\U$options{$option}\E";
         }
         elsif($option =~ m:TIMELEVELS:i)
         {
-          $interface_data_ref->{"\U$thorn GROUP $current_group\E TIMELEVELS"} = "\U$options{$option}\E";
+          $interface_data_ref2->{"\U$thorn GROUP $current_group\E TIMELEVELS"} = "\U$options{$option}\E";
         }
         elsif($option =~ m:GHOSTSIZE:i)
         {
-          $interface_data_ref->{"\U$thorn GROUP $current_group\E GHOSTSIZE"} = "\U$options{$option}\E";
+          $interface_data_ref2->{"\U$thorn GROUP $current_group\E GHOSTSIZE"} = "\U$options{$option}\E";
         }
         elsif($option =~ m:DISTRIB:i)
         {
-          $interface_data_ref->{"\U$thorn GROUP $current_group\E DISTRIB"} = "\U$options{$option}\E";
+          $interface_data_ref2->{"\U$thorn GROUP $current_group\E DISTRIB"} = "\U$options{$option}\E";
         }
         elsif($option =~ m:SIZE:i)
         {
-          $interface_data_ref->{"\U$thorn GROUP $current_group\E SIZE"} = "\U$options{$option}\E";
+          $interface_data_ref2->{"\U$thorn GROUP $current_group\E SIZE"} = "\U$options{$option}\E";
         }
         elsif($option =~ m:TAGS:i)
         {
@@ -903,7 +1190,7 @@ sub parse_interface_ccl
           $options{$option} =~ s/\\/\\\\/g;
           $options{$option} =~ s/\"/\\\"/g;
 
-          $interface_data_ref->{"\U$thorn GROUP $current_group\E TAGS"} = $options{$option};
+          $interface_data_ref2->{"\U$thorn GROUP $current_group\E TAGS"} = $options{$option};
         }
         else
         {
@@ -916,48 +1203,48 @@ sub parse_interface_ccl
       }
 
       # Put in defaults
-      if(! $interface_data_ref->{"\U$thorn GROUP $current_group\E GTYPE"})
+      if(! $interface_data_ref2->{"\U$thorn GROUP $current_group\E GTYPE"})
       {
-        $interface_data_ref->{"\U$thorn GROUP $current_group\E GTYPE"} = "SCALAR";
+        $interface_data_ref2->{"\U$thorn GROUP $current_group\E GTYPE"} = "SCALAR";
       }
 
-      if (! $interface_data_ref->{"\U$thorn GROUP $current_group\E DIM"})
+      if (! $interface_data_ref2->{"\U$thorn GROUP $current_group\E DIM"})
       {
-        if ($interface_data_ref->{"\U$thorn GROUP $current_group\E GTYPE"} eq 'SCALAR')
+        if ($interface_data_ref2->{"\U$thorn GROUP $current_group\E GTYPE"} eq 'SCALAR')
         {
-          $interface_data_ref->{"\U$thorn GROUP $current_group\E DIM"} = 0;
+          $interface_data_ref2->{"\U$thorn GROUP $current_group\E DIM"} = 0;
         }
         else
         {
-          $interface_data_ref->{"\U$thorn GROUP $current_group\E DIM"} = 3;
+          $interface_data_ref2->{"\U$thorn GROUP $current_group\E DIM"} = 3;
         }
       }
 
-      if(! $interface_data_ref->{"\U$thorn GROUP $current_group\E TIMELEVELS"})
+      if(! $interface_data_ref2->{"\U$thorn GROUP $current_group\E TIMELEVELS"})
       {
-        $interface_data_ref->{"\U$thorn GROUP $current_group\E TIMELEVELS"} = 1;
+        $interface_data_ref2->{"\U$thorn GROUP $current_group\E TIMELEVELS"} = 1;
       }
 
-      if(! $interface_data_ref->{"\U$thorn GROUP $current_group\E DISTRIB"})
+      if(! $interface_data_ref2->{"\U$thorn GROUP $current_group\E DISTRIB"})
       {
-        if ($interface_data_ref->{"\U$thorn GROUP $current_group\E GTYPE"} eq 'SCALAR')
+        if ($interface_data_ref2->{"\U$thorn GROUP $current_group\E GTYPE"} eq 'SCALAR')
         {
-          $interface_data_ref->{"\U$thorn GROUP $current_group\E DISTRIB"} = 'CONSTANT';
+          $interface_data_ref2->{"\U$thorn GROUP $current_group\E DISTRIB"} = 'CONSTANT';
         }
         else
         {
-          $interface_data_ref->{"\U$thorn GROUP $current_group\E DISTRIB"} = 'DEFAULT';
+          $interface_data_ref2->{"\U$thorn GROUP $current_group\E DISTRIB"} = 'DEFAULT';
         }
       }
 
-      if(! $interface_data_ref->{"\U$thorn GROUP $current_group\E COMPACT"})
+      if(! $interface_data_ref2->{"\U$thorn GROUP $current_group\E COMPACT"})
       {
-        $interface_data_ref->{"\U$thorn GROUP $current_group\E COMPACT"} = 0;
+        $interface_data_ref2->{"\U$thorn GROUP $current_group\E COMPACT"} = 0;
       }
 
-      if ($interface_data_ref->{"\U$thorn GROUP $current_group\E GTYPE"} eq "SCALAR")
+      if ($interface_data_ref2->{"\U$thorn GROUP $current_group\E GTYPE"} eq "SCALAR")
       {
-        my $dim = $interface_data_ref->{"\U$thorn GROUP $current_group\E DIM"};
+        my $dim = $interface_data_ref2->{"\U$thorn GROUP $current_group\E DIM"};
         if ($dim && $dim ne '0')
         {
           my $message =  "Inconsistent GROUP DIM $dim for SCALAR group $current_group of thorn $thorn";
@@ -971,9 +1258,9 @@ sub parse_interface_ccl
           }
           next;
         }
-        $interface_data_ref->{"\U$thorn GROUP $current_group\E DIM"} = 0;
+        $interface_data_ref2->{"\U$thorn GROUP $current_group\E DIM"} = 0;
 
-        my $distrib = $interface_data_ref->{"\U$thorn GROUP $current_group\E DISTRIB"};
+        my $distrib = $interface_data_ref2->{"\U$thorn GROUP $current_group\E DISTRIB"};
         if ($distrib && $distrib ne 'CONSTANT')
         {
           my $message =  "Inconsistent GROUP DISTRIB $distrib for SCALAR group $current_group of thorn $thorn";
@@ -987,14 +1274,14 @@ sub parse_interface_ccl
           }
           next;
         }
-        $interface_data_ref->{"\U$thorn GROUP $current_group\E DISTRIB"} =
+        $interface_data_ref2->{"\U$thorn GROUP $current_group\E DISTRIB"} =
             "CONSTANT";
       }
 
       # Override defaults for grid functions
-      if ($interface_data_ref->{"\U$thorn GROUP $current_group\E GTYPE"} eq "GF")
+      if ($interface_data_ref2->{"\U$thorn GROUP $current_group\E GTYPE"} eq "GF")
       {
-        my $distrib = $interface_data_ref->{"\U$thorn GROUP $current_group\E DISTRIB"};
+        my $distrib = $interface_data_ref2->{"\U$thorn GROUP $current_group\E DISTRIB"};
         if ($distrib && $distrib ne 'DEFAULT')
         {
           my $message =  "Inconsistent GROUP DISTRIB $distrib for GF group $current_group of thorn $thorn";
@@ -1008,17 +1295,17 @@ sub parse_interface_ccl
           }
           next;
         }
-        $interface_data_ref->{"\U$thorn GROUP $current_group\E DISTRIB"} =
+        $interface_data_ref2->{"\U$thorn GROUP $current_group\E DISTRIB"} =
             "DEFAULT";
       }
 
       # Check that it is a known group type
-      if($interface_data_ref->{"\U$thorn GROUP $current_group\E GTYPE"} !~ m:^\s*(SCALAR|GF|ARRAY)\s*$:)
+      if($interface_data_ref2->{"\U$thorn GROUP $current_group\E GTYPE"} !~ m:^\s*(SCALAR|GF|ARRAY)\s*$:)
       {
-          $message =  "Unknown GROUP TYPE " .
-          $interface_data_ref->{"\U$thorn GROUP $current_group\E GTYPE"} .
+          my $message =  "Unknown GROUP TYPE " .
+          $interface_data_ref2->{"\U$thorn GROUP $current_group\E GTYPE"} .
             " for group $current_group of thorn $thorn";
-          $hint = "Allowed group types are SCALAR, GF or ARRAY";
+          my $hint = "Allowed group types are SCALAR, GF or ARRAY";
           &CST_error(0,$message,$hint,__LINE__,__FILE__);
           if($data_ref->[$line_number+1] =~ m:\{:)
           {
@@ -1030,12 +1317,12 @@ sub parse_interface_ccl
       }
 
       # Check that it is a known distribution type
-      if($interface_data_ref->{"\U$thorn GROUP $current_group\E DISTRIB"} !~ m:DEFAULT|CONSTANT:)
+      if($interface_data_ref2->{"\U$thorn GROUP $current_group\E DISTRIB"} !~ m:DEFAULT|CONSTANT:)
       {
-          $message =  "Unknown DISTRIB TYPE " .
-          $interface_data_ref->{"\U$thorn GROUP $current_group\E DISTRIB"} .
+          my $message =  "Unknown DISTRIB TYPE " .
+          $interface_data_ref2->{"\U$thorn GROUP $current_group\E DISTRIB"} .
             " for group $current_group of thorn $thorn";
-          $hint = "Allowed distribution types are DEFAULT or CONSTANT";
+          my $hint = "Allowed distribution types are DEFAULT or CONSTANT";
           &CST_error(0,$message,"",__LINE__,__FILE__);
           if($data_ref->[$line_number+1] =~ m:\{:)
           {
@@ -1050,7 +1337,7 @@ sub parse_interface_ccl
       if($isgrouparray)
       {
         # get its size
-        $interface_data_ref->{"\U$thorn GROUP $current_group\E VARARRAY_SIZE"} = $grouparray_size;
+        $interface_data_ref2->{"\U$thorn GROUP $current_group\E VARARRAY_SIZE"} = $grouparray_size;
       }
         # Fill in data for the scalars/arrays/functions
         $line_number++;
@@ -1059,8 +1346,8 @@ sub parse_interface_ccl
           $line_number++;
           while($data_ref->[$line_number] !~ m:\}:i)
           {
-            @functions = split(/[^a-zA-Z_0-9]+/, $data_ref->[$line_number]);
-            foreach $function (@functions)
+            my @functions = split(/[^a-zA-Z_0-9]+/, $data_ref->[$line_number]);
+            foreach my $function (@functions)
             {
               if ($function eq $current_group)
               {
@@ -1086,7 +1373,7 @@ sub parse_interface_ccl
                 {
                   $known_variables{"\U$function\E"} = 1;
 
-                  $interface_data_ref->{"\U$thorn GROUP $current_group\E"} .= " $function";
+                  $interface_data_ref2->{"\U$thorn GROUP $current_group\E"} .= " $function";
                 }
                 else
                 {
@@ -1104,12 +1391,12 @@ sub parse_interface_ccl
         else
         {
           # If no block, create a variable with the same name as group.
-          $function = $current_group;
+          my $function = $current_group;
           if(! $known_variables{"\U$function\E"})
           {
             $known_variables{"\U$function\E"} = 1;
 
-            $interface_data_ref->{"\U$thorn GROUP $current_group\E"} .= " $function";
+            $interface_data_ref2->{"\U$thorn GROUP $current_group\E"} .= " $function";
           }
           else
           {
@@ -1120,31 +1407,32 @@ sub parse_interface_ccl
           # Decrement the line number, since the line is the first line of the next CCL statement.
           $line_number--;
         }
-        $interface_data_ref->{"\U$thorn GROUP $current_group\E DESCRIPTION"} = $description;
+        $interface_data_ref2->{"\U$thorn GROUP $current_group\E DESCRIPTION"} = $description;
+        $description = ""; # Prevent re-use of description
     }
     elsif ($line =~ m/^\s*(USES\s*INCLUDE)S?\s*(SOURCE)S?\s*:\s*(.*)\s*$/i)
     {
-      $interface_data_ref->{"\U$thorn USES SOURCE\E"} .= " $3";
+      $interface_data_ref2->{"\U$thorn USES SOURCE\E"} .= " $3";
     }
     elsif ($line =~ m/^\s*(USES\s*INCLUDE)S?\s*(HEADER)?S?\s*:\s*(.*)\s*$/i)
     {
-      $interface_data_ref->{"\U$thorn USES HEADER\E"} .= " $3";
+      $interface_data_ref2->{"\U$thorn USES HEADER\E"} .= " $3";
     }
     elsif ($line =~ m/^\s*(INCLUDE)S?\s*(SOURCE)S?\s*:\s*(.*)\s+IN\s+(.*)\s*$/i)
     {
-      $header = $3;
+      my $header = $3;
       $header =~ s/ //g;
-      $interface_data_ref->{"\U$thorn ADD SOURCE\E"} .= " $header";
+      $interface_data_ref2->{"\U$thorn ADD SOURCE\E"} .= " $header";
 #      print "Adding $header to $4\n";
-      $interface_data_ref->{"\U$thorn ADD SOURCE $header TO\E"} = $4;
+      $interface_data_ref2->{"\U$thorn ADD SOURCE $header TO\E"} = $4;
     }
     elsif ($line =~ m/^\s*(INCLUDE)S?\s*(HEADER)?S?\s*:\s*(\S*)\s+IN\s+(\S*)\s*$/i)
     {
-      $header = $3;
+      my $header = $3;
       $header =~ s/ //g;
-      $interface_data_ref->{"\U$thorn ADD HEADER\E"} .= " $header";
+      $interface_data_ref2->{"\U$thorn ADD HEADER\E"} .= " $header";
 #      print "Adding $header to $4\n";
-      $interface_data_ref->{"\U$thorn ADD HEADER $header TO\E"} = $4;
+      $interface_data_ref2->{"\U$thorn ADD HEADER $header TO\E"} = $4;
     }
     else
     {
@@ -1160,6 +1448,40 @@ sub parse_interface_ccl
         &CST_error(0,"Unknown line in interface.ccl for thorn $arrangement/$thorn\n\"$line\"",'',__LINE__,__FILE__) if ($line);
       }
     }
+  }
+  for my $k (sort keys %{$interface_data_ref2}) {
+    my $v1 = "".$interface_data_ref1->{$k};
+    my $v2 = "".$interface_data_ref2->{$k};
+    unless($v1 =~ /VOID/) {
+      $v1 =~ s/\s+/\n/g;
+      $v2 =~ s/\s+/\n/g;
+      $v1 =~ s/\s+$//;
+      $v2 =~ s/\s+$//;
+      $v1 =~ s/^\s+//;
+      $v2 =~ s/^\s+//;
+      $v1 =~ s/\s\(/\(/g;
+      $v2 =~ s/\s\(/\(/g;
+      $v1 =~ s/\s*,\s*/,\n/g;
+      $v2 =~ s/\s*,\s*/,\n/g;
+    }
+    my $fd = new FileHandle;
+    open($fd,">v1") or die;
+    print $fd $v1,"\n";
+    close($fd);
+    open($fd,">v2") or die;
+    print $fd $v2,"\n";
+    close($fd);
+    if($v1 ne $v2) {
+      confess("key error:($k) new=($v1) old=($v2)");
+    }
+  }
+  for my $k (sort keys %{$interface_data_ref1}) {
+    if(!defined($interface_data_ref2->{$k})) {
+      confess("Extra key in interface ($k) ($interface_data_ref1->{$k})")
+    }
+  }
+  for my $k (keys %{$interface_data_ref1}) {
+    $interface_data_ref->{$k} .= $interface_data_ref1->{$k};
   }
 }
 

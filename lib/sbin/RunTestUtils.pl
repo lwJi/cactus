@@ -13,6 +13,7 @@ $sbin_dir = "$cctk_home/lib/sbin";
 die "Unable to find CCTK sbin directory - tried $sbin_dir\n"
   if (! -e "$sbin_dir/parameter_parser.pl");
 
+use lib ".";
 require "$sbin_dir/CSTUtils.pl";
 
 

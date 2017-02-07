@@ -197,9 +197,18 @@ configuration options of this thorn.
 
 \subsubsection{General Syntax of CCL Files}
 
-\textit{Cactus Configuration Language} (CCL) files are simple text files
-used to define configuration information for a thorn.  CCL files are
-case independent, and may contain comments introduced by the hash `\texttt{\#}'
+\textit{Cactus Configuration Language} (CCL) files are text files
+used to define configuration information for a thorn. Their formal
+syntax is described using Piraha, a parsing expression grammar engine
+that supports multiple languages (see https://github.com/stevenrbrandt/piraha-peg
+for a description of Piraha patterns and Grammar Files).
+
+A Grammar File for each type of CCL file is provided in the src/piraha/pegs
+directory of the Cactus source tree. These may be consulted for the precise
+details of any given Cactus CCL file.
+
+CCL files are
+(mostly) case independent, and may contain comments introduced by the hash `\texttt{\#}'
 character, which indicates that the rest of the line is a comment. If the last
 non-blank character of a line in a CCL file is a backslash
 `\texttt{$\backslash$}', the
@@ -3125,7 +3134,7 @@ source code.
 \label{sec:prrutiin}
 
 To write from thorns to standard output (i.e. the screen)
-at runtime, use the macro \texttt{CCTK\_INFO} or the function \texttt{CCTK\_VInfo()}.
+at runtime, use the macro \texttt{CCTK\_INFO} or \texttt{CCTK\_VINFO}.
 
 For example, from the Fortran thorn \texttt{MyThorn},
 \begin{verbatim}
@@ -3142,7 +3151,7 @@ will be printed to screen by default. The standard output of other processors
 will usually be discarded unless the ``\texttt{-r}'' command line option is used
 (Section~\ref{sec:command_line_options}).
 
-Note that the routine \texttt{CCTK\_VInfo()} can only be called from C, because
+Note that the macro \texttt{CCTK\_VINFO} can only be called from C, because
 Fortran doesn't know about variable argument lists. So, including variables in
 the info message using \texttt{CCTK\_INFO} is currently more tricky, since you
 need to build the string to be output.
@@ -3151,7 +3160,7 @@ For example, in C you would just write
 \begin{verbatim}
   int myint;
 
-  CCTK_VInfo(CCTK_THORNSTRING, "The integer is %d", myint);
+  CCTK_VINFO("The integer is %d", myint);
 \end{verbatim}
 
 But in Fortran you have to do the following
@@ -3181,12 +3190,12 @@ Note that
 \subsection{Error Handling, Warnings and Code Termination}
 \subsectionmark{Error handling, ...}
 \label{sec:erhawancote}
-The Cactus function \texttt{CCTK\_VError()}, and its accompanying
-\texttt{CCTK\_ERROR} macro, should be used to output error messages
+The Cactus macros \texttt{CCTK\_ERROR} and
+\texttt{CCTK\_VERROR} should be used to output error messages
 and abort the code.
 
-The Cactus function \texttt{CCTK\_VWarn()}, and its accompanying
-\texttt{CCTK\_WARN} macro, should be used to issue warning messages
+The Cactus macros \texttt{CCTK\_WARN} and
+\texttt{CCTK\_VWARN} should be used to issue warning messages
 during code execution.
 
 Along with the warning message, an integer is given to indicate the
@@ -3257,9 +3266,8 @@ line number in the message.%%%
          which is the character-string name of the
          current thorn.  In C, you can get the source
          file name and line number from the predefined
-         preprocessor macros \texttt{\_\_FILE\_\_} and
-         \texttt{\_\_LINE\_\_}, respectively.  In Fortran
-         you're out of luck. :(
+!         preprocessor macros \texttt{\_\_FILE\_\_} and
+         \texttt{\_\_LINE\_\_}, respectively.
          }%%%
 {}  (For this reason it is important for Fortran code that capital
 letters are always used in order to expand the macro.)
@@ -3269,8 +3277,8 @@ source file name and line number will be printed to standard error along with
 the originating processor number, the thorn name and the warning message.
 The default is to omit the source file name and line number.
 
-Note that the routines \texttt{CCTK\_VError()} and
-\texttt{CCTK\_VWarn()} can only be called from C, because
+Note that the macros \texttt{CCTK\_VERROR} and
+\texttt{CCTK\_VWARN} can only be called from C, because
 Fortran doesn't know about variable argument lists. So including variables in
 the warning message using \texttt{CCTK\_ERROR} or \texttt{CCTK\_WARN},
 is currently more tricky since
@@ -3281,7 +3289,7 @@ For example, in C you would just write
   int    myint;
   double myreal;
 
-  CCTK_VWarn(CCTK_WARN_ALERT, __LINE__, __FILE__, CCTK_THORNSTRING,
+  CCTK_VWARN(CCTK_WARN_ALERT,
              "Your warning message, including %f and %d",
              myreal, myint);
 \end{verbatim}
@@ -3322,7 +3330,7 @@ The data pointer can be used to pass arbitrary information to the
 registered function, e.g. a file descriptor or a format string.
 
 Multiple functions can be registered as above; when
-\texttt{CCTK\_VWarn()} is called, all the registered functions will be
+\texttt{CCTK\_WARN} is called, all the registered functions will be
 called, if the warning is within the minimum and maximum levels
 indicated.
 

@@ -25,6 +25,7 @@ sub debug_dedent
   $debug_indent_level--;
 }
 
+use lib ".";
 require "lib/sbin/RunTestUtils.pl";
 
 # Read options from command line

@@ -395,12 +395,12 @@ static inline ptrdiff_t CCTK_VECTGFINDEX4D (const cGH *restrict cctkGH,
 #define CCTK_WARN(a,b) CCTK_Warn(a,__LINE__,__FILE__,CCTK_THORNSTRING,b)
 #define CCTK_ERROR(b) CCTK_Error(__LINE__,__FILE__,CCTK_THORNSTRING,b)
 
-#define CCTK_VINFO(a,...) CCTK_VInfo(CCTK_THORNSTRING,a,__VA_ARGS__)
-#define CCTK_VPARAMWARN(a,...) CCTK_VParamWarn(CCTK_THORNSTRING,a,__VA_ARGS__)
-#define CCTK_VWARN(a,b,...) \
-  CCTK_VWarn(a,__LINE__,__FILE__,CCTK_THORNSTRING,b,__VA_ARGS__)
-#define CCTK_VERROR(b,...) \
-  CCTK_VError(__LINE__,__FILE__,CCTK_THORNSTRING,b,__VA_ARGS__)
+#define CCTK_VINFO(...) CCTK_VInfo(CCTK_THORNSTRING,__VA_ARGS__)
+#define CCTK_VPARAMWARN(...) CCTK_VParamWarn(CCTK_THORNSTRING,__VA_ARGS__)
+#define CCTK_VWARN(level,...) \
+  CCTK_VWarn(__LINE__,__FILE__,CCTK_THORNSTRING,level,__VA_ARGS__)
+#define CCTK_VERROR(...) \
+  CCTK_VError(__LINE__,__FILE__,CCTK_THORNSTRING,__VA_ARGS__)
 
 #define CCTK_MALLOC(s) CCTKi_Malloc(s,__LINE__,__FILE__)
 #define CCTK_FREE(p) CCTKi_Free(p)

@@ -114,6 +114,9 @@ from Fortran.
 \item[\code{CCTK\_CmplxSub}] [\pageref{CCTK-CmplxSub}]
   Returns the subtraction of two complex numbers (only C) [deprecated]
 
+\item[\code{CCTK\_CommandLine}] [\pageref{CCTK-CommandLine}]
+ Gets the command line arguments.
+
 \item[\code{CCTK\_CompileDate}] [\pageref{CCTK-CompileDate}]
   Returns a formatted string containing the date stamp when Cactus was compiled
 
@@ -166,19 +169,19 @@ from Fortran.
 \item[\code{CCTK\_CreateDirectory}] [\pageref{CCTK-CreateDirectory}]
   Creates a directory
 
-\item[\code{CCTK\_DeclaredTimelevels}] [\pageref{CCTK-DeclaredTimelevels}]
+\item[\code{CCTK\_DeclaredTimeLevels}] [\pageref{CCTK-DeclaredTimeLevels}]
   Gives the maximum number of timelevels for a group
 
-\item[\code{CCTK\_DeclaredTimelevelsGI}] [\pageref{CCTK-DeclaredTimelevelsGI}]
+\item[\code{CCTK\_DeclaredTimeLevelsGI}] [\pageref{CCTK-DeclaredTimeLevelsGI}]
   Gives the maximum number of timelevels for a group
 
-\item[\code{CCTK\_DeclaredTimelevelsGN}] [\pageref{CCTK-DeclaredTimelevelsGN}]
+\item[\code{CCTK\_DeclaredTimeLevelsGN}] [\pageref{CCTK-DeclaredTimeLevelsGN}]
   Gives the maximum number of timelevels for a group
 
-\item[\code{CCTK\_DeclaredTimelevelsVI}] [\pageref{CCTK-DeclaredTimelevelsVI}]
+\item[\code{CCTK\_DeclaredTimeLevelsVI}] [\pageref{CCTK-DeclaredTimeLevelsVI}]
   Gives the maximum number of timelevels for a variable
 
-\item[\code{CCTK\_DeclaredTimelevelsVN}] [\pageref{CCTK-DeclaredTimelevelsVN}]
+\item[\code{CCTK\_DeclaredTimeLevelsVN}] [\pageref{CCTK-DeclaredTimeLevelsVN}]
   Gives the maximum number of timelevels for a variable
 
 \item[\code{CCTK\_DecomposeName}] [\pageref{CCTK-DecomposeName}]
@@ -614,6 +617,10 @@ from Fortran.
   [\pageref{CCTK-ParameterGet}]
   Get the data pointer to and type of a parameter's value
 
+\item[\code{CCTK\_ParameterFilename}]
+  [\pageref{CCTK-ParameterFilename}]
+  Returns the parameter filename
+
 \item[\code{CCTK\_ParameterLevel}]
   [\pageref{CCTK-ParameterLevel}]
   Return the parameter checking level
@@ -846,9 +853,17 @@ from Fortran.
 \item[\code{CCTK\_VarTypeSize}] [\pageref{CCTK-VarTypeSize}]
   Provides variable type size in bytes from the variable type index
 
+\item[\code{CCTK\_VERROR}] [\pageref{CCTK-VERROR}]
+  Macro to print a formatted string with a variable argument list as
+  error message to standard error and stops the code
+
 \item[\code{CCTK\_VError}] [\pageref{CCTK-VError}]
   Prints a formatted string with a variable argument list as error
   message to standard error and stops the code
+
+\item[\code{CCTK\_VINFO}] [\pageref{CCTK-VINFO}]
+  Macro to print a formatted string with a variable argument list as
+  an information message to screen
 
 \item[\code{CCTK\_VInfo}] [\pageref{CCTK-VInfo}]
   Prints a formatted string with a variable argument list as an information
@@ -857,6 +872,10 @@ from Fortran.
 \item[\code{CCTK\_VParamWarn}] [\pageref{CCTK-VParamWarn}]
   Prints a formatted string with a variable argument list as a warning from
   parameter checking, and possibly stops the code
+
+\item[\code{CCTK\_VWARN}] [\pageref{CCTK-VWARN}]
+  Macro to print a formatted string with a variable argument list as a
+  warning message to standard error and possibly stops the code
 
 \item[\code{CCTK\_VWarn}] [\pageref{CCTK-VWarn}]
   Prints a formatted string with a variable argument list as a warning message
@@ -1151,7 +1170,7 @@ number of timelevels which may have storage provided by
 \begin{SeeAlso2}{CCTK\_MaxActiveTimeLevels}{CCTK-MaxActiveTimeLevels}
   Returns the maximum number of timeleves that were ever active from a group name
 \end{SeeAlso2}
-\begin{SeeAlso2}{CCTK\_DeclaredTimelevels}{CCTK-DeclaredTimelevels}
+\begin{SeeAlso2}{CCTK\_DeclaredTimeLevels}{CCTK-DeclaredTimeLevels}
 Return the maximum number of active timelevels.
 \end{SeeAlso2}
 \begin{SeeAlso2}{CCTK\_GroupStorageDecrease}{CCTK-GroupStorageDecrease}
@@ -1796,6 +1815,41 @@ subval = CCTK_CmplxSub(inval1,inval2);
 \end{verbatim}
 \end{Example}
 \end{ExampleSection}
+\end{FunctionDescription}
+
+
+% ProcessCommandline.c
+%Entering a function desctiption for CCTK\_ParamterFile
+\begin{FunctionDescription}{CCTK\_CommandLine}
+\label{CCTK-CommandLine}
+Gets the command line arguments.
+
+\begin{SynopsisSection}
+\begin{Synopsis}{C}
+\begin{verbatim}
+#include "cctk.h"
+int outargc = CCTK_CommandLine(char ***outargv)
+\end{verbatim}
+\end{Synopsis}
+\end{SynopsisSection}
+
+\begin{ResultSection}
+\begin{Result}{outargc}
+  The number of command line arguments.
+\end{Result}
+\end{ResultSection}
+
+\begin{ParameterSection}
+\begin{Parameter}{outargc}
+   Place to dump the command line arguments
+\end{Parameter}
+\end{ParameterSection}
+
+\begin{SeeAlsoSection}
+\begin{SeeAlso2}{CCTK\_ParameterFilename}{CCTK-ParameterFilename}
+   Returns the parameter filename
+\end{SeeAlso2}
+\end{SeeAlsoSection}
 \end{FunctionDescription}
 
 
@@ -2623,14 +2677,14 @@ call CCTK_CREATEDIRECTORY(ierr,0755, "Results/New")
 %%%%%
 
 
-\begin{FunctionDescription}{CCTK\_DeclaredTimelevels}{Gives the number of timelevels for a group}
-\label{CCTK-DeclaredTimelevels}
+\begin{FunctionDescription}{CCTK\_DeclaredTimeLevels}{Gives the number of timelevels for a group}
+\label{CCTK-DeclaredTimeLevels}
 \begin{SynopsisSection}
 \begin{Synopsis}{C}
-\begin{verbatim}int numlevels = CCTK_DeclaredTimelevels( const char * name)\end{verbatim}
+\begin{verbatim}int numlevels = CCTK_DeclaredTimeLevels( const char * name)\end{verbatim}
 \end{Synopsis}
 \begin{Synopsis}{Fortran}
-\begin{verbatim}call CCTK_DeclaredTimelevels(numlevels , name )
+\begin{verbatim}call CCTK_DeclaredTimeLevels(numlevels , name )
 
 integer numlevels
 character*(*) name\end{verbatim}
@@ -2650,7 +2704,7 @@ The group name should be in the form \code{<implementation>::<group>}
 \begin{ExampleSection}
 \begin{Example}{C}
 \begin{verbatim}
-numlevels = CCTK_DeclaredTimelevels("evolve::phivars");
+numlevels = CCTK_DeclaredTimeLevels("evolve::phivars");
 \end{verbatim}
 \end{Example}
 \begin{Example}{Fortran}
@@ -2662,14 +2716,14 @@ call CCTK_DECLAREDTIMELEVELS(numlevels,"evolve::phivars")
 \end{FunctionDescription}
 
 % Groups.c
-\begin{FunctionDescription}{CCTK\_DeclaredTimelevelsGI}{Gives the number of timelevels for a group}
-\label{CCTK-DeclaredTimelevelsGI}
+\begin{FunctionDescription}{CCTK\_DeclaredTimeLevelsGI}{Gives the number of timelevels for a group}
+\label{CCTK-DeclaredTimeLevelsGI}
 \begin{SynopsisSection}
 \begin{Synopsis}{C}
-\begin{verbatim}int numlevels = CCTK_DeclaredTimelevelsGI( int index)\end{verbatim}
+\begin{verbatim}int numlevels = CCTK_DeclaredTimeLevelsGI( int index)\end{verbatim}
 \end{Synopsis}
 \begin{Synopsis}{Fortran}
-\begin{verbatim}call CCTK_DeclaredTimelevelsGI(numlevels , index )
+\begin{verbatim}call CCTK_DeclaredTimeLevelsGI(numlevels , index )
 
 integer numlevels
 integer index\end{verbatim}
@@ -2688,7 +2742,7 @@ The group index
 \begin{Example}{C}
 \begin{verbatim}
 index = CCTK_GroupIndex("evolve::phivars")
-numlevels = CCTK_DeclaredTimelevelsGI(index);
+numlevels = CCTK_DeclaredTimeLevelsGI(index);
 \end{verbatim}
 \end{Example}
 \begin{Example}{Fortran}
@@ -2701,12 +2755,12 @@ call CCTK_DECLAREDTIMELEVELSGI(numlevels,3)}
 
 
 % Groups.c
-\begin{FunctionDescription}{CCTK\_DeclaredTimelevelsGN}
-\label{CCTK-DeclaredTimelevelsGN}
+\begin{FunctionDescription}{CCTK\_DeclaredTimeLevelsGN}
+\label{CCTK-DeclaredTimeLevelsGN}
 Gives the number of timelevels for a group
 \begin{SynopsisSection}
 \begin{Synopsis}{C}
-\begin{verbatim}int retval = CCTK_DeclaredTimelevelsGN(const char *group);\end{verbatim}
+\begin{verbatim}int retval = CCTK_DeclaredTimeLevelsGN(const char *group);\end{verbatim}
 \end{Synopsis}
 \end{SynopsisSection}
 
@@ -2730,14 +2784,14 @@ This function and its relatives return the maximum number of timelevels that the
 
 
 % Groups.c
-\begin{FunctionDescription}{CCTK\_DeclaredTimelevelsVI}{Gives the number of timelevels for a variable}
-\label{CCTK-DeclaredTimelevelsVI}
+\begin{FunctionDescription}{CCTK\_DeclaredTimeLevelsVI}{Gives the number of timelevels for a variable}
+\label{CCTK-DeclaredTimeLevelsVI}
 \begin{SynopsisSection}
 \begin{Synopsis}{C}
-\begin{verbatim}int numlevels = CCTK_DeclaredTimelevelsVI( int index)\end{verbatim}
+\begin{verbatim}int numlevels = CCTK_DeclaredTimeLevelsVI( int index)\end{verbatim}
 \end{Synopsis}
 \begin{Synopsis}{Fortran}
-\begin{verbatim}call CCTK_DeclaredTimelevelsVI(numlevels , index )
+\begin{verbatim}call CCTK_DeclaredTimeLevelsVI(numlevels , index )
 
 integer numlevels
 integer index\end{verbatim}
@@ -2756,7 +2810,7 @@ The variable index
 \begin{Example}{C}
 \begin{verbatim}
 index = CCTK_VarIndex("evolve::phi")
-numlevels = CCTK_DeclaredTimelevelsVI(index);
+numlevels = CCTK_DeclaredTimeLevelsVI(index);
 \end{verbatim}
 \end{Example}
 \begin{Example}{Fortran}
@@ -2767,14 +2821,14 @@ call CCTK_DECLAREDTIMELEVELSVI(numlevels,3)
 \end{ExampleSection}
 \end{FunctionDescription}
 
-\begin{FunctionDescription}{CCTK\_DeclaredTimelevelsVN}{Gives the number of timelevels for a variable}
-\label{CCTK-DeclaredTimelevelsVN}
+\begin{FunctionDescription}{CCTK\_DeclaredTimeLevelsVN}{Gives the number of timelevels for a variable}
+\label{CCTK-DeclaredTimeLevelsVN}
 \begin{SynopsisSection}
 \begin{Synopsis}{C}
-\begin{verbatim}int numlevels = CCTK_DeclaredTimelevelsVN( const char * name)\end{verbatim}
+\begin{verbatim}int numlevels = CCTK_DeclaredTimeLevelsVN( const char * name)\end{verbatim}
 \end{Synopsis}
 \begin{Synopsis}{Fortran}
-\begin{verbatim}call CCTK_DeclaredTimelevelsVN(numlevels , name )
+\begin{verbatim}call CCTK_DeclaredTimeLevelsVN(numlevels , name )
 
 integer numlevels
 character*(*) name\end{verbatim}
@@ -2794,7 +2848,7 @@ The variable name should be in the form \code{<implementation>::<variable>}
 \begin{ExampleSection}
 \begin{Example}{C}
 \begin{verbatim}
-numlevels = CCTK_DeclaredTimelevelsVN("evolve::phi")
+numlevels = CCTK_DeclaredTimeLevelsVN("evolve::phi")
 \end{verbatim}
 \end{Example}
 \begin{Example}{Fortran}
@@ -3286,11 +3340,11 @@ Abort the code
 \begin{SeeAlso2}{CCTK\_Exit}{CCTK-Exit}
 Exit the code cleanly
 \end{SeeAlso2}
-\begin{SeeAlso2}{CCTK\_VError}{CCTK-VError}
-prints an error message with a variable argument list
+\begin{SeeAlso2}{CCTK\_VERROR}{CCTK-VERROR}
+macro to print an error message with a variable argument list
 \end{SeeAlso2}
-\begin{SeeAlso2}{CCTK\_VWarn}{CCTK-VWarn}
-Prints a formatted string with a variable argument list as a warning
+\begin{SeeAlso2}{CCTK\_VWARN}{CCTK-VWARN}
+macro to print a formatted string with a variable argument list as a warning
 message to standard error and possibly stops the code
 \end{SeeAlso2}
 \begin{SeeAlso2}{CCTK\_WARN}{CCTK-WARN}
@@ -3378,11 +3432,11 @@ Abort the code
 \begin{SeeAlso2}{CCTK\_Exit}{CCTK-Exit}
 Exit the code cleanly
 \end{SeeAlso2}
-\begin{SeeAlso2}{CCTK\_VError}{CCTK-VError}
-prints an error message with a variable argument list
+\begin{SeeAlso2}{CCTK\_VERROR}{CCTK-VERROR}
+macro to print an error message with a variable argument list
 \end{SeeAlso2}
-\begin{SeeAlso2}{CCTK\_VWarn}{CCTK-VWarn}
-Prints a formatted string with a variable argument list as a warning
+\begin{SeeAlso2}{CCTK\_VWARN}{CCTK-VWARN}
+macro to print a formatted string with a variable argument list as a warning
 message to standard error and possibly stops the code
 \end{SeeAlso2}
 \begin{SeeAlso2}{CCTK\_WARN}{CCTK-WARN}
@@ -3713,7 +3767,7 @@ Given a variable index, returns the full name of the variable.
 
 
 \begin{FunctionDescription}{CCTK\_FullVarName}{Given a variable index, returns the full name of the variable}
-\label{CCTK-FullName}
+\label{CCTK-FullVarName}
 \begin{SynopsisSection}
 \begin{Synopsis}{C}
 \begin{verbatim}const char * fullname = CCTK_FullVarName( int index)\end{verbatim}
@@ -6344,16 +6398,16 @@ in a \code{CCTK\_INFO} macro.
 macro to print an error message with a single string argument and stop
 the code
 \end{SeeAlso2}
-\begin{SeeAlso2} {CCTK\_VError} {CCTK-VError}
-prints a formatted string with a variable argument list as error
+\begin{SeeAlso2} {CCTK\_VERROR} {CCTK-VERROR}
+macro to print a formatted string with a variable argument list as error
 message and stops the code
 \end{SeeAlso2}
-\begin{SeeAlso2} {CCTK\_VInfo()} {CCTK-VInfo}
-prints a formatted string with a variable argument list as an info message to
-screen
+\begin{SeeAlso2} {CCTK\_VINFO()} {CCTK-VINFO}
+macro to print a formatted string with a variable argument list as an
+info message to screen
 \end{SeeAlso2}
-\begin{SeeAlso2} {CCTK\_VWarn} {CCTK-VWarn}
-prints a warning message with a variable argument list
+\begin{SeeAlso2} {CCTK\_VWARN} {CCTK-VWARN}
+macro to print a warning message with a variable argument list
 \end{SeeAlso2}
 \begin{SeeAlso2} {CCTK\_WARN} {CCTK-WARN}
 macro to print a warning message with a single string argument and
@@ -6425,16 +6479,16 @@ is used to print a message rather than calling \code{CCTK\_Info} directly.
 macro to print an error message with a single string argument and stop
 the code
 \end{SeeAlso2}
-\begin{SeeAlso2} {CCTK\_VError} {CCTK-VError}
-prints a formatted string with a variable argument list as error
+\begin{SeeAlso2} {CCTK\_VERROR} {CCTK-VERROR}
+macro to print a formatted string with a variable argument list as error
 message and stops the code
 \end{SeeAlso2}
-\begin{SeeAlso2} {CCTK\_VInfo()} {CCTK-VInfo}
-prints a formatted string with a variable argument list as an info message to
-screen
+\begin{SeeAlso2} {CCTK\_VINFO} {CCTK-VINFO}
+macro to print a formatted string with a variable argument list as an
+info message to screen
 \end{SeeAlso2}
-\begin{SeeAlso2} {CCTK\_VWarn} {CCTK-VWarn}
-prints a warning message with a variable argument list
+\begin{SeeAlso2} {CCTK\_VWARN} {CCTK-VWARN}
+macro to print a warning message with a variable argument list
 \end{SeeAlso2}
 \begin{SeeAlso2} {CCTK\_WARN} {CCTK-WARN}
 macro to print a warning message with a single string argument and
@@ -8511,7 +8565,7 @@ end subroutine CCTK_MaxActiveTimeLevelsVN
 \begin{ResultSection}
 \begin{Result}{timelevels}
 The largest number of timelevels that were ever active for the group or the
-result of \code{CCTK\_DeclaredTimelevels}, whichever is larger.
+result of \code{CCTK\_DeclaredTimeLevels}, whichever is larger.
 \end{Result}
 \end{ResultSection}
 
@@ -8537,11 +8591,11 @@ Index of a variable in the group.
 This function returns the number of timelevels for which storage has
 ever been request either through an actual storage request or via the
 \code{TIMELEVELS} attribute in \texttt{interface.ccl}. This is always
-at least as large as \code{CCTK\_DeclaredTimelevels}.
+at least as large as \code{CCTK\_DeclaredTimeLevels}.
 \end{Discussion}
 
 \begin{SeeAlsoSection}
-\begin{SeeAlso2}{CCTK\_DeclaredTimelevels}{CCTK-DeclaredTimelevels}
+\begin{SeeAlso2}{CCTK\_DeclaredTimeLevels}{CCTK-DeclaredTimeLevels}
 Return the maximum number of timelevels in \code{interface.ccl}.
 \end{SeeAlso2}
 \begin{SeeAlso2}{CCTK\_GroupStorageDecrease}{CCTK-GroupStorageDecrease}
@@ -9604,6 +9658,56 @@ parameter as used.
 No parameter with that name was found.
 \end{Error}
 \end{ErrorSection}
+\end{FunctionDescription}
+
+
+% ProcessCommandline.c
+%Entering a function desctiption for CCTK\_ParamterFile
+\begin{FunctionDescription}{CCTK\_ParameterFilename}
+\label{CCTK-ParameterFilename}
+Returns the parameter filename.
+
+\begin{SynopsisSection}
+\begin{Synopsis}{C}
+\begin{verbatim}
+#include "cctk.h"
+int retval = CCTK_ParameterFilename(int len, char *filename)
+\end{verbatim}
+\end{Synopsis}
+\begin{Synopsis}{Fortran}
+\begin{verbatim}
+call CCTK_ParameterFilename(retval, len, filename)
+INTEGER :: retval, len
+CHARACTER(*) :: filename
+\end{verbatim}
+\end{Synopsis}
+\end{SynopsisSection}
+
+\begin{ResultSection}
+\begin{Result}{retval}
+The length of the returned string.
+\end{Result}
+\end{ResultSection}
+
+\begin{ParameterSection}
+\begin{Parameter}{len}
+The length of the incoming string
+\end{Parameter}
+\begin{Parameter}{filename}
+String to contain the filename
+\end{Parameter}
+\end{ParameterSection}
+
+\begin{Discussion}
+Returns the name of the parameter file given to Cactus, up to len characters
+in length and guaranteed to be NUL terminated.
+\end{Discussion}
+
+\begin{SeeAlsoSection}
+\begin{SeeAlso2}{CCTK\_CommandLine}{CCTK-CommandLine}
+Gets the command line arguments.
+\end{SeeAlso2}
+\end{SeeAlsoSection}
 \end{FunctionDescription}
 
 
@@ -13279,6 +13383,84 @@ function returns the size in bytes of the corresponding data type
 \end{FunctionDescription}
 
 
+%Entering a function description for CCTK_VERROR
+\begin{FunctionDescription}{CCTK\_VERROR}
+\label{CCTK-VERROR}
+Prints a formatted string with a variable argument list as error
+message and stops the code
+
+\begin{SynopsisSection}
+\begin{Synopsis}{C}
+\begin{verbatim}
+#include <cctk.h>
+
+void CCTK_VERROR(const char *format, ...);
+\end{verbatim}
+\end{Synopsis}
+\end{SynopsisSection}
+
+\begin{ParameterSection}
+\begin{Parameter}{format}
+The \code{printf}-like format string to use for printing the warning message.
+\end{Parameter}
+\begin{Parameter}{...}
+The \code{printf}-style variable argument list.
+\end{Parameter}
+\end{ParameterSection}
+
+\begin{Discussion}
+This routine can be used by thorns to print a formatted string
+followed by a variable argument list as error message to
+\code{stderr}. After printing the message, Cactus aborts the run (and
+\code{CCTK\_VERROR} does \emph{not} return to the caller).
+
+This macro can be used by thorns to print an info message to screen.
+
+The macro \code{CCTK\_VERROR(...)} expands to a call to the
+underlying function \code{CCTK\_VError}:
+
+\begin{verbatim}
+CCTK_VError(CCTK_THORNSTRING, ...)
+\end{verbatim}
+
+So the macro automatically includes the name of the originating thorn in the
+info message. It is recommended that the macro \code{CCTK\_VERROR} is used
+to print a message rather than calling \code{CCTK\_VError} directly.
+\end{Discussion}
+
+\begin{SeeAlsoSection}
+\begin{SeeAlso2}{CCTK\_Abort}{CCTK-Abort}
+Abort the code
+\end{SeeAlso2}
+\begin{SeeAlso2} {CCTK\_ERROR} {CCTK-ERROR}
+macro to print an error message with a single string argument
+\end{SeeAlso2}
+\begin{SeeAlso2}{CCTK\_Exit}{CCTK-Exit}
+Exit the code cleanly
+\end{SeeAlso2}
+\begin{SeeAlso2} {CCTK\_VWARN} {CCTK-VWARN}
+Possibly prints a formatted string with a variable argument list as
+warning message and/or stops the code
+\end{SeeAlso2}
+\begin{SeeAlso2} {CCTK\_WARN} {CCTK-WARN}
+macro to print a warning message with a single string argument
+\end{SeeAlso2}
+\end{SeeAlsoSection}
+
+\begin{ExampleSection}
+\begin{Example}{C}
+\begin{verbatim}
+#include <cctk.h>
+
+const char *outdir;
+
+CCTK_VERROR("Output directory '%s' could not be created", outdir);
+\end{verbatim}
+\end{Example}
+\end{ExampleSection}
+\end{FunctionDescription}
+
+
 %Entering a function description for CCTK_VError
 \begin{FunctionDescription}{CCTK\_VError}
 \label{CCTK-VError}
@@ -13354,6 +13536,85 @@ const char *outdir;
 
 CCTK_VError(__LINE__, __FILE__, CCTK_THORNSTRING,
            "Output directory '%s' could not be created", outdir);
+\end{verbatim}
+\end{Example}
+\end{ExampleSection}
+\end{FunctionDescription}
+
+
+%Entering a function description for CCTK_VINFO
+\begin{FunctionDescription}{CCTK\_VINFO}
+\label{CCTK-VINFO}
+Macro to print a printf-style variable argument list an information
+message to screen
+
+\begin{SynopsisSection}
+\begin{Synopsis}{C}
+\begin{verbatim}
+#include <cctk.h>
+
+CCTK_VINFO(const char *format, ...);
+\end{verbatim}
+\end{Synopsis}
+\end{SynopsisSection}
+
+\begin{ResultSection}
+\begin{Result}{0} ok \end{Result}
+\end{ResultSection}
+
+\begin{ParameterSection}
+\begin{Parameter}{format}
+The \code{printf}-like format string to use for printing the info message.
+\end{Parameter}
+\begin{Parameter}{...}
+The variable argument list.
+\end{Parameter}
+\end{ParameterSection}
+
+\begin{Discussion}
+This macro can be used by thorns to print an info message to screen.
+
+The macro \code{CCTK\_VINFO(...)} expands to a call to the
+underlying function \code{CCTK\_VInfo}:
+
+\begin{verbatim}
+CCTK_VInfo(CCTK_THORNSTRING, ...)
+\end{verbatim}
+
+So the macro automatically includes the name of the originating thorn in the
+info message. It is recommended that the macro \code{CCTK\_VINFO} is used
+to print a message rather than calling \code{CCTK\_VInfo} directly.
+\end{Discussion}
+
+\begin{SeeAlsoSection}
+\begin{SeeAlso2} {CCTK\_ERROR} {CCTK-ERROR}
+macro to print an error message with a single string argument and stop
+the code
+\begin{SeeAlso2} {CCTK\_INFO()} {CCTK-INFO}
+macro to print an info message with a single string argument to screen
+\end{SeeAlso2}
+\end{SeeAlso2}
+\begin{SeeAlso2} {CCTK\_VERROR} {CCTK-VERROR}
+macro to print a formatted string with a variable argument list as error
+message and stops the code
+\end{SeeAlso2}
+\begin{SeeAlso2} {CCTK\_VWARN} {CCTK-VWARN}
+macro to print a warning message with a variable argument list
+\end{SeeAlso2}
+\begin{SeeAlso2} {CCTK\_WARN} {CCTK-WARN}
+macro to print a warning message with a single string argument and
+possibly stop the code
+\end{SeeAlso2}
+\end{SeeAlsoSection}
+
+\begin{ExampleSection}
+\begin{Example}{C}
+\begin{verbatim}
+#include <cctk.h>
+
+const char *outdir;
+
+CCTK_VINFO("Output files will go to '%s'", outdir);
 \end{verbatim}
 \end{Example}
 \end{ExampleSection}
@@ -13481,6 +13742,149 @@ Prints a warning from parameter checking, and possibly stops the code
 \end{SeeAlso2}
 \end{SeeAlsoSection}
 \end{FunctionDescription}
+
+
+%Entering a function description for CCTK_VWARN
+\begin{FunctionDescription}{CCTK\_VWARN}
+\label{CCTK-VWARN}
+Possibly prints a formatted string with a variable argument list as
+warning message and/or stops the code
+
+\begin{SynopsisSection}
+\begin{Synopsis}{C}
+\begin{verbatim}
+#include <cctk.h>
+
+int status = CCTK_VWARN(int level,
+                        const char *format,
+                        ...);
+\end{verbatim}
+\end{Synopsis}
+\end{SynopsisSection}
+
+\begin{ResultSection}
+\begin{Result}{0}
+ok%%%
+\end{Result}
+\end{ResultSection}
+
+\begin{ParameterSection}
+\begin{Parameter}{level ($\ge 0$)}
+The warning level for the message to print, with level~0 being the
+severest level and greater levels being less severe.
+\end{Parameter}
+\begin{Parameter}{format}
+The \code{printf}-like format string to use for printing the warning message.
+\end{Parameter}
+\begin{Parameter}{...}
+The \code{printf}-style variable argument list.
+\end{Parameter}
+\end{ParameterSection}
+
+\begin{Discussion}
+This routine can be used by thorns to print a formatted string followed
+by a variable argument list as a warning message to \code{stderr}.  If
+the message's ``warning level'' is severe enough, then after printing
+the message Cactus aborts the run (and \code{CCTK\_VWARN} does {\em not\/}
+return to the caller).
+
+\code{CCTK\_VWARN(level, ...)} expands to a call to \verb|CCTK_Warn()|
+function which is equivalent to \verb|CCTK_VWarn()|.
+The macro automatically includes details about the origin of the warning
+(the thorn name, the source code file name and the line number where the macro
+occurs).
+
+Cactus's behavior when \code{CCTK\_VWARN} is called depends on the
+\code{-W} and \code{-E} command-line options:
+\begin{itemize}
+\item   Cactus prints any warning with a warning level $\le$
+        the \code{-W} level to standard error (any warnings with
+        warning levels $>$ the \code{-W} level are silently discarded).
+        The default \code{-W} level is~1, \ie{} only level~0 and level~1
+        warnings will be printed.
+\item   Cactus stops (aborts) the current run for any warning
+        with a warning level $\le$ the \code{-E} level.
+        The default \code{-W} level is~0, \ie{} only level~0
+        warnings will abort the run.
+\end{itemize}
+
+Cactus guarantees that
+$\hbox{the \code{-W}~level} \ge \hbox{the \code{-E}~level} \ge 0$.
+This implies that a message will always be printed for any warning that's
+severe enough to halt the Cactus run.  It also implies that a level~0
+warning is guaranteed (to be printed and) to halt the Cactus run.
+
+The severity level may actually be any integer, and a lot of existing
+code uses bare ``magic number'' integers for warning levels, but to
+help standardize warning levels across thorns, new code should probably
+use one of the following macros, defined in \verb|"cctk_WarnLevel.h"|
+(which is \verb|#include|d by \verb|"cctk.h"|):
+\begin{verbatim}
+#define CCTK_WARN_ABORT    0    /* abort the Cactus run */
+#define CCTK_WARN_ALERT    1    /* the results of this run will probably */
+                                /* be wrong, but this isn't quite certain, */
+                                /* so we're not going to abort the run */
+#define CCTK_WARN_COMPLAIN 2    /* the user should know about this, but */
+                                /* the results of this run are probably ok */
+#define CCTK_WARN_PICKY    3    /* this is for small problems that can */
+                                /* probably be ignored, but that careful */
+                                /* people may want to know about */
+#define CCTK_WARN_DEBUG    4    /* these messages are probably useful */
+                                /* only for debugging purposes */
+\end{verbatim}
+
+For example, to provide a warning for a serious problem, which
+indicates that the results of the run are quite likely wrong,
+and which will be printed to the screen by default,
+a level~\verb|CCTK_WARN_ALERT| warning should be used.
+
+In any case, the Boolean flesh parameter \code{cctk\_full\_warnings}
+determines whether all the details about the warning origin (processor~ID,
+line number, source file, source thorn) are shown. The default is to
+print everything.
+\end{Discussion}
+
+\begin{SeeAlsoSection}
+\begin{SeeAlso2}{CCTK\_Abort}{CCTK-Abort}
+Abort the code
+\end{SeeAlso2}
+\begin{SeeAlso2} {CCTK\_ERROR} {CCTK-ERROR}
+macro to print an error message with a single string argument and stop
+the code
+\end{SeeAlso2}
+\begin{SeeAlso2}{CCTK\_Exit}{CCTK-Exit}
+Exit the code cleanly
+\end{SeeAlso2}
+\begin{SeeAlso2} {CCTK\_INFO} {CCTK-INFO}
+macro to print an info message with a single string argument
+\end{SeeAlso2}
+\begin{SeeAlso2} {CCTK\_VINFO()} {CCTK-VINFO}
+prints a formatted string with a variable argument list as an info message to
+screen
+\end{SeeAlso2}
+\begin{SeeAlso2} {CCTK\_VERROR} {CCTK-VERROR}
+prints a formatted string with a variable argument list as error
+message and stops the code
+\end{SeeAlso2}
+\begin{SeeAlso2} {CCTK\_WARN} {CCTK-WARN}
+macro to print a warning message with a single string argument
+\end{SeeAlso2}
+\end{SeeAlsoSection}
+
+\begin{ExampleSection}
+\begin{Example}{C}
+\begin{verbatim}
+#include <cctk.h>
+
+const char *outdir;
+
+CCTK_VWarn(CCTK_WARN_ALERT, __LINE__, __FILE__, CCTK_THORNSTRING,
+           "Output directory '%s' could not be created", outdir);
+\end{verbatim}
+\end{Example}
+\end{ExampleSection}
+\end{FunctionDescription}
+
 
 %Entering a function description for CCTK_VWarn
 \begin{FunctionDescription}{CCTK\_VWarn}
@@ -13611,11 +14015,11 @@ Exit the code cleanly
 \begin{SeeAlso2} {CCTK\_INFO} {CCTK-INFO}
 macro to print an info message with a single string argument
 \end{SeeAlso2}
-\begin{SeeAlso2} {CCTK\_VInfo()} {CCTK-VInfo}
+\begin{SeeAlso2} {CCTK\_VINFO()} {CCTK-VINFO}
 prints a formatted string with a variable argument list as an info message to
 screen
 \end{SeeAlso2}
-\begin{SeeAlso2} {CCTK\_VError} {CCTK-VError}
+\begin{SeeAlso2} {CCTK\_VERROR} {CCTK-VERROR}
 prints a formatted string with a variable argument list as error
 message and stops the code
 \end{SeeAlso2}
@@ -13631,7 +14035,7 @@ macro to print a warning message with a single string argument
 
 const char *outdir;
 
-CCTK_VWarn(CCTK_WARN_ALERT, __LINE__, __FILE__, CCTK_THORNSTRING,
+CCTK_VWARN(CCTK_WARN_ALERT,
            "Output directory '%s' could not be created", outdir);
 \end{verbatim}
 \end{Example}
@@ -13719,19 +14123,22 @@ the code
 \begin{SeeAlso2}{CCTK\_Exit}{CCTK-Exit}
 Exit the code cleanly
 \end{SeeAlso2}
+\begin{SeeAlso2} {CCTK\_ERROR} {CCTK-ERROR}
+macro to print an error message an abort the code
+\end{SeeAlso2}
 \begin{SeeAlso2} {CCTK\_INFO} {CCTK-INFO}
 macro to print an info message with a single string argument
 \end{SeeAlso2}
-\begin{SeeAlso2} {CCTK\_VError} {CCTK-VError}
-prints a formatted string with a variable argument list as error
+\begin{SeeAlso2} {CCTK\_VERROR} {CCTK-VERROR}
+macro to print a formatted string with a variable argument list as error
 message and stops the code
 \end{SeeAlso2}
-\begin{SeeAlso2} {CCTK\_VInfo()} {CCTK-VInfo}
-prints a formatted string with a variable argument list as an info message to
-screen
+\begin{SeeAlso2} {CCTK\_VINFO} {CCTK-VINFO}
+macro to print a formatted string with a variable argument list as an
+info message to screen
 \end{SeeAlso2}
-\begin{SeeAlso2} {CCTK\_VWarn} {CCTK-VWarn}
-prints a warning message with a variable argument list
+\begin{SeeAlso2} {CCTK\_VWARN} {CCTK-VWARN}
+macro to print a warning message with a variable argument list
 \end{SeeAlso2}
 \end{SeeAlsoSection}
 
@@ -13819,12 +14226,18 @@ Abort the code
 \begin{SeeAlso2}{CCTK\_Exit}{CCTK-Exit}
 Exit the code cleanly
 \end{SeeAlso2}
-\begin{SeeAlso2}{CCTK\_VWarn}{CCTK-VWarn}
-prints an error message with a variable argument list
+\begin{SeeAlso2}{CCTK\_INFO}{CCTK-INFO}
+macro to print an info message
 \end{SeeAlso2}
-\begin{SeeAlso2}{CCTK\_VWarn}{CCTK-VWarn}
-Prints a formatted string with a variable argument list as a warning
-message to standard error and possibly stops the code
+\begin{SeeAlso2}{CCTK\_VERROR}{CCTK-VERROR}
+macro to print an error message with a variable argument list
+\end{SeeAlso2}
+\begin{SeeAlso2}{CCTK\_VINFO}{CCTK-VINFO}
+macro to print an info message with a variable argument list
+\end{SeeAlso2}
+\begin{SeeAlso2}{CCTK\_VWARN}{CCTK-VWARN}
+macro to print a formatted string with a variable argument list as a
+warning message to standard error and possibly stops the code
 \end{SeeAlso2}
 \begin{SeeAlso2}{CCTK\_WARN}{CCTK-WARN}
 Macro to print a single string as a warning message and possibly stop the code

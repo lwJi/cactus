@@ -7,6 +7,8 @@
 #  @enddesc 
 #@@*/
 
+use lib ".";
+
 #/*@@
 #  @routine    SplitThorns
 #  @date       Mon May  8 16:04:59 2000

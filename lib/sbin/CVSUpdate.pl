@@ -16,6 +16,7 @@ my $svn_ops="";
 my $cvs_symbolic_name="";
 my $svn_symbolic_name="";
 
+use lib ".";
 require "lib/sbin/MakeUtils.pl";
 
 $debug = 0;

@@ -1,8 +1,10 @@
+# The grammar for the schedule.ccl file
 skipper = \b([\ \t\n\r\b]|{-ccomment}|\#[^\n]*|\\[\r\n])*
 
 any = [^]
 name = (?i:[a-zA-Z_][a-zA-Z0-9_\-]*\b)
 expr = {name}|{num}
+# TODO: Should this be a * or a ?
 vname = {name}( :: {name})*( \[ {expr} \]|)
 quote = "(\\{any}|[^"])*"
 ccomment = /\*((?!\*/){-any})*\*/
@@ -31,7 +33,7 @@ boolterm = (?i:{boolneg}
 boolop = (&&|\|\|)
 boolcmp = (>=|<=|==|!=|<|>)
 boolexpr = {boolterm} ({boolop} {boolexpr} )+
-	     | {term} {boolcmp} {term} | {boolterm}
+     | {term} {boolcmp} {term} | {boolterm}
 
 lang = (?i:lang(uage|) : {name})
 group = (?i:group)
@@ -44,27 +46,29 @@ storage = (?i:storage) : {vname}( , {vname}|[ \t]{vname})*
 triggers = (?i:triggers?) : {vname}( , {vname}|[ \t]{vname})*
 reads = (?i:reads) : {qname}( , {qname}|[ \t]{qname})*
 writes = (?i:writes) : {qname}( , {qname}|[ \t]{qname})*
-qname = {vname}(\({region}(;{region})*\))?
-region = (everywhere|interior|boundary_ghostzones|boundary|all_timelevels|all_maps|all_reflevels)
+qname = {vname}(\({region}\))?
+region = (?i:everywhere|interior|boundarywithghosts|boundary)
 tags = (?i:tags) : {assign}( , {assign}|[ \t]{assign})*
 schedule = (?i:
-	schedule ({group}|{nogroup}) {name} {prepositions} \{
-		( {storage}
+  schedule ({group}|{nogroup}) {name} {prepositions} \{
+    ( {storage}
         | {lang}
-		| {sync}
-		| {options}
-		| {triggers}
+        | {sync}
+        | {options}
+        | {triggers}
         | {reads}
         | {writes}
         | {tags}
-		)*
-	\} {quote}
-  )
+    )*
+ \} {quote}
+ )
+else = else
+ifbody = {block} ({else} {if}|{else} {block}|)
 if = (?i:
-	if \( {boolexpr} \) {block} (else {if}|else {block}|)
+  if \( {boolexpr} \) {ifbody}
   )
 storage = (?i:storage: {vname}( , {vname}|([ \t]|\\\r?\n)+{vname})* )
 block = \{ (({statement}|{block}) )* \} | {statement}
-	
+
 statement = ({schedule} |{if} |{storage} )
-sched = {-skipper}({statement}|{block})*$
+sched = ^ ({statement} |{block} )*$

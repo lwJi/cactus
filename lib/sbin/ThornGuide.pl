@@ -1,6 +1,7 @@
 #!/usr/local/bin/perl
 
 use strict;
+use lib ".";
 use vars qw($h $help $cctk_home $thornlist $directory $outdir $verbose $debug $outfile $tocdepth);
 #$debug = 1;
 

@@ -14,6 +14,7 @@
 #  @endhistory
 #@@*/
 
+use lib ".";
 require "$sbin_dir/CSTUtils.pl";
 
 sub BuildHeaders
