@@ -282,8 +282,8 @@ for $dim (1,2,3,4) {
         (rpt (bsnl '    const int cctki0_[C]min = (cctki0_[C]min_);')),
         (rpt (bsnl '    const int cctki0_[C]max = (cctki0_[C]max_);')),
         (rpt (bsnl '    const int cctki0_[C]ash CCTK_ATTRIBUTE_UNUSED = (cctki0_[C]ash_);')),
-        (bsnl '    const int cctki0_ialn = (cctki0_ialn_);'),
-        (bsnl '    const int cctki0_ioff = (cctki0_ioff_);'),
+        (bsnl '    const int cctki0_ialn CCTK_ATTRIBUTE_UNUSED = (cctki0_ialn_);'),
+        (bsnl '    const int cctki0_ioff CCTK_ATTRIBUTE_UNUSED = (cctki0_ioff_);'),
         (bsnl '    const int cctki0_istr = (cctki0_istr_);'),
         # Ensure alignment is positive
         (bsnl '    assert(cctki0_ialn>0);'),

@@ -88,8 +88,8 @@
     const int cctki0_imin = (cctki0_imin_); \
     const int cctki0_imax = (cctki0_imax_); \
     const int cctki0_iash CCTK_ATTRIBUTE_UNUSED = (cctki0_iash_); \
-    const int cctki0_ialn = (cctki0_ialn_); \
-    const int cctki0_ioff = (cctki0_ioff_); \
+    const int cctki0_ialn CCTK_ATTRIBUTE_UNUSED = (cctki0_ialn_); \
+    const int cctki0_ioff CCTK_ATTRIBUTE_UNUSED = (cctki0_ioff_); \
     const int cctki0_istr = (cctki0_istr_); \
     assert(cctki0_ialn>0); \
     assert(cctki0_ioff>=0 && cctki0_ioff<cctki0_ialn); \
@@ -1188,8 +1188,8 @@
     const int cctki0_jmax = (cctki0_jmax_); \
     const int cctki0_iash CCTK_ATTRIBUTE_UNUSED = (cctki0_iash_); \
     const int cctki0_jash CCTK_ATTRIBUTE_UNUSED = (cctki0_jash_); \
-    const int cctki0_ialn = (cctki0_ialn_); \
-    const int cctki0_ioff = (cctki0_ioff_); \
+    const int cctki0_ialn CCTK_ATTRIBUTE_UNUSED = (cctki0_ialn_); \
+    const int cctki0_ioff CCTK_ATTRIBUTE_UNUSED = (cctki0_ioff_); \
     const int cctki0_istr = (cctki0_istr_); \
     assert(cctki0_ialn>0); \
     assert(cctki0_ioff>=0 && cctki0_ioff<cctki0_ialn); \
@@ -2347,8 +2347,8 @@
     const int cctki0_iash CCTK_ATTRIBUTE_UNUSED = (cctki0_iash_); \
     const int cctki0_jash CCTK_ATTRIBUTE_UNUSED = (cctki0_jash_); \
     const int cctki0_kash CCTK_ATTRIBUTE_UNUSED = (cctki0_kash_); \
-    const int cctki0_ialn = (cctki0_ialn_); \
-    const int cctki0_ioff = (cctki0_ioff_); \
+    const int cctki0_ialn CCTK_ATTRIBUTE_UNUSED = (cctki0_ialn_); \
+    const int cctki0_ioff CCTK_ATTRIBUTE_UNUSED = (cctki0_ioff_); \
     const int cctki0_istr = (cctki0_istr_); \
     assert(cctki0_ialn>0); \
     assert(cctki0_ioff>=0 && cctki0_ioff<cctki0_ialn); \
@@ -3565,8 +3565,8 @@
     const int cctki0_jash CCTK_ATTRIBUTE_UNUSED = (cctki0_jash_); \
     const int cctki0_kash CCTK_ATTRIBUTE_UNUSED = (cctki0_kash_); \
     const int cctki0_lash CCTK_ATTRIBUTE_UNUSED = (cctki0_lash_); \
-    const int cctki0_ialn = (cctki0_ialn_); \
-    const int cctki0_ioff = (cctki0_ioff_); \
+    const int cctki0_ialn CCTK_ATTRIBUTE_UNUSED = (cctki0_ialn_); \
+    const int cctki0_ioff CCTK_ATTRIBUTE_UNUSED = (cctki0_ioff_); \
     const int cctki0_istr = (cctki0_istr_); \
     assert(cctki0_ialn>0); \
     assert(cctki0_ioff>=0 && cctki0_ioff<cctki0_ialn); \
