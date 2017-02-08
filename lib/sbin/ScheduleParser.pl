@@ -240,6 +240,11 @@ sub parse_schedule_statement
                 $options .= "," unless($options eq "");
                 $options .= $opt->substring(); 
               }
+            } elsif($child->is("tags")) {
+              for my $tag (@{$child->{children}}) {
+                $tags .= "," unless($tags eq "");
+                $tags .= $tag->substring(); 
+              }
             } elsif($child->is("storage")) {
               for my $vname (@{$child->{children}}) {
                 if($vname->is("vname")) {
