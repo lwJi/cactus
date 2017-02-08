@@ -1064,7 +1064,6 @@ sub CheckExpression
     $retval = 1;
   }
 
-  print "RETVAL=$retval\n";
   return $retval;
 }
 

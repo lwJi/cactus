@@ -277,6 +277,15 @@ sub parse_schedule_statement
                   $trigger_groups .= vname($vname);
                 }
               }
+            } elsif($child->is("tags")) {
+              for my $ch (@{$child->{children}}) {
+                if(!defined($tags)) {
+                  $tags = "";
+                } else {
+                  $tags .= " ";
+                }
+                $tags .= $ch->substring();
+              }
             } else {
               confess("child error: ".$child->{name});
             }
