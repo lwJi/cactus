@@ -98,7 +98,7 @@ sub getChar
     if($gr->groupCount()==1) {
         my $sub = gr->group(0)->substring();
         my $n = 0;
-        # Parse a hexidecimal coded character
+        # Parse a hexadecimal coded character
         for(my $i=0;$i<length($sub);$i++) {
             my $c = substr($sub,$i,1);
             if(ord($c) >= ord('0') && ord($c) <= ord('9')) {
