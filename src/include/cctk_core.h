@@ -398,7 +398,7 @@ static inline ptrdiff_t CCTK_VECTGFINDEX4D (const cGH *restrict cctkGH,
 #define CCTK_VINFO(...) CCTK_VInfo(CCTK_THORNSTRING,__VA_ARGS__)
 #define CCTK_VPARAMWARN(...) CCTK_VParamWarn(CCTK_THORNSTRING,__VA_ARGS__)
 #define CCTK_VWARN(level,...) \
-  CCTK_VWarn(__LINE__,__FILE__,CCTK_THORNSTRING,level,__VA_ARGS__)
+  CCTK_VWarn(level,__LINE__,__FILE__,CCTK_THORNSTRING,__VA_ARGS__)
 #define CCTK_VERROR(...) \
   CCTK_VError(__LINE__,__FILE__,CCTK_THORNSTRING,__VA_ARGS__)
 
