@@ -329,9 +329,8 @@ sub ParseConfigurationCCL
   my $p=piraha::parse_src($grammar,$rule,$ccl_file);
   my $m = $p->matches();
   unless($m) {
-    print "CST ERROR IN FILE '$ccl_file' ";
-    $p->showError();
-    confess("Parse Error");
+    my $line = $p->showError();
+    &CST_fatal("Syntax Error",undef,$line,$ccl_file);
   }
     if(defined($ENV{CCTK_MAKE_TREE})) {
       my $fd = new FileHandle;

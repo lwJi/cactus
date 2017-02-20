@@ -2017,6 +2017,7 @@ sub showError
   }
   print "FOUND CHARACTER: ",expand_char($c),"\n";
   print "EXPECTED CHARACTER(S): ",join(", ",@out2),"\n";
+  return $line;
 }
 
 sub upos

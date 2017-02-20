@@ -85,9 +85,8 @@ sub create_interface_database
     my $p=piraha::parse_src($grammar,$rule,$ccl_file);
     my $m = $p->matches();
     unless($m) {
-      print "CST ERROR IN FILE '$ccl_file' ";
-      $p->showError();
-      confess("Parse Error");
+      my $line = $p->showError();
+      &CST_fatal("Syntax Error",undef,$line,$ccl_file);
     }
     if(defined($ENV{CCTK_MAKE_TREE})) {
       my $fd = new FileHandle;
@@ -873,11 +872,8 @@ sub parse_interface_ccl
         my $ch=$fin->group($i);
         my $nm = $ch->{name};
         if(defined($items{$nm})) {
-          print "CST Error:\n";
-          print "Repeated element 'tag' in $gname\n";
-          print "Line: ",$ch->linenum(),"\n";
-          print "File: ",$ccl_file,"\n";
-          confess("Repeated item: $nm in $gname")
+          my $msg = "Repeated element 'tag' in $gname";
+          &CCT_fatal($msg,undef,$ch->linenum(),$ccl_file);
         }
         $items{$nm}++;
         if($nm eq "desc" or $nm eq "group_comment") {
