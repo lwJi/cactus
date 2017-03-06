@@ -2380,6 +2380,18 @@ static int CCTKi_SchedulePrintEntry(t_attribute *attribute,
   {
     printf("%*s %s: %s\n", indent_level + 5, "GROUP",
            attribute->FunctionData.routine,attribute->description);
+    if(attribute->FunctionData.n_SyncGroups > 0)
+    {
+      printf ("%*s", indent_level, " ");
+      printf("SYNC:");
+      for(int g = 0 ; g < attribute->FunctionData.n_SyncGroups ; g++)
+      {
+        char *groupname = CCTK_GroupName(attribute->FunctionData.SyncGroups[g]);
+        printf(" %s", groupname);
+        free(groupname);
+      }
+      printf("\n");
+    }
   }
 
   return 1;
@@ -2678,6 +2690,18 @@ static int CCTKi_SchedulePrintFunction(void *function,
          attribute->FunctionData.thorn, attribute->FunctionData.routine,
          mode, loop_mode,
          attribute->description);
+  if(attribute->FunctionData.n_SyncGroups > 0)
+  {
+    printf ("%*s", indent_level, " ");
+    printf("SYNC:");
+    for(int g = 0 ; g < attribute->FunctionData.n_SyncGroups ; g++)
+    {
+      char *groupname = CCTK_GroupName(attribute->FunctionData.SyncGroups[g]);
+      printf(" %s", groupname);
+      free(groupname);
+    }
+    printf("\n");
+  }
 
   return 1;
 }
