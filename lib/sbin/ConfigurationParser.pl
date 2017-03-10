@@ -13,6 +13,7 @@ use strict;
 
 use lib ".";
 my $ccl_file;
+my $syntax_ok = 1;
 
 #/*@@
 #  @routine    CreateConfigurationDatabase
@@ -93,6 +94,8 @@ sub CreateConfigurationDatabase
     print "| Config Parsing Complete |\n";
     print "+=========================+\n";
   }
+
+  return unless($syntax_ok);
 
   # Turn optional capabilities into required capabilities, if the
   # capability is provided. This way we don't have to treat required
@@ -329,17 +332,18 @@ sub ParseConfigurationCCL
   my $p=piraha::parse_src($grammar,$rule,$ccl_file);
   my $m = $p->matches();
   unless($m) {
-    my $line = $p->showError();
-    &CST_fatal("Syntax Error",undef,$line,$ccl_file);
+    my ($line,$msg) = $p->showError();
+    &CST_error(0,"Syntax Error","\n$msg",$line,$ccl_file);
+    $syntax_ok = 0;
   }
-    if(defined($ENV{CCTK_MAKE_TREE})) {
-      my $fd = new FileHandle;
-      open($fd,">tree.txt");
-      print $fd $ccl_file,"\n";
-      print $fd "=" x 50,"\n";
-      print $fd $p->{gr}->dump(),"\n";
-      close($fd);
-    }
+  if(defined($ENV{CCTK_MAKE_TREE})) {
+    my $fd = new FileHandle;
+    open($fd,">tree.txt");
+    print $fd $ccl_file,"\n";
+    print $fd "=" x 50,"\n";
+    print $fd $p->{gr}->dump(),"\n";
+    close($fd);
+  }
 
   for my $node (@{$p->{gr}->{children}}) {
     if($node->is("requires")) {
@@ -406,6 +410,8 @@ sub ParseConfigurationCCL
     }
   }
   $cfg1->{"\U$thorn\E REQUIRES THORNS"} = join(" ",sort @req_thorns);
+
+  return unless($syntax_ok);
 
   my $cfg2 = {};
   $cfg2->{"\U$thorn\E PROVIDES"} = '';

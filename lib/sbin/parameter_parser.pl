@@ -15,6 +15,7 @@
 use strict;
 use Carp;
 my $ccl_file;
+my $syntax_ok = 1;
 
 #/*@@
 #  @routine    create_parameter_database
@@ -45,8 +46,9 @@ sub create_parameter_database
     my $p=piraha::parse_src($grammar,$rule,$ccl_file);
     my $m = $p->matches();
     unless($m) {
-      my $line=$p->showError();
-      &CST_fatal("Syntax Error",undef,$line,$ccl_file);
+      my ($line,$help)=$p->showError();
+      &CST_error(0,"Syntax Error","\n$help",$line,$ccl_file);
+      $syntax_ok = 0;
     }
     if(defined($ENV{CCTK_MAKE_TREE})) {
       my $fd = new FileHandle;
@@ -353,6 +355,8 @@ sub parse_param_ccl
   }
   $parameter_db1{"\U$thorn SHARES\E implementations"} = 
     join(" ",sort keys %shares_implementations);
+
+  return unless($syntax_ok);
 
   # Initialise, to prevent perl -w from complaining.
   $parameter_db2{"\U$thorn PRIVATE\E variables"} = '';

@@ -2,6 +2,7 @@
 use strict;
 
 my $ccl_file = undef;
+my $syntax_ok = 1;
 
 use Carp;
 use FileHandle;
@@ -85,8 +86,9 @@ sub create_interface_database
     my $p=piraha::parse_src($grammar,$rule,$ccl_file);
     my $m = $p->matches();
     unless($m) {
-      my $line = $p->showError();
-      &CST_fatal("Syntax Error",undef,$line,$ccl_file);
+      my ($line,$msg) = $p->showError();
+      &CST_error(0,"Syntax Error",$msg,$line,$ccl_file);
+      $syntax_ok = 0;
     }
     if(defined($ENV{CCTK_MAKE_TREE})) {
       my $fd = new FileHandle;
@@ -124,6 +126,8 @@ sub cross_index_interface_data
   my(%friends);
   my($thorn,$thorn_implements,$ancestor_imp,$thorn_ancestor,$message,$hint);
   my(%thorn_ancestor);
+
+  return unless($syntax_ok);
 
   foreach $thorn (@$thorns_ref)
   {
@@ -268,6 +272,8 @@ sub get_implementation_ancestors
   $interface_data_ref->{"IMPLEMENTATION \U$implementation\E THORNS"} =~ m:(\w+):;
 
   my $thorn = $1;
+
+  return unless($syntax_ok);
 
   # Recurse.
   foreach my $ancestor (split(" ", $interface_data_ref->{"\U$thorn\E INHERITS"}))
@@ -945,6 +951,8 @@ sub parse_interface_ccl
   }
 
   # Initialise some stuff to prevent perl -w from complaining.
+  
+  return unless($syntax_ok);
 
   my $interface_data_ref2 = {};
 

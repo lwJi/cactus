@@ -21,6 +21,8 @@ sub CST_error
 {
     my($level,$mess,$help,$line,$file) = @_;
     my($error);
+    my $full_warnings = 0;
+    $full_warnings = 1 if(defined($file) or defined($line));
 
     if ($help !~ /^\s*$/)
     {
@@ -61,24 +63,6 @@ sub CST_error
     }
 
     return;
-}
-
-#/*@@
-#  @routine   CST_fatal
-#  @date      20 Feb 2017
-#  @author    Steven R. Brandt
-#  @desc 
-#  Print an error message and dies
-#  @enddesc 
-#@@*/
-
-sub CST_fatal
-{
-    my($mess,$help,$line,$file) = @_;
-    my $error = "\nCST error in $file (at $line)\n  -> $mess\n";
-    $error_string .= "$error$help\n";
-    &CST_PrintErrors();
-    die;
 }
 
 #/*@@

@@ -1960,10 +1960,11 @@ sub showError
   my $txt = $self->{text};
   my $pre = substr($txt,0,$pos);
   my $line = 1;
+  my $output = "";
   while($pre =~ /\n/g) {
     $line++;
   }
-  print "ERROR ON LINE $line:\n";
+  #print "ERROR ON LINE $line:\n";
   if($pre =~ /.*\n.*\n.*\n*$/) {
     $pre = $&.$';
   }
@@ -1986,10 +1987,10 @@ sub showError
   #print $pre,"\e[1;37;41m",$c,"\e[0;m",$post;
   #print $pre,"<<<",$c,">>>",$post;
   $post = "" if($c eq "\n");
-  print $pre,$c,$post;
+  $output .= $pre.$c.$post;
   $pre =~ /.*$/;
-  print " " x length($&),"^\n";
-  print " " x length($&),"| here\n";
+  $output .= " " x length($&)."^\n";
+  $output .= " " x length($&)."| here\n";
   my @out = ();
   my @count = ();
   my @k = sort keys %hash;
@@ -2015,9 +2016,9 @@ sub showError
       $out2[$#out2+1]="'$k' to '".chr(ord($k)+$count[$i]-1)."'";
     }
   }
-  print "FOUND CHARACTER: ",expand_char($c),"\n";
-  print "EXPECTED CHARACTER(S): ",join(", ",@out2),"\n";
-  return $line;
+  $output .= "FOUND CHARACTER: ".expand_char($c)."\n";
+  $output .= "EXPECTED CHARACTER(S): ".join(", ",@out2)."\n";
+  return ($line,$output);
 }
 
 sub upos

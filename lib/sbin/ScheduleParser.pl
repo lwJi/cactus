@@ -9,6 +9,7 @@
 #  @version   $Header$
 #@@*/
 use strict;
+my $syntax_ok = 1;
 
 # The known schedule bins
 our @schedule_bins = (
@@ -93,8 +94,9 @@ sub create_schedule_database
     my $p=piraha::parse_src($grammar,$rule,$ccl_file);
     my $m = $p->matches();
     unless($m) {
-      my $line = $p->showError();
-      &CST_fatal("Syntax Error",undef,$line,$ccl_file);
+      my ($line,$msg) = $p->showError();
+      &CST_error(0,"Syntax Error",$msg,$line,$ccl_file);
+      $syntax_ok = 0;
     }
     # Debugging
     if(defined($ENV{CCTK_MAKE_TREE})) {
@@ -387,6 +389,8 @@ sub parse_schedule_ccl
   $schedule_db1{"\U$thorn\E N_BLOCKS"}     = $n_blocks;
   $schedule_db1{"\U$thorn\E FILE"}         = $buffer;
   $schedule_db1{"\U$thorn\E N_STATEMENTS"} = $n_statements;
+
+  return unless($syntax_ok);
 
   $buffer       = "";
   $n_blocks     = 0;
