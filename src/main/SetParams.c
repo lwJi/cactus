@@ -80,11 +80,12 @@ static int num_1errors = 0; /* number of level 1 errors in parameter file */
 int CCTKi_SetParameter (const char *parameter, const char *value, int lineno)
 {
   int retval, parameter_check;
-  char parfile[256];
+  char *parfile;
 
 
   parameter_check = CCTK_ParameterLevel ();
-  CCTK_ParameterFilename (sizeof (parfile), parfile);
+  parfile = malloc (1000);
+  CCTK_ParameterFilename (1000, parfile);
 
   if (CCTK_Equals (parameter, "ActiveThorns"))
   {
@@ -265,6 +266,8 @@ int CCTKi_SetParameter (const char *parameter, const char *value, int lineno)
       num_0errors++;
     }
   }
+
+  free (parfile);
 
   return (retval);
 }
