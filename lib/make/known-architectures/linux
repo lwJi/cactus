@@ -148,12 +148,12 @@ else
      # only gfortran versions 4.1 and higher support OpenMP
      major_version=`echo $F77_VERSION | cut -d')' -f2 | tr -d ' ' | cut -d'.' -f1`
      minor_version=`echo $F77_VERSION | cut -d')' -f2 | cut -d'.' -f2`
-     if test ! \( $major_version -lt 4 -o \( $major_version = 4 -a $minor_version -lt 1 \) \) ; then
+     if test ! \( "$major_version" -lt 4 -o \( "$major_version" = 4 -a "$minor_version" -lt 1 \) \) ; then
        : ${F77_OPENMP_FLAGS='-fopenmp'}
      fi
      major_version=`echo $F90_VERSION | cut -d')' -f2 | tr -d ' ' | cut -d'.' -f1`
      minor_version=`echo $F90_VERSION | cut -d')' -f2 | cut -d'.' -f2`
-     if test ! \( $major_version -lt 4 -o \( $major_version = 4 -a $minor_version -lt 1 \) \) ; then
+     if test ! \( "$major_version" -lt 4 -o \( "$major_version" = 4 -a "$minor_version" -lt 1 \) \) ; then
        : ${F90_OPENMP_FLAGS='-fopenmp'}
      fi
      ;;
