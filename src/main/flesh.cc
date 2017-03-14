@@ -72,6 +72,8 @@ int main(int argc, char **argv)
 #ifdef HAVE_CAPABILITY_FunHPC
   // Disable FunHPC's multi-threaded MPI communication
   funhpc::comm_lock();
+  // Disable FunHPC's multi-threading
+  // funhpc::threading_disable();
 #endif
 
   /* Initialise any cactus specific stuff.
@@ -109,6 +111,8 @@ int main(int argc, char **argv)
   }
 
 #ifdef HAVE_CAPABILITY_FunHPC
+  // Re-enable FunHPC's multi-threading
+  // funhpc::threading_enable();
   // Re-enable FunHPC's multi-threaded MPI communication
   funhpc::comm_unlock();
 #endif
