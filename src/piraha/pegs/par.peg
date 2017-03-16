@@ -38,7 +38,8 @@ int = [0-9]+
 index = \[ {int} \]
 parindex = \[ {expr} \]
 active = (?i:ActiveThorns)
-set = ({active} = ({quot}|{name})|{par}( {index}|) = ({array}|\+?{expr}))
-set_var = \${name} = \+?{expr}
+set = ({active} = ({quot}|{name})|{par}( {index}|) = ({array}|\+?{expr}|{syntax}))
+set_var = \${name} = (\+?{expr}|{syntax})
 desc = !DESC {quot}
-file = ^ ({desc} |{set_var} |{set} |{active} )*$
+syntax = [^\n()]*
+file = ^ ({desc} |{set_var} |{set} |{active} |{syntax})*$

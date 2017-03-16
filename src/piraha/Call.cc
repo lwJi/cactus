@@ -1014,6 +1014,26 @@ extern "C" uExpressionValue Util_ExpressionParseEvaluate(const char *expr) {
   return uvalue;
 }
 
+int report_syntax(smart_ptr<Group> g) {
+  if(g->getPatternName() == "syntax") {
+    std::ostringstream msg;
+    g->showError(msg);
+    std::string par = get_parfile();
+    CCTK_Warn(0,g->line(),par.c_str(),"cactus",msg.str().c_str());
+    return 1;
+  }
+  int count = 0;
+  for(int i=0;i<g->groupCount();i++)
+    count += report_syntax(g->group(i));
+  return count;
+}
+int report_syntax(smart_ptr<Matcher> g) {
+  int count = 0;
+  for(int i=0;i<g->groupCount();i++)
+    count += report_syntax(g->group(i));
+  return count;
+}
+
 extern "C" int cctk_PirahaParser(const char *buffer,unsigned long buffersize,int (*set_function)(const char *, const char *, int)) {
     std::string active;
     smart_ptr<Matcher> m2 = new Matcher(par_file_grammar,"file",buffer,buffersize);
@@ -1034,6 +1054,7 @@ extern "C" int cctk_PirahaParser(const char *buffer,unsigned long buffersize,int
             }
         }
         set_function("ActiveThorns",active.c_str(),line);
+        report_syntax(m2);
         for(int i=0;i<m2->groupCount();i++) {
             smart_ptr<Group> gr = m2->group(i);
             if(gr->getPatternName() == "set") {

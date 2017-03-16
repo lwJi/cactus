@@ -162,3 +162,38 @@ int Group::childCount() {
 smart_ptr<Group> Group::child(int n) {
     return (*children)[n];
 }
+
+const int num_previous_lines = 5;
+
+void Group::showError(std::ostream& out) {
+  out << "Parse Error" << std::endl;
+  int buf[num_previous_lines];
+  buf[0] = 0;
+  int line = 0;
+  int err_pos = start_;
+  for(int i=0;input[i] != 0;i++) {
+    char c = input[i];
+    if(c == '\n') {
+      line++;
+      int ln = line % num_previous_lines;
+      buf[ln] = i;
+      if(i >= err_pos)
+        break;
+    }
+  }
+  int ln = line % num_previous_lines;
+  int lo = line - num_previous_lines + 1;
+  if(lo < 0) lo = 0;
+  lo = lo % num_previous_lines;
+  for(int i=buf[lo];i<buf[ln];i++) {
+    char c = input[i];
+    if(c == '\r') ;
+    else if(c == '\n') out << std::endl;
+    else out << c;
+  }
+  out << std::endl;
+  int m = (line - 1) % num_previous_lines;
+  for(int i=buf[m]+1;i<err_pos;i++)
+    out << ' ';
+  out << '^' << std::endl;
+}
