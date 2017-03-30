@@ -472,6 +472,9 @@ sub parse_schedule_ccl
     $v1 =~ s/\s+/\n/g;
     $v2 =~ s/\s+/\n/g;
     $v2 =~ s/\)\{/\)\n\{/g;
+    $v2 =~ s{/\*.*?\*/\s*}{}gs;
+    $v1 =~ s/\s+$//;
+    $v2 =~ s/\s+$//;
     my $fd = new FileHandle;
     open($fd,">v1") or die;
     print $fd $v1,"\n";
