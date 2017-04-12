@@ -52,7 +52,6 @@ $(MASTER_FILE).pdf: $(MASTER_FILE).tex
 	-pdflatex $< < /dev/null 2>&1 > LOG_LATEX_FULL_MSGS
 	-bibtex $(MASTER_FILE) < /dev/null 2>&1 | tee LOG_LATEX_BIBTEX_MSGS
 	-rm bibliography.bbl ; $(PERL) -n -e 'print $$_ unless /\\(begin|end)[{]thebibliography[}]/' <$(MASTER_FILE).bbl >bibliography.bbl
-	false
 	-pdflatex $< < /dev/null 2>&1 > LOG_LATEX_FULL_MSGS
 	-pdflatex $< < /dev/null 2>&1 | tee LOG_LATEX_FULL_MSGS | grep -v Underfull | grep -v Overfull | grep -v OT1 > LOG_LATEX_MSGS
 	if test -e "$@"; then                                    \
