@@ -1019,7 +1019,7 @@ int report_syntax(smart_ptr<Group> g) {
     std::ostringstream msg;
     g->showError(msg);
     std::string par = get_parfile();
-    CCTK_Warn(0,g->line(),par.c_str(),"cactus",msg.str().c_str());
+    CCTK_Warn(1,g->line(),par.c_str(),"cactus",msg.str().c_str());
     return 1;
   }
   int count = 0;
@@ -1054,7 +1054,9 @@ extern "C" int cctk_PirahaParser(const char *buffer,unsigned long buffersize,int
             }
         }
         set_function("ActiveThorns",active.c_str(),line);
-        report_syntax(m2);
+        int syntax_errors = report_syntax(m2);
+        if(syntax_errors > 0)
+            CCTK_Error(-1,"","Cactus","Terminating because of parse errors");
         for(int i=0;i<m2->groupCount();i++) {
             smart_ptr<Group> gr = m2->group(i);
             if(gr->getPatternName() == "set") {
