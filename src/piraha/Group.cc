@@ -167,16 +167,21 @@ const int num_previous_lines = 5;
 
 void Group::showError(std::ostream& out) {
   out << "Parse Error" << std::endl;
-  int buf[num_previous_lines];
-  buf[0] = 0;
+  // keep the start position of the last 5 lines
+  int start_position[num_previous_lines];
+  start_position[0] = 0;
   int line = 0;
   int err_pos = start_;
   for(int i=0;input[i] != 0;i++) {
     char c = input[i];
     if(c == '\n') {
       line++;
+      // the start position of line is
+      // found by taking the modulus of
+      // the line and the number of lines
+      // to be stored.
       int ln = line % num_previous_lines;
-      buf[ln] = i;
+      start_position[ln] = i;
       if(i >= err_pos)
         break;
     }
@@ -185,15 +190,21 @@ void Group::showError(std::ostream& out) {
   int lo = line - num_previous_lines + 1;
   if(lo < 0) lo = 0;
   lo = lo % num_previous_lines;
-  for(int i=buf[lo];i<buf[ln];i++) {
+  // Print the previous five lines to show
+  // context for the error
+  for(int i=start_position[lo];i<start_position[ln];i++) {
     char c = input[i];
-    if(c == '\r') ;
+    if(c == '\r') ; // skip carriage returns because
+                    // they can confuse the output.
+                    // TODO: Backspaces would mess it
+                    // up even more. 
     else if(c == '\n') out << std::endl;
     else out << c;
   }
   out << std::endl;
   int m = (line - 1) % num_previous_lines;
-  for(int i=buf[m]+1;i<err_pos;i++)
+  // print the pointer to the error in the line.
+  for(int i=start_position[m]+1;i<err_pos;i++)
     out << ' ';
   out << '^' << std::endl;
 }
