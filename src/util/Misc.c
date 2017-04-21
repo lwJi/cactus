@@ -1234,7 +1234,7 @@ int CCTK_SetString(char **data, const char *value)
 
   retval = 1;
 
-  if(*data) free(*data);
+  free(*data);
   *data = (char *)malloc((strlen(value)+1)*sizeof(char));
   if(*data)
   {
