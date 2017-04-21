@@ -149,14 +149,14 @@ int ParseFile(FILE *ifp,
     buffer = ParseDefines(buffer, &buffersize);
     /* ParseBuffer can get confused with detecting the end of the buffer
        (in comment or in a string), and may overrun.  Therefore
-       we te a buffer that is a bit longer.  */
+       we allocate a buffer that is a bit longer.  */
     {
       buffer = realloc (buffer, strlen(buffer) + 10);
       memset (buffer+strlen(buffer), '\0', 10);
     }
     retval = ParseBuffer(buffer, set_function, ConfigData);
-    free(buffer);
   }
+  free(buffer);
   return retval;
 }
 
