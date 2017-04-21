@@ -37,11 +37,18 @@ $top = `pwd` if (! $top);
 $config_dir = "$top/config-data" if (! $config_dir);
 $system_database{"CONFIG_DIR"} = $config_dir;
 
-# Set up the CCTK home directory
-if(! $cctk_home)
-{
-  $cctk_home = $ENV{'CCTK_HOME'} || "$ENV{HOME}/CCTK";
-  $cctk_home =~ s:/$::g;
+# Set up the CCTK home directory (use in "use lib" so must be valid at compile
+# time)
+
+BEGIN {
+  if(! $cctk_home)
+  {
+    $cctk_home = $ENV{'CCTK_HOME'} || "$ENV{HOME}/CCTK";
+    $cctk_home =~ s:/$::g;
+  }
+  $sbin_dir = "$cctk_home/lib/sbin";
+  die "Unable to find CCTK sbin directory - tried $sbin_dir\n"
+    if (! -e "$sbin_dir/parameter_parser.pl");
 }
 $system_database{'CCTK_HOME'} = $cctk_home;
 
@@ -80,13 +87,8 @@ sub CheckCSTErrors
 ########################################################################
 # Require certain arrangements
 
+use lib $sbin_dir;
 
-$sbin_dir = "$cctk_home/lib/sbin";
-
-die "Unable to find CCTK sbin directory - tried $sbin_dir\n"
-  if (! -e "$sbin_dir/parameter_parser.pl");
-
-require "$sbin_dir/Piraha.pm";
 require "$sbin_dir/parameter_parser.pl";
 require "$sbin_dir/interface_parser.pl";
 require "$sbin_dir/ScheduleParser.pl";

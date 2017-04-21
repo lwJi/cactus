@@ -371,6 +371,37 @@ sub SplitWithStrings
 }
 
 #/*@@
+#  @routine    trim_quotes
+#  @date
+#  @author     Steven Brandt
+#  @desc
+#  Remove single or double quotes surrounding a string
+#  @enddesc
+#  @calls
+#  @calledby
+#  @history
+#
+#  @endhistory
+#
+#  @var     line
+#  @vdesc   line to remove quotes from
+#  @vtype   string
+#  @vio     in
+#  @endvar
+#
+#  @returntype line
+#  @returndesc
+#    line without quotes
+#  @endreturndesc
+#@@*/
+sub trim_quotes
+{
+  my $str = shift;
+  $str =~ s/^(["'])(.*)\1$/$2/s;
+  return $str;
+}
+
+#/*@@
 #  @routine    RemoveComments
 #  @date       
 #  @author     Tom Goodale, Yaakoub El Khamra

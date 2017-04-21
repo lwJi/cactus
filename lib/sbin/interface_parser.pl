@@ -6,6 +6,7 @@ my $ccl_file = undef;
 use Carp;
 use FileHandle;
 use Data::Dumper;
+use Piraha;
 
 sub trim_quotes
 {

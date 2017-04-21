@@ -53,6 +53,7 @@ if ($h || $help) {
 $cctk_home .= '/' if (($cctk_home !~ /\/$/) && defined $cctk_home);
 
 my $sbin_dir = "${cctk_home}lib/sbin";
+use lib $sbin_dir;
 require "$sbin_dir/ScheduleParser.pl";
 require "$sbin_dir/CSTUtils.pl";
 

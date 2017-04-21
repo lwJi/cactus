@@ -14,6 +14,7 @@
 #%parameter_database = create_parameter_database(%implementations);
 use strict;
 use Carp;
+use Piraha;
 my $ccl_file;
 
 #/*@@
@@ -342,7 +343,7 @@ sub parse_param_ccl
         confess("share not set") if("$share" eq "");
         $parameter_db1{"\U$thorn SHARES $share\E variables"} .= $as_name . " ";
       } elsif($uses_or_extends eq "") {
-        $parameter_db1{"\U$thorn $block\E variables"} .= $as_name."\n";
+        $parameter_db1{"\U$thorn $block\E variables"} .= $as_name." ";
         my @children = @{$gr->{children}};
         my $default = trim_quotes($children[$#children]->substring());
         $default =~ s/\\\n//g;
@@ -900,6 +901,13 @@ sub CheckParameterDefault
     for ($i=1; $i<=$nranges; $i++)
     {
       $range = $parameter_db{"\U$thorn $variable\E range $i range"};
+      eval { "" =~ m:$range:i; };
+      if ($@)
+      {
+        &CST_error(0, "Invalid regular expression '$range' for string " .
+                      "parameter '$variable': $@",
+                   __LINE__, __FILE__);
+      }
 
       # An empty regular expression should match everything.
       # Instead, perl returns the result of the last match.

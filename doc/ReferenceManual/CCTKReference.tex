@@ -762,6 +762,13 @@ from Fortran.
 \item[\code{CCTK\_SchedulePrintTimesToFile}] [\pageref{CCTK-SchedulePrintTimesToFile}]
   Output the timing results for a certain schedule item to a file
 
+\item[\code{CCTK\_ScheduleQueryCurrentFunction}] [\pageref{CCTK-ScheduleQueryCurrentFunction}]
+ Return the cFunctionData of the function currently executing via
+ \texttt{CCTK\_CallFunction}
+
+\item[\code{CCTK\_ScheduleTraverse}] [\pageref{CCTK-ScheduleTraverse}]
+  Traverses a schedule point, and its entry and exit points if necessary
+
 \item[\code{CCTK\_SetupGH}] [\pageref{CCTK-SetupGH}]
   Sets up a CCTK grid hierarchy
 
@@ -11873,13 +11880,13 @@ int status = CCTK_SchedulePrintTimes("CCTK_ANALYSIS")
 % ScheduleInterface.c
 \begin{FunctionDescription}{CCTK\_SchedulePrintTimesToFile}
   \label{CCTK-SchedulePrintTimesToFile}
-  Output the timing results for a certain schedule item to stdout
+  Output the timing results for a certain schedule item to a file
   
   \begin{SynopsisSection}
     \begin{Synopsis}{C}
 \begin{verbatim}
 #include "cctk.h"
-int status = CCTK_SchedulePrintTimesToFile(const char *where)
+int status = CCTK_SchedulePrintTimesToFile(const char *where, FILE *file)
 \end{verbatim}
     \end{Synopsis}
   \end{SynopsisSection}
@@ -11999,6 +12006,84 @@ printf("scheduled function: %s::%s AT %s\n",
 \end{Example}
   \end{ExampleSection}
   
+\end{FunctionDescription}
+
+
+
+
+% ScheduleInterface.c
+\begin{FunctionDescription}{CCTK\_ScheduleTraverse}
+  \label{CCTK-ScheduleTraverse}
+  Traverses a schedule point, and its entry and exit points if necessary.
+
+  \begin{SynopsisSection}
+    \begin{Synopsis}{C}
+\begin{verbatim}
+#include "cctk.h"
+typedef int (*CallFunction_t)(void *func, cFunctionData *attributes,
+                              void *data);
+int CCTK_ScheduleQueryCurrentFunction(const char *where, void *data,
+                                      CallFunction_t CallFunction);
+\end{verbatim}
+    \end{Synopsis}
+  \end{SynopsisSection}
+
+  \begin{ResultSection}
+    \begin{Result}{0}
+      success
+    \end{Result}
+    \begin{Result}{1}
+      memory failure
+    \end{Result}
+  \end{ResultSection}
+
+  \begin{ParameterSection}
+    \begin{Parameter}{where}
+      Schedule point
+    \end{Parameter}
+    \begin{Parameter}{data}
+      user data passed alongto CallFunction as its last argument
+    \end{Parameter}
+    \begin{Parameter}{CallFunction}
+      callback function with the same signature as
+        \texttt{CCTK\_CallFunction}. Pass \texttt{NULL} to use the default.
+    \end{Parameter}
+  \end{ParameterSection}
+
+  \begin{Discussion}
+    This functions is intended to be used by driver thorns to iterate through
+    the schedule and act on the scheduled functions.  Using it in user code
+    can lead to recursive function call warnings.
+  \end{Discussion}
+
+  \begin{SeeAlsoSection}
+    \begin{SeeAlso}{CCTK\_CallFunction}
+      Calls a function depending upon the data passed in the the fdata
+      structure.
+    \end{SeeAlso}
+  \end{SeeAlsoSection}
+
+  \begin{ExampleSection}
+    \begin{Example}{C}
+      Output the names of the function scheduled in MoL\_PostStep:
+\begin{verbatim}
+#include <stdio.h>
+#include "cctk.h"
+int CallFunction(void *fun, cFunctionData *fdata, void *data) {
+  int *count = data;
+  *count += 1;
+  printf("scheduled function: %s::%s AT %s\n",
+         fdata->thorn, fdata->routine, fdata->where);
+  return 1; // no need to SYNC
+}
+
+int count = 0;
+int ierr = CCTK_ScheduleTraverse("MoL_PostStep", CallFunction, &count);
+printf("There were %d functions scheduled\n", count);
+\end{verbatim}
+\end{Example}
+  \end{ExampleSection}
+
 \end{FunctionDescription}
 
 

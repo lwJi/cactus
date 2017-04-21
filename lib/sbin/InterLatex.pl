@@ -47,6 +47,7 @@ $cctk_home  .= '/' if (($cctk_home !~ /\/$/) && (defined $cctk_home));
 
 # set up the sbin dir, tacking cctk_home on the front
 my $sbin_dir = "${cctk_home}lib/sbin";
+use lib $sbin_dir;
 
 ##############
 # REQUIRE(S) #
