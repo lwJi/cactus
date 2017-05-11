@@ -153,9 +153,9 @@ sub parse_param_ccl
         $parameter_db1{"\U$thorn $block\E variables"} .= "";
       }
       if($gr->{children}->[0]->{name} eq "share") {
-        $share = $gr->group(0,"share")->group(0,"name")->substring();
-        #$parameter_db1{"\U$thorn SHARES\E implementations"} .= "\U$share ";
-        $shares_implementations{uc($share)}++;
+        $share = uc $gr->group(0,"share")->group(0,"name")->substring();
+        $parameter_db1{"\U$thorn SHARES\E $share variables"} .= "";
+        $shares_implementations{$share}++;
       }
     } else {
       my $uses_or_extends = "";
@@ -355,6 +355,8 @@ sub parse_param_ccl
   }
   $parameter_db1{"\U$thorn SHARES\E implementations"} = 
     join(" ",sort keys %shares_implementations);
+
+  $block = "PRIVATE";
 
   # Initialise, to prevent perl -w from complaining.
   $parameter_db2{"\U$thorn PRIVATE\E variables"} = '';
