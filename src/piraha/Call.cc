@@ -1014,6 +1014,13 @@ extern "C" uExpressionValue Util_ExpressionParseEvaluate(const char *expr) {
   return uvalue;
 }
 
+/**
+ * Recovery of syntax errors within a par file is
+ * accomplished by matching syntactically incorrect text
+ * against a pattern named "syntax". At the end of the
+ * match, nodes in the AST with the name "syntax" are
+ * all reported as errors by this function.
+ */
 int report_syntax(smart_ptr<Group> g) {
   if(g->getPatternName() == "syntax") {
     std::ostringstream msg;

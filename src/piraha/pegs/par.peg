@@ -38,6 +38,7 @@ int = [0-9]+
 index = \[ {int} \]
 parindex = \[ {expr} \]
 active = (?i:ActiveThorns)
+# Anything matching "syntax" is actually a syntax error.
 set = ({active} = ({quot}|{name})|{par}( {index}|) = ({array}|\+?{expr}|{syntax}))
 set_var = \${name} = (\+?{expr}|{syntax})
 desc = !DESC {quot}

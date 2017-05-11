@@ -165,6 +165,10 @@ smart_ptr<Group> Group::child(int n) {
 
 const int num_previous_lines = 5;
 
+/**
+ * This function formats and displays
+ * syntax errors.
+ */
 void Group::showError(std::ostream& out) {
   out << "Parse Error" << std::endl;
   // keep the start position of the last 5 lines
