@@ -22,6 +22,8 @@ sub CST_error
     my($level,$mess,$help,$line,$file) = @_;
     my($error);
 
+    my $full_warnings = 1 if(defined($line) or defined($file));
+
     if ($help !~ /^\s*$/)
     {
       $help = "     HINT: $help\n";

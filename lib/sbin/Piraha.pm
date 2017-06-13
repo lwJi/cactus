@@ -827,11 +827,80 @@ sub parse_src
   my $rule = shift;
   my $src = shift;
   my $fd = new FileHandle;
-  open($fd,$src) or die "cannot open $src";
+  open($fd,$src) or croak "cannot open $src";
   my $src_contents = <$fd>;
   close($fd);
   my $m = new Matcher($g,$rule,$src_contents);
   return $m;
+}
+
+# Load a parse tree from disk.
+sub load_tree
+{
+  my $file = shift;
+  my $fd = new FileHandle;
+  open($fd,$file) or die $file;
+  my $txt = <$fd>;
+  chomp($txt);
+  $txt =~ s/\&([a-f0-9]{2});/chr(hex($1))/ge;
+  my $g = r_load_tree($txt,$fd);
+  my $end = <$fd>;
+  close($fd);
+  $end =~ s/\s//g;
+  if($end eq "<end>") {
+    return $g;
+  } else {
+    unlink($file);
+    return undef;
+  }
+}
+
+# Internal method used by load_tree.
+# Recursively load parse tree elements.
+sub r_load_tree
+{
+  my $txt = shift;
+  my $fd = shift;
+  my $line = <$fd>;
+  if($line =~ /^(\d+),(\d+),(\d+),(\w+)/) {
+    my ($start,$end,$nchildren,$name) = ($1,$2,$3,$4);
+    my $g = new Group($name,$txt,$start,$end);
+    for(my $i=0;$i<$nchildren;$i++) {
+      my $ch = r_load_tree($txt,$fd);
+      push @{$g->{children}}, $ch;
+    }
+    return $g;
+  }
+  die "Nothing";
+}
+
+# Store a parse tree to disk
+sub store_tree
+{
+  my $file = shift;
+  my $tree = shift;
+  my $fd = new FileHandle;
+  open($fd,">$file") or return;
+  croak "bad=".ref($tree) unless(ref($tree) eq "Group");
+  my $txt = $tree->{text};
+  $txt =~ s/[\n\t\b\r&]/sprintf("&%02x;",ord($&))/ge;
+  print $fd $txt,"\n";
+  r_store_tree($fd,$tree);
+  print $fd "<end>\n";
+  close($fd);
+}
+
+# Internal method used by store_tree.
+# Recursively store parse tree elements.
+sub r_store_tree
+{
+  my $fd = shift;
+  my $g = shift;
+  my @ch = @{$g->{children}};
+  print $fd $g->{start},",",$g->{end},",",1+$#ch,",",$g->{name},"\n";
+  for my $ch (@{$g->{children}}) {
+    r_store_tree($fd,$ch);
+  }
 }
 
 # Combine the phases of parsing a peg, and

@@ -74,6 +74,7 @@ public:
     	smart_ptr<Group> ret;
     	return ret;
     }
+    void showError(std::ostream& o);
 };
 
 class Grammar;

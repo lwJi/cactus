@@ -162,3 +162,55 @@ int Group::childCount() {
 smart_ptr<Group> Group::child(int n) {
     return (*children)[n];
 }
+
+const int num_previous_lines = 5;
+
+/**
+ * This function formats and displays
+ * syntax errors. It prints the last
+ * five lines and uses a ^ to point to
+ * the position of the error.
+ */
+void Group::showError(std::ostream& out) {
+  out << "Parse Error" << std::endl;
+  // keep the start position of the last 5 lines
+  int start_position[num_previous_lines];
+  start_position[0] = 0;
+  int line = 0;
+  int err_pos = start_;
+  for(int i=0;input[i] != 0;i++) {
+    char c = input[i];
+    if(c == '\n') {
+      line++;
+      // the start position of line is
+      // found by taking the modulus of
+      // the line and the number of lines
+      // to be stored.
+      int ln = line % num_previous_lines;
+      start_position[ln] = i;
+      if(i >= err_pos)
+        break;
+    }
+  }
+  int ln = line % num_previous_lines;
+  int lo = line - num_previous_lines + 1;
+  if(lo < 0) lo = 0;
+  lo = lo % num_previous_lines;
+  // Print the previous five lines to show
+  // context for the error
+  for(int i=start_position[lo];i<start_position[ln];i++) {
+    char c = input[i];
+    if(c == '\r') ; // skip carriage returns because
+                    // they can confuse the output.
+                    // TODO: Backspaces would mess it
+                    // up even more. 
+    else if(c == '\n') out << std::endl;
+    else out << c;
+  }
+  out << std::endl;
+  int m = (line - 1) % num_previous_lines;
+  // print the pointer to the error in the line.
+  for(int i=start_position[m]+1;i<err_pos;i++)
+    out << ' ';
+  out << '^' << std::endl;
+}

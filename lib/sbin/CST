@@ -9,7 +9,11 @@
 #  @version   $Header: /mnt/data2/cvs2svn/cvs-repositories/Cactus/lib/sbin/CST,v 1.81 2009-09-11 22:15:48 knarf Exp $
 #@@*/
 
+use FileHandle;
+use File::stat;
+use File::Path qw{ make_path };
 use lib ".";
+use Carp;
 
 # Global parameter to track the number of errors from the CST
 # The file make.thornlist is only created if the number of errors is zero.
@@ -115,6 +119,23 @@ require "$sbin_dir/Logger.pl";
 #
 ######################################################################
 
+# Find out which parser to use
+#
+$main::cctk_parser = "new";
+$main::cctk_parser = $ENV{CCTK_SELECT_PARSER}
+  if(defined($ENV{CCTK_SELECT_PARSER}));
+if($main::cctk_parser !~ /^(new|old|both)$/) {
+  &CST_error(0,"Bad setting for CCTK_SELECT_PARSER");
+  $main::cctk_parser = "new";
+}
+
+if($main::cctk_parser eq "old") {
+  print STDERR "***************************************\n";
+  print STDERR "* Warning: New CST parser disabled!!! *\n";
+  print STDERR "***************************************\n";
+  sleep 5;
+}
+
 # Find out which thorns we have and the location of the ccl files.
 print "Reading ThornList...\n";
 %thorns = &CreateThornList($cctk_home, $thornlist);
@@ -199,12 +220,71 @@ $make_thornlist = &CreateMakeThornlist(\%thorns, \%interface_database, $configur
 print "CST finished.\n";
 exit;
 
-
 #############################################################################
 #
 #                      Subroutines
 #
 #############################################################################
+
+#/*@@
+#  @routine parse_ccl
+#  @date    Thu May 15, 2017
+#  @author  Steven R. Brandt
+#  @desc
+#           Parses any of the given ccl files.
+#           It checks if the file has been previously
+#           parsed and uses the cached parse tree if
+#           possible.
+#  @enddesc
+#@@*/
+sub parse_ccl
+{
+  my $grammar = shift;
+  my $rule = shift;
+  my $ccl_file = shift;
+  my $peg_file = shift;
+  $ccl_file =~ s{//+}{/}g; # remove double slashes
+  croak "bad ccl file '$ccl_file'" unless($ccl_file =~ m{([^/]+)/([^/]+)/(\w+)\.ccl$});
+  my ($arr,$thorn,$ccl)=($1,$2,$3);
+  my $top = $ENV{TOP};
+  croak "TOP not defined" unless(defined($top));
+  my $ccl_dir = "$top/piraha/$arr/$thorn";
+  make_path($ccl_dir);
+  my $ccl_cache = "$ccl_dir/$ccl.cache";
+
+  # If the cache file exists and is newer than the
+  # ccl file Use it instead.
+  my $gr = undef;
+  my $ccl_tm = stat($ccl_file)->mtime;
+  my $peg_tm = stat($peg_file)->mtime;
+  my $tm = $ccl_tm < $peg_tm ? $peg_tm : $ccl_tm;
+  if(-r $ccl_cache and stat($ccl_cache)->mtime > $tm) {
+    $gr = piraha::load_tree($ccl_cache);
+  }
+  if(!defined($gr)) {
+    my $p=piraha::parse_src($grammar,$rule,$ccl_file);
+    my $m = $p->matches();
+    if($m) {
+      piraha::store_tree($ccl_cache,$p->{gr});
+      $gr = $p->{gr};
+    } else {
+      print "CST ERROR IN FILE '$ccl_file' ";
+      $p->showError();
+      confess("Parse Error");
+    }
+  }
+  # Debugging
+  if(defined($ENV{CCTK_MAKE_TREE})) {
+    my $fd = new FileHandle;
+    open($fd,">tree.txt");
+    print $fd $ccl_file,"\n";
+    print $fd "=" x 50,"\n";
+    print $fd $gr->dump(),"\n";
+    close($fd);
+  }
+  return $gr;
+}
+
 
 #/*@@
 #  @routine CreateThornList
@@ -774,4 +854,85 @@ sub  CompareValues
   }
 
   return $retval;
+}
+
+#/*@@
+#  @routine    canonicalize_key
+#  @date       Wed May 24 18:48:23 UTC 2017
+#  @author     Steven R. Brandt
+#  @desc
+#  Perform the surprisingly difficult task of
+#  normalizing whitespace content. If there is
+#  whitespace between two letters, replace it
+#  with a single space. Remove spaces elsewhere.
+#
+#  Also, remove comments.
+#
+#  Also, convert array refs to strings.
+#  @enddesc
+#@@*/
+sub canonicalize_key
+{
+  my $v = shift;
+  if(ref($v) eq "ARRAY") {
+    $v = "[".join(",",@$v)."]";
+  }
+  # Remove a C-stile // comment
+  $v =~ s{//.*}{}g;
+  # Remove a C-style /* ... */ comment
+  $v =~ s{/\*.*?\*/}{}gs;
+  # Remove leading spaces
+  $v =~ s/^\s+//;
+  # Remove trailing spaces
+  $v =~ s/\s+$//;
+  # Replace spaces between word-characters with a single space
+  $v =~ s/(\w)\s+(?=\w)/$1 $2/g;
+  # Remove spaces otherwise...
+  $v =~ s/([^\w\s])\s+(?=\w)/$1/g;
+  $v =~ s/(\w)\s+(?=[^\w\s])/$1/g;
+  $v =~ s/([^\w\s])\s+(?=[^\w\s])/$1/g;
+  return $v;
+}
+
+#/*@@
+#  @routine    parser_compare
+#  @date       Wed May 24 18:48:23 UTC 2017
+#  @author     Steven R. Brandt
+#  @desc
+#  Each of the four CCL parsers produces a
+#  massive hashtable. This routine compares
+#  the key value pairs, on a file by file basis.
+#  @enddesc
+#@@*/
+sub parser_compare
+{
+  my $ccl_file = shift;
+  my $table1 = shift;
+  my $table2 = shift;
+  $ccl_file =~ s{.*/(.*)/(.*)/(.*)$}{$1/$2/$3};
+  my $first = "Difference between old and new parser while parsing $ccl_file:";
+  my $help = "Try disabling the old parser";
+  my $errs = 0;
+  for my $k (sort keys %$table2) {
+    my $v1 = $table1->{$k};
+    next if($v1 eq "");
+    unless(defined($v1)) {
+      CST_error(0,"$first Missing key ($k)=($v1)",$help,__LINE__,__FILE__);
+      $errs++;
+    }
+    my $v2 = $table2->{$k};
+    $v1 = canonicalize_key($v1);
+    $v2 = canonicalize_key($v2);
+    if($v1 ne $v2) {
+      CST_error(0,"$first Value for key ($k) is different: new=($v1) old=($v2)",$help,__LINE__,__FILE__);
+      $errs++;
+    }
+  }
+  for my $k (keys %$table1) {
+    if(!defined($table2->{$k})) {
+      CST_error(0,"$first Extra key: ($k) value: ($table1->{$k})",$help,__LINE__,__FILE__);
+      $errs++;
+    }
+  }
+  exit 2 if($errs > 0);
 }
