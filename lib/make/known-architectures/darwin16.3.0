@@ -1,8 +1,8 @@
 #! /bin/sh
 # /*@@
 #   @file    darwin16.3.0
-#   @date    2016-12-15
-#   @author  Erik Schnetter
+#   @date    2017-07-04
+#   @author  Roland Haas
 #   @desc
 #            Known architecture stuff for OS X (Darwin) release 16.3.0
 #   @enddesc

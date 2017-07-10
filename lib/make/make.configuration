@@ -279,6 +279,7 @@ editthorns:
 clean:
 	@echo Deleting all object and dependency files in $(TOP)
 	find $(TOP) \( -name '*.[od]' -o -name '*.a' \) -exec rm {} \;
+	rm -rf $(TOP)/piraha \;
 	rm -rf $(TOP)/scratch; $(MKDIR) $(MKDIRFLAGS) $(TOP)/scratch
 
 cleandeps:
@@ -294,6 +295,7 @@ cleanobjs:
 
 realclean:
 	@echo Deleting all built files in $(TOP)
+	rm -rf $(TOP)/piraha
 	rm -rf $(TOP)/build
 	rm -rf $(TOP)/bindings
 	rm -rf $(TOP)/config-data/make.thornlist

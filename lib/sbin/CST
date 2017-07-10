@@ -11,7 +11,7 @@
 
 use FileHandle;
 use File::stat;
-use File::Path qw{ make_path };
+use File::Path qw{ mkpath };
 use lib ".";
 use Carp;
 
@@ -249,7 +249,7 @@ sub parse_ccl
   my $top = $ENV{TOP};
   croak "TOP not defined" unless(defined($top));
   my $ccl_dir = "$top/piraha/$arr/$thorn";
-  make_path($ccl_dir);
+  mkpath($ccl_dir);
   my $ccl_cache = "$ccl_dir/$ccl.cache";
 
   # If the cache file exists and is newer than the
