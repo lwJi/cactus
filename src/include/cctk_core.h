@@ -335,24 +335,24 @@ static inline ptrdiff_t CCTK_VECTGFINDEX4D (const cGH *restrict cctkGH,
 
 #define _INITIALISE_CCTK_C2F
 #define _DECLARE_CCTK_C2F
-#define _PASS_CCTK_C2F(xGH) &((xGH)->cctk_dim),\
+#define _PASS_CCTK_C2F(xGH) &(xGH)->cctk_dim,\
                             (xGH)->cctk_gsh,(xGH)->cctk_lsh,\
                             (xGH)->cctk_lbnd,(xGH)->cctk_ubnd,\
                             (xGH)->cctk_ash,\
-                            (xGH)->cctk_alignment,\
-                            (xGH)->cctk_alignment_offset,\
+                            &(xGH)->cctk_alignment,\
+                            &(xGH)->cctk_alignment_offset,\
                             (xGH)->cctk_from,(xGH)->cctk_to,\
                             (xGH)->cctk_bbox,\
-                            &((xGH)->cctk_delta_time), &((xGH)->cctk_time),\
+                            &(xGH)->cctk_delta_time, &(xGH)->cctk_time,\
                             (xGH)->cctk_delta_space, (xGH)->cctk_origin_space,\
                             (xGH)->cctk_levfac,\
                             (xGH)->cctk_levoff,\
                             (xGH)->cctk_levoffdenom,\
-                            &((xGH)->cctk_timefac),\
-                            &((xGH)->cctk_convlevel),\
-                            &((xGH)->cctk_convfac),\
+                            &(xGH)->cctk_timefac,\
+                            &(xGH)->cctk_convlevel,\
+                            &(xGH)->cctk_convfac,\
                             (xGH)->cctk_nghostzones,\
-                            &((xGH)->cctk_iteration),\
+                            &(xGH)->cctk_iteration,\
                             &(xGH),\
                             &(xGH)->cctk_ash[0],\
                             &(xGH)->cctk_ash[1],\
