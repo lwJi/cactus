@@ -1683,12 +1683,12 @@ sub CompareTestFiles
 
       ($fileabstol, $filereltol)=&GetFileTolerances($test,$thorn,$runconfig,$file);
 
+      my $numlines = 0;
+
       if ( -s $newfile && -s $oldfile)
       {
         open (INORIG, "<$oldfile") || print "Warning: Archive file $oldfile not found";
         open (INNEW,  "<$newfile") || print "Warning: Test file $newfile not found";
-
-        $numlines = 0;
 
         while (my $oline = <INORIG>)
         {
