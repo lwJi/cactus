@@ -1638,10 +1638,8 @@ sub RunTest
 sub CompareTestFiles
 {
   my ($test,$thorn,$runconfig,$rundata,$config_data,$testdata) = @_;
-  my ($test_dir,$file,$newfile,$oldfile);
-  my ($vmaxdiff,$tmaxdiff,$numlines);
 
-  $test_dir = $testdata->{"$thorn $test TESTOUTPUTDIR"};
+  my $test_dir = $testdata->{"$thorn $test TESTOUTPUTDIR"};
 
   # Add new output files to database
   ($rundata->{"$thorn $test UNKNOWNFILES"},$rundata->{"$thorn $test TESTFILES"}) = &FindFiles("$test_dir",$testdata);
@@ -1651,21 +1649,21 @@ sub CompareTestFiles
   $rundata->{"$thorn $test NFAILWEAK"}=0;
   $rundata->{"$thorn $test NFAILSTRONG"}=0;
 
-  $abstol = $runconfig->{"ABSTOL"};
-  $reltol = $runconfig->{"RELTOL"};
+  my $abstol = $runconfig->{"ABSTOL"};
+  my $reltol = $runconfig->{"RELTOL"};
 
   if ($rundata->{"$thorn $test NTESTFILES"})
   {
 
     # Compare each file in the archived test directory
-    foreach $file (split(" ",$testdata->{"$thorn $test DATAFILES"}))
+    foreach my $file (split(" ",$testdata->{"$thorn $test DATAFILES"}))
     {
       my (@maxabsdiff, @absdiff, @valmax) = ();
       my ($filereltol, $fileabstol);
 
-      $newfile = "$test_dir$sep$file";
+      my $newfile = "$test_dir$sep$file";
       # This is the standard location of test data files
-      $oldfile = "$testdata->{\"$thorn TESTSDIR\"}${sep}${test}${sep}$file";
+      my $oldfile = "$testdata->{\"$thorn TESTSDIR\"}${sep}${test}${sep}$file";
       # If there is no data in the standard location, see if it got
       # decompressed to some place else
       if (!-d "$testdata->{\"$thorn TESTSDIR\"}${sep}${test}")
@@ -1692,12 +1690,12 @@ sub CompareTestFiles
 
         $numlines = 0;
 
-        while ($oline = <INORIG>)
+        while (my $oline = <INORIG>)
         {
           # ignore comment lines in old file
           next if ($oline =~ /^\s*(["#].*)?$/);
 
-          $nline = "";
+          my $nline = "";
           while ($nline = <INNEW>)
           {
             # ignore comment lines in new file
@@ -1723,21 +1721,21 @@ sub CompareTestFiles
             my @oldvals = split(' ',$oline);
 
             my $nnew = scalar(@newvals);
-            $nold = scalar(@oldvals);
+            my $nold = scalar(@oldvals);
 
             my $allzero = 1;
-            for ($count = 0; $count < $nold; $count++)
+            for (my $count = 0; $count < $nold; $count++)
             {
               $absdiff[$count] = abs($newvals[$count] - $oldvals[$count]);
               $allzero = 0 if ($absdiff[$count]);
             }
             next if ($allzero);
 
-            # They diff. But do they differ strongly?
+            # They differ. But do they differ strongly?
             $rundata->{"$thorn $test $file NFAILWEAK"}++;
 
             # store difference for strong failures
-            for ($count = 0; $count < $nold; $count++)
+            for (my $count = 0; $count < $nold; $count++)
             {
               $maxabsdiff[$count] = $absdiff[$count]
                 if ($maxabsdiff[$count] < $absdiff[$count]);
@@ -1747,7 +1745,7 @@ sub CompareTestFiles
                                 $absoldval : $absnewval;
             }
 
-            for ($count = 0; $count < $nold; $count++)
+            for (my $count = 0; $count < $nold; $count++)
             {
               my $vreltol = $filereltol * $valmax[$count];
               my $vtol = $fileabstol > $vreltol ? $fileabstol : $vreltol;
@@ -1839,7 +1837,7 @@ sub CompareTestFiles
 
       my $havediffs = 0;
       my @maxreldiff = @maxabsdiff;
-      for ($count = 0; $count < $nold; $count++)
+      for (my $count = 0; $count < $nold; $count++)
       {
         next unless ($maxreldiff[$count]);
         $havediffs = 1;
@@ -1849,6 +1847,8 @@ sub CompareTestFiles
         }
         else
         {
+          # Note: You got here because the number of columns in the old
+          # and new file differ
           print "ERROR: How did I get here, maximum difference is $maxabsdiff[$count] and maximum value is $valmax[$count] for $file\n";
         }
       }

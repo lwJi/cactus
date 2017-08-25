@@ -1,7 +1,6 @@
 #!/bin/perl -s
 #
 # Test Suite tool
-# Version: $Header$
 
 # For debugging:
 my $debug = 0;
