@@ -149,7 +149,7 @@ $(EXEDIR)$(DIRSEP)$(EXE): $(CONFIG)/make.thornlist $(CONFIG)/cctki_version.h $(p
 	@echo Creating $(EXE) in $(EXEDIR) from $(THORNS)
 	datetime=`/bin/date +'%Y-%m-%dT%H:%M:%S%z' 2>&1` ; \
 	if [ $$? != 0 ]; then datetime=`/bin/date` ; fi ; \
-	$(CC) $(CFLAGS) -DCCTK_COMPILE_DATETIME="$$datetime" $(CCOMPILEONLY)$(OPTIONSEP)"$(call TRANSFORM_DIRS,$(TOP)/datestamp.o)" -I"$(call TRANSFORM_DIRS,$(CCTK_HOME)/src/include)" -I"$(call TRANSFORM_DIRS,$(CONFIG))" "$(call TRANSFORM_DIRS,$(DATESTAMP))"
+	$(CC) $(CPPFLAGS) $(CFLAGS) -DCCTK_COMPILE_DATETIME="$$datetime" $(CCOMPILEONLY)$(OPTIONSEP)"$(call TRANSFORM_DIRS,$(TOP)/datestamp.o)" -I"$(call TRANSFORM_DIRS,$(CCTK_HOME)/src/include)" -I"$(call TRANSFORM_DIRS,$(CONFIG))" "$(call TRANSFORM_DIRS,$(DATESTAMP))"
 	if [ ! -d $(EXEDIR) ]; then $(MKDIR) $(MKDIRFLAGS) $(EXEDIR) ; fi
 	$(LD) $(CREATEEXE)$(OPTIONSEP)"$(call TRANSFORM_DIRS,$@)" $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(EXTRAFLAGS) "$(call TRANSFORM_DIRS,$(TOP)/datestamp.o)" $(BEGIN_WHOLE_ARCHIVE_FLAGS) $(CACTUSLIBLINKLINE) $(END_WHOLE_ARCHIVE_FLAGS) $(GENERAL_LIBRARIES)
 	@echo Done creating $(EXE).
