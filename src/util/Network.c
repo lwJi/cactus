@@ -76,7 +76,7 @@ CCTK_FILEVERSION(util_Network_c);
 void Util_GetHostName (char *returned_name, int length)
 {
   static int have_name = 0;
-  static char name[100];
+  static char name[256];
   
   if (! have_name)
   {
