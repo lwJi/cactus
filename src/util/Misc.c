@@ -740,7 +740,7 @@ int Util_DoubleInRange(double inval, const char *range)
 
     if((start_closed ? inval >= start : inval > start) &&
        (end_closed   ? inval <= end   : inval < end  ) &&
-       (step         ? ! fmod (inval - start, step) : 1))
+       (step != 0    ? fmod (inval - start, step) == 0 : 1))
     {
       retval = 1;
     }
