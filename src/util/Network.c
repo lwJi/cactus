@@ -12,6 +12,7 @@
 #include "util_Network.h"
 
 #include <string.h>
+#include <errno.h>
 
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
@@ -76,14 +77,28 @@ CCTK_FILEVERSION(util_Network_c);
 void Util_GetHostName (char *returned_name, int length)
 {
   static int have_name = 0;
-  static char name[100];
+  static char name[256];
   
   if (! have_name)
   {
-    gethostname (name, sizeof name);
+    /* gethostname does not return an error if the name does not fit, and it is
+     * undefined whether or not there is a NUL byte at the end in that case. We
+     * work around this by checking that the name returned is in fact shorter
+     * than what would fit in the buffer. */
+    int ierr = gethostname (name, sizeof name);
+    if (! ierr)
+    {
+      name[sizeof name - 1] = '\0';
+      /* I cannot tell is a name of max length has been truncated so consider
+       * any string of max. length to already be too long */
+      if (strlen (name) == sizeof name - 1)
+      {
+        ierr = ENAMETOOLONG;
+      }
+    }
     
     /* Does the name include the domain name? */
-    if (! strchr (name, '.'))
+    if (ierr || ! strchr (name, '.'))
     {
 #ifdef HAVE_GETHOSTBYNAME
       struct hostent *thishostent = 0;
