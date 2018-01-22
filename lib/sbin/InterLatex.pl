@@ -42,11 +42,14 @@ if ($h || $help) {
    exit 0;
 }
 
+my $sbin_dir;
+BEGIN {
 # setup the cctk_home, if it doesn't exist, we leave it blank
 $cctk_home  .= '/' if (($cctk_home !~ /\/$/) && (defined $cctk_home));
 
 # set up the sbin dir, tacking cctk_home on the front
-my $sbin_dir = "${cctk_home}lib/sbin";
+$sbin_dir = "${cctk_home}lib/sbin";
+}
 use lib $sbin_dir;
 
 ##############
@@ -187,7 +190,8 @@ sub ReadInterfaceDatabase
 
       my ($arrangement, $thorn) = ($1, $2);
 
-      next if /^implementation/;
+      next if /^implementations$/;
+      next if /^thorns$/;
       next if ($interfaceDatabase{$old_key} !~ /\w/);
    
 
@@ -213,7 +217,7 @@ sub ReadInterfaceDatabase
       } elsif (/^([^\s]+) ([^\s]+)$/) { 
           $newDatabase{$arrangement}->{$thorn}->{$2} = $interfaceDatabase{$old_key};
       } else {
-         print "\n--> Confused: [$_] = [$interfaceDatabase{$_}]";
+         print "\n--> Confused: [$_] = [$interfaceDatabase{$old_key}]";
       }
  
    }

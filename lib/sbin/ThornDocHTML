@@ -41,7 +41,7 @@ for arr in `cd arrangements; echo *`; do
               cat ${arr}_${th}_param.tex >> documentation.tex
               cat $inter_file >> documentation.tex
               cat ${arr}_${th}_schedule.tex >> documentation.tex
-              echo "\\end{document}" >> documentation.tex
+              echo '\\end{document}' >> documentation.tex
 
               $abspath/lib/sbin/ConvertFigures $path
 

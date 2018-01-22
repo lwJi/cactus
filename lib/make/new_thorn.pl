@@ -77,7 +77,7 @@ mkdir("test", 0755);
 open(OUT, ">interface.ccl") || die "Cannot create interface.ccl";
 
 print OUT "# Interface definition for thorn $thorn_name\n";
-print OUT "implements:\n";
+print OUT "implements: $thorn_name\n";
 print OUT "inherits:\n";
 
 close OUT;
