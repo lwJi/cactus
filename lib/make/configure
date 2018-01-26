@@ -1733,7 +1733,7 @@ fi
 
 
 
-if test -z "$LD" ; then
+if test -z "$LD" -o "$LD" = 'ld' ; then
   if test "x$CXX" != 'xnone' ; then
     LD=$CXX
   else
