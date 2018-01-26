@@ -337,9 +337,24 @@ static char *ReadFile(FILE *file, unsigned long *filesize)
     return NULL;
   }
   /* Get the file size */
-  fseek(file, 0, SEEK_END);
+  int ierr = fseek(file, 0, SEEK_END);
+  if (ierr < 0)
+  {
+    fprintf(stderr, "Could not determine file size.\n");
+    return NULL;
+  }
   *filesize = ftell(file);
-  fseek(file, 0, SEEK_SET);
+  if (*filesize < 0)
+  {
+    fprintf(stderr, "Could not determine file size.\n");
+    return NULL;
+  }
+  ierr = fseek(file, 0, SEEK_SET);
+  if (ierr < 0)
+  {
+    fprintf(stderr, "Could not determine file size.\n");
+    return NULL;
+  }
   /* Allocate buffer */
   buffer = (char *)malloc(*filesize+1);
   if (!buffer)
@@ -348,7 +363,12 @@ static char *ReadFile(FILE *file, unsigned long *filesize)
     return NULL;
   }
   /* Read file into buffer and return */
-  fread(buffer, *filesize, 1, file);
+  size_t iret = fread(buffer, *filesize, 1, file);
+  if (iret < 1)
+  {
+    fprintf(stderr, "Could not read data from file.\n");
+    return NULL;
+  }
   /* Protect buffer for string operations */
   buffer[*filesize] = '\0';
   return buffer;
