@@ -440,8 +440,9 @@ AC_SUBST(F77_OPENMP_FLAGS)
 
 # Set default Fortran compiler
 AC_SUBST(F90)
-if test -z "$F90" || test "$F90" = none ; then
-  F90="$CCTK_HOME/lib/sbin/no-fortran-compiler"
+F90_NONE="$CCTK_HOME/lib/sbin/no-fortran-compiler"
+if test -z "$F90" || test "x$F90" = xnone ; then
+  F90="$F90_NONE"
 fi
 
 AC_SUBST(F77)
@@ -1191,19 +1192,19 @@ if test "x$DISABLE_REAL16" != 'xyes' -a "x$DISABLE_REAL16" != 'xno' -a "x$DISABL
     AC_ERROR([Didn't recognise setting of DISABLE_REAL16=\"$DISABLE_REAL16\"; should be either \"yes\" or \"no\" or \"\" (empty)])
 fi
 
-if test -n "$CCTK_REAL16_TYPE" -a "x$cctk_cv_have_fortran_real16" = 'xyes' -a "x$cctk_cv_have_fortran_complex32" = 'xyes' -a "x$DISABLE_REAL16" != 'xyes' ; then
+if test -n "$CCTK_REAL16_TYPE" -a \( "x$F90" = "x$F90_NONE" -o \( "x$cctk_cv_have_fortran_real16" = 'xyes' -a "x$cctk_cv_have_fortran_complex32" = 'xyes' -a "x$DISABLE_REAL16" != 'xyes' \) \); then
   AC_DEFINE_UNQUOTED(CCTK_REAL16_TYPE, $CCTK_REAL16_TYPE)
   AC_DEFINE(HAVE_CCTK_REAL16)
   AC_DEFINE_UNQUOTED(CCTK_REAL16_KIND, $REAL16_KIND)
   AC_DEFINE_UNQUOTED(CCTK_COMPLEX32_KIND, $COMPLEX32_KIND)
 fi
 
-if test -n "$CCTK_REAL8_TYPE" -a "x$cctk_cv_have_fortran_real8" -a "x$cctk_cv_have_fortran_complex16" = 'xyes' ; then
+if test -n "$CCTK_REAL8_TYPE" -a \( "x$F90" = "x$F90_NONE" -o \( "x$cctk_cv_have_fortran_real8" = 'xyes' -a "x$cctk_cv_have_fortran_complex16" = 'xyes' \) \); then
   AC_DEFINE_UNQUOTED(CCTK_REAL8_TYPE, $CCTK_REAL8_TYPE)
   AC_DEFINE(HAVE_CCTK_REAL8)
 fi
 
-if test -n "$CCTK_REAL4_TYPE" -a "x$cctk_cv_have_fortran_real4" = 'xyes' -a "x$cctk_cv_have_fortran_complex8" = 'xyes' ; then
+if test -n "$CCTK_REAL4_TYPE" -a \( "x$F90" = "x$F90_NONE" -o \( "x$cctk_cv_have_fortran_real4" = 'xyes' -a "x$cctk_cv_have_fortran_complex8" = 'xyes' \) \); then
   AC_DEFINE_UNQUOTED(CCTK_REAL4_TYPE, $CCTK_REAL4_TYPE)
   AC_DEFINE(HAVE_CCTK_REAL4)
 fi
