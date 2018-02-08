@@ -456,7 +456,7 @@ static char *ParseDefines(char *buffer, unsigned long *buffersize)
           value = getenv(define+5);
           if (!value)
           {
-            CCTK_VWarn(CCTK_WARN_ALERT, __LINE__, __FILE__, CCTK_THORNSTRING,
+            CCTK_VWARN(CCTK_WARN_ALERT,
                        "No environment variable %s found\n", define+5);
             /* TODO: Should we abort here? (return NULL) */
           }
@@ -529,7 +529,7 @@ static char *ParseDefines(char *buffer, unsigned long *buffersize)
          * It might not be a define after all but a valid, long parameter
          * value containing a '$'.*/
         define[1023] = '\0';
-        CCTK_VWarn(CCTK_WARN_PICKY, __LINE__, __FILE__, CCTK_THORNSTRING,
+        CCTK_VWARN(CCTK_WARN_PICKY,
                    "Possible define too long: %s", define);
         indef = 0;
         defpos = 0;
