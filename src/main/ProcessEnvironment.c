@@ -132,7 +132,22 @@ int CCTKi_ProcessEnvironment(int *argcp, char ***argvp,
       /* CACTUS_MPI_ERROR(MPI_Init(argcp, argvp)); */
       int provided;
       CACTUS_MPI_ERROR(MPI_Init_thread(argcp, argvp,
-                                       MPI_THREAD_SERIALIZED, &provided));
+                                       MPI_THREAD_MULTIPLE, &provided));
+      if (provided != MPI_THREAD_MULTIPLE)
+      {
+        fprintf(stderr, "Cannot initialise MPI with MPI_THREAD_MULTIPLE\n");
+        exit(1);
+      }
+    }
+    else
+    {
+      int provided;
+      MPI_Query_thread(&provided);
+      if (provided != MPI_THREAD_MULTIPLE)
+      {
+        fprintf(stderr, "MPI was initialised without threading support -- Cactus requires MPI_THREAD_MULTIPLE\n");
+        exit(1);
+      }
     }
   }
 #endif
