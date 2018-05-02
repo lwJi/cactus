@@ -9,6 +9,7 @@
  @@*/
 
 #include "cctk_Types.h"
+#include <stddef.h>
 
 #ifndef _CCTK_MISC_H_
 #define _CCTK_MISC_H_
@@ -24,9 +25,9 @@ int Util_SplitString(char **before, char **after, const char *string, const char
 int CCTK_Equals(const char *string1, const char *string2);
 int CCTK_FortranString (const char *c_string,
                         char *fortran_string,
-                        int fortran_length);
+                        ptrdiff_t fortran_length);
 
-char *Util_NullTerminateString(const char *, unsigned int);
+char *Util_NullTerminateString(const char *, ptrdiff_t);
 
 int Util_InList(const char *string1, int n_elements, ...);
 
