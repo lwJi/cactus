@@ -153,21 +153,28 @@
 
 #else
 
+#include <stddef.h>
+#if defined __GNUC__ && __GNUC__ >= 8
+typedef ptrdiff_t CCTK_FORTRAN_STRLEN;
+#else
+typedef int CCTK_FORTRAN_STRLEN;
+#endif
+
 #define ONE_FORTSTRING_ARG\
    char *cctk_str1,\
-   unsigned int cctk_strlen1
+   CCTK_FORTRAN_STRLEN cctk_strlen1
 #define TWO_FORTSTRING_ARG\
    char *cctk_str1,\
    char *cctk_str2,\
-   unsigned int cctk_strlen1,\
-   unsigned int cctk_strlen2
+   CCTK_FORTRAN_STRLEN cctk_strlen1,\
+   CCTK_FORTRAN_STRLEN cctk_strlen2
 #define THREE_FORTSTRING_ARG\
    char *cctk_str1,\
    char *cctk_str2,\
    char *cctk_str3,\
-   unsigned int cctk_strlen1,\
-   unsigned int cctk_strlen2,\
-   unsigned int cctk_strlen3
+   CCTK_FORTRAN_STRLEN cctk_strlen1,\
+   CCTK_FORTRAN_STRLEN cctk_strlen2,\
+   CCTK_FORTRAN_STRLEN cctk_strlen3
 
 #define ONE_FORTSTRING_CREATE(arg1)\
    char *arg1 = Util_NullTerminateString(cctk_str1,cctk_strlen1);
@@ -203,15 +210,15 @@
 #define TWO_FORTSTRINGS_ARGS\
    char *cctk_str1,\
    char *cctk_str2,\
-   unsigned int cctk_strlen1,\
-   unsigned int cctk_strlen2
+   CCTK_FORTRAN_STRLEN cctk_strlen1,\
+   CCTK_FORTRAN_STRLEN cctk_strlen2
 #define THREE_FORTSTRINGS_ARGS\
    char *cctk_str1,\
    char *cctk_str2,\
    char *cctk_str3,\
-   unsigned int cctk_strlen1,\
-   unsigned int cctk_strlen2,\
-   unsigned int cctk_strlen3
+   CCTK_FORTRAN_STRLEN cctk_strlen1,\
+   CCTK_FORTRAN_STRLEN cctk_strlen2,\
+   CCTK_FORTRAN_STRLEN cctk_strlen3
 #define TWO_FORTSTRINGS_CREATE(arg1,arg2)\
    char *arg1 = Util_NullTerminateString(cctk_str1,cctk_strlen1);\
    char *arg2 = Util_NullTerminateString(cctk_str2,cctk_strlen2);

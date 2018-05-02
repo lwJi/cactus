@@ -230,22 +230,22 @@ CCTK_POINTER CCTK_FCALL CCTK_FNAME (CCTK_NullPointer) (void)
    @endreturndesc
 @@*/
 
-char *Util_NullTerminateString(const char *instring, unsigned int len)
+char *Util_NullTerminateString(const char *instring, ptrdiff_t len)
 {
   char *outstring;
-  unsigned int i;
-  unsigned int position;
+  ptrdiff_t i;
+  ptrdiff_t position;
 
   if (len > 100000)
   {
     CCTK_VWarn(CCTK_WARN_ALERT,__LINE__,__FILE__,"Cactus",
-               "Null-terminating a string with length %d; "
+               "Null-terminating a string with length %td; "
                "this is probably an error in calling a C routine from Fortran",
                len);
   }
 
 #ifdef DEBUG_MISC
-  printf("Util_NullTerminateString: -%s-, (%u)\n",instring,len);
+  printf("Util_NullTerminateString: -%s-, (%td)\n",instring,len);
 #endif
 
   position = len;
@@ -1433,9 +1433,9 @@ void CCTK_FCALL CCTK_FNAME(CCTK_PrintString)
 @@*/
 int CCTK_FortranString (const char *c_string,
                         char *fortran_string,
-                        int fortran_length)
+                        ptrdiff_t fortran_length)
 {
-  int nchars, c_strlen;
+  ptrdiff_t nchars, c_strlen;
 
 
   nchars = c_strlen = strlen (c_string);
