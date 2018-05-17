@@ -142,7 +142,7 @@ $(CCTK_LIBDIR)/LINKLIST: $(patsubst %,$(CCTK_LIBDIR)/$(LIBNAME_PREFIX)$(CCTK_LIB
 			echo $$thorn/$$file; \
 		done; \
 	done >$@.tmp
-	mv $@.tmp $@
+	mv -f $@.tmp $@
 
 # Build the executable
 $(EXEDIR)$(DIRSEP)$(EXE): $(CONFIG)/make.thornlist $(CONFIG)/cctki_version.h $(patsubst %,$(CCTK_LIBDIR)/$(LIBNAME_PREFIX)$(CCTK_LIBNAME_PREFIX)%$(LIBNAME_SUFFIX),$(notdir $(THORNS) $(CACTUSLIBS))) $(CCTK_LIBDIR)/LINKLIST
