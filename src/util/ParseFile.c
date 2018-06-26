@@ -116,6 +116,7 @@ static int lineno = 1;
    @returntype int
    @returndesc
    0 - success
+   >0 - number of errors encountered
    @endreturndesc
 @@*/
 

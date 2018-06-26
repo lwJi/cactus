@@ -24,7 +24,7 @@ our @schedule_bins = (
     'POSTRESTRICTINITIAL',
     'POSTINITIAL',
     'POSTPOSTINITIAL',
-    # Recovery                  
+    # Recovery
     'RECOVER_VARIABLES',
     'POST_RECOVER_VARIABLES',
     'RECOVER_PARAMETERS',
@@ -43,7 +43,8 @@ our @schedule_bins = (
     'SHUTDOWN');
 # A regular expression matching all possible schedule bins, including
 # a CCTK prefix and in upper case
-our $schedule_bin_regexp = 'CCTK_(' . join ('|', @schedule_bins) . ')';
+our $schedule_bin_regexp = '\bCCTK_(' . join ('|', @schedule_bins) . ')\b';
+our $time_bin_info = {};
 
 # Check that the schedule bin exists
 my %schedule_bins = ();
@@ -185,8 +186,16 @@ sub parse_schedule_statement
             } elsif($prep_name eq "at") {
               $where = uc($prep->group(1,"pararg")->group(0,"vname")->substring());
               $where =~ s/^(CCTK_|)/CCTK_/gi;
+              if($where !~ $schedule_bin_regexp) {
+						  my $hint="If this routine should be scheduled check the spelling of the group or timebin name. Note that scheduling IN must be used to schedule a routine to run in a thorn-defined schedule group, whereas scheduling AT is used for a usual timebin. (Schedule IN may also be used with the usual timebins, but in this case the full name of the bin must be used, e.g. CCTK_EVOL and not EVOL";
+						  &CST_error(0,"Scheduling routine $name from thorn $thorn in non-existent group or timebin $where",$hint,$prep->linenum(),$ccl_file);
+              }
             } elsif($prep_name eq "in") {
               $where = $prep->group(1,"pararg")->group(0,"vname")->substring();
+              $time_bin_info->{$thorn}->{$name}->{$where} = {
+                  line  => $prep->linenum(),
+                  file  => $ccl_file,
+              };
             } elsif($prep_name eq "while") {
               $while_list = "";
               for my $w (@{$prep->group(1)->{children}}) {
@@ -225,12 +234,12 @@ sub parse_schedule_statement
             } elsif($child->is("options")) {
               for my $opt (@{$child->{children}}) {
                 $options .= "," unless($options eq "");
-                $options .= $opt->substring(); 
+                $options .= $opt->substring();
               }
             } elsif($child->is("tags")) {
               for my $tag (@{$child->{children}}) {
                 $tags .= "," unless($tags eq "");
-                $tags .= $tag->substring(); 
+                $tags .= $tag->substring();
               }
             } elsif($child->is("storage")) {
               for my $vname (@{$child->{children}}) {
@@ -434,7 +443,7 @@ sub parse_schedule_ccl
         my $hint = "Line should be of format STORAGE: <group>, <group>";
         my $message = "Format error in STORAGE statement of $thorn\nLine is: $data[$line_number]";
         &CST_error(0,$message,$hint,__LINE__,__FILE__);
-  	
+
       }
       else
       {
@@ -734,7 +743,7 @@ sub ParseScheduleBlock
     {
       $line_number++;
       if($data[$line_number] =~ m/^\s*STOR[^:]*:\s*(.*)$/i)
-      { 
+      {
         if ($where eq "CCTK_STARTUP" )
         {
           &CST_error(1, "Scheduling storage \"$name\" at startup in thorn \"$thorn\"","Storage cannot be allocated at startup",__LINE__,__FILE__);
@@ -948,10 +957,13 @@ sub check_schedule_database
     {
       if(!defined($allgroups{$rhschedule_db->{"\U$thorn\E BLOCK_$block WHERE"}}))
       {
-        my $message = "Scheduling routine $rhschedule_db->{\"\U$thorn\E BLOCK_$block NAME\"} from thorn $thorn in non-existent group or timebin $rhschedule_db->{\"\U$thorn\E BLOCK_$block WHERE\"}";
+        my $name  = $rhschedule_db->{"\U$thorn\E BLOCK_$block NAME"};
+        my $where = $rhschedule_db->{"\U$thorn\E BLOCK_$block WHERE"};
+        my $message = "Scheduling routine $name from thorn $thorn in non-existent group or timebin $where";
         print "    $message\n";
         my $hint = "If this routine should be scheduled check the spelling of the group or timebin name. Note that scheduling IN must be used to schedule a routine to run in a thorn-defined schedule group, whereas scheduling AT is used for a usual timebin. (Schedule IN may also be used with the usual timebins, but in this case the full name of the bin must be used, e.g. CCTK_EVOL and not EVOL)";
-        &CST_error(1,$message,$hint,__LINE__,__FILE__);
+        my $info = $time_bin_info->{$thorn}->{$name}->{$where};
+        &CST_error(1,$message,$hint,$info->{line},$info->{file});
       }
     }
   }
