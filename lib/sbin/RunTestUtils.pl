@@ -1615,11 +1615,9 @@ sub RunTest
   {
     print "Cactus exited with error code $retcode\n";
     print "Please check the logfile $testdata->{\"$thorn $test TESTRUNDIR\"}$sep$test.log\n\n";
-    $testdata->{"$thorn FAILED"} .= "$parfile ";
-    $testdata->{"NFAILED"}++;
   }
 
-  return $testdata;
+  return $retcode;
 }
 
 ############################################################
@@ -1637,7 +1635,7 @@ sub RunTest
 ############################################################
 sub CompareTestFiles
 {
-  my ($test,$thorn,$runconfig,$rundata,$config_data,$testdata) = @_;
+  my ($test,$thorn,$runconfig,$rundata,$config_data,$testdata,$retcode) = @_;
   my ($test_dir,$file,$newfile,$oldfile);
   my ($vmaxdiff,$tmaxdiff,$numlines);
 
@@ -1654,7 +1652,13 @@ sub CompareTestFiles
   $abstol = $runconfig->{"ABSTOL"};
   $reltol = $runconfig->{"RELTOL"};
 
-  if ($rundata->{"$thorn $test NTESTFILES"})
+  if ($retcode != 0)
+  {
+    # Cactus exited with an error code, we cannot trust any of the files
+    $rundata->{"$thorn $test NFAILWEAK"} = $testdata->{"$thorn $test NDATAFILES"};
+    $rundata->{"$thorn $test NFAILSTRONG"} = $testdata->{"$thorn $test NDATAFILES"};
+  }
+  elsif ($rundata->{"$thorn $test NTESTFILES"})
   {
 
     # Compare each file in the archived test directory
