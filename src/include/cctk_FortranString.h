@@ -15,6 +15,7 @@
    @version $Header$
  @@*/
 
+#include "cctk_Types.h"
 #include "cctk_Misc.h"
 
 #ifndef _CCTK_FORTRANSTRING_H_
@@ -162,19 +163,19 @@ typedef int CCTK_FORTRAN_STRLEN;
 
 #define ONE_FORTSTRING_ARG\
    char *cctk_str1,\
-   CCTK_FORTRAN_STRLEN cctk_strlen1
+   CCTK_FORTRAN_STRLEN_T cctk_strlen1
 #define TWO_FORTSTRING_ARG\
    char *cctk_str1,\
    char *cctk_str2,\
-   CCTK_FORTRAN_STRLEN cctk_strlen1,\
-   CCTK_FORTRAN_STRLEN cctk_strlen2
+   CCTK_FORTRAN_STRLEN_T cctk_strlen1,\
+   CCTK_FORTRAN_STRLEN_T cctk_strlen2
 #define THREE_FORTSTRING_ARG\
    char *cctk_str1,\
    char *cctk_str2,\
    char *cctk_str3,\
-   CCTK_FORTRAN_STRLEN cctk_strlen1,\
-   CCTK_FORTRAN_STRLEN cctk_strlen2,\
-   CCTK_FORTRAN_STRLEN cctk_strlen3
+   CCTK_FORTRAN_STRLEN_T cctk_strlen1,\
+   CCTK_FORTRAN_STRLEN_T cctk_strlen2,\
+   CCTK_FORTRAN_STRLEN_T cctk_strlen3
 
 #define ONE_FORTSTRING_CREATE(arg1)\
    char *arg1 = Util_NullTerminateString(cctk_str1,cctk_strlen1);
@@ -210,15 +211,15 @@ typedef int CCTK_FORTRAN_STRLEN;
 #define TWO_FORTSTRINGS_ARGS\
    char *cctk_str1,\
    char *cctk_str2,\
-   CCTK_FORTRAN_STRLEN cctk_strlen1,\
-   CCTK_FORTRAN_STRLEN cctk_strlen2
+   CCTK_FORTRAN_STRLEN_T cctk_strlen1,\
+   CCTK_FORTRAN_STRLEN_T cctk_strlen2
 #define THREE_FORTSTRINGS_ARGS\
    char *cctk_str1,\
    char *cctk_str2,\
    char *cctk_str3,\
-   CCTK_FORTRAN_STRLEN cctk_strlen1,\
-   CCTK_FORTRAN_STRLEN cctk_strlen2,\
-   CCTK_FORTRAN_STRLEN cctk_strlen3
+   CCTK_FORTRAN_STRLEN_T cctk_strlen1,\
+   CCTK_FORTRAN_STRLEN_T cctk_strlen2,\
+   CCTK_FORTRAN_STRLEN_T cctk_strlen3
 #define TWO_FORTSTRINGS_CREATE(arg1,arg2)\
    char *arg1 = Util_NullTerminateString(cctk_str1,cctk_strlen1);\
    char *arg2 = Util_NullTerminateString(cctk_str2,cctk_strlen2);

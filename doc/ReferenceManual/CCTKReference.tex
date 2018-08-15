@@ -12022,8 +12022,8 @@ printf("scheduled function: %s::%s AT %s\n",
 #include "cctk.h"
 typedef int (*CallFunction_t)(void *func, cFunctionData *attributes,
                               void *data);
-int CCTK_ScheduleQueryCurrentFunction(const char *where, void *data,
-                                      CallFunction_t CallFunction);
+int CCTK_ScheduleTraverse(const char *where, void *data,
+                          CallFunction_t CallFunction);
 \end{verbatim}
     \end{Synopsis}
   \end{SynopsisSection}

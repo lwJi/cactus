@@ -25,9 +25,9 @@ int Util_SplitString(char **before, char **after, const char *string, const char
 int CCTK_Equals(const char *string1, const char *string2);
 int CCTK_FortranString (const char *c_string,
                         char *fortran_string,
-                        ptrdiff_t fortran_length);
+                        CCTK_FORTRAN_STRLEN_T fortran_length);
 
-char *Util_NullTerminateString(const char *, ptrdiff_t);
+char *Util_NullTerminateString(const char *, CCTK_FORTRAN_STRLEN_T);
 
 int Util_InList(const char *string1, int n_elements, ...);
 
