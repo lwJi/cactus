@@ -55,8 +55,8 @@ while (<>)
       $mline =~ s/^\s*((ONE|TWO|THREE|FOUR|FIVE)_FORTSTRING_(CREATE|PTR)\s*\([^)]*\))(\s*;)?/$1/m;
 
       # start counting braces
-      $n_arg_left_braces++  while ($mline =~ m/({)/gm);
-      $n_arg_right_braces++ while ($mline =~ m/(})/gm);
+      $n_arg_left_braces++  while ($mline =~ m/(\{)/gm);
+      $n_arg_right_braces++ while ($mline =~ m/(\})/gm);
 
       # check if we have to fix names of fortran wrappers
       $do_fix_fnames = 1 if ($mline =~ /(CCTK_FNAME|CCTK_FORTRAN_COMMON_NAME)/m);
