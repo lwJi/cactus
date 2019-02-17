@@ -27,6 +27,8 @@ sub debug_dedent
 use lib ".";
 require "lib/sbin/RunTestUtils.pl";
 
+use Data::Dumper;
+
 # Read options from command line
 $prompt = shift;   
 $prompt =~ tr/A-Z/a-z/;
@@ -104,26 +106,112 @@ while ($choice !~ /^Q/i)
       $rundata = &ResetTestStatistics($rundata,$testdata);
 
       # Run all parameter files
+      # run up to nparallel tests in parallel
+      my $nparallel = (defined ($ENV{'CCTK_TESTSUITE_PARALLEL_TESTS'}) ?
+                       $ENV{'CCTK_TESTSUITE_PARALLEL_TESTS'} : 1);
+      my %running_tests;
+      my $wait_for_test = sub {
+        # peel one finished test of the list of running tests
+        my $finished_test = wait();
+        my $retcode = $?;
+        my ($thorn,$test,$STDOUT_CAPTURE,$STDERR_CAPTURE,$RESULTS_CAPTURE) = @{$running_tests{$finished_test}};
+
+        # read in the test's stdout, stderr and results
+        my $slurp = sub {
+          my ($FN) = @_;
+          local $/ = undef;
+          open(my $FH, '<', $FN) or die "Could not open '$FN' for reading: $!";
+          my $data = <$FH>;
+          close $FH;
+          #unlink $FN;
+          return $data;
+        };
+        my ($TESTOUT, $TESTERR, $TESTRESULTS) =
+          (&$slurp($STDOUT_CAPTURE), &$slurp($STDERR_CAPTURE), &$slurp($RESULTS_CAPTURE));
+        # inject testdata values into global data structure
+        my %testvalues = %{eval $TESTRESULTS};
+        if(exists $testvalues{"NFAILED"}) {
+          $testdata->{"NFAILED"} += $testvalues{"NFAILED"};
+          $testdata->{"$thorn failed"} .= " ".$testvalues{"$thorn FAILED"};
+        }
+        if($retcode != 0) { # subprocess exited with an error
+          $testdata->{"NFAILED"} += 1;
+          $testdata->{"$thorn failed"} .= " ".$test;
+        }
+        foreach my $key (keys %testvalues) {
+          if ($key =~ /^$thorn $test /) {
+            $testdata->{$key} = $testvalues{$key};
+          }
+        }
+
+        # handle and print output
+	print "------------------------------------------------------------------------\n\n";
+	print "  Test $thorn: $test \n";
+	print "    \"$testdata->{\"$thorn $test DESC\"}\"\n";
+        print STDOUT $TESTOUT;
+        print STDERR $TESTERR;
+
+        $rundata = &CompareTestFiles($test,$thorn,\%runconfig,$rundata,$config_data,$testdata);
+
+	$rundata = &ReportOnTest($test,$thorn,$rundata,$testdata);
+	if ($choice =~ /^I/i)
+	{
+	  &ViewResults($test,$thorn,\%runconfig,$rundata,$testdata);
+	}
+      };
       foreach $thorn (split(" ",$testdata->{"RUNNABLETHORNS"}))
       {
 	foreach $test (split(" ",$testdata->{"$thorn RUNNABLE"}))
 	{
-	  print "------------------------------------------------------------------------\n\n";
-	  print "  Test $thorn: $test \n";
-	  print "    \"$testdata->{\"$thorn $test DESC\"}\"\n";
+          while(scalar keys %running_tests >= $nparallel) { # wait for a task to finish
+            &$wait_for_test();
+          }
+
+	  print "  Starting test $thorn: $test \n" unless $nparallel == 1;
 	  if ($choice !~ /^O/i)
 	  {
-	    $testdata = &RunTest("log",$test,$thorn,$config_data,$testdata);
+            # TODO: replace these with pipes
+            my $TMPFILE = "/tmp/$thorn.$test";
+            my $STDOUT_CAPTURE = $TMPFILE.".stdout";
+            my $STDERR_CAPTURE = $TMPFILE.".stderr";
+            my $RESULTS_CAPTURE = $TMPFILE.".results";
+
+            my $pid = fork(); # start a sub-process
+            if(not $pid) {
+              # the child process
+              open(STDOUT, '>', $STDOUT_CAPTURE) or die "Could not open '$STDOUT_CAPTURE' for writing: $!";
+              open(STDERR, '>', $STDERR_CAPTURE) or die "Could not open '$STDERR_CAPTURE' for writing: $!";;
+              open(my $RESULTS, '>', $RESULTS_CAPTURE) or die "Could not open '$RESULTS_CAPTURE' for writing: $!";;
+
+              $testdata = &RunTest("log",$test,$thorn,$config_data,$testdata);
+
+              # get all values that need to be returned to our caller
+              my %retvalues;
+              foreach my $key (keys %$testdata) {
+                if ($key =~ /^$thorn $test /) {
+                  $retvalues{$key} = $testdata->{$key};
+                }
+              }
+              # Deal with the error code
+              if($retcode != 0) {
+                $retvalues{"$thorn FAILED"} = $parfile;
+                $retvalues{"NFAILED"} = 1;
+              }
+              $Data::Dumper::Terse = 1;
+              print $RESULTS Dumper(\%retvalues) or die;
+              close($RESULTS) or die;
+
+              exit 0;
+            } else {
+              # the parent process
+              $running_tests{$pid} = [$thorn,$test,$STDOUT_CAPTURE,$STDERR_CAPTURE,$RESULTS_CAPTURE];
+            }
 	  }
 
-	  $rundata = &CompareTestFiles($test,$thorn,\%runconfig,$rundata,$config_data,$testdata);
-
-	  $rundata = &ReportOnTest($test,$thorn,$rundata,$testdata);
-	  if ($choice =~ /^I/i)
-	  {
-	    &ViewResults($test,$thorn,\%runconfig,$rundata,$testdata);
-	  }
 	}
+      }
+      while(scalar keys %running_tests > 0) { # wait for all tasks to finish
+        &$wait_for_test();
       }
 
       # Write results of all tests
