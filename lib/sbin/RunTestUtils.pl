@@ -1065,8 +1065,8 @@ sub RunCactus
   printf "\n  Issuing $command\n";
 
   $retcode = 0;
-  open (CMD, "pwd; $command 2>&1 |");
-  open (LOG, "> $testname.log");
+  open (CMD, "pwd; $command 2>&1 |") or die "Could not start '$command': $!";
+  open (LOG, "> $testname.log") or die "Could not open '$testname.log' for writing: $!";
 
   while (<CMD>)
   {
