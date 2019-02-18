@@ -30,7 +30,6 @@ require "lib/sbin/RunTestUtils.pl";
 use Data::Dumper;
 use IO::Select;
 use POSIX ":sys_wait_h";
-use overload;
 
 # Read options from command line
 $prompt = shift;   
@@ -120,7 +119,7 @@ while ($choice !~ /^Q/i)
         foreach my $pid (keys %running_tests) {
           my ($thorn,$test,$STDOUT_CAPTURE,$STDERR,$RESULTS_CAPTURE) = @{$running_tests{$pid}};
           foreach my $cap ($STDOUT_CAPTURE,$STDERR,$RESULTS_CAPTURE) {
-            $captures{overload::StrVal($cap->[0])} = \$cap->[1];
+            $captures{$cap->[0]} = \$cap->[1];
             $reads->add($cap->[0]);
           }
         }
@@ -130,7 +129,7 @@ while ($choice !~ /^Q/i)
             my $read = sysread($fh, my $s, 4096*4);
             die "Could not read from pipe: $!" if not defined $read;
             $total_read += $read;
-            ${$captures{overload::StrVal($fh)}} .= $s;
+            ${$captures{$fh}} .= $s;
           }
           last if $total_read == 0; # all handles are at EOF
         }
