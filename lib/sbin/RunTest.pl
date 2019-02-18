@@ -115,6 +115,7 @@ while ($choice !~ /^Q/i)
         my $finished_test = wait();
         my $retcode = $?;
         my ($thorn,$test,$STDOUT_CAPTURE,$STDERR_CAPTURE,$RESULTS_CAPTURE) = @{$running_tests{$finished_test}};
+        delete $running_tests{$finished_test};
 
         # read in the test's stdout, stderr and results
         my $slurp = sub {
