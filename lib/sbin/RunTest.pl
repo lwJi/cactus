@@ -156,10 +156,8 @@ while ($choice !~ /^Q/i)
         my $TESTRESULTS = $RESULTS_CAPTURE->[1] .= &$slurp($RESULTS_CAPTURE->[0]);
         # inject testdata values into global data structure
         my %testvalues = %{eval $TESTRESULTS};
-        if(exists $testvalues{"NFAILED"}) {
-          $testdata->{"NFAILED"} += $testvalues{"NFAILED"};
-          $testdata->{"$thorn failed"} .= " ".$testvalues{"$thorn FAILED"};
-        }
+        $testdata->{"NFAILED"} += $testvalues{"NFAILED"};
+        $testdata->{"$thorn failed"} .= " ".$testvalues{"$thorn FAILED"};
         if($retcode != 0) { # subprocess exited with an error
           $testdata->{"NFAILED"} += 1;
           $testdata->{"$thorn failed"} .= " ".$test;
@@ -208,6 +206,11 @@ while ($choice !~ /^Q/i)
                 close $FH or die "Failed to close file: $!";
               }
 
+              # these are globals updated by RunTest so I initialize them to a
+              # known value that I can accumulate over
+              $testdata->{"NFAILED"} = 0;
+              $testdata->{"$thorn failed"} = "";
+
               $testdata = &RunTest("log",$test,$thorn,$config_data,$testdata);
 
               # get all values that need to be returned to our caller
@@ -217,11 +220,8 @@ while ($choice !~ /^Q/i)
                   $retvalues{$key} = $testdata->{$key};
                 }
               }
-              # Deal with the error code
-              if($retcode != 0) {
-                $retvalues{"$thorn FAILED"} = $parfile;
-                $retvalues{"NFAILED"} = 1;
-              }
+              $retvalues{"$thorn FAILED"} = $testdata->{"$thorn FAILED"};
+              $retvalues{"NFAILED"} = $testdata->{"NFAILED"};
               $Data::Dumper::Terse = 1;
               print $RESULTS_WR Dumper(\%retvalues) or die "Could not write results: $!";
               close($RESULTS_WR) or die "Could not write results: $!";
