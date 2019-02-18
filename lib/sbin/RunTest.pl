@@ -28,6 +28,9 @@ use lib ".";
 require "lib/sbin/RunTestUtils.pl";
 
 use Data::Dumper;
+use IO::Select;
+use POSIX ":sys_wait_h";
+use overload;
 
 # Read options from command line
 $prompt = shift;   
@@ -111,24 +114,47 @@ while ($choice !~ /^Q/i)
                        $ENV{'CCTK_TESTSUITE_PARALLEL_TESTS'} : 1);
       my %running_tests;
       my $wait_for_test = sub {
+        # get data from pipes if there is any available
+        my $reads = IO::Select->new();
+        my %captures;
+        foreach my $pid (keys %running_tests) {
+          my ($thorn,$test,$STDOUT_CAPTURE,$STDERR,$RESULTS_CAPTURE) = @{$running_tests{$pid}};
+          foreach my $cap ($STDOUT_CAPTURE,$STDERR,$RESULTS_CAPTURE) {
+            $captures{overload::StrVal($cap->[0])} = \$cap->[1];
+            $reads->add($cap->[0]);
+          }
+        }
+        while (my @can_read = $reads->can_read()) {
+          my $total_read = 0;
+          foreach my $fh (@can_read) {
+            my $read = sysread($fh, my $s, 4096*4);
+            die "Could not read from pipe: $!" if not defined $read;
+            $total_read += $read;
+            ${$captures{overload::StrVal($fh)}} .= $s;
+          }
+          last if $total_read == 0; # all handles are at EOF
+        }
         # peel one finished test of the list of running tests
-        my $finished_test = wait();
+        my $finished_test = waitpid(-1, WNOHANG);
         my $retcode = $?;
+        return if $finished_test <= 0; # no child finished
         my ($thorn,$test,$STDOUT_CAPTURE,$STDERR_CAPTURE,$RESULTS_CAPTURE) = @{$running_tests{$finished_test}};
         delete $running_tests{$finished_test};
 
-        # read in the test's stdout, stderr and results
+        # read in all remaining data test's stdout, stderr and results
         my $slurp = sub {
-          my ($FN) = @_;
-          local $/ = undef;
-          open(my $FH, '<', $FN) or die "Could not open '$FN' for reading: $!";
-          my $data = <$FH>;
+          my ($FH) = @_;
+          my $data = "";
+          while((my $read = sysread($FH, my $newdata, 4096*4)) != 0) {
+            die "Could not read from pipe: $!" if not defined $read;
+            $data .= $newdata;
+          }
           close $FH;
-          #unlink $FN;
           return $data;
         };
-        my ($TESTOUT, $TESTERR, $TESTRESULTS) =
-          (&$slurp($STDOUT_CAPTURE), &$slurp($STDERR_CAPTURE), &$slurp($RESULTS_CAPTURE));
+        my $TESTOUT = $STDOUT_CAPTURE->[1] .= &$slurp($STDOUT_CAPTURE->[0]);
+        my $TESTERR = $STDERR_CAPTURE->[1] .= &$slurp($STDERR_CAPTURE->[0]);
+        my $TESTRESULTS = $RESULTS_CAPTURE->[1] .= &$slurp($RESULTS_CAPTURE->[0]);
         # inject testdata values into global data structure
         my %testvalues = %{eval $TESTRESULTS};
         if(exists $testvalues{"NFAILED"}) {
@@ -171,18 +197,17 @@ while ($choice !~ /^Q/i)
 	  print "  Starting test $thorn: $test \n" unless $nparallel == 1;
 	  if ($choice !~ /^O/i)
 	  {
-            # TODO: replace these with pipes
-            my $TMPFILE = "/tmp/$thorn.$test";
-            my $STDOUT_CAPTURE = $TMPFILE.".stdout";
-            my $STDERR_CAPTURE = $TMPFILE.".stderr";
-            my $RESULTS_CAPTURE = $TMPFILE.".results";
-
+            pipe(my $STDOUT_RD, my $STDOUT_WR) or die "Could not open pipe: $!";
+            pipe(my $STDERR_RD, my $STDERR_WR) or die "Could not open pipe: $!";
+            pipe(my $RESULTS_RD, my $RESULTS_WR) or die "Could not open pipe: $!";
             my $pid = fork(); # start a sub-process
             if(not $pid) {
               # the child process
-              open(STDOUT, '>', $STDOUT_CAPTURE) or die "Could not open '$STDOUT_CAPTURE' for writing: $!";
-              open(STDERR, '>', $STDERR_CAPTURE) or die "Could not open '$STDERR_CAPTURE' for writing: $!";;
-              open(my $RESULTS, '>', $RESULTS_CAPTURE) or die "Could not open '$RESULTS_CAPTURE' for writing: $!";;
+              open(STDOUT, '>&', $STDOUT_WR) or die "Could not dup STDOUT: $!";
+              open(STDERR, '>&', $STDERR_WR) or die "Could not dup STDERR $!";;
+              foreach my $FH ($STDOUT_RD, $STDOUT_WR, $STDERR_RD, $STDERR_WR, $RESULTS_RD) {
+                close $FH or die "Failed to close file: $!";
+              }
 
               $testdata = &RunTest("log",$test,$thorn,$config_data,$testdata);
 
@@ -199,13 +224,16 @@ while ($choice !~ /^Q/i)
                 $retvalues{"NFAILED"} = 1;
               }
               $Data::Dumper::Terse = 1;
-              print $RESULTS Dumper(\%retvalues) or die;
-              close($RESULTS) or die;
+              print $RESULTS_WR Dumper(\%retvalues) or die "Could not write results: $!";
+              close($RESULTS_WR) or die "Could not write results: $!";
 
               exit 0;
             } else {
               # the parent process
-              $running_tests{$pid} = [$thorn,$test,$STDOUT_CAPTURE,$STDERR_CAPTURE,$RESULTS_CAPTURE];
+              foreach my $FH ($STDOUT_WR, $STDERR_WR, $RESULTS_WR) {
+                close $FH or die "Failed to close file: $!";
+              }
+              $running_tests{$pid} = [$thorn,$test,[$STDOUT_RD,""],[$STDERR_RD,""],[$RESULTS_RD,""]];
             }
 	  }
 
