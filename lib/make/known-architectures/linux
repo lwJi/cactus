@@ -71,30 +71,6 @@ else
      fi
      rm foo.f
    fi
- elif test -n "$F77" && test "$F77" != 'none' ; then
-   if test "`$F77 -v 2>&1 | grep -i 'gcc version'`" ; then
-     LINUX_F90_COMP=gnu77
-   elif test "`$F77 --version 2>&1 | grep 'GNU Fortran'`" ; then
-     LINUX_F90_COMP=gnu95
-   elif test "`$F77 -? 2>&1 | grep -i absoft`" ; then
-     LINUX_F90_COMP=absoft77
-   elif test "`$F77 -V 2>&1 | grep NAGWare`" ; then
-     LINUX_F90_COMP=nag
-   elif test "`$F90 -V 2>&1 | grep -i intel`" ; then
-     LINUX_F90_COMP=Intel
-   elif test "`$F90 -v 2>&1 | grep -i compaq`" ; then
-     LINUX_F90_COMP=Compaq
-   elif test "`$F90 -v 2>&1 | grep PathScale`" ; then
-     LINUX_F90_COMP=PathScale
-   elif test "`$F77 -qversion 2>&1 | grep IBM`" ; then
-     LINUX_F90_COMP=IBM
-   else
-     echo "Unknown Linux f77 compiler '$F77'."
-     echo 'Please add appropriate information to'
-     echo "  $srcdir/known-architectures/linux"
-     echo 'and send the updated file to CactusMaint'
-     echo 'We will try anyway ...'
-   fi
  fi
 
  # find out if we have egcs or not, LIBS is either g2c or f2c
@@ -102,7 +78,7 @@ else
 
  if test "$LINUX_F90_COMP" = 'gnu77' -o "$LINUX_F90_COMP" = 'pacific' ; then
    : > foo.f
-   if test -n "`$F77 -v 2>&1 foo.f | grep collect | grep g2c`" ; then
+   if test -n "`$F90 -v 2>&1 foo.f | grep collect | grep g2c`" ; then
      LINUX_G77_USES_LIBG2C=yes
    else
      LINUX_G77_USES_LIBG2C=no
@@ -123,19 +99,13 @@ else
          : ${LIBS='f2c m'}
        fi
      fi
-     : ${F77_DEBUG_FLAGS='-g'}
      : ${F90_DEBUG_FLAGS='-g'}
-     : ${F77_WARN_FLAGS='-Wall'}
      : ${F90_WARN_FLAGS='-Wall'}
-     F77_VERSION="`$F77 -v 2>&1 | grep -i version | head -n1`"
      F90_VERSION="`$F90 -v 2>&1 | grep -i version | head -n1`"
      ;;
    gnu95)
-     : ${F77_DEBUG_FLAGS='-g'}
      : ${F90_DEBUG_FLAGS='-g'}
-     : ${F77_WARN_FLAGS='-Wall'}
      : ${F90_WARN_FLAGS='-Wall'}
-     : ${F77_OPTIMISE_FLAGS='-O3 -funroll-loops'}
      : ${F90_OPTIMISE_FLAGS='-O3 -funroll-loops'}
      if test "$LD" != "$F90" ; then
        gnu95_libdir="`$F90 -print-file-name=libgfortran.a`"
@@ -143,14 +113,7 @@ else
        : ${LIBS='gfortran'}
        : ${LIBDIRS="$gnu95_libdir"}
      fi
-     F77_VERSION="`$F77 --version 2>&1 | grep GNU | head -n1`"
      F90_VERSION="`$F90 --version 2>&1 | grep GNU | head -n1`"
-     # only gfortran versions 4.1 and higher support OpenMP
-     major_version=`echo $F77_VERSION | cut -d')' -f2 | tr -d ' ' | cut -d'.' -f1`
-     minor_version=`echo $F77_VERSION | cut -d')' -f2 | cut -d'.' -f2`
-     if test ! \( "$major_version" -lt 4 -o \( "$major_version" = 4 -a "$minor_version" -lt 1 \) \) ; then
-       : ${F77_OPENMP_FLAGS='-fopenmp'}
-     fi
      major_version=`echo $F90_VERSION | cut -d')' -f2 | tr -d ' ' | cut -d'.' -f1`
      minor_version=`echo $F90_VERSION | cut -d')' -f2 | cut -d'.' -f2`
      if test ! \( "$major_version" -lt 4 -o \( "$major_version" = 4 -a "$minor_version" -lt 1 \) \) ; then
@@ -164,46 +127,34 @@ else
      if test "$LINUX_G77_USES_LIBG2C" = 'no' ; then
        : ${LIBS='vast90 f2c m'}
      fi
-     : ${F77_DEBUG_FLAGS="-g"}
      : ${F90_DEBUG_FLAGS="-g"}
-     : ${F77_WARN_FLAGS="-Wall"}
      : ${F90_WARN_FLAGS="-Wall"}
      F90_VERSION="`$F90 -V 2>&1 | grep -i version | head -n1`"
      ;;
    absoft)
      : ${LIBS='f90math fio f77math m'}
      : ${F90_OPTIMISE_FLAGS='-s -O'}
-     : ${F77_OPTIMISE_FLAGS='-s -O'}
      # Test if it is a version of the absoft compiler which has the library in a custom place.
      if test -n "$ABSOFT" ; then
        : ${LIBDIRS='$(ABSOFT)/lib'}
      fi
-     : ${F77_DEBUG_FLAGS='-g'}
      : ${F90_DEBUG_FLAGS='-g'}
-     : ${F77_WARN_FLAGS='-m0'}
      : ${F90_WARN_FLAGS='-m0'}
      F90_VERSION="`$F90 -V 2>&1 | grep -i version | head -n1`"
      ;;
    absoft77)
      : ${LIBS='fio f77math m'}
-     F77FLAGS='-f'
      F90FLAGS='-f'
      # Test if it is a version of the absoft compiler which has the library in a custom place.
      if test -n "$ABSOFT" ; then
        : ${LIBDIRS='$(ABSOFT)/lib'}
      fi
-     : ${F77_DEBUG_FLAGS='-g'}
      : ${F90_DEBUG_FLAGS='-g'}
-     : ${F77_WARN_FLAGS='-m0'}
      : ${F90_WARN_FLAGS='-m0'}
-     F77_VERSION="`$F77 -? 2>&1 | grep -i version | head -n1`"
      ;;
    nag)
-     : ${F77FLAGS='-maxcontin=100 -mismatch -w=x77 -w=uda -w=usy'}
      : ${F90FLAGS='-maxcontin=100 -mismatch -w=x77 -w=uda -w=usy'}
-     : ${F77_OPTIMISE_FLAGS='-O4'}
      : ${F90_OPTIMISE_FLAGS='-O4'}
-     F77_VERSION="`$F77 -V 2>&1 | grep -i version | head -n1`"
      F90_VERSION="`$F90 -V 2>&1 | grep -i version | head -n1`"
      ;;
    portland)
@@ -212,15 +163,10 @@ else
        LIBDIRS="`which $F90 | sed 's,/bin/.*,/lib,'`"
      fi
      # workaround for calling C varargs functions from Fortran
-     : ${F77FLAGS='-Mx,125,0x200'}
      : ${F90FLAGS='-Mx,125,0x200'}
-     : ${F77_OPENMP_FLAGS='-mp'}
-     : ${F77_OPTIMISE_FLAGS='-fast -Mvect=assoc'}
-     : ${F77_WARN_FLAGS='-Minfo -Mneginfo'}
      : ${F90_OPENMP_FLAGS='-mp'}
      : ${F90_OPTIMISE_FLAGS='-fast -Mvect=assoc'}
      : ${F90_WARN_FLAGS='-Minfo -Mneginfo'}
-     : ${F77_DEBUG_FLAGS='-g'}
      : ${F90_DEBUG_FLAGS='-g'}
      F90_VERSION="`$F90 -V 2>&1 | grep -i pgf90 | head -n1`"
      ;;
@@ -229,11 +175,8 @@ else
      F90_VERSION="`$F90 -V 2>&1 | grep -i version | head -n1`"
      ;;
    lahey)
-     : ${F77_DEBUG_FLAGS='-g --chk'}
      : ${F90_DEBUG_FLAGS='-g --chk'}
-     : ${F77_WARN_FLAGS='--warn'}
      : ${F90_WARN_FLAGS='--warn'}
-     : ${F77_OPTIMISE_FLAGS='-O'}
      : ${F90_OPTIMISE_FLAGS='-O'}
      if test -n "$LAHEY" ; then
        : ${LIBDIRS="$LAHEY/lib"}
@@ -257,25 +200,19 @@ else
      F90_VERSION="`$F90 --version 2>&1 | grep -i version | head -n1`"
      ;;
    SGI)
-     : ${F77_WARN_FLAGS='-fullwarn'}
      : ${F90_WARN_FLAGS='-fullwarn'}
-     : ${F77_DEBUG_FLAGS='-g3'}
      : ${F90_DEBUG_FLAGS='-g3'}
-     : ${F77_OPTIMISE_FLAGS='-O3'}
      : ${F90_OPTIMISE_FLAGS='-O3'}
      : ${LIBS='fortran ffio m'}
      F90_VERSION="`$F90 -v 2>&1 | grep -i version | head -n1`"
      ;;
   Intel)
      if test "$OPTIMISE" = 'no'; then
-       : ${F77FLAGS='-align -w95 -O0'}
        : ${F90FLAGS='-align -w95 -O0'}
      else
-       : ${F77FLAGS='-align -w95'}
        : ${F90FLAGS='-align -w95'}
      fi
 
-     : ${F77_OPENMP_FLAGS='-openmp'}
      : ${F90_OPENMP_FLAGS='-openmp'}
 
      intel_dir="$(dirname $(dirname $(which $F90)))"
@@ -322,48 +259,33 @@ else
      esac
      # Be conservative about the default optimisation options; the
      # user can always override them
-     : ${F77_OPTIMISE_FLAGS="-O2 -ip"}
      : ${F90_OPTIMISE_FLAGS="-O2 -ip"}
-     F77_VERSION="`$F77 -V 2>&1 | grep -i version | head -n1`"
      F90_VERSION="`$F90 -V 2>&1 | grep -i version | head -n1`"
      ;;
    Compaq)
      : ${LIBS='for m'}
-     F77_VERSION="`$F77 -v 2>&1 | grep -i version | head -n1`"
      F90_VERSION="`$F90 -v 2>&1 | grep -i version | head -n1`"
      ;;
    PathScale)
-     : ${F77FLAGS='-fno-second-underscore'}
      : ${F90FLAGS='-fno-second-underscore'}
-     : ${F77_OPENMP_FLAGS='-openmp'}
      : ${F90_OPENMP_FLAGS='-openmp'}
-     : ${F77_OPTIMISE_FLAGS='-Ofast'}
      : ${F90_OPTIMISE_FLAGS='-Ofast'}
      if test "$OPTIMISE" != 'no'; then
        : ${LDFLAGS='-Ofast'}
      fi
-     : ${F77_WARN_FLAGS='-fullwarn'}
      : ${F90_WARN_FLAGS='-fullwarn'}
      : ${LIBS='pathfortran mv'}
-     F77_VERSION="`$F77 -v 2>&1 | grep -i version | head -n1`"
      F90_VERSION="`$F90 -v 2>&1 | grep -i version | head -n1`"
      ;;
    IBM)
-     : ${F77FLAGS='-q64 -qextname -qsuppress=1501-510:cmpmsg'}
      : ${F90FLAGS='-q64 -qextname -qsuppress=1501-510:cmpmsg'}
-     : ${F77_OPTIMISE_FLAGS='-O3 -qhot -qarch=auto -qtune=auto -qcache=auto'}
      : ${F90_OPTIMISE_FLAGS='-O3 -qhot -qarch=auto -qtune=auto -qcache=auto'}
-     : ${F77_OPENMP_FLAGS='-qsmp=omp'}
      : ${F90_OPENMP_FLAGS='-qsmp=omp'}
      : ${LIBS='xlf90'}
-     F77_VERSION="`$F77 -qversion 2>&1 | head -n1`"
      F90_VERSION="`$F90 -qversion 2>&1 | head -n1`"
      CCTK_WriteLine make.arch.defn 'F90FLAGS += $(IBM_$(subst .,,$(suffix $<))_FLAGS)' 
-     CCTK_WriteLine make.arch.defn 'F77FLAGS += $(IBM_$(subst .,,$(suffix $<))_FLAGS)'
      CCTK_WriteLine make.arch.defn 'IBM_F90_FLAGS = -qfree'
      CCTK_WriteLine make.arch.defn 'IBM_f90_FLAGS = -qfree'
-     CCTK_WriteLine make.arch.defn 'IBM_F77_FLAGS = -qfixed'
-     CCTK_WriteLine make.arch.defn 'IBM_f77_FLAGS = -qfixed'
      CCTK_WriteLine make.arch.defn 'IBM_F_FLAGS = -qfixed'
      CCTK_WriteLine make.arch.defn 'IBM_f_FLAGS = -qfixed'
      ;;
