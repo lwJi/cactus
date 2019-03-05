@@ -169,14 +169,12 @@ fi
 CCTK_PROG_CC_WORKS
 AC_PROG_CC_GNU
 
-if test "x$CXX" != 'xnone' ; then
-  if test -z "$CXX" ; then
-    AC_CHECK_PROGS(CXX, g++-mp-4.4 g++-mp-4.2 g++-mp-4.2 c++ g++ gcc CC cxx cc++ cl xlC)
-  fi
-
-  CCTK_PROG_CXX_WORKS
-  AC_PROG_CXX_GNU
+if test -z "$CXX" ; then
+  AC_CHECK_PROGS(CXX, g++-mp-4.4 g++-mp-4.2 g++-mp-4.2 c++ g++ gcc CC cxx cc++ cl xlC)
 fi
+
+CCTK_PROG_CXX_WORKS
+AC_PROG_CXX_GNU
 
 if test -z "$CUCC" ; then
   AC_CHECK_PROGS(CUCC, nvcc)
@@ -243,11 +241,7 @@ fi
 AC_SUBST(LD)
 
 if test -z "$LD" ; then
-  if test "x$CXX" != 'xnone' ; then
-    LD=$CXX
-  else
-    LD=$CC
-  fi
+  LD=$CXX
 fi
 
 
