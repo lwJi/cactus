@@ -1368,7 +1368,25 @@ fi
 
 # How to link the cactus libraries
 AC_SUBST(CACTUSLIBLINKLINE)
-: ${CACTUSLIBLINKLINE='-L$(CCTK_LIBDIR) $(addprefix -l, $(ALLCACTUSLIBS))'}
+if test -z "$CACTUSLIBLINKLINE" ; then
+  AC_MSG_CHECKING([whether linker supports -filelist])
+  AC_CACHE_VAL(cctk_cv_have_filelist,
+  [ac_save_LDFLAGS="$LDFLAGS"
+  LDFLAGS="-filelist /dev/null,/"
+  AC_TRY_LINK([],
+  [return 0], eval "cctk_cv_have_filelist=yes",
+  eval "cctk_cv_have_filelist=no")
+  LDFLAGS=$ac_save_LDFLAGS
+  ])
+  if test "$cctk_cv_have_filelist" = 'yes'; then
+    CACTUSLIBLINKLINE='-L$(CCTK_LIBDIR) -filelist $(CCTK_LIBDIR)/LINKLIST,$(TOP)/build'
+    AC_MSG_RESULT(yes)
+  else
+    CACTUSLIBLINKLINE='-L$(CCTK_LIBDIR) $(addprefix -l, $(ALLCACTUSLIBS))'
+    AC_MSG_RESULT(no)
+  fi
+fi
+
 
 # How to generate dependency info
 AC_SUBST(C_DEPEND)
