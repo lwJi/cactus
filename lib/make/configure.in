@@ -1343,9 +1343,28 @@ AC_SUBST(LIBNAME_SUFFIX)
 
 # How to link in all object files from an archive
 AC_SUBST(BEGIN_WHOLE_ARCHIVE_FLAGS)
-: ${BEGIN_WHOLE_ARCHIVE_FLAGS=''}
 AC_SUBST(END_WHOLE_ARCHIVE_FLAGS)
-: ${END_WHOLE_ARCHIVE_FLAGS=''}
+if test  -z "$BEGIN_WHOLE_ARCHIVE_FLAGS" &&
+   test -z "$END_WHOLE_ARCHIVE_FLAGS" ; then
+  AC_MSG_CHECKING([whether linker supports --whole-archive])
+  AC_CACHE_VAL(cctk_cv_have_whole_archive,
+  [ac_save_LDFLAGS="$LDFLAGS"
+  LDFLAGS="-Wl,--whole-archive -Wl,--no-whole-archive"
+  AC_TRY_LINK([],
+  [return 0], eval "cctk_cv_have_whole_archive=yes",
+  eval "cctk_cv_have_whole_archive=no")
+  LDFLAGS=$ac_save_LDFLAGS
+  ])
+  if test "$cctk_cv_have_whole_archive" = 'yes'; then
+    BEGIN_WHOLE_ARCHIVE_FLAGS='-Wl,--whole-archive'
+    END_WHOLE_ARCHIVE_FLAGS='-Wl,--no-whole-archive'
+    AC_MSG_RESULT(yes)
+  else
+    AC_MSG_RESULT(no)
+  fi
+fi
+
+
 
 # How to link the cactus libraries
 AC_SUBST(CACTUSLIBLINKLINE)
