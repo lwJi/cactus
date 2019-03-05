@@ -178,6 +178,10 @@ if test "x$CXX" != 'xnone' ; then
   AC_PROG_CXX_GNU
 fi
 
+if test -z "$F90" ; then
+  AC_CHECK_PROGS(F90, f90 pgf90 xlf90 ifort gfortran-mp-4.4 gfortran-mp-4.3 gfortran-mp-4.2 gfortran)
+fi
+
 if test -z "$CUCC" ; then
   AC_CHECK_PROGS(CUCC, nvcc)
 fi
@@ -220,10 +224,6 @@ fi
 
 if test -z "$GIT" ; then
   AC_CHECK_PROGS(GIT, git)
-fi
-
-if test -z "$F90" ; then
-  AC_CHECK_PROGS(F90, f90 pgf90 xlf90 ifort gfortran-mp-4.4 gfortran-mp-4.3 gfortran-mp-4.2 gfortran)
 fi
 
 if test -z "$AR" ; then
@@ -438,17 +438,6 @@ AC_SUBST(F77_OPENMP_FLAGS)
 
 ##########################################################################
 
-# Set default Fortran compiler
-AC_SUBST(F90)
-F90_NONE="$CCTK_HOME/lib/sbin/no-fortran-compiler"
-if test -z "$F90" || test "x$F90" = xnone ; then
-  F90="$F90_NONE"
-fi
-
-AC_SUBST(F77)
-F77="$F90"
-
-
 # The known architecture stuff has probably set the LIBS variable
 # So remember what it is and set it to blank to prevent any problems with the
 # rest of the configure stuff.
@@ -472,6 +461,22 @@ AC_SUBST(RUNDIR_PREFIX)
 AC_SUBST(LIBLINK_PREFIX)
 : ${LIBLINK_PREFIX='-l'}
 : ${LIBLINK_SUFFIX=''}
+
+# either give up on a Fortran compiler or require that one found actually works
+# this needs to be after known_architectures b/c those files only check for
+# F90=none and not the full path of the tool
+AC_SUBST(F90)
+AC_SUBST(F77)
+
+F90_NONE="$CCTK_HOME/lib/sbin/no-fortran-compiler"
+if test -z "$F90" || test "x$F90" = xnone ; then
+  F90="$F90_NONE"
+  F77="$F90_NONE"
+else
+  F77="$F90"
+  # autoconf2.13 only knows about F77 so we cannot check F90
+  CCTK_PROG_F77_WORKS
+fi
 
 # Checks for libraries.
 
