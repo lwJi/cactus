@@ -313,7 +313,7 @@ AC_SUBST(CUCC_WARN_FLAGS)
 : ${CUCC_WARN_FLAGS=''}
 
 AC_SUBST(F90_WARN_FLAGS)
-if test "$F90" = 'gfortran' ; then
+if test "`$F90 --version 2>&1 | grep 'GNU Fortran'`" ; then
   : ${F90_WARN_FLAGS='-Wall -Wshadow -Wsurprising'}
 else
   : ${F90_WARN_FLAGS=''}
