@@ -301,12 +301,29 @@ else
      ;;
  esac
 
- # C compiler
- # Set the appropriate dependency, warning, and debugging flags
- # Note that the defaults settings are for gcc/g++ and set by configure
- case `basename $CC` in
+ # Determine which C compiler is in use
+ LINUX_C_COMP=unknown
+ if test "`$CC -V 2>&1 | grep -i intel`" ; then
+   LINUX_C_COMP=Intel
+ elif test "`$CC -V 2>&1 | grep -i cc | grep -i pgcc`" ; then
+   LINUX_C_COMP=portland
+ elif test "`$CC -V 2>&1 | grep pgcc`" ; then
+   LINUX_C_COMP=portland
+ elif test "`$CC -v 2>&1 | grep  gcc`" ; then
+   LINUX_C_COMP=gcc
+ elif test "`$CC -v 2>&1 | grep -i SGICC`" ; then
+   LINUX_C_COMP=SGI
+ elif test "`$CC -v 2>&1 | grep PathScale`" ; then
+   LINUX_C_COMP=PathScale
+ elif test "`$CC --version 2>&1 | grep 'gcc'`" ; then
+   LINUX_C_COMP=gcc
+ elif test "`$CC -qversion 2>&1 | grep IBM`" ; then
+   LINUX_C_COMP=IBM
+ fi
+
+ case $LINUX_C_COMP in
    # GNU
-   gcc | cc)
+   gcc)
      : ${CFLAGS='-pipe -std=gnu99'}
      : ${C_OPTIMISE_FLAGS='-O3'}
      CC_VERSION="`$CC -v 2>&1 | grep -i "gcc version" | head -n1`"
@@ -318,7 +335,7 @@ else
      fi
      ;;
    # Intel
-   [ei]cc)
+   Intel)
      icc_version=`$CC -V 2>&1 | grep Version | sed 's/.*Version //' | cut -f1 -d.`
      if test "$OPTIMISE" = 'no'; then
        icc_opt='-O0'
@@ -341,24 +358,24 @@ else
      CC_VERSION="`$CC -V 2>&1 | grep -i version | head -n1`"
      : ${C_OPENMP_FLAGS='-openmp'}
      ;;
-   sgicc)
+   SGI)
      : ${C_OPTIMISE_FLAGS='-O3'}
      : ${C_DEBUG_FLAGS='-g3'}
      CC_VERSION="`$CC -v 2>&1 | grep -i version | head -n1`"
      ;;
-   pgcc)
+   portland)
      : ${C_OPENMP_FLAGS='-mp'}
      : ${C_OPTIMISE_FLAGS='-fast -O3 -Mvect=assoc'}
      : ${C_WARN_FLAGS='-Minfo -Mneginfo'}
      CC_VERSION="`$CC -V 2>&1 | grep -i pgcc | head -n1`"
      ;;
-   pathcc)
+   PathScale)
      : ${CFLAGS='-std=gnu99'}
      : ${C_OPTIMISE_FLAGS='-Ofast'}
      CC_VERSION="`$CC -v 2>&1 | grep -i version | head -n1`"
      : ${C_OPENMP_FLAGS='-openmp'}
      ;;
-   xlc | xlc_r | bgxlc | bgxlc_r)
+   IBM)
      : ${CFLAGS='-q64'}
      : ${C_DEPEND='$(CXX) -E -M $(CPPFLAGS)'}
      : ${C_DEPEND_OUT=' > /dev/null ; mv $(basename $(basename $@)).d $@'}
@@ -366,11 +383,37 @@ else
      : ${C_OPTIMISE_FLAGS='-O3 -qhot -qarch=auto -qtune=auto -qcache=auto'}
      CC_VERSION="`$CC -qversion 2>&1 | head -n1`"
      ;;
+   *)
+     if ! test "x$LINUX_C_COMP" = "xunknown" ; then
+       echo "Internal error: did not expect Linux C compiler to be $LINUX_C_COMP"
+       exit 2
+     fi
+     ;;
  esac
 
- case `basename $CXX` in
+ # Determine which C++ compiler is in use
+ LINUX_CXX_COMP=unknown
+ if test "`$CC -V 2>&1 | grep -i intel`" ; then
+   LINUX_CXX_COMP=Intel
+ elif test "`$CC -V 2>&1 | grep -i cc | grep -i pgcc`" ; then
+   LINUX_CXX_COMP=portland
+ elif test "`$CC -V 2>&1 | grep pgcc`" ; then
+   LINUX_CXX_COMP=portland
+ elif test "`$CC -v 2>&1 | grep  gcc`" ; then
+   LINUX_CXX_COMP=g++
+ elif test "`$CC -v 2>&1 | grep -i SGICC`" ; then
+   LINUX_CXX_COMP=SGI
+ elif test "`$CC -v 2>&1 | grep PathScale`" ; then
+   LINUX_CXX_COMP=PathScale
+ elif test "`$CC --version 2>&1 | grep 'g++'`" ; then
+   LINUX_CXX_COMP=g++
+ elif test "`$CC -qversion 2>&1 | grep IBM`" ; then
+   LINUX_CXX_COMP=IBM
+ fi
+
+ case $LINUX_CXX_COMP in
    # GNU
-   gcc | [gc]++)
+   g++)
      : ${CXXFLAGS='-pipe -std=c++0x'}
      : ${CXX_OPTIMISE_FLAGS='-O3'}
      CXX_VERSION="`$CXX -v 2>&1 | grep -i "gcc version" | head -n1`"
@@ -382,7 +425,7 @@ else
      fi
      ;;
    # Intel
-   [ei]cc | [ei]cpc)
+   Intel)
      if test "$OPTIMISE" = 'no'; then
        : ${CXXFLAGS='-restrict -std=c++0x -O0'}
      else
@@ -412,12 +455,12 @@ else
      CXX_VERSION="`$CXX -V 2>&1 | grep -i version | head -n1`"
      : ${CXX_OPENMP_FLAGS='-openmp'}
      ;;
-   sgiCC)
+   SGI)
      : ${CXX_OPTIMISE_FLAGS='-O3'}
      : ${CXX_DEBUG_FLAGS='-g3'}
      CXX_VERSION="`$CXX -v 2>&1 | grep -i version | head -n1`"
      ;;
-   pgCC)
+   portland)
      : ${CXXFLAGS='--no_using_std'}
      : ${CXX_OPENMP_FLAGS='-mp'}
      : ${CXX_OPTIMISE_FLAGS='-fast -O3 -Mvect=assoc'}
@@ -427,18 +470,24 @@ else
      fi
      CXX_VERSION="`$CXX -V 2>&1 | grep pgCC | head -n1`"
      ;;
-   pathCC)
+   Pathscale)
      : ${CXX_OPTIMISE_FLAGS='-Ofast'}
      CXX_VERSION="`$CXX -v 2>&1 | grep -i version | head -n1`"
      : ${CXX_OPENMP_FLAGS='-openmp'}
      ;;
-   xlC | xlC_r | bgxlC | bgxlC_r)
+   IBM)
      : ${CXXFLAGS='-q64'}
      : ${CXX_DEPEND='$(CXX) -E -M $(CPPFLAGS)'}
      : ${CXX_DEPEND_OUT=' > /dev/null ; mv $(basename $(basename $@)).d $@'}
      : ${CXX_OPENMP_FLAGS='-qsmp=omp'}
      : ${CXX_OPTIMISE_FLAGS='-O3 -qhot -qarch=auto -qtune=auto -qcache=auto'}
      CXX_VERSION="`$CXX -qversion 2>&1 | head -n1`"
+     ;;
+   *)
+     if ! test "x$LINUX_CXX_COMP" = "xunknown" ; then
+       echo "Internal error: did not expect Linux CXX compiler to be $LINUX_CXX_COMP"
+       exit 2
+     fi
      ;;
  esac
 
