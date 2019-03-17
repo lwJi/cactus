@@ -99,45 +99,6 @@ EOF
   return $RC
 }
 
-# strip_incl_dirs: strip system directories from -I finding the minimum list
-#                  that lets me compile
-function strip_inc_dirs {
-  local INCS="$1"
-  local INC_DIRS=($2)
-
-  local NUM_INC_DIRS=${#INC_DIRS[*]}
-  for i in $(seq 0 $(($NUM_INC_DIRS - 1))) ; do
-    local VICTIM=${INC_DIRS[$i]}
-    INC_DIRS[$i]=''
-    if ! test_compile "$INCS" "${INC_DIRS[*]}" ; then
-      # couldn't compile, put directory back
-      INC_DIRS[$i]=$VICTIM
-    fi
-  done
-
-  echo ${INC_DIRS[*]}
-}
-
-# strip_lib_dirs: strip system directories from -L finding the minimum list
-#                 that lets me link
-function strip_lib_dirs {
-  local LIBS="$1"
-  local LIB_DIRS=($2)
-
-  # check lib directories first, these need to compile and link
-  local NUM_LIB_DIRS=${#LIB_DIRS[*]}
-  for i in $(seq 0 $(($NUM_LIB_DIRS - 1))) ; do
-    local VICTIM=${LIB_DIRS[$i]}
-    LIB_DIRS[$i]=''
-    if ! test_link "$LIBS" "${LIB_DIRS[*]}" ; then
-      # couldn't link, put directory back
-      LIB_DIRS[$i]=$VICTIM
-    fi
-  done
-
-  echo ${LIB_DIRS[*]}
-}
-
 # set_make_vars: set variables needed by the Cactus make system, in particular
 #                libs, and paths. This takes care of stripping out system paths
 #                that shouldn't be in these lists, and guesses PREFIX_DIR to be
@@ -158,36 +119,6 @@ function set_make_vars {
 
   local STRIPPED_LIB_DIRS=$("${CCTK_HOME}/lib/sbin/strip-libdirs.sh" "$LIB_DIRS")
   local STRIPPED_INC_DIRS=$("${CCTK_HOME}/lib/sbin/strip-incdirs.sh" "$INC_DIRS")
-
-  eval "${PREFIX}_DIR=\"$DIR\""
-  eval "${PREFIX}_LIBS=\"$LIBS\""
-  eval "${PREFIX}_RAW_LIB_DIRS=\"$LIB_DIRS\""
-  eval "${PREFIX}_RAW_INC_DIRS=\"$INC_DIRS\""
-  eval "${PREFIX}_LIB_DIRS=\"$STRIPPED_LIB_DIRS\""
-  eval "${PREFIX}_INC_DIRS=\"$STRIPPED_INC_DIRS\""
-}
-
-# set_make_vars2: set variables needed by the Cactus make system, in particular
-#                 libs, and paths. This takes care of stripping out system paths
-#                 that shouldn't be in these lists, and guesses PREFIX_DIR to be
-#                 one level up from the first lib directory
-function set_make_vars2 {
-  local PREFIX=$1
-  local LIBS=$2
-  local INCS=$3
-  local LIB_DIRS=$4
-  local INC_DIRS=$5
-  # For the general ${PREFIX}_DIR we have to guess, since there isn't anything
-  # like that in pkg-config
-  # take the first directory in LIBS and take off anything past lib\d*
-  local DIR=$(echo "$LIB_DIRS" | perl -pe 's/ .*//; s/(.*)\/lib\d*.*/\1/g')
-  # If that is empty, assume '/usr'. We just don't know where
-  # the library is, and we don't need to. But we need to set ${PREFIX}_DIR to
-  # something to indicate a find
-  : "${DIR:=/usr}"
-
-  local STRIPPED_INC_DIRS=$(strip_inc_dirs "$INCS" "$INC_DIRS")
-  local STRIPPED_LIB_DIRS=$(strip_lib_dirs "$LIBS" "$LIB_DIRS")
 
   eval "${PREFIX}_DIR=\"$DIR\""
   eval "${PREFIX}_LIBS=\"$LIBS\""
@@ -222,38 +153,6 @@ function pkg_config {
   local INC_DIRS=$($PKGCONFIG --cflags-only-I "$STATIC" "$LIBNAME" | perl -pe 's/(^| )+-I/\1/g')
 
   set_make_vars "$PREFIX" "$LIBS" "$LIB_DIRS" "$INC_DIRS"
-
-  PKG_CONFIG_SUCCESS=yes
-  return 0
-}
-
-# pkg_config2: use pkg-config to configure a library
-# arg 1: Cactus env variable prefix (e.g. HDF5)
-# arg 2: library name
-# arg 3: minimum version
-# arg 4: include files to test -I path with
-function pkg_config2 {
-  local PREFIX=$1
-  local LIBNAME=$2
-  local MINVERSION=$3
-  local INCS="$4"
-  local PKGCONFIG=pkg-config
-  local STATIC="--static"
-  $PKGCONFIG --version >/dev/null 2>&1 || return 0
-  if [ -z "$MINVERSION" ]; then
-    $PKGCONFIG --exists "$LIBNAME" > /dev/null 2>&1 || return 0
-  else
-    $PKGCONFIG --atleast-version="$MINVERSION" "$LIBNAME" > /dev/null 2>&1 || return 0
-  fi
-  # NOTE: This breaks if pkg-config returns quotes strings, i.e., path names
-  #       with strings in them. It doesn't seems to happen in practice.
-  #       If it does: let us know what pkg-config prints in that case, and we
-  #       can try to fix it.
-  local     LIBS=$($PKGCONFIG --libs-only-l   "$STATIC" "$LIBNAME" | perl -pe 's/(^| )+-l/\1/g')
-  local LIB_DIRS=$($PKGCONFIG --libs-only-L   "$STATIC" "$LIBNAME" | perl -pe 's/(^| )+-L/\1/g')
-  local INC_DIRS=$($PKGCONFIG --cflags-only-I "$STATIC" "$LIBNAME" | perl -pe 's/(^| )+-I/\1/g')
-
-  set_make_vars2 "$PREFIX" "$LIBS" "$INCS" "$LIB_DIRS" "$INC_DIRS"
 
   PKG_CONFIG_SUCCESS=yes
   return 0
@@ -299,7 +198,7 @@ function find_standardlib {
         done
         if [ $FOUND -eq 1 ]; then
           FOUND=$dir
-          set_make_vars2 "$PREFIX" "$LIBS" "$INCS" "$dir/$ldir" "$dir/include"
+          set_make_vars "$PREFIX" "$LIBS" "$dir/$ldir" "$dir/include"
           return 0
         fi
       done
@@ -324,7 +223,7 @@ function find_lib {
     echo "BEGIN MESSAGE"
     echo "$PREFIX selected, but ${PREFIX}_DIR not set. Checking pkg-config ..."
     echo "END MESSAGE"
-    pkg_config2 "$PREFIX" "$LIBNAME" "$MINVERSION" "$INCS"
+    pkg_config "$PREFIX" "$LIBNAME" "$MINVERSION"
     if [ -n "$PKG_CONFIG_SUCCESS" ]; then
       echo "BEGIN MESSAGE"
       eval "echo \"$PREFIX found: \"\${${PREFIX}_DIR}"
