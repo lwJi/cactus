@@ -105,17 +105,10 @@ EOF
 #                one level up from the first lib directory
 function set_make_vars2 {
   local PREFIX=$1
-  local LIBS=$2
-  local LIB_DIRS=$3
-  local INC_DIRS=$4
-  # For the general ${PREFIX}_DIR we have to guess, since there isn't anything
-  # like that in pkg-config
-  # take the first directory in LIBS and take off anything past lib\d*
-  local DIR=$(echo "$LIB_DIRS" | perl -pe 's/ .*//; s/(.*)\/lib\d*.*/\1/g')
-  # If that is empty, assume '/usr'. We just don't know where
-  # the library is, and we don't need to. But we need to set ${PREFIX}_DIR to
-  # something to indicate a find
-  : "${DIR:=/usr}"
+  local DIR=$2
+  local LIBS=$3
+  local LIB_DIRS=$4
+  local INC_DIRS=$5
 
   # set ${PREFIX}_DIR to DIR unles it is already set (by the user)
   # dito for the other variables
@@ -162,6 +155,7 @@ function pkg_config2 {
   local PREFIX=$1
   local LIBNAME=$2
   local MINVERSION=$3
+  local REQLIBS="$4"
   local PKGCONFIG=pkg-config
   local STATIC="--static"
   $PKGCONFIG --version >/dev/null 2>&1 || return 1
@@ -177,8 +171,16 @@ function pkg_config2 {
   local     LIBS=$($PKGCONFIG --libs-only-l   "$STATIC" "$LIBNAME" | perl -pe 's/(^| )+-l/\1/g')
   local LIB_DIRS=$($PKGCONFIG --libs-only-L   "$STATIC" "$LIBNAME" | perl -pe 's/(^| )+-L/\1/g')
   local INC_DIRS=$($PKGCONFIG --cflags-only-I "$STATIC" "$LIBNAME" | perl -pe 's/(^| )+-I/\1/g')
+  # For the general ${PREFIX}_DIR we have to guess, since there isn't anything
+  # like that in pkg-config
+  # take the first directory in LIBS and take off anything past lib\d*
+  local DIR=$(echo "$LIB_DIRS" | perl -pe 's/ .*//; s/(.*)\/lib\d*.*/\1/g')
 
-  set_make_vars2 "$PREFIX" "$LIBS" "$LIB_DIRS" "$INC_DIRS"
+  # Sadly, pkg-config for HDF5 is good for paths, but bad for the list of
+  # available (and necessary) library names, so we have to fix things
+  test_link "$REQ_LIBS" "$LIB_DIRS" || return 1
+
+  set_make_vars2 "$PREFIX" "$DIR" "$LIBS" "$LIB_DIRS" "$INC_DIRS"
   return 0
 }
 
@@ -217,6 +219,7 @@ function pkg_config {
 # arg2: library name
 # arg3: required libs (as one string)
 # arg4: required header file names (as one string)
+# arg5: where to look for files
 # return: 0 on success, 1 on failure
 function find_standardlib2 {
   local PREFIX=$1
@@ -238,12 +241,12 @@ function find_standardlib2 {
     ALLDIRS=$GUESS
   else
     # standard paths
-    local DIRS="/ /usr /usr/local /usr/local/packages /usr/local/apps /opt /opt/local $HOME c:/packages"
+    local DIRS="/usr /usr/local /usr/local/packages /usr/local/apps /opt /opt/local $HOME c:/packages"
     local ALLDIRS=("" $(echo "$DIRS" | perl -pe 's/([^ \n]+)/\1\/'"$LIBNAME"' \1/g'))
   fi
 
   # try them all
-  for dir in "${ALLDIRS[@]}"; do
+  for dir in "" "${ALLDIRS[@]}"; do
     # first look for include file only which only needs to compile
     if ! test_compile "$INCS" "${dir+$dir/include}"; then
       continue
@@ -252,7 +255,7 @@ function find_standardlib2 {
       # then look for library files that also need to link
       if test_link "$LIBS" "$dir${ldir+/$ldir}"; then
         FOUND=$dir
-        set_make_vars2 "$PREFIX" "$LIBS" "${dir+dir${ldir+/$ldir}}" "${dir+$dir/include}"
+        set_make_vars2 "$PREFIX" "$dir" "$LIBS" "$dir${ldir+/$ldir}" "${dir+$dir/include}"
         return 0
       fi
     done
@@ -327,7 +330,7 @@ function find_lib2 {
     echo "$PREFIX selected, but ${PREFIX}_DIR not set. Checking pkg-config ..."
     echo "END MESSAGE"
 
-    if pkg_config2 "$PREFIX" "$LIBNAME" "$MINVERSION"; then
+    if pkg_config2 "$PREFIX" "$LIBNAME" "$MINVERSION" "$LIBS"; then
       echo "BEGIN MESSAGE"
       eval "echo \"$PREFIX found: \"\${${PREFIX}_DIR}"
       echo "END MESSAGE"
