@@ -134,7 +134,7 @@ else
   # parser for the marker is done like for PBS ie parsing ends with the first
   # excution line which is a line whose first non-space character is not a #
   for arch in $srcdir/known-architectures/* ; do
-    archglob=$($AWK '{sub("^[ \t]*","")} /^[^#]/{exit} /^#CCTK[ \t]+ARCHITECTURE/{arch=$3} END{print arch}' $arch)
+    archglob=$($PERL -n -e 'chomp;/^\s*[^#]/ and exit;/^\s*#CCTK\s+ARCHITECTURE\s+(.*)/ and $arch=$1;END{print $arch}' $arch)
     if test -n "$archglob" ; then
       case "$host_os" in $archglob) . $arch ; found_arch=yes ; break ;; esac
     fi
