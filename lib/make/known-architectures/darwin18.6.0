@@ -1,0 +1,12 @@
+#! /bin/sh
+# /*@@
+#   @file    darwin18.6.0
+#   @date    2019-06-20
+#   @author  Roland Haas
+#   @desc
+#            Known architecture stuff for OS X (Darwin) release 18.6.0
+#   @enddesc
+#   @version $Header$
+# @@*/
+
+. $srcdir/known-architectures/darwin
