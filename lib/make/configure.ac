@@ -455,9 +455,6 @@ F77_OPENMP_FLAGS="$F90_OPENMP_FLAGS"
 KNOWN_LIBS="$LIBS"
 unset LIBS
 
-KNOWN_LDFLAGS="$LDFLAGS"
-unset LDFLAGS
-
 AC_SUBST(LIBDIR_PREFIX)
 : ${LIBDIR_PREFIX='-L'}
 : ${LIBDIR_SUFFIX=''}
@@ -1350,7 +1347,6 @@ C_FILE_PROCESSOR='$(CCTK_HOME)/lib/sbin/c_file_processor.pl'
 
 # Put the libraries from the known-architectures onto the LIB variable.
 LIBS="$LIBS $KNOWN_LIBS"
-LDFLAGS="$LDFLAGS $KNOWN_LDFLAGS"
 
 #Set the compileonly flags if they've not been set by now
 AC_SUBST(CCOMPILEONLY)
