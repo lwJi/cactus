@@ -5936,9 +5936,6 @@ F77_OPENMP_FLAGS="$F90_OPENMP_FLAGS"
 KNOWN_LIBS="$LIBS"
 unset LIBS
 
-KNOWN_LDFLAGS="$LDFLAGS"
-unset LDFLAGS
-
 
 : ${LIBDIR_PREFIX='-L'}
 : ${LIBDIR_SUFFIX=''}
@@ -9946,7 +9943,7 @@ else case e in #(
   e) cctk_cv_c_static_inline=no
 for ac_kw in 'static inline' 'static __inline__' 'static __inline' static; do
   cat > conftest.$ac_ext <<EOF
-#line 9949 "configure"
+#line 9946 "configure"
 #include "confdefs.h"
 
 int main(void) {
@@ -9954,7 +9951,7 @@ int main(void) {
 ; return 0; }
 EOF
 cat > conftest2.$ac_ext <<EOF
-#line 9957 "configure"
+#line 9954 "configure"
 #include "confdefs.h"
 
 int main2() {
@@ -14368,7 +14365,6 @@ C_FILE_PROCESSOR='$(CCTK_HOME)/lib/sbin/c_file_processor.pl'
 
 # Put the libraries from the known-architectures onto the LIB variable.
 LIBS="$LIBS $KNOWN_LIBS"
-LDFLAGS="$LDFLAGS $KNOWN_LDFLAGS"
 
 #Set the compileonly flags if they've not been set by now
 
