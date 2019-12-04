@@ -101,7 +101,17 @@ sub ProcessConfiguration
     $optfile = {};
   }
 
-  $env = GetOptionsFromEnv(\%ENV, \@allowed_opts);
+  # parse make command line options FOO=BAR
+  # Set variables from makefile command line first
+  my %MAKEFLAGS;
+  my $commandline = $ENV{"MAKEFLAGS"};
+  $commandline =~ s/^.*? -- //;
+  while ($commandline =~ /^(.*)\s*\b(\w+)\s*=\s*(.*?)\s*$/)
+  {
+    $MAKEFLAG{$2} = $3;
+    $commandline=$1;
+  }
+  $env = GetOptionsFromEnv(\%MAKEFLAGS, \@allowed_opts);
 
   my $modified = AmalgamateOptions($env,$optfile,$configinfo,\@allowed_opts);
 
@@ -117,6 +127,11 @@ sub ProcessConfiguration
     if (defined($configinfo->{$option}))
     {
       $ENV{$option} = $configinfo->{$option};
+    }
+    else
+    {
+      # remove from ENV so that existing ENV vars do not polute the ENV
+      delete $ENV{$option};
     }
   }
 
