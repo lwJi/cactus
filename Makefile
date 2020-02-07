@@ -1042,6 +1042,7 @@ doc/UsersGuide/bincactus2.ps: doc/UsersGuide/bincactus2.pdf
 UsersGuideHTML: doc/UsersGuide/bincactus2.ps
 	$(NOTIFY_DIVIDER)
 	@echo "Creating user documentation (HTML)"
+	rm -rf $(CCTK_HOME)/doc/HTML/UsersGuide;   \
 	cd doc/UsersGuide;                         \
 	$(CCTK_HOME)/lib/sbin/ConvertFigures;      \
 	echo "  Running htlatex....";              \
@@ -1059,7 +1060,7 @@ UsersGuideHTML: doc/UsersGuide/bincactus2.ps
 	  echo "  For more information see doc/UsersGuide/LATEX_MESSAGES."; \
 	fi;                                                                 \
 	mkdir -p $(CCTK_HOME)/doc/HTML/UsersGuide;                          \
-	$(PERL) -ne 'chomp;m!^File: (.*/)?([^/]*)$$! and rename("$$1$$2", "$(CCTK_HOME)/doc/HTML/UsersGuide/$$2");' UsersGuide.lg
+        $(PERL) -n -e 'chomp; if(m/^File: (.*)/){rename($$1, "$(CCTK_HOME)/doc/HTML/UsersGuide/$$1") or die $$!}' UsersGuide.lg
 	@echo "  Users Guide (HTML) created in doc/HTML/UsersGuide directory."
 	@echo "  Done."
 	$(NOTIFY_DIVIDER)
@@ -1093,6 +1094,7 @@ ReferenceManual:
 ReferenceManualHTML:
 	$(NOTIFY_DIVIDER)
 	@echo "Creating user reference manual (HTML)"
+	rm -rf $(CCTK_HOME)/doc/HTML/ReferenceManual; \
 	cd doc/ReferenceManual;                    \
 	$(CCTK_HOME)/lib/sbin/ConvertFigures;      \
 	echo "  Running htlatex....";              \
@@ -1110,7 +1112,7 @@ ReferenceManualHTML:
 	  echo "  For more information see doc/ReferenceManual/LATEX_MESSAGES."; \
 	fi;                                         \
 	mkdir -p $(CCTK_HOME)/doc/HTML/ReferenceManual;                \
-	$(PERL) -ne 'chomp;m!^File: (.*/)?([^/]*)$$! and rename("$$1$$2", "$(CCTK_HOME)/doc/HTML/ReferenceManual/$$2");' ReferenceManual.lg
+        $(PERL) -n -e 'chomp; if(m/^File: (.*)/){rename($$1, "$(CCTK_HOME)/doc/HTML/ReferenceManual/$$1") or die $$!}' ReferenceManual.lg
 	@echo "  HTML ReferenceManual created in doc/HTML/ReferenceManual directory."
 	@echo "  Done."
 	$(NOTIFY_DIVIDER)
@@ -1144,6 +1146,7 @@ MaintGuide:
 MaintGuideHTML:
 	$(NOTIFY_DIVIDER)
 	@echo "Creating maintainers documentation (HTML)"
+	rm -rf $(CCTK_HOME)/doc/HTML/MaintGuide; \
 	cd doc/MaintGuide;                          \
 	$(CCTK_HOME)/lib/sbin/ConvertFigures;             \
 	echo "  Running htlatex....";              \
@@ -1161,7 +1164,7 @@ MaintGuideHTML:
 	  echo "  For more information see doc/MaintGuide/LATEX_MESSAGES."; \
 	fi;                                                                 \
 	mkdir -p $(CCTK_HOME)/doc/HTML/MaintGuide;                          \
-	$(PERL) -ne 'chomp;m!^File: (.*/)?([^/]*)! and rename("$$1$$2", "$(CCTK_HOME)/doc/HTML/MaintGuide/$$2");' MaintGuide.lg
+        $(PERL) -n -e 'chomp; if(m/^File: (.*)/){rename($$1, "$(CCTK_HOME)/doc/HTML/MaintGuide/$$1") or die $$!}' MaintGuide.lg
 	@echo "  Maintainers Guide (HTML) created in doc/HTML/MaintGuide directory."
 	@echo "  Done."
 	$(NOTIFY_DIVIDER)
