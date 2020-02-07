@@ -9,14 +9,33 @@ fi
 
 files=`find ${figpath} -type f -name "*.pdf"`
 
-if [ -n "${files}" ]; then
-  echo "  Converting figures to postscript"
-fi
+# if possible use ebb to compute the bounding boxes only rather than full
+# pdf2ps conversion
 
-for i in $files; do
-  epsfilename=`echo $i | sed s/.pdf$/.eps/`
-  if [ "$i" != "documentation.pdf" ] && [ ! -e $epsfilename ]; then
-    echo "   " `basename $i` " -> " `basename $epsfilename`
-    pdf2ps $i $epsfilename
+if ebb 2>/dev/null --version ; then
+  if [ -n "${files}" ]; then
+    echo "  Computing bounding boxes for figures"
   fi
-done
+
+  for i in $files; do
+    xbbfilename=`echo $i | sed s/.pdf$/.xbb/`
+
+    if [ "$i" != "documentation.pdf" ]; then
+      echo "   " `basename $i` " -> " `basename $xbbfilename`
+      ebb -x -O $i >$xbbfilename
+    fi
+  done
+else
+  if [ -n "${files}" ]; then
+    echo "  Converting figures to postscript"
+  fi
+
+  for i in $files; do
+    epsfilename=`echo $i | sed s/.pdf$/.eps/`
+
+    if [ "$i" != "documentation.pdf" ] && [ ! -e $epsfilename ]; then
+      echo "   " `basename $i` " -> " `basename $epsfilename`
+      pdf2ps $i $epsfilename
+    fi
+  done
+fi

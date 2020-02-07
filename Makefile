@@ -1036,10 +1036,7 @@ UsersGuide:
 
 .PHONY: UsersGuideHTML
 
-doc/UsersGuide/bincactus2.ps: doc/UsersGuide/bincactus2.pdf
-	pdf2ps doc/UsersGuide/bincactus2.pdf doc/UsersGuide/bincactus2.ps
-
-UsersGuideHTML: doc/UsersGuide/bincactus2.ps
+UsersGuideHTML:
 	$(NOTIFY_DIVIDER)
 	@echo "Creating user documentation (HTML)"
 	rm -rf $(CCTK_HOME)/doc/HTML/UsersGuide;   \
