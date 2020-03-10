@@ -414,23 +414,28 @@ sub create_macros
               $group_register = "yes";
             } else {
               my $hint = "Is ${th}::${var} a correctly declared variable?";
+              my %hints = ();
               # Do a brute force search of the world...
               for my $th2 (keys %$hash) {
                 for my $v (%{$hash->{private_variable}->{$th2}->{variable_list_lc}}) {
                   if($v eq lc $var) {
-                    $hint .= " Did you mean ${th}::$v?";
+                    $hints{" Did you mean ${th2}::$v?"}=1;
                   }
                 }
                 for my $v (%{$hash->{$th2}->{variable_list_lc}}) {
                   if($v eq lc $var) {
-                    $hint .= " Did you mean ${th}::$v?";
+                    $hints{" Did you mean ${th2}::$v?"}=1;
                   }
                 }
                 for my $v (%{$hash->{$th2}->{group_list_lc}}) {
                   if($v eq lc $var) {
-                    $hint .= " Did you mean ${th}::$v?";
+                    $hints{" Did you mean ${th2}::$v?"}=1;
                   }
                 }
+              }
+              my @hints = keys %hints;
+              if($#hints >= 0) {
+                $hint = join(" ",@hints);
               }
               # Regardless of whether we found a capitalization
               # match or not, we report an error.
@@ -522,19 +527,33 @@ sub create_macros
               # match the case of the corresponding declaration in
               # the interface.ccl. If it doesn't line up, an error
               # will occur. This helps the user figure it out.
-              my $hint = "";
-              for my $v (%{$hash->{$th}->{variable_list}}) {
-                if(lc $v eq lc $var) {
-                    $hint = "Did you mean ${th}::$v?";
+              my $hint = undef;
+              ###
+              my $hint = "Is ${th}::${var} a correctly declared variable?";
+              my %hints = ();
+              # Do a brute force search of the world...
+              for my $th2 (keys %$hash) {
+                for my $v (%{$hash->{private_variable}->{$th2}->{variable_list_lc}}) {
+                  if($v eq lc $var) {
+                    $hints{" Did you mean ${th2}::$v?"}=1;
+                  }
                 }
-              }
-              if($hint eq "" and $tnm eq $th) {
-                for my $v (%{$hash->{private_variable}->{$th}->{variable_list}}) {
-                  if(lc $v eq lc $var) {
-                      $hint = "Did you mean ${th}::$v?";
+                for my $v (%{$hash->{$th2}->{variable_list_lc}}) {
+                  if($v eq lc $var) {
+                    $hints{" Did you mean ${th2}::$v?"}=1;
+                  }
+                }
+                for my $v (%{$hash->{$th2}->{group_list_lc}}) {
+                  if($v eq lc $var) {
+                    $hints{" Did you mean ${th2}::$v?"}=1;
                   }
                 }
               }
+              my @hints = keys %hints;
+              if($#hints >= 0) {
+                $hint = join(" ",@hints);
+              }
+              ###
               &CST_error(0, "Error in $nm schedule. Check variable or group '${th}::$full_var'" .
                     ' and verify correct implementation/thorn name and variable name.'
                     ,$hint, , __LINE__, __FILE__);
