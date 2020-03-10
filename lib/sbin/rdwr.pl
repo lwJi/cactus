@@ -159,6 +159,7 @@ sub do_interfaces
     $hash->{$gname}->{gtype} = uc $gtype;
     $hash->{$gname}->{array_dim} = $dim;
     $hash->{group_list}->{$gname}=1;
+    $hash->{group_list_lc}->{lc $gname}=1;
     my $Detect = 0;
     for my $ch (@{$gr->{children}}) {
       # Looping over variables in the group
@@ -168,7 +169,9 @@ sub do_interfaces
         while($ch->has($i,"name")) {
           my $var = $ch->has($i,"name")->substring();
           $hash->{$gname}->{grp_vars}->{$var} = $var;
+          $hash->{$gname}->{grp_vars_lc}->{lc $var} = $var;
           $hash->{variable_list}->{$var} = $gname;
+          $hash->{variable_list_lc}->{lc $var} = $gname;
           $i++;
         }
         last;
@@ -178,7 +181,9 @@ sub do_interfaces
       # If no VARS were detected, then the group name
       # is also the variable name.
       $hash->{$gname}->{grp_vars}->{$gname} = $gname;
+      $hash->{$gname}->{grp_vars_lc}->{lc $gname} = $gname;
       $hash->{variable_list}->{$gname} = $gname;
+      $hash->{variable_list_lc}->{lc $gname} = $gname;
     }
   } elsif($gr->{name} =~ /^(intr|FUNC_GROUP)$/) {
     # 'intr' is the name of the top-level pattern for an entire interface file
@@ -395,60 +400,34 @@ sub create_macros
               $var = substr $var,0,-2;
               $timelevel++;
             }
-            if(defined($hash->{$th}->{variable_list}->{$var})) {
+            if(defined($hash->{$th}->{variable_list_lc}->{lc $var})) {
               # public variables
-              my $group = $hash->{$th}->{variable_list}->{$var};
+              my $group = $hash->{$th}->{variable_list_lc}->{lc $var};
               $var_group = $hash->{$th}->{$group};
-            } elsif(($tnm eq $th) && defined($hash->{private_variable}->{$th}->{variable_list}->{$var})) {
+            } elsif(($tnm eq $th) && defined($hash->{private_variable}->{$th}->{variable_list_lc}->{lc $var})) {
               # private variables
-              my $group = $hash->{private_variable}->{$th}->{variable_list}->{$var};
+              my $group = $hash->{private_variable}->{$th}->{variable_list_lc}->{lc $var};
               $var_group = $hash->{private_variable}->{$th}->{$group};
-            } elsif(defined($hash->{$th}->{group_list}->{$var})) {
+            } elsif(defined($hash->{$th}->{group_list_lc}->{lc $var})) {
               # variable name is actually a group
               $var_group = $hash->{$th}->{$var};
               $group_register = "yes";
             } else {
-              # So $var isn't a public variable, a private variable,
-              # or a group name...
-              #
-              # Maybe it's a capitalization problem?
-              #
-              # We need the write directive in the schedule.ccl to
-              # match the case of the corresponding declaration in
-              # the interface.ccl. If it doesn't line up, an error
-              # will occur. This helps the user figure it out.
-              my $hint = undef;
-              for my $v (%{$hash->{$th}->{variable_list}}) {
-                if(lc $v eq lc $var) {
-                    $hint = "Did you mean ${th}::$v?";
-                }
-              }
-              if(!defined($hint) and $tnm eq $th) {
-                for my $v (%{$hash->{private_variable}->{$th}->{variable_list}}) {
-                  if(lc $v eq lc $var) {
-                      $hint = "Did you mean ${th}::$v?";
-                  }
-                }
-              }
-              for my $g (keys %{$hash->{$th}->{group_list}}) {
-                if(lc($g) eq lc($full_var)) {
-                    $hint = "Did you mean ${th}::$g?";
-                }
-              }
+              my $hint = "Is ${th}::${var} a correctly declared variable?";
               # Do a brute force search of the world...
               for my $th2 (keys %$hash) {
-                for my $v (%{$hash->{private_variable}->{$th2}->{variable_list}}) {
-                  if(lc $v eq lc $var) {
+                for my $v (%{$hash->{private_variable}->{$th2}->{variable_list_lc}}) {
+                  if($v eq lc $var) {
                     $hint .= " Did you mean ${th}::$v?";
                   }
                 }
-                for my $v (%{$hash->{$th2}->{variable_list}}) {
-                  if(lc $v eq lc $var) {
+                for my $v (%{$hash->{$th2}->{variable_list_lc}}) {
+                  if($v eq lc $var) {
                     $hint .= " Did you mean ${th}::$v?";
                   }
                 }
-                for my $v (%{$hash->{$th2}->{group_list}}) {
-                  if(lc $v eq lc $var) {
+                for my $v (%{$hash->{$th2}->{group_list_lc}}) {
+                  if($v eq lc $var) {
                     $hint .= " Did you mean ${th}::$v?";
                   }
                 }
