@@ -504,11 +504,11 @@ sub create_macros
               $var = substr $var,0,-2;
               $timelevel++;
             }
-            if(defined($hash->{$th}->{variable_list}->{$var})) {
+            if(defined($hash->{$th}->{variable_list_lc}->{lc $var})) {
               # public variables
               $group = $hash->{$th}->{variable_list}->{$var};
               $var_group = $hash->{$th}->{$group};
-            } elsif(($tnm eq $th) && defined($hash->{private_variable}->{$th}->{variable_list}->{$var})) {
+            } elsif(($tnm eq $th) && defined($hash->{private_variable}->{$th}->{variable_list_lc}->{lc $var})) {
               # private variables
               $group = $hash->{private_variable}->{$th}->{variable_list}->{$var};
               $var_group = $hash->{private_variable}->{$th}->{$group};
