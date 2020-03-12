@@ -1612,6 +1612,13 @@ the scheduler at time bins between {\t CCTK\_STARTUP} and {\t CCTK\_SHUTDOWN})
 should include at the top of the file the header
 \begin{verbatim}
 #include "cctk_Arguments.h"
+
+// This second version of Arguments needs
+// to be present for the function-specific version
+// of the DECLARE_CCTK_ARGUMENTS, i.e.
+// DECLARE_CCTK_ARGUMENTS_<function name>
+// See text below.
+#include "cctk_Arguments_Checked.h"
 \end{verbatim}
 
 A Cactus macro \texttt{CCTK\_ARGUMENTS} is defined for each thorn
@@ -1625,7 +1632,16 @@ to contain:
       the \texttt{inherits} and \texttt{friend} lines in the \texttt{interface.ccl}
 \end{itemize}
 These variables must be declared at the start of the routine using
-the macro \texttt{DECLARE\_CCTK\_ARGUMENTS}.
+the macro \texttt{DECLARE\_CCTK\_ARGUMENTS}. Alternatively, they can
+be declared with \texttt{DECLARE\_CCTK\_ARGUMENTS\_<function name>},
+where \texttt{<function name>} is the name of the function as declared
+in \texttt{schedule.ccl}. The function-name specific version of the macro
+will declare only those variables identified by READS/WRITES directives
+in \texttt{schedule.ccl}, using \texttt{const} for the C/C++ variables
+and \texttt{intent(in)} for the Fortran variables. (Note that, for technical
+reasons, in Fortran variables declared in \texttt{DECLARE\_CCTK\_ARGUMENTS}
+but not in the \texttt{READS/WRITES} directives are actually declared as
+\texttt{intent(in), character*8}, and are thus unusable.)
 
 To pass the arguments to another routine in the same thorn use the macro
 \texttt{CCTK\_PASS\_FTOF} in the calling routine, and again the macro
@@ -1691,6 +1707,7 @@ as the standard Cactus variables. The source file should look like
 \begin{verbatim}
 #include "cctk.h"
 #include "cctk_Arguments.h"
+#include "cctk_Arguments_Checked.h"
 #include "cctk_Parameters.h"
 
       subroutine MyFRoutine(CCTK_ARGUMENTS)
@@ -1698,7 +1715,12 @@ as the standard Cactus variables. The source file should look like
 c     I'm very cautious, so I want to declare all variables
       implicit none
 
-      DECLARE_CCTK_ARGUMENTS
+      DECLARE_CCTK_ARGUMENTS_MyFRoutine
+c Note: It is also possible to use
+c     DECLARE_CCTK_ARGUMENTS
+c However, this latter form will declare all variables
+c available to the thorn and not simply those listed
+c in the READS/WRITES clauses of the schedule.ccl declaration.
 
       integer flag
 
@@ -1712,7 +1734,7 @@ c     I'm very cautious, so I want to declare all variables
 
       implicit none
 
-      DECLARE_CCTK_ARGUMENTS
+      DECLARE_CCTK_ARGUMENTS_MyNewRoutine
       DECLARE_CCTK_PARAMETERS
       integer flag
 
@@ -1790,6 +1812,7 @@ the scheduler at time bins between {\t CCTK\_STARTUP} and {\t CCTK\_SHUTDOWN}),
 should include at the top of the file the header
 \begin{verbatim}
 #include "cctk_Arguments.h"
+#include "cctk_Arguments_Checked.h"
 \end{verbatim}
 
 A Cactus macro \texttt{CCTK\_ARGUMENTS} is defined for each thorn
@@ -1841,11 +1864,12 @@ and uses Cactus parameters. The source file should look like
 \begin{verbatim}
 #include "cctk.h"
 #include "cctk_Arguments.h"
+#include "cctk_Arguments_Checked.h"
 #include "cctk_Parameters.h"
 
 void MyCRoutine(CCTK_ARGUMENTS)
 {
-  DECLARE_CCTK_ARGUMENTS
+  DECLARE_CCTK_ARGUMENTS_MyCRoutine
   DECLARE_CCTK_PARAMETERS
 
   /* Here goes your code */
