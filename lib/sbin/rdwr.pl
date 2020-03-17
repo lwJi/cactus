@@ -192,6 +192,7 @@ sub do_interfaces
     $hash->{$gname}->{array_dim} = $dim;
     $hash->{group_list}->{$gname}=1;
     $hash->{group_list_lc}->{lc $gname}=1;
+    $hash->{capitalization}->{lc $gname}=$gname;
     my $Detect = 0;
     for my $ch (@{$gr->{children}}) {
       # Looping over variables in the group
@@ -445,7 +446,8 @@ sub create_macros
               $var_group = $hash->{private_variable}->{$th}->{$group};
             } elsif(defined($hash->{$th}->{group_list_lc}->{lc $var})) {
               # variable name is actually a group
-              $var_group = $hash->{$th}->{$var};
+              my $cap_group = get_cap($hash, $th, $var);
+              $var_group = $hash->{$th}->{$cap_group};
               $group_register = "yes";
             } else {
               my $hint = "Is ${th}::${var} a correctly declared variable?";
