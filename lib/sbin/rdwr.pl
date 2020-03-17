@@ -17,6 +17,38 @@ my($I_grammar,$I_rule)=piraha::parse_peg_file($int_file);
 #
 #############################################################################
 
+
+#/*@@
+#  @routine get_cap
+#  @date    Tue 17 Mar 2020 10:12:37 PM UTC
+#  @author  Steven R. Brandt
+#  @desc
+#           Look up correct capitalization (interface.ccl file)
+#           so that READ/WRITE declarations don't need to worry
+#           about case.
+#  @enddesc
+#@@*/
+sub get_cap {
+    my $hash = shift;
+    my $th = shift;
+    my $var = shift;
+    my $realvar = $var;;
+    my $suffix = "";
+    if($var =~ /(.*?)((_p)*)$/) {
+        $realvar = $1;
+        $suffix = $2;
+    }
+    my $outvar;
+    if(defined($hash->{private_variable}->{$th}->{capitalization}->{lc $realvar})) {
+        $outvar = $hash->{private_variable}->{$th}->{capitalization}->{lc $realvar} . $suffix;
+    } elsif(defined($hash->{$th}->{capitalization}->{lc $realvar})) {
+        $outvar = $hash->{$th}->{capitalization}->{lc $realvar} . $suffix;
+    } else {
+        $outvar = $var;
+    }
+    return $outvar;
+}
+
 #/*@@
 #  @routine thorn_args
 #  @date    Mon Feb 24 16:10:38 EST 2020
@@ -168,10 +200,12 @@ sub do_interfaces
         $Detect = 1;
         while($ch->has($i,"name")) {
           my $var = $ch->has($i,"name")->substring();
+          my $lc_var = lc $var;
           $hash->{$gname}->{grp_vars}->{$var} = $var;
-          $hash->{$gname}->{grp_vars_lc}->{lc $var} = $var;
+          $hash->{$gname}->{grp_vars_lc}->{$lc_var} = $var;
           $hash->{variable_list}->{$var} = $gname;
-          $hash->{variable_list_lc}->{lc $var} = $gname;
+          $hash->{variable_list_lc}->{$lc_var} = $gname;
+          $hash->{capitalization}->{$lc_var} = $var;
           $i++;
         }
         last;
@@ -184,6 +218,7 @@ sub do_interfaces
       $hash->{$gname}->{grp_vars_lc}->{lc $gname} = $gname;
       $hash->{variable_list}->{$gname} = $gname;
       $hash->{variable_list_lc}->{lc $gname} = $gname;
+      $hash->{capitalization}->{lc $gname} = $gname;
     }
   } elsif($gr->{name} =~ /^(intr|FUNC_GROUP)$/) {
     # 'intr' is the name of the top-level pattern for an entire interface file
@@ -473,14 +508,16 @@ sub create_macros
                 if ($var_group->{vector} ne "0") {
                   $vname .= "[0]";
                 }
-                $$data .= qq(static int cctki_vi_$var = -100; if (cctki_vi_$var == -100) cctki_vi_$var = CCTK_VarIndex("$vname"); $vtype * restrict const $var __attribute__((__unused__)) = (($vtype *) CCTKi_VarDataPtrI(cctkGH, $timelevel, cctki_vi_$var));; /* group $group_register */\\\n);
+                my $ivar = get_cap($hash, $th, $var);
+                $$data .= qq(static int cctki_vi_$ivar = -100; if (cctki_vi_$ivar == -100) cctki_vi_$ivar = CCTK_VarIndex("$vname"); $vtype * restrict const $ivar __attribute__((__unused__)) = (($vtype *) CCTKi_VarDataPtrI(cctkGH, $timelevel, cctki_vi_$ivar));; /* group $group_register */\\\n);
               }
             } else {
+              my $ivar = get_cap($hash, $th, $full_var);
               my $vname = "${th}::$var";
               if ($var_group->{vector} ne "0") {
                 $vname .= "[0]";
               }
-              $$data .= qq(static int cctki_vi_$full_var = -100; if (cctki_vi_$full_var == -100) cctki_vi_$full_var = CCTK_VarIndex("$vname"); $vtype * restrict const $full_var __attribute__((__unused__)) = (($vtype *) CCTKi_VarDataPtrI(cctkGH, $timelevel, cctki_vi_$full_var));; /* TL: $namekey --> $timelevel $group_register*/\\\n);
+              $$data .= qq(static int cctki_vi_$ivar = -100; if (cctki_vi_$ivar == -100) cctki_vi_$ivar = CCTK_VarIndex("$vname"); $vtype * restrict const $ivar __attribute__((__unused__)) = (($vtype *) CCTKi_VarDataPtrI(cctkGH, $timelevel, cctki_vi_$ivar));; /* TL: $namekey --> $timelevel $group_register*/\\\n);
             }
           } # loop over read/write variables
         } # loop over read/write thorns
@@ -674,3 +711,5 @@ sub GenerateArguments
     }
   }
 }
+
+1;
