@@ -89,7 +89,7 @@ sub thorn_args {
         if($line =~ /$find/) {
             $line=<$fd>;
             while($line =~ /\w+/g) {
-                push @vars, $&;
+                push @vars, lc $&;
             }
         }
     }
@@ -545,16 +545,16 @@ sub create_macros
             }
             if(defined($hash->{$th}->{variable_list_lc}->{lc $var})) {
               # public variables
-              $group = $hash->{$th}->{variable_list}->{$var};
+              $group = $hash->{$th}->{variable_list_lc}->{lc $var};
               $var_group = $hash->{$th}->{$group};
             } elsif(($tnm eq $th) && defined($hash->{private_variable}->{$th}->{variable_list_lc}->{lc $var})) {
               # private variables
               $group = $hash->{private_variable}->{$th}->{variable_list}->{$var};
               $var_group = $hash->{private_variable}->{$th}->{$group};
-            } elsif(defined($hash->{$th}->{$var})) {
+            } elsif(defined($hash->{$th}->{group_list_lc}->{lc $var})) { #yyy
               # variable name is actually a group
-              $group = $var;
-              $var_group = $hash->{$th}->{$var};
+              $group = get_cap($hash, $th, $var);
+              $var_group = $hash->{$th}->{$group};
               $group_register = "yes";
             } else {
               # So $var isn't a public variable, a private variable,
@@ -607,7 +607,7 @@ sub create_macros
               if($var_group->{vector} ne "0") {
                 my $glen = $group."_length";
                 if(!defined($vector_len->{$glen})) {
-                  $cctk_arguments{$glen}=1;
+                  $cctk_arguments{lc $glen}=1;
                   $$data .= "  integer :: $glen &&\\\n";
                   $vector_len->{$glen} = 1;
                 }
@@ -621,7 +621,7 @@ sub create_macros
               }
               my $glen = "X0".$group;
               if(!defined($vector_len->{$glen})) {
-                $cctk_arguments{$glen}=1;
+                $cctk_arguments{lc $glen}=1;
                 $$data .= "  integer :: $glen &&\\\n";
                 $vector_len->{$glen} = 1;
               }
@@ -629,7 +629,7 @@ sub create_macros
                 my $temp_glen .= "X".$i.$group;
                 $glen .= ",".$temp_glen;
                 if(!defined($vector_len->{$temp_glen})) {
-                  $cctk_arguments{$temp_glen}=1;
+                  $cctk_arguments{lc $temp_glen}=1;
                   $$data .= "  integer :: $temp_glen &&\\\n";
                   $vector_len->{$temp_glen} = 1;
                 }
@@ -637,18 +637,18 @@ sub create_macros
               $arrays = qq(($glen));
             } elsif($var_group->{vector} ne "0") {
               my $glen = $group."_length";
-              $cctk_arguments{$glen}=1;
+              $cctk_arguments{lc $glen}=1;
               $$data .= "  integer :: $glen &&\\\n";
               $arrays = qq(($glen));
             }
             if($group_register eq "yes") {
               for my $variable (sort keys %{$var_group->{grp_vars}}) {
-                $cctk_arguments{$variable}=1;
+                $cctk_arguments{lc $variable}=1;
                 $$data .= "  $vtype :: $variable $arrays &&\\\n";
                 $$data .= "  integer, parameter :: cctki_use_$variable = kind($variable) &&\\\n";
               }
             } else {
-              $cctk_arguments{$full_var}=1;
+              $cctk_arguments{lc $full_var}=1;
               $$data .= "  $vtype :: $full_var $arrays &&\\\n";
               $$data .= "  integer, parameter :: cctki_use_$full_var = kind($full_var) &&\\\n";
             }
