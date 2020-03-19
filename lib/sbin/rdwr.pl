@@ -39,12 +39,12 @@ sub get_cap {
         $suffix = $2;
     }
     my $outvar;
-    if(defined($hash->{private_variable}->{$th}->{capitalization}->{lc $realvar})) {
-        $outvar = $hash->{private_variable}->{$th}->{capitalization}->{lc $realvar} . $suffix;
-    } elsif(defined($hash->{$th}->{capitalization}->{lc $realvar})) {
-        $outvar = $hash->{$th}->{capitalization}->{lc $realvar} . $suffix;
+    if(defined($hash->{private_variable}->{$th}->{capitalization}->{$realvar})) {
+        $outvar = $hash->{private_variable}->{$th}->{capitalization}->{$realvar} . $suffix;
+    } elsif(defined($hash->{$th}->{capitalization}->{$realvar})) {
+        $outvar = $hash->{$th}->{capitalization}->{$realvar} . $suffix;
     } else {
-        $outvar = $var;
+        croak("No Capitalization for ($realvar)");
     }
     return $outvar;
 }
@@ -154,9 +154,11 @@ sub do_interfaces
     my $dim = 0;
     my $gname;
     my $gtype;
+    my $cap_gname;
     for my $ch (@{$gr->{children}}) {
       if($ch->is("gname")) {
-        $gname = $ch->has(0,"name")->substring();
+        $cap_gname = $ch->has(0,"name")->substring();
+        $gname = lc $cap_gname;
         if($ch->has(1,"expr")) {
           # This section finds the length for vectors.
           my $expr = $ch->has(1,"expr")->has(0,"addexpr")->has(0,"mulexpr")->has(0,"powexpr");
@@ -191,8 +193,7 @@ sub do_interfaces
     $hash->{$gname}->{gtype} = uc $gtype;
     $hash->{$gname}->{array_dim} = $dim;
     $hash->{group_list}->{$gname}=1;
-    $hash->{group_list_lc}->{lc $gname}=1;
-    $hash->{capitalization}->{lc $gname}=$gname;
+    $hash->{capitalization}->{$gname}=$cap_gname;
     my $Detect = 0;
     for my $ch (@{$gr->{children}}) {
       # Looping over variables in the group
@@ -200,13 +201,11 @@ sub do_interfaces
         my $i = 0;
         $Detect = 1;
         while($ch->has($i,"name")) {
-          my $var = $ch->has($i,"name")->substring();
-          my $lc_var = lc $var;
+          my $cap_var = $ch->has($i,"name")->substring();
+          my $var = lc $cap_var;
           $hash->{$gname}->{grp_vars}->{$var} = $var;
-          $hash->{$gname}->{grp_vars_lc}->{$lc_var} = $var;
           $hash->{variable_list}->{$var} = $gname;
-          $hash->{variable_list_lc}->{$lc_var} = $gname;
-          $hash->{capitalization}->{$lc_var} = $var;
+          $hash->{capitalization}->{$var} = $cap_var;
           $i++;
         }
         last;
@@ -216,10 +215,8 @@ sub do_interfaces
       # If no VARS were detected, then the group name
       # is also the variable name.
       $hash->{$gname}->{grp_vars}->{$gname} = $gname;
-      $hash->{$gname}->{grp_vars_lc}->{lc $gname} = $gname;
       $hash->{variable_list}->{$gname} = $gname;
-      $hash->{variable_list_lc}->{lc $gname} = $gname;
-      $hash->{capitalization}->{lc $gname} = $gname;
+      $hash->{capitalization}->{$gname} = $cap_gname;
     }
   } elsif($gr->{name} =~ /^(intr|FUNC_GROUP)$/) {
     # 'intr' is the name of the top-level pattern for an entire interface file
@@ -304,10 +301,10 @@ sub do_schedules
         my $var = undef;
         if($vname->has(1,"name")) {
             $thorn = uc $thorn_or_var;
-            $var = $vname->has(1,"name")->substring();
+            $var = lc $vname->has(1,"name")->substring();
         } else {
             $thorn = uc $parsing_thorn;
-            $var = $thorn_or_var;
+            $var = lc $thorn_or_var;
         }
 
         # update informational data structures
@@ -322,7 +319,7 @@ sub do_schedules
         # Process additional variable names in this definition.
         while($qname->has($i,"qrname")) {
           my $qrname = $qname->group($i);
-          $var = $qrname->has(0,"name")->substring();
+          $var = lc $qrname->has(0,"name")->substring();
           $reads_writes->{$nm}->{$thorn}->{$var}->{rdwr} += $is_writes;
           $reads_writes->{$nm}->{$thorn}->{$var}->{line} = $vname->linenum();
           $i++;
@@ -436,18 +433,17 @@ sub create_macros
               $var = substr $var,0,-2;
               $timelevel++;
             }
-            if(defined($hash->{$th}->{variable_list_lc}->{lc $var})) {
+            if(defined($hash->{$th}->{variable_list}->{$var})) {
               # public variables
-              my $group = $hash->{$th}->{variable_list_lc}->{lc $var};
+              my $group = $hash->{$th}->{variable_list}->{$var};
               $var_group = $hash->{$th}->{$group};
-            } elsif(($tnm eq $th) && defined($hash->{private_variable}->{$th}->{variable_list_lc}->{lc $var})) {
+            } elsif(($tnm eq $th) && defined($hash->{private_variable}->{$th}->{variable_list}->{$var})) {
               # private variables
-              my $group = $hash->{private_variable}->{$th}->{variable_list_lc}->{lc $var};
+              my $group = $hash->{private_variable}->{$th}->{variable_list}->{$var};
               $var_group = $hash->{private_variable}->{$th}->{$group};
-            } elsif(defined($hash->{$th}->{group_list_lc}->{lc $var})) {
+            } elsif(defined($hash->{$th}->{group_list}->{$var})) {
               # variable name is actually a group
-              my $cap_group = get_cap($hash, $th, $var);
-              $var_group = $hash->{$th}->{$cap_group};
+              $var_group = $hash->{$th}->{$var};
               $group_register = "yes";
             } else {
               my $hint = "Is ${th}::${var} a correctly declared variable?";
@@ -515,7 +511,7 @@ sub create_macros
               }
             } else {
               my $ivar = get_cap($hash, $th, $full_var);
-              my $vname = "${th}::$var";
+              my $vname = "${th}::$ivar";
               if ($var_group->{vector} ne "0") {
                 $vname .= "[0]";
               }
@@ -543,18 +539,18 @@ sub create_macros
               $var = substr $var,0,-2;
               $timelevel++;
             }
-            if(defined($hash->{$th}->{variable_list_lc}->{lc $var})) {
+            if(defined($hash->{$th}->{variable_list}->{$var})) {
               # public variables
-              $group = $hash->{$th}->{variable_list_lc}->{lc $var};
+              $group = $hash->{$th}->{variable_list}->{$var};
               $var_group = $hash->{$th}->{$group};
-            } elsif(($tnm eq $th) && defined($hash->{private_variable}->{$th}->{variable_list_lc}->{lc $var})) {
+            } elsif(($tnm eq $th) && defined($hash->{private_variable}->{$th}->{variable_list}->{$var})) {
               # private variables
               $group = $hash->{private_variable}->{$th}->{variable_list}->{$var};
               $var_group = $hash->{private_variable}->{$th}->{$group};
-            } elsif(defined($hash->{$th}->{group_list_lc}->{lc $var})) { #yyy
+            } elsif(defined($hash->{$th}->{$var})) {
               # variable name is actually a group
-              $group = get_cap($hash, $th, $var);
-              $var_group = $hash->{$th}->{$group};
+              $group = $var;
+              $var_group = $hash->{$th}->{$var};
               $group_register = "yes";
             } else {
               # So $var isn't a public variable, a private variable,
@@ -607,7 +603,7 @@ sub create_macros
               if($var_group->{vector} ne "0") {
                 my $glen = $group."_length";
                 if(!defined($vector_len->{$glen})) {
-                  $cctk_arguments{lc $glen}=1;
+                  $cctk_arguments{$glen}=1;
                   $$data .= "  integer :: $glen &&\\\n";
                   $vector_len->{$glen} = 1;
                 }
@@ -619,17 +615,17 @@ sub create_macros
               if($var_group->{vector} ne "0") {
                 croak("Not supported yet.");
               }
-              my $glen = "X0".$group;
+              my $glen = "x0".$group;
               if(!defined($vector_len->{$glen})) {
-                $cctk_arguments{lc $glen}=1;
+                $cctk_arguments{$glen}=1;
                 $$data .= "  integer :: $glen &&\\\n";
                 $vector_len->{$glen} = 1;
               }
               for(my $i = 1; $i < $var_group->{array_dim}; $i++) {
-                my $temp_glen .= "X".$i.$group;
+                my $temp_glen .= "x".$i.$group;
                 $glen .= ",".$temp_glen;
                 if(!defined($vector_len->{$temp_glen})) {
-                  $cctk_arguments{lc $temp_glen}=1;
+                  $cctk_arguments{$temp_glen}=1;
                   $$data .= "  integer :: $temp_glen &&\\\n";
                   $vector_len->{$temp_glen} = 1;
                 }
@@ -637,18 +633,18 @@ sub create_macros
               $arrays = qq(($glen));
             } elsif($var_group->{vector} ne "0") {
               my $glen = $group."_length";
-              $cctk_arguments{lc $glen}=1;
+              $cctk_arguments{$glen}=1;
               $$data .= "  integer :: $glen &&\\\n";
               $arrays = qq(($glen));
             }
             if($group_register eq "yes") {
               for my $variable (sort keys %{$var_group->{grp_vars}}) {
-                $cctk_arguments{lc $variable}=1;
+                $cctk_arguments{$variable}=1;
                 $$data .= "  $vtype :: $variable $arrays &&\\\n";
                 $$data .= "  integer, parameter :: cctki_use_$variable = kind($variable) &&\\\n";
               }
             } else {
-              $cctk_arguments{lc $full_var}=1;
+              $cctk_arguments{$full_var}=1;
               $$data .= "  $vtype :: $full_var $arrays &&\\\n";
               $$data .= "  integer, parameter :: cctki_use_$full_var = kind($full_var) &&\\\n";
             }
