@@ -299,17 +299,24 @@ sub do_schedules
         my $thorn_or_var = $vname->has(0,"name")->substring();
         my $thorn = undef;
         my $var = undef;
+        my $cap_thorn = undef;
+        my $cap_var = undef;
         if($vname->has(1,"name")) {
-            $thorn = uc $thorn_or_var;
-            $var = lc $vname->has(1,"name")->substring();
+            $cap_thorn = $thorn_or_var;
+            $cap_var = $vname->has(1,"name")->substring();
+            $thorn = uc $cap_thorn;
+            $var = lc $cap_var;
         } else {
-            $thorn = uc $parsing_thorn;
-            $var = lc $thorn_or_var;
+            $cap_thorn = $parsing_thorn;
+            $cap_var = $thorn_or_var;
+            $thorn = uc $cap_thorn;
+            $var = lc $cap_var;
         }
 
         # update informational data structures
         $reads_writes->{$nm}->{$thorn}->{$var}->{rdwr} += $is_writes;
         $reads_writes->{$nm}->{$thorn}->{$var}->{line} = $vname->linenum();
+        $reads_writes->{$nm}->{$thorn}->{$var}->{cap} = "${cap_thorn}::${cap_var}";
         my $i = 1;
 
         # we skip over the region, e.g. interior, boundary, etc.
@@ -446,21 +453,22 @@ sub create_macros
               $var_group = $hash->{$th}->{$var};
               $group_register = "yes";
             } else {
-              my $hint = "Is ${th}::${var} a correctly declared variable?";
+              my $cap = $reads_writes->{$namekey}->{$th}->{$var}->{cap};
+              my $hint = "Is $cap a correctly declared variable?";
               my %hints = ();
               # Do a brute force search of the world...
               for my $th2 (keys %$hash) {
-                for my $v (%{$hash->{private_variable}->{$th2}->{variable_list_lc}}) {
+                for my $v (%{$hash->{private_variable}->{$th2}->{variable_list}}) {
                   if($v eq lc $var) {
                     $hints{" Did you mean ${th2}::$v?"}=1;
                   }
                 }
-                for my $v (%{$hash->{$th2}->{variable_list_lc}}) {
+                for my $v (%{$hash->{$th2}->{variable_list}}) {
                   if($v eq lc $var) {
                     $hints{" Did you mean ${th2}::$v?"}=1;
                   }
                 }
-                for my $v (%{$hash->{$th2}->{group_list_lc}}) {
+                for my $v (%{$hash->{$th2}->{group_list}}) {
                   if($v eq lc $var) {
                     $hints{" Did you mean ${th2}::$v?"}=1;
                   }
@@ -564,21 +572,22 @@ sub create_macros
               # will occur. This helps the user figure it out.
               my $hint = undef;
               ###
-              my $hint = "Is ${th}::${var} a correctly declared variable?";
+              my $cap = $reads_writes->{$namekey}->{$th}->{$var}->{cap};
+              my $hint = "Is $cap a correctly declared variable?";
               my %hints = ();
               # Do a brute force search of the world...
               for my $th2 (keys %$hash) {
-                for my $v (%{$hash->{private_variable}->{$th2}->{variable_list_lc}}) {
+                for my $v (%{$hash->{private_variable}->{$th2}->{variable_list}}) {
                   if($v eq lc $var) {
                     $hints{" Did you mean ${th2}::$v?"}=1;
                   }
                 }
-                for my $v (%{$hash->{$th2}->{variable_list_lc}}) {
+                for my $v (%{$hash->{$th2}->{variable_list}}) {
                   if($v eq lc $var) {
                     $hints{" Did you mean ${th2}::$v?"}=1;
                   }
                 }
-                for my $v (%{$hash->{$th2}->{group_list_lc}}) {
+                for my $v (%{$hash->{$th2}->{group_list}}) {
                   if($v eq lc $var) {
                     $hints{" Did you mean ${th2}::$v?"}=1;
                   }
