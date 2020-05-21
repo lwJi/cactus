@@ -1,8 +1,6 @@
 use strict;
 use warnings;
 
-use Time::HiRes;
-
 our $top = `pwd` if (! $top);
 our $config_dir = "$top/config-data" if (! $config_dir);
 
@@ -26,6 +24,15 @@ die "Unable to find CCTK sbin directory - tried $sbin_dir\n"
 use lib "$sbin_dir";
 require "CSTUtils.pl";
 
+# timing routines
+eval {
+  require Time::HiRes;
+};
+if($@) {
+  eval "sub timeofday { return time(); }"
+} else {
+  eval "sub timeofday { return Time::HiRes::gettimeofday(); }"
+}
 
 ############################################################
 =pod 
@@ -1139,7 +1146,7 @@ sub RunCactus
   $retcode = 0;
   open (LOG, "> $testname.log") or die "Could not open '$testname.log' for writing: $!";
 
-  my $start_time = &Time::HiRes::gettimeofday();
+  my $start_time = &timeofday();
   open (CMD, "pwd; $command 2>&1 |") or die "Could not start '$command': $!";
 
   while (<CMD>)
@@ -1149,7 +1156,7 @@ sub RunCactus
   }
   close CMD;
   $retcode = $? >> 8 if($retcode==0);
-  my $end_time = &Time::HiRes::gettimeofday();
+  my $end_time = &timeofday();
 
   my $elapsed = $end_time - $start_time;
   printf LOG "  Elapsed time: %.1f s\n", $elapsed if ($output =~ /log/);
