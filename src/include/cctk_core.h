@@ -94,9 +94,22 @@ cctk_ash1,cctk_ash2,cctk_ash3
 
 #ifdef F90CODE
 
-#define _DECLARE_CCTK_FUNCTIONS                   \
+#ifdef HAVE_CCTK_F_TYPE_STAR
+#define _DECLARE_CCTK_POINTER_TO                  \
+  interface                                     &&\
+    CCTK_POINTER function CCTK_PointerTo (var)  &&\
+      implicit none                             &&\
+      type(*),dimension(..),TARGET :: var       &&\
+    end function CCTK_PointerTo                 &&\
+  end interface                                 &&
+#else
+#define _DECLARE_CCTK_POINTER_TO                  \
   external     CCTK_PointerTo                   &&\
-  CCTK_POINTER CCTK_PointerTo                   &&\
+  CCTK_POINTER CCTK_PointerTo                   &&
+#endif
+
+#define _DECLARE_CCTK_FUNCTIONS                   \
+  _DECLARE_CCTK_POINTER_TO                        \
   interface                                     &&\
      integer function CCTK_Equals (arg1, arg2)  &&\
        implicit none                            &&\

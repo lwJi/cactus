@@ -18,3 +18,7 @@ StringList.c\
 Table.c\
 Time.c\
 Network.c
+
+ifneq ($(lastword $(subst /, ,$(F90))),no-fortran-compiler)
+SRCS += PointerTo.F90
+endif

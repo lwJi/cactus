@@ -46,8 +46,10 @@ void CCTK_PrintString(const char *data);
 int CCTK_FCALL CCTK_FNAME(CCTK_Equals)
                          (const char **arg1, ONE_FORTSTRING_ARG);
 
+#ifndef HAVE_CCTK_F_TYPE_STAR
 CCTK_POINTER CCTK_FCALL CCTK_FNAME(CCTK_PointerTo)
                                   (CCTK_POINTER var);
+#endif // HAVE_CCTK_F_TYPE_STAR
 CCTK_POINTER CCTK_FCALL CCTK_FNAME(CCTK_NullPointer)
                                   (void);
 
@@ -182,10 +184,12 @@ int CCTK_FCALL CCTK_FNAME(CCTK_Equals)
                pointer to the variable
    @endreturndesc
 @@*/
+#ifndef HAVE_CCTK_F_TYPE_STAR
 CCTK_POINTER CCTK_FCALL CCTK_FNAME (CCTK_PointerTo) (CCTK_POINTER var)
 {
   return (var);
 }
+#endif // HAVE_CCTK_F_TYPE_STAR
 
  /*@@
    @routine    CCTK_NullPointer
