@@ -960,6 +960,10 @@ CCTK_C__PRAGMA
 #CCTK_CXX_ATTRIBUTE_PURE
 #CCTK_CXX_MEMBER_ATTRIBUTE_PURE
 
+# Find out whether the compiler supports __attribute__((common))
+CCTK_C_ATTRIBUTE_COMMON
+CCTK_CXX_ATTRIBUTE_COMMON
+
 # Find out whether the compiler supports __attribute__((noinline))
 CCTK_C_ATTRIBUTE_NOINLINE
 CCTK_CXX_ATTRIBUTE_NOINLINE

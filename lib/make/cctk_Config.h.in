@@ -308,6 +308,14 @@
 #  define CCTK_ATTRIBUTE_PURE
 #endif
 
+/* Whether __attribute__((common)) exists. */
+#undef HAVE_CCTK_C_ATTRIBUTE_COMMON
+#ifdef HAVE_CCTK_C_ATTRIBUTE_COMMON
+#  define CCTK_ATTRIBUTE_COMMON __attribute__((__common__))
+#else
+#  define CCTK_ATTRIBUTE_COMMON
+#endif
+
 /* Whether __attribute__((noinline)) exists. */
 #undef HAVE_CCTK_C_ATTRIBUTE_NOINLINE
 #ifdef HAVE_CCTK_C_ATTRIBUTE_NOINLINE
@@ -520,6 +528,14 @@
 #  define CCTK_MEMBER_ATTRIBUTE_PURE __attribute__((__pure__))
 #else
 #  define CCTK_MEMBER_ATTRIBUTE_PURE
+#endif
+
+/* Whether __attribute__((common)) exists. */
+#undef HAVE_CCTK_CXX_ATTRIBUTE_COMMON
+#ifdef HAVE_CCTK_CXX_ATTRIBUTE_COMMON
+#  define CCTK_ATTRIBUTE_COMMON __attribute__((__common__))
+#else
+#  define CCTK_ATTRIBUTE_COMMON
 #endif
 
 /* Whether __attribute__((noinline)) exists. */

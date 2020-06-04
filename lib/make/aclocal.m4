@@ -903,6 +903,31 @@ fi
 
 
 
+AC_DEFUN(CCTK_C_ATTRIBUTE_COMMON,
+[AC_CACHE_CHECK([for C data __attribute__((__common__))], cctk_cv_have_c_attribute_common,
+[cctk_cv_have_c_attribute_common=no
+AC_TRY_COMPILE(, struct foo_t {int bar;} foo_s  __attribute__((__common__));, cctk_cv_have_c_attribute_common=yes, cctk_cv_have_c_attribute_common=no)
+])
+if test "$cctk_cv_have_c_attribute_common" = "yes" ; then
+   AC_DEFINE(HAVE_CCTK_C_ATTRIBUTE_COMMON)
+fi
+])
+
+AC_DEFUN(CCTK_CXX_ATTRIBUTE_COMMON,
+[AC_CACHE_CHECK([for C+ data __attribute__((__common__))], cctk_cv_have_cxx_attribute_common,
+[cctk_cv_have_cxx_attribute_common=no
+AC_LANG_SAVE
+AC_LANG_CPLUSPLUS
+AC_TRY_COMPILE(, struct foo_t {int bar;} foo_s  __attribute__((__common__));, cctk_cv_have_cxx_attribute_common=yes, cctk_cv_have_cxx_attribute_common=no)
+AC_LANG_RESTORE
+])
+if test "$cctk_cv_have_cxx_attribute_common" = "yes" ; then
+   AC_DEFINE(HAVE_CCTK_CXX_ATTRIBUTE_COMMON)
+fi
+])
+
+
+
 AC_DEFUN(CCTK_C_ATTRIBUTE_NOINLINE,
 [AC_CACHE_CHECK([for C function __attribute__((__noinline__))], cctk_cv_have_c_attribute_noinline,
 [cctk_cv_have_c_attribute_noinline=no
