@@ -63,7 +63,9 @@ sub CreateParameterBindingFile
     push(@data, '  int dummy_parameter;');
   }
 
-  push(@data, "} $structure;");
+  push(@data, "  /* All parameter blocks become common blocks in Fortran, and they should all");
+  push(@data, "   * have the common attribute in C. */");
+  push(@data, "} $structure CCTK_ATTRIBUTE_COMMON;");
   push(@data, "\n");   # workaround for perl 5.004_04 to add a trailing newline
 
   return join ("\n", @data);
