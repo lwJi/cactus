@@ -741,6 +741,12 @@
 #  undef COLLAPSE
 #endif
 
+/* TYPE(*) declaration for void* argument (Fortran 2018) */
+#undef HAVE_CCTK_F_TYPE_STAR
+#ifdef HAVE_CCTK_F_TYPE_STAR
+#define HAVE_CCTK_TYPE_STAR
+#endif
+
 #endif /* FCODE */
 
 /* Now include the code to pick an appropriate precison for reals and ints */

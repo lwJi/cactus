@@ -505,6 +505,7 @@ else
   fi
   FFLAGS="$F90FLAGS"
   CCTK_PROG_F77_WORKS
+  CCTK_HAVE_TYPE_STAR
   if ! test "x${ac_save_FFLAGS+y}" = x ; then
     FFLAGS="$ac_save_FFLAGS"
   else

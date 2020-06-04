@@ -46,3 +46,4 @@
 21 Oct 2014: Autoconfigure support for attribute((nonnull))
 24 Apr 2020: update config.guess and config.sub
 04 Jun 2020: Add CCTK_ATTRIBUTE_COMMON
+04 Jun 2020: Add CCTK_HAVE_TYPE_STAR

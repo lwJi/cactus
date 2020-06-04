@@ -399,6 +399,25 @@ fi
 cross_compiling=$ac_cv_prog_f90_cross
 ])
 
+AC_DEFUN(CCTK_HAVE_TYPE_STAR,
+[AC_CACHE_CHECK([whether the Fortran compiler ($F77 $F77FLAGS $LDFLAGS) supports TYPE(*)], cctk_cv_have_f_type_star,
+[cctk_cv_have_f_type_star=no
+AC_LANG_SAVE
+AC_LANG_FORTRAN77
+CCTK_TRY_COMPILE(
+[
+      subroutine foo(a)
+        implicit none
+        type(*),dimension(..),target :: a
+      end subroutine
+],[], cctk_cv_have_f_type_star=yes, cctk_cv_have_f_type_star=no)
+AC_LANG_RESTORE
+])
+if test "$cctk_cv_have_f_type_star" = "yes" ; then
+  AC_DEFINE_UNQUOTED(HAVE_CCTK_F_TYPE_STAR)
+fi
+])
+
 AC_DEFUN(CCTK_HEADER_REGEX,
 [AC_MSG_CHECKING([for regex.h])
 AC_CACHE_VAL(cctk_cv_header_regex_h,
