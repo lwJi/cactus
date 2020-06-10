@@ -20,6 +20,17 @@ my @otherdirs = @ARGV[3..$#ARGV];
 
 my @suffixes = (".f77", ".f", ".f90", ".F77", ".F", ".F90");
 
+# the list of Fortran intrinsic modules provided by the compiler, from
+# https://gcc.gnu.org/onlinedocs/gcc-10.1.0/gfortran/Intrinsic-Modules.html#Intrinsic-Modules
+my @intrinsic_mods = ("ISO_FORTRAN_ENV", "ISO_C_BINDING",
+                      "IEEE_EXCEPTIONS", "IEEE_ARITHMETIC",  "IEEE_FEATURES",
+                      "OMP_LIB", "OMP_LIB_KINDS", "OPENACC");
+
+# a list of "intrinsic" include files. From:
+# https://gcc.gnu.org/onlinedocs/gfortran/OpenMP.html
+# https://www.mpi-forum.org/docs/mpi-3.1/mpi31-report/node411.htm
+my @intrinsic_includes = ("omp_lib.h", "mpif.h");
+
 print "$dest:";
 
 my %modules;
@@ -35,6 +46,13 @@ while (<STDIN>) {
         # Include statement
         my $name = $1;
         my $found = 0;
+        # one of the intrinsic includes?
+        foreach my $include (@intrinsic_includes) {
+            if ($name =~ m:^\Q$include\E\$:i) {
+                $found = 1;
+                last;
+            }
+        }
         if (!$found) {
             # Reference to an include file in this thorn?
             my @subdirs = (".", "include");
@@ -94,6 +112,13 @@ while (<STDIN>) {
         # Use statement
         my $name = $1;
         my $found = 0;
+        # one of the intrinsic modules?
+        foreach my $mod (@intrinsic_mods) {
+            if ($name =~ m:^\Q$mod\E$:i) {
+                $found = 1;
+                last;
+            }
+        }
         if (!$found) {
             # Reference to a module in this file?
             if ($modules{"\L$name"}) {
