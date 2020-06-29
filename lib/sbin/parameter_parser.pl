@@ -196,6 +196,15 @@ sub parse_param_ccl
         }
         my $desc = $guts->group(1,"description")->substring();
         $desc =~ s/\\\n//g;
+        if($desc eq "" and $uses_or_extends eq "") {
+
+            my $hint = "Each parameter definition must have " .
+              "the syntax <TYPE> <NAME> <\"DESCRIPTION\">";
+
+            &CST_error(0, "Missing description for parameter $name " .
+                          "param.ccl for thorn $thorn",
+                       $hint, $guts->linenum(), $ccl_file);
+        }
         if($gr->is("keywordpar")) {
           $parameter_db1{"\U$thorn $as_name\E type"}="KEYWORD";
           my $item_count = 1;
