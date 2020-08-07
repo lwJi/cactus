@@ -446,7 +446,7 @@ static char *ParseDefines(char *buffer, long *buffersize)
         char *value = NULL;
         /* a new buffer for the whole thing */
         char * new_buffer;
-        unsigned long new_size;
+        long new_size;
         /* Check for different kinds of defines */
         /* Environment variables */
         if ((defpos > 6) &&
