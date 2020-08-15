@@ -44,8 +44,18 @@ Gets the region where a grid function is valid.
 \begin{verbatim}
 #include "cctk.h"
 
-int where = CCTK_GetValidRegion(int variable_index ,int time_level);
+CCTK_INT where = Driver_GetValidRegion(CCTK_INT variable_index, CCTK_INT time_level);
 
+\end{verbatim}
+\end{Synopsis}
+\begin{Synopsis}{Fortran}
+\begin{verbatim}
+#include "cctk.h"
+
+CCTK_INT function Driver_GetValidRegion(variable_index, time_level)
+   CCTK_INT, INTENT(IN) :: variable_index
+   CCTK_INT, INTENT(IN) :: time_level
+end function Driver_GetValidRegion
 \end{verbatim}
 \end{Synopsis}
 \end{SynopsisSection}
@@ -91,12 +101,29 @@ Notify the driver as to which region of which grid function you have updated.
 \begin{verbatim}
 #include "cctk.h"
 
-int zero = CCTK_NotifyDataModified(const cGH *cctkGH,
-    int *variable_list,
-    int *time_level_list,
-    int num_variables,
-    int *where_list);
+CCTK_INT zero = Driver_NotifyDataModified(CCTK_POINTER_TO_CONST cctkGH,
+    CCTK_INT *variable_list,
+    CCTK_INT *time_level_list,
+    CCTK_INT num_variables,
+    CCTK_INT *where_list);
 
+\end{verbatim}
+\end{Synopsis}
+\begin{Synopsis}{Fortran}
+\begin{verbatim}
+#include "cctk.h"
+
+CCTK_INT function Driver_NotifyDataModified(cctkGH, variable_list, &
+    time_level_list, &
+    num_variables, &
+    where_list)
+
+    CCTK_POINTER_TO_CONST, INTENT(IN) :: cctkGH
+    CCTK_INT, INTENT(IN) :: num_variables
+    CCTK_INT, DIMENSION(num_variables), INTENT(IN) :: variable_list
+    CCTK_INT, DIMENSION(num_variables), INTENT(IN) :: time_level_list
+    CCTK_INT, DIMENSION(num_variables), INTENT(IN) :: where_list
+end function Driver_NotifyDataModified
 \end{verbatim}
 \end{Synopsis}
 \end{SynopsisSection}
@@ -160,12 +187,29 @@ Assertions may be triggered for invalid variables or time levels.
 \begin{verbatim}
 #include "cctk.h"
 
-int zero = CCTK_RequireValidData(const cGH *cctkGH,
-    int *variable_list,
-    int *time_level_list,
-    int num_variables,
-    int *where_list);
+CCTK_INT zero = Driver_RequireValidData(CCTK_POINTER_TO_CONST cctkGH,
+    CCTK_INT *variable_list,
+    CCTK_INT *time_level_list,
+    CCTK_INT num_variables,
+    CCTK_INT *where_list);
 
+\end{verbatim}
+\end{Synopsis}
+\begin{Synopsis}{Fortran}
+\begin{verbatim}
+#include "cctk.h"
+
+CCTK_INT function Driver_RequireValidData(cctkGH, variable_list, &
+    time_level_list, &
+    num_variables, &
+    where_list)
+
+    CCTK_POINTER_TO_CONST, INTENT(IN) :: cctkGH
+    CCTK_INT, INTENT(IN) :: num_variables
+    CCTK_INT, DIMENSION(num_variables), INTENT(IN) :: variable_list
+    CCTK_INT, DIMENSION(num_variables), INTENT(IN) :: time_level_list
+    CCTK_INT, DIMENSION(num_variables), INTENT(IN) :: where_list
+end function Driver_RequireValidData
 \end{verbatim}
 \end{Synopsis}
 \end{SynopsisSection}
@@ -230,14 +274,29 @@ Tell the driver how to update the boundary conditions for the grid functions in 
 \begin{verbatim}
 #include "cctk.h"
 
-int err = Driver_SelectGroupForBC(
-    const cGH *cctkGH,
-    int faces,
-    int width,
-    int table handle,
-    const char *group_name,
-    const char *bc_name);
+CCTK_INT err = Driver_SelectGroupForBC(
+    CCTK_POINTER_TO_CONST cctkGH,
+    CCTK_INT faces,
+    CCTK_INT width,
+    CCTK_INT table handle,
+    CCTK_STRING group_name,
+    CCTK_STRING bc_name);
 
+\end{verbatim}
+\end{Synopsis}
+\begin{Synopsis}{Fortran}
+\begin{verbatim}
+#include "cctk.h"
+
+CCTK_INT function Driver_SelectGroupForBC(cctkGH, faces, width, table handle, &
+    group_name, bc_name)
+    CCTK_POINTER_TO_CONST, INTENT(IN) :: cctkGH
+    CCTK_INT, INTENT(IN) :: faces
+    CCTK_INT, INTENT(IN) :: width,
+    CCTK_INT, INTENT(IN) :: table handle
+    CCTK_STRING, INTENT(IN) :: group_name
+    CCTK_STRING, INTENT(IN) :: bc_name
+end function Driver_SelectGroupForBC
 \end{verbatim}
 \end{Synopsis}
 \end{SynopsisSection}
@@ -319,14 +378,29 @@ Assertions may be triggered for invalid variables or time levels.
 \begin{verbatim}
 #include "cctk.h"
 
-int err = Driver_SelectVarForBC(
-    const cGH *cctkGH,
-    int faces,
-    int width,
-    int table handle,
-    const char *var_name,
-    const char *bc_name);
+CCTK_INT err = Driver_SelectVarForBC(
+    CCTK_POINTER_TO_CONST cctkGH,
+    CCTK_INT faces,
+    CCTK_INT width,
+    CCTK_INT table handle,
+    CCTK_STRING var_name,
+    CCTK_STRING bc_name);
 
+\end{verbatim}
+\end{Synopsis}
+\begin{Synopsis}{Fortran}
+\begin{verbatim}
+#include "cctk.h"
+
+CCTK_INT function Driver_SelectVarForBC(cctkGH, faces, width, table handle, &
+    var_name, bc_name)
+    CCTK_POINTER_TO_CONST, INTENT(IN) :: cctkGH
+    CCTK_INT, INTENT(IN) :: faces
+    CCTK_INT, INTENT(IN) :: width,
+    CCTK_INT, INTENT(IN) :: table handle
+    CCTK_STRING, INTENT(IN) :: var_name
+    CCTK_STRING, INTENT(IN) :: bc_name
+end function Driver_SelectVarForBC
 \end{verbatim}
 \end{Synopsis}
 \end{SynopsisSection}
@@ -409,7 +483,20 @@ Gets the region where a grid function is valid.
 \begin{verbatim}
 #include "cctk.h"
 
-CCTK_SetValidRegion(int variable_index ,int time_level,int where);
+void Driver_SetValidRegion(CCTK_INT variable_index, CCTK_INT time_level,
+   CCTK_INT where);
+
+\end{verbatim}
+\end{Synopsis}
+\begin{Synopsis}{Fortran}
+\begin{verbatim}
+#include "cctk.h"
+
+subroutine Driver_SetValidRegion(variable_index, time_level, where)
+   CCTK_INT, INTENT(INT) :: variable_index
+   CCTK_INT, INTENT(INT) :: time_level
+   CCTK_INT, INTENT(INT) :: where
+end subroutine Driver_SetValidRegion
 
 \end{verbatim}
 \end{Synopsis}
