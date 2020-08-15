@@ -27,10 +27,16 @@ Ask the driver to provide valid data in the region you specify.
 \item[\code{CCTK\_SelectGroupForBC}] [\pageref{CCTK-gSelectGroupForBC}]
 Tell the driver how to update the boundary conditions for the grid functions in a group.
 
-\item[\code{CCTK\_SelectVarForBC}] [\pageref{CCTK-gSelectVarForBC}]
+\item[\code{Driver\_SelectGroupForBCI}] [\pageref{Driver-SelectGroupForBCI}]
+Tell the driver how to update the boundary conditions for the grid functions in a group.
+
+\item[\code{Driver\_SelectVarForBC}] [\pageref{Driver-SelectVarForBC}]
 Tell the driver how to update the boundary conditions for a grid functions.
 
-\item[\code{CCTK\_SetValidRegion}] [\pageref{CCTK-gSetValidRegion}]
+\item[\code{Driver\_SelectVarForBCI}] [\pageref{Driver-SelectVarForBCI}]
+Tell the driver how to update the boundary conditions for a grid functions.
+
+\item[\code{Driver\_SetValidRegion}] [\pageref{Driver-SetValidRegion}]
 Sets the region where a grid function is valid.
 
 \end{Lentry}
@@ -370,8 +376,113 @@ Assertions may be triggered for invalid variables or time levels.
 % zzz
 \end{FunctionDescription}
 
-\begin{FunctionDescription}{CCTK\_SelectVarForBC}
-\label{CCTK-gSelectVarForBC}
+\begin{FunctionDescription}{Driver\_SelectGroupForBCI}
+\label{Driver-SelectGroupForBCI}
+Tell the driver how to update the boundary conditions for the grid functions in a group.
+% yyy
+\begin{SynopsisSection}
+\begin{Synopsis}{C}
+\begin{verbatim}
+#include "cctk.h"
+
+CCTK_INT err = Driver_SelectGroupForBCI(
+    CCTK_POINTER_TO_CONST cctkGH,
+    CCTK_INT faces,
+    CCTK_INT width,
+    CCTK_INT table handle,
+    CCTK_INT group_index,
+    CCTK_STRING bc_name);
+
+\end{verbatim}
+\end{Synopsis}
+\begin{Synopsis}{Fortran}
+\begin{verbatim}
+#include "cctk.h"
+
+CCTK_INT function Driver_SelectGroupForBCI(cctkGH, faces, width, table handle, &
+    group_name, bc_name)
+    CCTK_POINTER_TO_CONST, INTENT(IN) :: cctkGH
+    CCTK_INT, INTENT(IN) :: faces
+    CCTK_INT, INTENT(IN) :: width,
+    CCTK_INT, INTENT(IN) :: table handle
+    CCTK_INT, INTENT(IN) :: group_index
+    CCTK_STRING, INTENT(IN) :: bc_name
+end function Driver_SelectGroupForBCI
+\end{verbatim}
+\end{Synopsis}
+\end{SynopsisSection}
+
+\begin{ResultSection}
+\begin{Result}{err}
+Returns -6 for an invalid group index, -2 for an invalid boundary condition name.
+\end{Result}
+\end{ResultSection}
+
+\begin{ParameterSection}
+\begin{Parameter}{cctkGH}
+Pointer to CCTK grid hierarchy
+\end{Parameter}
+\end{ParameterSection}
+
+\begin{ParameterSection}
+\begin{Parameter}{faces}
+The choice of which faces the boundary condition applies to.
+Normally, this will be \texttt{CCTK\_ALL\_FACES}. If a different
+specification is desired, consult the documentation on the
+Boundary thorn.
+\end{Parameter}
+\end{ParameterSection}
+
+\begin{ParameterSection}
+\begin{Parameter}{width}
+The number of zones from the edge filled in by the boundary condition.
+\end{Parameter}
+\end{ParameterSection}
+
+\begin{ParameterSection}
+\begin{Parameter}{table\_handle}
+The table handle holds extra arguments for the boundary condition, if such are needed. Use
+-1 (an invalid table handle) for boundary conditions which need no additional arguments.
+\end{Parameter}
+\end{ParameterSection}
+
+\begin{ParameterSection}
+\begin{Parameter}{where\_list}
+An array of \texttt{num\_variables} where specifications describing
+where valid data is needed for a given grid function and time level.
+\end{Parameter}
+\end{ParameterSection}
+
+\begin{ParameterSection}
+\begin{Parameter}{group\_index}
+The group index of the group of grid functions to which this boundary condition applies.
+\end{Parameter}
+\end{ParameterSection}
+
+\begin{ParameterSection}
+\begin{Parameter}{bc\_name}
+The name of the boundary condition registered physical boundary condition.
+See the documentation for \texttt{Boundary\_RegisterPhysicalBCI} on the
+Boundary thorn.
+\end{Parameter}
+\end{ParameterSection}
+
+\begin{SeeAlsoSection}
+\begin{SeeAlso2}{Driver\_SelectVarForBCI}{Driver-SelectVarForBCI}
+Tell the driver how to update the boundary conditions for a grid functions.
+\end{SeeAlso2}
+\end{SeeAlsoSection}
+
+\begin{ErrorSection}
+\begin{Error}{Abort}
+Assertions may be triggered for invalid variables or time levels.
+\end{Error}
+\end{ErrorSection}
+% zzz
+\end{FunctionDescription}
+
+\begin{FunctionDescription}{Driver\_SelectVarForBC}
+\label{Driver-SelectVarForBC}
 % yyy
 \begin{SynopsisSection}
 \begin{Synopsis}{C}
@@ -474,8 +585,112 @@ Assertions may be triggered for invalid variables or time levels.
 % zzz
 \end{FunctionDescription}
 
-\begin{FunctionDescription}{CCTK\_SetValidRegion}
-\label{CCTK-gSetValidRegion}
+\begin{FunctionDescription}{Driver\_SelectVarForBCI}
+\label{Driver-SelectVarForBCI}
+% yyy
+\begin{SynopsisSection}
+\begin{Synopsis}{C}
+\begin{verbatim}
+#include "cctk.h"
+
+CCTK_INT err = Driver_SelectVarForBCI(
+    CCTK_POINTER_TO_CONST cctkGH,
+    CCTK_INT faces,
+    CCTK_INT width,
+    CCTK_INT table handle,
+    CCTK_INT var_index,
+    CCTK_STRING bc_name);
+
+\end{verbatim}
+\end{Synopsis}
+\begin{Synopsis}{Fortran}
+\begin{verbatim}
+#include "cctk.h"
+
+CCTK_INT function Driver_SelectVarForBCI(cctkGH, faces, width, table handle, &
+    var_name, bc_name)
+    CCTK_POINTER_TO_CONST, INTENT(IN) :: cctkGH
+    CCTK_INT, INTENT(IN) :: faces
+    CCTK_INT, INTENT(IN) :: width,
+    CCTK_INT, INTENT(IN) :: table handle
+    CCTK_INT, INTENT(IN) :: var_index
+    CCTK_STRING, INTENT(IN) :: bc_name
+end function Driver_SelectVarForBCI
+\end{verbatim}
+\end{Synopsis}
+\end{SynopsisSection}
+
+\begin{ResultSection}
+\begin{Result}{err}
+Returns -7 for an invalid variable index, -2 for an invalid boundary condition name.
+\end{Result}
+\end{ResultSection}
+
+\begin{ParameterSection}
+\begin{Parameter}{cctkGH}
+Pointer to CCTK grid hierarchy
+\end{Parameter}
+\end{ParameterSection}
+
+\begin{ParameterSection}
+\begin{Parameter}{faces}
+The choice of which faces the boundary condition applies to.
+Normally, this will be \texttt{CCTK\_ALL\_FACES}. If a different
+specification is desired, consult the documentation on the
+Boundary thorn.
+\end{Parameter}
+\end{ParameterSection}
+
+\begin{ParameterSection}
+\begin{Parameter}{width}
+The number of zones from the edge filled in by the boundary condition.
+\end{Parameter}
+\end{ParameterSection}
+
+\begin{ParameterSection}
+\begin{Parameter}{table\_handle}
+The table handle holds extra arguments for the boundary condition, if such are needed. Use
+-1 (an invalid table handle) for boundary conditions which need no additional arguments.
+\end{Parameter}
+\end{ParameterSection}
+
+\begin{ParameterSection}
+\begin{Parameter}{where\_list}
+An array of \texttt{num\_variables} where specifications describing
+where valid data is needed for a given grid function and time level.
+\end{Parameter}
+\end{ParameterSection}
+
+\begin{ParameterSection}
+\begin{Parameter}{var\_index}
+The variable index of the grid function to which this boundary condition applies.
+\end{Parameter}
+\end{ParameterSection}
+
+\begin{ParameterSection}
+\begin{Parameter}{bc\_name}
+The name of the boundary condition registered physical boundary condition.
+See the documentation for \texttt{Boundary\_RegisterPhysicalBCI} on the
+Boundary thorn.
+\end{Parameter}
+\end{ParameterSection}
+
+\begin{SeeAlsoSection}
+\begin{SeeAlso2}{Driver\_SelectVarForBCI}{Driver-SelectGroupForBCI}
+Tell the driver how to update the boundary conditions for the grid functions in a group.
+\end{SeeAlso2}
+\end{SeeAlsoSection}
+
+\begin{ErrorSection}
+\begin{Error}{Abort}
+Assertions may be triggered for invalid variables or time levels.
+\end{Error}
+\end{ErrorSection}
+% zzz
+\end{FunctionDescription}
+
+\begin{FunctionDescription}{Driver\_SetValidRegion}
+\label{Driver-SetValidRegion}
 % yyy
 Gets the region where a grid function is valid.
 \begin{SynopsisSection}
