@@ -84,9 +84,7 @@ boundary condition at this time.
 \begin{Parameter}{cctkGH}
 Pointer to CCTK grid hierarchy
 \end{Parameter}
-\end{ParameterSection}
 
-\begin{ParameterSection}
 \begin{Parameter}{var\_index}
 The index of a grid function.
 \end{Parameter}
@@ -144,9 +142,7 @@ Region where the given grid variable is valid at the given time level.
 \begin{Parameter}{variable\_index}
 The index of a grid function.
 \end{Parameter}
-\end{ParameterSection}
 
-\begin{ParameterSection}
 \begin{Parameter}{time\_level}
 The time level of a grid function.
 \end{Parameter}
@@ -212,27 +208,19 @@ Always returns zero.
 \begin{Parameter}{cctkGH}
 Pointer to CCTK grid hierarchy
 \end{Parameter}
-\end{ParameterSection}
 
-\begin{ParameterSection}
 \begin{Parameter}{variable\_list}
 An array of \texttt{num\_variables} grid function indexes.
 \end{Parameter}
-\end{ParameterSection}
 
-\begin{ParameterSection}
 \begin{Parameter}{time\_level\_list}
 An array of \texttt{num\_variables} time levels.
 \end{Parameter}
-\end{ParameterSection}
 
-\begin{ParameterSection}
 \begin{Parameter}{num\_variables}
 The number of variable index, time level, where tuples.
 \end{Parameter}
-\end{ParameterSection}
 
-\begin{ParameterSection}
 \begin{Parameter}{where\_list}
 An array of \texttt{num\_variables} where specifications describing
 where valid data was modified for a given grid function and time level.
@@ -298,27 +286,19 @@ Always returns zero.
 \begin{Parameter}{cctkGH}
 Pointer to CCTK grid hierarchy
 \end{Parameter}
-\end{ParameterSection}
 
-\begin{ParameterSection}
 \begin{Parameter}{variable\_list}
 An array of \texttt{num\_variables} grid function indexes.
 \end{Parameter}
-\end{ParameterSection}
 
-\begin{ParameterSection}
 \begin{Parameter}{time\_level\_list}
 An array of \texttt{num\_variables} time levels.
 \end{Parameter}
-\end{ParameterSection}
 
-\begin{ParameterSection}
 \begin{Parameter}{num\_variables}
 The number of variable index, time level, where tuples.
 \end{Parameter}
-\end{ParameterSection}
 
-\begin{ParameterSection}
 \begin{Parameter}{where\_list}
 An array of \texttt{num\_variables} where specifications describing
 where valid data is needed for a given grid function and time level.
@@ -385,44 +365,32 @@ Returns -6 for an invalid group index, -2 for an invalid boundary condition name
 \begin{Parameter}{cctkGH}
 Pointer to CCTK grid hierarchy
 \end{Parameter}
-\end{ParameterSection}
 
-\begin{ParameterSection}
 \begin{Parameter}{faces}
 The choice of which faces the boundary condition applies to.
 Normally, this will be \texttt{CCTK\_ALL\_FACES}. If a different
 specification is desired, consult the documentation on the
 Boundary thorn.
 \end{Parameter}
-\end{ParameterSection}
 
-\begin{ParameterSection}
 \begin{Parameter}{width}
 The number of zones from the edge filled in by the boundary condition.
 \end{Parameter}
-\end{ParameterSection}
 
-\begin{ParameterSection}
 \begin{Parameter}{table\_handle}
 The table handle holds extra arguments for the boundary condition, if such are needed. Use
 -1 (an invalid table handle) for boundary conditions which need no additional arguments.
 \end{Parameter}
-\end{ParameterSection}
 
-\begin{ParameterSection}
 \begin{Parameter}{where\_list}
 An array of \texttt{num\_variables} where specifications describing
 where valid data is needed for a given grid function and time level.
 \end{Parameter}
-\end{ParameterSection}
 
-\begin{ParameterSection}
 \begin{Parameter}{group\_name}
 The name of the group of grid functions to which this boundary condition applies.
 \end{Parameter}
-\end{ParameterSection}
 
-\begin{ParameterSection}
 \begin{Parameter}{bc\_name}
 The name of the boundary condition registered physical boundary condition.
 See the documentation for \texttt{Boundary\_RegisterPhysicalBC} on the
@@ -490,44 +458,32 @@ Returns -6 for an invalid group index, -2 for an invalid boundary condition name
 \begin{Parameter}{cctkGH}
 Pointer to CCTK grid hierarchy
 \end{Parameter}
-\end{ParameterSection}
 
-\begin{ParameterSection}
 \begin{Parameter}{faces}
 The choice of which faces the boundary condition applies to.
 Normally, this will be \texttt{CCTK\_ALL\_FACES}. If a different
 specification is desired, consult the documentation on the
 Boundary thorn.
 \end{Parameter}
-\end{ParameterSection}
 
-\begin{ParameterSection}
 \begin{Parameter}{width}
 The number of zones from the edge filled in by the boundary condition.
 \end{Parameter}
-\end{ParameterSection}
 
-\begin{ParameterSection}
 \begin{Parameter}{table\_handle}
 The table handle holds extra arguments for the boundary condition, if such are needed. Use
 -1 (an invalid table handle) for boundary conditions which need no additional arguments.
 \end{Parameter}
-\end{ParameterSection}
 
-\begin{ParameterSection}
 \begin{Parameter}{where\_list}
 An array of \texttt{num\_variables} where specifications describing
 where valid data is needed for a given grid function and time level.
 \end{Parameter}
-\end{ParameterSection}
 
-\begin{ParameterSection}
 \begin{Parameter}{group\_index}
 The group index of the group of grid functions to which this boundary condition applies.
 \end{Parameter}
-\end{ParameterSection}
 
-\begin{ParameterSection}
 \begin{Parameter}{bc\_name}
 The name of the boundary condition registered physical boundary condition.
 See the documentation for \texttt{Boundary\_RegisterPhysicalBCI} on the
@@ -594,44 +550,32 @@ Returns -7 for an invalid variable index, -2 for an invalid boundary condition n
 \begin{Parameter}{cctkGH}
 Pointer to CCTK grid hierarchy
 \end{Parameter}
-\end{ParameterSection}
 
-\begin{ParameterSection}
 \begin{Parameter}{faces}
 The choice of which faces the boundary condition applies to.
 Normally, this will be \texttt{CCTK\_ALL\_FACES}. If a different
 specification is desired, consult the documentation on the
 Boundary thorn.
 \end{Parameter}
-\end{ParameterSection}
 
-\begin{ParameterSection}
 \begin{Parameter}{width}
 The number of zones from the edge filled in by the boundary condition.
 \end{Parameter}
-\end{ParameterSection}
 
-\begin{ParameterSection}
 \begin{Parameter}{table\_handle}
 The table handle holds extra arguments for the boundary condition, if such are needed. Use
 -1 (an invalid table handle) for boundary conditions which need no additional arguments.
 \end{Parameter}
-\end{ParameterSection}
 
-\begin{ParameterSection}
 \begin{Parameter}{where\_list}
 An array of \texttt{num\_variables} where specifications describing
 where valid data is needed for a given grid function and time level.
 \end{Parameter}
-\end{ParameterSection}
 
-\begin{ParameterSection}
 \begin{Parameter}{var\_name}
 The name of the grid function to which this boundary condition applies.
 \end{Parameter}
-\end{ParameterSection}
 
-\begin{ParameterSection}
 \begin{Parameter}{bc\_name}
 The name of the boundary condition registered physical boundary condition.
 See the documentation for \texttt{Boundary\_RegisterPhysicalBC} on the
@@ -698,44 +642,32 @@ Returns -7 for an invalid variable index, -2 for an invalid boundary condition n
 \begin{Parameter}{cctkGH}
 Pointer to CCTK grid hierarchy
 \end{Parameter}
-\end{ParameterSection}
 
-\begin{ParameterSection}
 \begin{Parameter}{faces}
 The choice of which faces the boundary condition applies to.
 Normally, this will be \texttt{CCTK\_ALL\_FACES}. If a different
 specification is desired, consult the documentation on the
 Boundary thorn.
 \end{Parameter}
-\end{ParameterSection}
 
-\begin{ParameterSection}
 \begin{Parameter}{width}
 The number of zones from the edge filled in by the boundary condition.
 \end{Parameter}
-\end{ParameterSection}
 
-\begin{ParameterSection}
 \begin{Parameter}{table\_handle}
 The table handle holds extra arguments for the boundary condition, if such are needed. Use
 -1 (an invalid table handle) for boundary conditions which need no additional arguments.
 \end{Parameter}
-\end{ParameterSection}
 
-\begin{ParameterSection}
 \begin{Parameter}{where\_list}
 An array of \texttt{num\_variables} where specifications describing
 where valid data is needed for a given grid function and time level.
 \end{Parameter}
-\end{ParameterSection}
 
-\begin{ParameterSection}
 \begin{Parameter}{var\_index}
 The variable index of the grid function to which this boundary condition applies.
 \end{Parameter}
-\end{ParameterSection}
 
-\begin{ParameterSection}
 \begin{Parameter}{bc\_name}
 The name of the boundary condition registered physical boundary condition.
 See the documentation for \texttt{Boundary\_RegisterPhysicalBCI} on the
@@ -795,15 +727,11 @@ end subroutine Driver_SetValidRegion
 \begin{Parameter}{variable\_index}
 The index of a grid function.
 \end{Parameter}
-\end{ParameterSection}
 
-\begin{ParameterSection}
 \begin{Parameter}{time\_level}
 The time level of a grid function.
 \end{Parameter}
-\end{ParameterSection}
 
-\begin{ParameterSection}
 \begin{Parameter}{where}
 The new where specification for the variable and time level.
 \end{Parameter}
