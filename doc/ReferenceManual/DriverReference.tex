@@ -15,6 +15,10 @@ In the functions below, \texttt{where} refers to an integer whose values are def
 
 \begin{Lentry}
 
+\item[\code{Driver\_FilterOutVarForBCI}] [\pageref{Driver-FilterOutVarForBCI}]
+Query driver if \code{Boundary} thorn should apply boundary condition right
+now.
+
 \item[\code{Driver\_GetValidRegion}] [\pageref{Driver-GetValidRegion}]
 Gets the region where a grid function is valid.
 
@@ -40,6 +44,70 @@ Tell the driver how to update the boundary conditions for a grid functions.
 Sets the region where a grid function is valid.
 
 \end{Lentry}
+
+\begin{FunctionDescription}{Driver\_FilterOutVarForBCI}
+\label{Driver-FilterOutVarForBCI}
+% yyy
+Query driver if \code{Boundary} thorn should apply boundary condition right
+now. This function should only be used by thorn \code{Boundary} to communicate
+with the Driver and should not be used by application thorns.
+\begin{SynopsisSection}
+\begin{Synopsis}{C}
+\begin{verbatim}
+#include "cctk.h"
+
+CCTK_INT ignore = Driver_FilterOutVarForBCI(CCTK_POINTER_TO_CONST cctkGH,
+   CCTK_INT var_index);
+
+\end{verbatim}
+\end{Synopsis}
+\begin{Synopsis}{Fortran}
+\begin{verbatim}
+#include "cctk.h"
+
+CCTK_INT function Driver_FilterOutVarForBCI(cctkGH, var_index)
+   CCTK_POINTER, INTENT(IN) :: cctkGH
+   CCTK_INT, INTENT(IN) :: var_index
+end function Driver_FilterOutVarForBCI
+\end{verbatim}
+\end{Synopsis}
+\end{SynopsisSection}
+
+\begin{ResultSection}
+\begin{Result}{ignore}
+Non-zero if the \code{Boundary} thorn should skip applying the selected
+boundary condition at this time.
+\end{Result}
+\end{ResultSection}
+
+\begin{ParameterSection}
+\begin{Parameter}{cctkGH}
+Pointer to CCTK grid hierarchy
+\end{Parameter}
+\end{ParameterSection}
+
+\begin{ParameterSection}
+\begin{Parameter}{var\_index}
+The index of a grid function.
+\end{Parameter}
+\end{ParameterSection}
+
+\begin{SeeAlsoSection}
+\begin{SeeAlso2}{Driver\_SelectGroupForBC}{Driver-SelectGroupForBC}
+Tell the driver how to update the boundary conditions for the grid functions in a group.
+\end{SeeAlso2}
+\begin{SeeAlso2}{Driver\_SelectVarForBC}{Driver-SelectVarForBC}
+Tell the driver how to update the boundary conditions for the a grid function.
+\end{SeeAlso2}
+\end{SeeAlsoSection}
+
+\begin{ErrorSection}
+\begin{Error}{Abort}
+Assertions may be triggered for invalid variables.
+\end{Error}
+\end{ErrorSection}
+% zzz
+\end{FunctionDescription}
 
 \begin{FunctionDescription}{Driver\_GetValidRegion}
 \label{Driver-GetValidRegion}
