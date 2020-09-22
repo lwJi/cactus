@@ -671,7 +671,6 @@ CCTK_CHECK_HEADERS(dirent.h)
 CCTK_CHECK_HEADERS(c_asm.h)
 CCTK_CHECK_HEADERS(intrinsics.h)
 CCTK_CHECK_HEADERS(mach/mach_time.h)
-CCTK_HEADER_REGEX
 CCTK_CHECK_HEADERS(sys/filio.h,[#ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif])
@@ -911,7 +910,7 @@ fi
 
 AC_SUBST(BUILD_REGEX)
 
-if test "x$cctk_cv_header_regex_h" = 'xyes' ; then
+if test "x$cctk_cv_header_regex_h" = 'xyes' -o "x$ac_cv_lib_regex_h_regex_regfree" = 'xyes'; then
   BUILD_REGEX=no
 else
   BUILD_REGEX=yes
@@ -1076,6 +1075,9 @@ AC_CHECK_FUNCS(backtrace_symbols, , )
 
 dnl Do we have crypt(3)
 AC_CHECK_FUNCS(crypt, , [CCTK_CHECK_LIB_FUNC(crypt, crypt)])
+
+dnl Do we have regex(3)
+CCTK_CHECK_FUNCS(regfree, [CCTK_HEADER_REGEX], [CCTK_CHECK_HEADER_LIB_FUNC(regex.h, regex, regfree, ((regex_t*)0))])
 
 dnl Do we have certain math functions or macros?
 CCTK_CHECK_HEADER_LIB_FUNC(math.h, m, finite, (1.0))
