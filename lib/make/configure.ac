@@ -689,7 +689,6 @@ CCTK_CHECK_HEADERS(netdb.h,[#ifdef HAVE_SYS_TYPES_H
 CCTK_CHECK_HEADERS(arpa/inet.h,[#ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif])
-CCTK_CHECK_HEADERS(winsock2.h)
 CCTK_CHECK_HEADERS(crypt.h,[#ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif])
@@ -1075,6 +1074,9 @@ AC_CHECK_FUNCS(backtrace_symbols, , )
 
 dnl Do we have crypt(3)
 AC_CHECK_FUNCS(crypt, , [CCTK_CHECK_LIB_FUNC(crypt, crypt)])
+
+dnl Do we need winsock2.h and / or ws2_32 for gethostname(2)
+CCTK_CHECK_HEADERS(winsock2.h, [], [CCTK_CHECK_LIB_FUNC(ws2_32, gethostname)])
 
 dnl Do we have regex(3)
 CCTK_CHECK_FUNCS(regfree, [CCTK_HEADER_REGEX], [CCTK_CHECK_HEADER_LIB_FUNC(regex.h, regex, regfree, ((regex_t*)0))])
