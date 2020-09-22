@@ -37,6 +37,9 @@
 /* Do we have mode_t ? */
 #undef HAVE_MODE_T
 
+/* Does mkdir use mode_t ? */
+#undef HAVE_MKDIR_MODE_T
+
 /* Do we have SOCKET ? */
 #undef HAVE_SOCKET_TYPE
 
