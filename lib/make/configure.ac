@@ -635,12 +635,12 @@ fi
 # Check if we have mode_t available
 AC_MSG_CHECKING([whether mkdir_mode_t is defined])
 AC_CACHE_VAL(cctk_cv_have_mkdir_mode_t,
-[AC_TRY_COMPILE([#include <stdio.h>
+[AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
-#include <sys/stat.h>],
-[mode_t foo; mkdir("", (mode_t)0); return 0], eval "cctk_cv_have_mkdir_mode_t=yes",
-eval "cctk_cv_have_mkdir_mode_t=no")
+#include <sys/stat.h>]],
+[[mode_t foo; mkdir("", (mode_t)0); return 0]])],[eval "cctk_cv_have_mkdir_mode_t=yes"],
+[eval "cctk_cv_have_mkdir_mode_t=no"])
 ])
 if test "$cctk_cv_have_mkdir_mode_t" = 'yes'; then
   AC_DEFINE(HAVE_MKDIR_MODE_T)

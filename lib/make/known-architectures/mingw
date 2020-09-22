@@ -1,0 +1,14 @@
+#! /bin/sh
+# /*@@
+#   @file      cygwin
+#   @date      Tue Sep 22 17:55:34 CDT 2020
+#   @author    Roland Haas
+#   @desc 
+#   Known architecture file for Windows using mingw.
+#   @enddesc 
+#   @version $Header$
+# @@*/
+
+#CCTK ARCHITECTURE mingw[36][24]
+
+. $srcdir/known-architectures/cygwin
