@@ -36,7 +36,7 @@ CCTK_FILEVERSION(util_File_c);
 #endif
 
 /* Some systems don't have mode_t and only pass one argument to mkdir. */
-#ifdef HAVE_MODE_T
+#ifdef HAVE_MKDIR_MODE_T
 #define MKDIR_WRAPPER(a,b) mkdir(a,b)
 #else
 #define MKDIR_WRAPPER(a,b) mkdir(a)
