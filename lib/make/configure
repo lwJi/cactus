@@ -7904,6 +7904,50 @@ printf "%s\n" "no" >&6; }
 fi
 
 
+# Check if we have mode_t available
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether mkdir_mode_t is defined" >&5
+printf %s "checking whether mkdir_mode_t is defined... " >&6; }
+if test ${cctk_cv_have_mkdir_mode_t+y}
+then :
+  printf %s "(cached) " >&6
+else case e in #(
+  e) cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+int
+main (void)
+{
+mode_t foo; mkdir("", (mode_t)0); return 0
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"
+then :
+  eval "cctk_cv_have_mkdir_mode_t=yes"
+else case e in #(
+  e) eval "cctk_cv_have_mkdir_mode_t=no" ;;
+esac
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
+ ;;
+esac
+fi
+
+if test "$cctk_cv_have_mkdir_mode_t" = 'yes'; then
+  printf "%s\n" "#define HAVE_MKDIR_MODE_T 1" >>confdefs.h
+
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
+else
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+fi
+
+
 
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for availability of gettimeofday timing" >&5
 printf %s "checking for availability of gettimeofday timing... " >&6; }
@@ -8638,44 +8682,6 @@ printf "%s\n" "no" >&6; }
 fi
 done
 
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for regex.h" >&5
-printf %s "checking for regex.h... " >&6; }
-if test ${cctk_cv_header_regex_h+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-#include <stdio.h>
-#include <regex.h>
-int
-main (void)
-{
-return 0;
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_compile "$LINENO"
-then :
-  eval "cctk_cv_header_regex_h=yes"
-else case e in #(
-  e) eval "cctk_cv_header_regex_h=no" ;;
-esac
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext ;;
-esac
-fi
-if eval "test \"`echo '$cctk_cv_header_regex_h'`\" = yes"; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf "%s\n" "yes" >&6; }
-  printf "%s\n" "#define HAVE_REGEX_H 1" >>confdefs.h
-
-else
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-fi
-
 for cctk_hdr in sys/filio.h
 do
 cctk_safe=`echo "$cctk_hdr" | sed 'y%./+-%__p_%'`
@@ -8915,49 +8921,6 @@ else case e in #(
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
-#include <$cctk_hdr>
-int
-main (void)
-{
-
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_compile "$LINENO"
-then :
-  eval "cctk_cv_header_$cctk_safe=yes"
-else case e in #(
-  e) eval "cctk_cv_header_$cctk_safe=no" ;;
-esac
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext ;;
-esac
-fi
-if eval "test \"`echo '$cctk_cv_header_'$cctk_safe`\" = yes"; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf "%s\n" "yes" >&6; }
-    cctk_tr_hdr=HAVE_`echo $cctk_hdr | sed 'y%abcdefghijklmnopqrstuvwxyz./-%ABCDEFGHIJKLMNOPQRSTUVWXYZ___%'`
-  printf "%s\n" "#define $cctk_tr_hdr 1" >>confdefs.h
-
-else
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-fi
-done
-
-for cctk_hdr in winsock2.h
-do
-cctk_safe=`echo "$cctk_hdr" | sed 'y%./+-%__p_%'`
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $cctk_hdr" >&5
-printf %s "checking for $cctk_hdr... " >&6; }
-if eval test \${cctk_cv_header_$cctk_safe+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
 #include <$cctk_hdr>
 int
 main (void)
@@ -9797,7 +9760,7 @@ fi
 
 
 
-if test "x$cctk_cv_header_regex_h" = 'xyes' ; then
+if test "x$cctk_cv_header_regex_h" = 'xyes' -o "x$ac_cv_lib_regex_h_regex_regfree" = 'xyes'; then
   BUILD_REGEX=no
 else
   BUILD_REGEX=yes
@@ -9946,7 +9909,7 @@ else case e in #(
   e) cctk_cv_c_static_inline=no
 for ac_kw in 'static inline' 'static __inline__' 'static __inline' static; do
   cat > conftest.$ac_ext <<EOF
-#line 9949 "configure"
+#line 9912 "configure"
 #include "confdefs.h"
 
 int main(void) {
@@ -9954,7 +9917,7 @@ int main(void) {
 ; return 0; }
 EOF
 cat > conftest2.$ac_ext <<EOF
-#line 9957 "configure"
+#line 9920 "configure"
 #include "confdefs.h"
 
 int main2() {
@@ -13345,6 +13308,110 @@ esac
 fi
 
 done
+
+for cctk_hdr in winsock2.h
+do
+cctk_safe=`echo "$cctk_hdr" | sed 'y%./+-%__p_%'`
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $cctk_hdr" >&5
+printf %s "checking for $cctk_hdr... " >&6; }
+if eval test \${cctk_cv_header_$cctk_safe+y}
+then :
+  printf %s "(cached) " >&6
+else case e in #(
+  e) cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+#include <$cctk_hdr>
+int
+main (void)
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"
+then :
+  eval "cctk_cv_header_$cctk_safe=yes"
+else case e in #(
+  e) eval "cctk_cv_header_$cctk_safe=no" ;;
+esac
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext ;;
+esac
+fi
+if eval "test \"`echo '$cctk_cv_header_'$cctk_safe`\" = yes"; then
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
+    cctk_tr_hdr=HAVE_`echo $cctk_hdr | sed 'y%abcdefghijklmnopqrstuvwxyz./-%ABCDEFGHIJKLMNOPQRSTUVWXYZ___%'`
+  printf "%s\n" "#define $cctk_tr_hdr 1" >>confdefs.h
+ { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for gethostname in library ws2_32" >&5
+printf %s "checking for gethostname in library ws2_32... " >&6; }
+ac_lib_var=`echo ws2_32'_'gethostname | sed 'y%./+-%__p_%'`
+if eval test \${ac_cv_lib_$ac_lib_var+y}
+then :
+  printf %s "(cached) " >&6
+else case e in #(
+  e) ac_link='${CC-cc} -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext `CCTK_Wrap "$LIBDIR_PREFIX" "$LIBDIR_SUFFIX" "$LIBDIRS"` `CCTK_Wrap "$LIBLINK_PREFIX" "$LIBLINK_SUFFIX" "$LIBS"` >&5'
+ac_save_LIBS="$LIBS"
+LIBS="ws2_32  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any gcc2 internal prototype to avoid an error.  */
+
+/* We use char because int might match the return type of a gcc2
+    builtin and then its argument prototype would still apply.  */
+char gethostname ();
+
+int
+main (void)
+{
+gethostname()
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+  eval "ac_cv_lib_$ac_lib_var=yes"
+else case e in #(
+  e) eval "ac_cv_lib_$ac_lib_var=no" ;;
+esac
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS="$ac_save_LIBS"
+ ;;
+esac
+fi
+if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
+    cctk_tr_lib=HAVE_LIB`echo ws2_32 | sed -e 's/[[^a-zA-Z0-9_]]/_/g' \
+    -e 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/'`
+  cctk_tr_func=HAVE_`echo gethostname | sed -e 's/[[^a-zA-Z0-9_]]/_/g' \
+    -e 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/'`
+  printf "%s\n" "#define $cctk_tr_lib 1" >>confdefs.h
+
+  printf "%s\n" "#define $cctk_tr_func 1" >>confdefs.h
+
+  LIBS="ws2_32 $LIBS"
+
+else
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+
+fi
+
+else
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+fi
+done
+
+
+CCTK_CHECK_FUNCS(regfree, CCTK_HEADER_REGEX, CCTK_CHECK_HEADER_LIB_FUNC(regex.h, regex, regfree, ((regex_t*)0)))
 
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for finite in header math.h and library m" >&5
 printf %s "checking for finite in header math.h and library m... " >&6; }
