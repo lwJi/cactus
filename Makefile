@@ -226,8 +226,7 @@ endif
 export CONFIGS_DIR
 
 # Work out which configurations are available
-CONFIGURATIONS = $(patsubst $(CONFIGS_DIR)/%,%,$(wildcard $(CONFIGS_DIR)/*))
-CONFIGINFOS = $(wildcard $(CONFIGS_DIR)/*/config-info)
+CONFIGURATIONS := $(shell cd "$(CONFIGS_DIR)" 2>/dev/null && ls)
 
 # Default target does nothing.
 # Used to set up a default based upon uname or something.
@@ -277,7 +276,7 @@ $(CONFIGURATIONS):
 	    exit 1; \
           fi                                                                 \
 	fi
-	if ($(PERL) -e 'exit ((stat shift)[9] > (stat shift)[9])' $(CONFIGS_DIR)/$@/config-info $(CCTK_HOME)/lib/make/force-reconfigure); then    \
+	if ($(PERL) -e 'exit ((stat shift)[9] > (stat shift)[9])' "$(CONFIGS_DIR)/$@/config-info" "$(CCTK_HOME)/lib/make/force-reconfigure)"; then    \
 	  $(NOTIFY_DIVIDER);\
 	  echo "Cactus - version: $(CCTK_VERSION)";\
 	  echo "Error: Configuration $@ is out of date.";\
@@ -295,8 +294,8 @@ $(CONFIGURATIONS):
 	  echo "Building configuration $@"; \
 	  $(NOTIFY_DIVIDER);\
 	fi
-	$(MAKE) -f $(CCTK_HOME)/lib/make/make.configuration TOP=$(CONFIGS_DIR)/$@ CCTK_HOME=$(CCTK_HOME) $(TPARFLAGS) rebuild
-	$(MAKE) -f $(CCTK_HOME)/lib/make/make.configuration TOP=$(CONFIGS_DIR)/$@ CCTK_HOME=$(CCTK_HOME) $(TPARFLAGS)
+	$(MAKE) -f "$(CCTK_HOME)/lib/make/make.configuration" TOP="$(CONFIGS_DIR)/$@" CCTK_HOME="$(CCTK_HOME)" $(TPARFLAGS) rebuild
+	$(MAKE) -f "$(CCTK_HOME)/lib/make/make.configuration" TOP="$(CONFIGS_DIR)/$@" CCTK_HOME="$(CCTK_HOME)" $(TPARFLAGS)
 
 # Clean target
 .PHONY: distclean
@@ -304,7 +303,7 @@ $(CONFIGURATIONS):
 distclean:
 	$(NOTIFY_DIVIDER)
 	@echo Deleting all your configurations !
-	rm -rf $(CONFIGS_DIR)
+	rm -rf "$(CONFIGS_DIR)"
 	$(NOTIFY_DIVIDER)
 
 # Targets to make tags files
@@ -478,8 +477,8 @@ $(addsuffix -build, $(CONFIGURATIONS)): int_version
 	  $(NOTIFY_DIVIDER); \
 	else \
 	  echo Building thorns \'$(BUILDLIST)\' of configuration $(@:%-build=%); \
-	  cd $(CONFIGS_DIR)/$(@:%-build=%); \
-	  $(MAKE) -f $(CCTK_HOME)/lib/make/make.configuration TOP=$(CONFIGS_DIR)/$(@:%-build=%) CCTK_HOME=$(CCTK_HOME) build; \
+	  cd "$(CONFIGS_DIR)/$(@:%-build=%):; \
+	  $(MAKE) -f "$(CCTK_HOME)/lib/make/make.configuration" TOP="$(CONFIGS_DIR)/$(@:%-build=%)" CCTK_HOME="$(CCTK_HOME)" build; \
 	fi;
 endif
 
@@ -505,8 +504,8 @@ ifneq ($strip($(CONFIGURATIONS)),)
 $(addsuffix -clean,$(CONFIGURATIONS)):
 	$(NOTIFY_DIVIDER)
 	@echo Cleaning configuration $(@:%-clean=%)
-	cd $(CONFIGS_DIR)/$(@:%-clean=%)
-	$(MAKE) -f $(CCTK_HOME)/lib/make/make.configuration TOP=$(CONFIGS_DIR)/$(@:%-clean=%) CCTK_HOME=$(CCTK_HOME) clean
+	cd "$(CONFIGS_DIR)/$(@:%-clean=%)"
+	$(MAKE) -f "$(CCTK_HOME)/lib/make/make.configuration" TOP="$(CONFIGS_DIR)/$(@:%-clean=%)" CCTK_HOME="$(CCTK_HOME)" clean
 	$(NOTIFY_DIVIDER)
 
 endif
@@ -533,8 +532,8 @@ ifneq ($strip($(CONFIGURATIONS)),)
 $(addsuffix -cleandeps,$(CONFIGURATIONS)):
 	$(NOTIFY_DIVIDER)
 	@echo Cleaning dependencies in configuration $(@:%-cleandeps=%)
-	cd $(CONFIGS_DIR)/$(@:%-cleandeps=%)
-	$(MAKE) -f $(CCTK_HOME)/lib/make/make.configuration TOP=$(CONFIGS_DIR)/$(@:%-cleandeps=%) CCTK_HOME=$(CCTK_HOME) cleandeps
+	cd "$(CONFIGS_DIR)/$(@:%-cleandeps=%)"
+	$(MAKE) -f "$(CCTK_HOME)/lib/make/make.configuration" TOP="$(CONFIGS_DIR)/$(@:%-cleandeps=%)" CCTK_HOME="$(CCTK_HOME)" cleandeps
 	$(NOTIFY_DIVIDER)
 
 endif
@@ -562,8 +561,8 @@ ifneq ($strip($(CONFIGURATIONS)),)
 $(addsuffix -cleanobjs,$(CONFIGURATIONS)):
 	$(NOTIFY_DIVIDER)
 	@echo Cleaning configuration $(@:%-cleanobjs=%)
-	cd $(CONFIGS_DIR)/$(@:%-cleanobjs=%)
-	$(MAKE) -f $(CCTK_HOME)/lib/make/make.configuration TOP=$(CONFIGS_DIR)/$(@:%-cleanobjs=%) CCTK_HOME=$(CCTK_HOME) cleanobjs
+	cd "$(CONFIGS_DIR)/$(@:%-cleanobjs=%)"
+	$(MAKE) -f "$(CCTK_HOME)/lib/make/make.configuration" TOP="$(CONFIGS_DIR)/$(@:%-cleanobjs=%)" CCTK_HOME="$(CCTK_HOME)" cleanobjs
 	$(NOTIFY_DIVIDER)
 
 endif
@@ -591,8 +590,8 @@ ifneq ($strip($(CONFIGURATIONS)),)
 $(addsuffix -realclean,$(CONFIGURATIONS)):
 	$(NOTIFY_DIVIDER)
 	@echo Cleaning configuration $(@:%-realclean=%)
-	cd $(CONFIGS_DIR)/$(@:%-realclean=%)
-	$(MAKE) -f $(CCTK_HOME)/lib/make/make.configuration TOP=$(CONFIGS_DIR)/$(@:%-realclean=%) CCTK_HOME=$(CCTK_HOME) realclean
+	cd "$(CONFIGS_DIR)/$(@:%-realclean=%)"
+	$(MAKE) -f "$(CCTK_HOME)/lib/make/make.configuration" TOP="$(CONFIGS_DIR)/$(@:%-realclean=%)" CCTK_HOME="$(CCTK_HOME)" realclean
 	$(NOTIFY_DIVIDER)
 
 endif
@@ -630,7 +629,7 @@ $(addsuffix -delete,$(CONFIGURATIONS)):
 	fi ;                                                       \
 	if test "x$$confirm" = "xyes" ; then                       \
 	  echo Deleting configuration $(@:%-delete=%);             \
-	  cd $(CONFIGS_DIR) ; rm -rf $(@:%-delete=%) ;             \
+	  cd "$(CONFIGS_DIR)" ; rm -rf $(@:%-delete=%) ;             \
 	fi
 	$(NOTIFY_DIVIDER)
 endif
@@ -655,7 +654,7 @@ ifneq ($strip($(CONFIGURATIONS)),)
 
 $(addsuffix -rebuild,$(CONFIGURATIONS)): int_version
 	@echo Rebuilding configuration $(@:%-rebuild=%)
-	if [ -r $(CONFIGS_DIR)/$(@:%-rebuild=%)/config-data/make.thornlist ] ; then rm  $(CONFIGS_DIR)/$(@:%-rebuild=%)/config-data/make.thornlist ; fi
+	if [ -r "$(CONFIGS_DIR)/$(@:%-rebuild=%)/config-data/make.thornlist" ] ; then rm  "$(CONFIGS_DIR)/$(@:%-rebuild=%)/config-data/make.thornlist" ; fi
 	$(MAKE) $(@:%-rebuild=%)
 endif
 
@@ -681,7 +680,7 @@ ifneq ($strip($(CONFIGURATIONS)),)
 $(addsuffix -thornlist,$(CONFIGURATIONS)):
 	$(NOTIFY_DIVIDER)
 	@echo Regenerating compiled ThornList $(@:%-thornlist=%)
-	if [ -r $(CONFIGS_DIR)/$(@:%-thornlist=%)/ThornList ] ; then rm $(CONFIGS_DIR)/$(@:%-thornlist=%)/ThornList ; fi
+	if [ -r "$(CONFIGS_DIR)/$(@:%-thornlist=%)/ThornList" ] ; then rm "$(CONFIGS_DIR)/$(@:%-thornlist=%)/ThornList" ; fi
 	$(MAKE) $(@:%-thornlist=%)
 endif
 
@@ -708,7 +707,7 @@ ifneq ($strip($(CONFIGURATIONS)),)
 $(addsuffix -editthorns,$(CONFIGURATIONS)):
 	$(NOTIFY_DIVIDER)
 	@echo Editing compiled ThornList $(@:%-editthorn=%)
-	$(MAKE) -f $(CCTK_HOME)/lib/make/make.configuration TOP=$(CONFIGS_DIR)/$(@:%-editthorns=%) CCTK_HOME=$(CCTK_HOME) editthorns
+	$(MAKE) -f "$(CCTK_HOME)/lib/make/make.configuration" TOP="$(CONFIGS_DIR)/$(@:%-editthorns=%)" CCTK_HOME="$(CCTK_HOME)" editthorns
 endif
 
 %-editthorns:
@@ -740,11 +739,11 @@ $(addsuffix -config,$(CONFIGURATIONS)): int_version
           fi ;                                                             \
 	  if test -n "$(THORNLIST)" ; \
 	  then \
-	    cp $(THORNLIST_DIR)/$(THORNLIST) $(CONFIGS_DIR)/$(@:%-config=%)/ThornList;\
+	    cp "$(THORNLIST_DIR)/$(THORNLIST)" "$(CONFIGS_DIR)/$(@:%-config=%)/ThornList";\
 	  fi ; \
 	  if test -n "$(THORNS)" ; \
           then \
-            echo $(THORNS) >> $(CONFIGS_DIR)/$(@:%-config=%)/ThornList ; \
+            echo $(THORNS) >> "$(CONFIGS_DIR)/$(@:%-config=%)/ThornList" ; \
           fi ; \
 	  $(NOTIFY_DIVIDER) ; \
 	  if test "x$(PROMPT)" = "xno" ; then \
@@ -782,10 +781,10 @@ endif
             fi ; \
 	    if test -n "$(THORNLIST)"; \
 	    then \
-	      cp $(THORNLIST_DIR)/$(THORNLIST) $(CONFIGS_DIR)/$(@:%-config=%)/ThornList;\
+	      cp "$(THORNLIST_DIR)/$(THORNLIST)" "$(CONFIGS_DIR)/$(@:%-config=%)/ThornList";\
 	    fi ;\
 	    if test -n "$(THORNS)" ; then \
-	      echo $(THORNS) >> $(CONFIGS_DIR)/$(@:%-config=%)/ThornList ; \
+	      echo $(THORNS) >> "$(CONFIGS_DIR)/$(@:%-config=%)/ThornList" ; \
 	    fi ; \
 	    $(NOTIFY_DIVIDER)   ;  \
 	    if test "x$(PROMPT)" = "xno" ; then \
@@ -819,7 +818,7 @@ $(addsuffix -reconfig,$(CONFIGURATIONS)): int_version
 	  echo "Error reconfiguring '$(@:%-reconfig=%)': configuration is incomplete."; \
 	  echo "Use '$(MAKE) $(@:%-reconfig=%-config)' to configure the configuration."; \
 	  exit 2; \
-	elif ! head -n 1 $(CONFIGS_DIR)/$(@:%-reconfig=%)/config-info | grep -q '# CONFIGURATION'; then \
+	elif ! head -n 1 "$(CONFIGS_DIR)/$(@:%-reconfig=%)/config-info" | grep -q '# CONFIGURATION'; then \
 	  echo "Error reconfiguring '$(@:%-reconfig=%)': unrecognized config-info file format" ; \
 	  echo "This probably means that the Cactus config-info file format has changed"; \
 	  echo "since this configuration was last configured.  You will have to freshly"; \
@@ -871,8 +870,8 @@ ifneq ($strip($(CONFIGURATIONS)),)
 $(addsuffix -utils,$(CONFIGURATIONS)):
 	$(NOTIFY_DIVIDER)
 	@echo Building utilities for $(@:%-utils=%)
-	cd $(CONFIGS_DIR)/$(@:%-utils=%)
-	$(MAKE) -f $(CCTK_HOME)/lib/make/make.configuration TOP=$(CONFIGS_DIR)/$(@:%-utils=%) CCTK_HOME=$(CCTK_HOME) utils UTILS=$(UTILS) CONFIG_NAME=$(@:%-utils=%)
+	cd "$(CONFIGS_DIR)/$(@:%-utils=%)"
+	$(MAKE) -f "$(CCTK_HOME)/lib/make/make.configuration" TOP="$(CONFIGS_DIR)/$(@:%-utils=%)" CCTK_HOME="$(CCTK_HOME)" utils UTILS=$(UTILS) CONFIG_NAME=$(@:%-utils=%)
 	$(NOTIFY_DIVIDER)
 
 endif
@@ -909,7 +908,7 @@ ifneq ($strip($(CONFIGURATIONS)),)
 
 $(addsuffix -testsuite,$(CONFIGURATIONS)):
 	@echo Running test suite $(@:%-thornlist=%)
-	if [ -r $(CONFIGS_DIR)/$(@:%-testsuite=%)/ThornList ] ; then $(PERL) -s lib/sbin/RunTest.pl $(PROMPT) $(CCTK_HOME) $(@:%-testsuite=%); fi
+	if [ -r "$(CONFIGS_DIR)/$(@:%-testsuite=%)/ThornList" ] ; then $(PERL) -s lib/sbin/RunTest.pl $(PROMPT) "$(CCTK_HOME)" $(@:%-testsuite=%); fi
 endif
 
 %-testsuite:
@@ -935,7 +934,7 @@ examples:
 $(addsuffix -examples,$(CONFIGURATIONS)):
 	$(NOTIFY_DIVIDER)
 	@echo Copying parameter files $(@:%-examples=%)
-	if [ -r $(CONFIGS_DIR)/$(@:%-examples=%)/ThornList ] ; then $(PERL) lib/sbin/CopyParFiles.pl $(@:%-examples=%) ; fi
+	if [ -r "$(CONFIGS_DIR)/$(@:%-examples=%)/ThornList" ] ; then $(PERL) lib/sbin/CopyParFiles.pl $(@:%-examples=%) ; fi
 endif
 
 %-examples:
@@ -954,7 +953,7 @@ ifeq ($(strip $(CONFIGURATIONS)),)
 	@echo No configurations defined.
 	$(NOTIFY_DIVIDER)
 else
-	cat $(CONFIGINFOS)
+	cat "$(CONFIGS_DIR)/"*"/config-info"
 endif
 	$(NOTIFY_DIVIDER)
 
@@ -1029,7 +1028,7 @@ UsersGuide:
 	elif grep "^LaTeX Warning:" "LATEX_MESSAGES"; then                  \
 	  echo "  For more information see doc/UsersGuide/LATEX_MESSAGES."; \
 	fi;                                                                 \
-	mv UsersGuide.pdf $(CCTK_HOME)/doc/UsersGuide.pdf 
+	mv UsersGuide.pdf "$(CCTK_HOME)/doc/UsersGuide.pdf"
 	@echo "  UsersGuide.pdf created in doc directory."
 	@echo "  Done."
 	$(NOTIFY_DIVIDER)
@@ -1043,7 +1042,7 @@ UsersGuideHTML: doc/UsersGuide/bincactus2.ps
 	$(NOTIFY_DIVIDER)
 	@echo "Creating user documentation (HTML)"
 	cd doc/UsersGuide;                         \
-	$(CCTK_HOME)/lib/sbin/ConvertFigures;      \
+	"$(CCTK_HOME)/lib/sbin/ConvertFigures";    \
 	echo "  Running htlatex....";              \
 	$(HTLATEX) UsersGuide.tex $(HTLATEXFLAGS) > LATEX_MESSAGES 2>&1; \
 	if [ $$? -ne 0 ]; then                                                \
@@ -1058,7 +1057,7 @@ UsersGuideHTML: doc/UsersGuide/bincactus2.ps
 	     grep -e "--- warning ---" "LATEX_MESSAGES"; then         \
 	  echo "  For more information see doc/UsersGuide/LATEX_MESSAGES."; \
 	fi;                                                                 \
-	mkdir -p $(CCTK_HOME)/doc/HTML/UsersGuide;                          \
+	mkdir -p "$(CCTK_HOME)/doc/HTML/UsersGuide";                        \
 	$(PERL) -ne 'chomp;m!^File: (.*/)?([^/]*)$$! and rename("$$1$$2", "$(CCTK_HOME)/doc/HTML/UsersGuide/$$2");' UsersGuide.lg
 	@echo "  Users Guide (HTML) created in doc/HTML/UsersGuide directory."
 	@echo "  Done."
@@ -1084,7 +1083,7 @@ ReferenceManual:
 	elif grep "^LaTeX Warning:" "LATEX_MESSAGES"; then    \
 	  echo "  For more information see doc/ReferenceManual/LATEX_MESSAGES."; \
 	fi;                                         \
-	mv ReferenceManual.pdf $(CCTK_HOME)/doc/ReferenceManual.pdf
+	mv ReferenceManual.pdf "$(CCTK_HOME)/doc/ReferenceManual.pdf"
 	@echo "  ReferenceManual.pdf created in doc directory."
 	@echo "  Done."
 	$(NOTIFY_DIVIDER)
@@ -1094,7 +1093,7 @@ ReferenceManualHTML:
 	$(NOTIFY_DIVIDER)
 	@echo "Creating user reference manual (HTML)"
 	cd doc/ReferenceManual;                    \
-	$(CCTK_HOME)/lib/sbin/ConvertFigures;      \
+	"$(CCTK_HOME)/lib/sbin/ConvertFigures";    \
 	echo "  Running htlatex....";              \
 	$(HTLATEX) ReferenceManual.tex $(HTLATEXFLAGS)  > LATEX_MESSAGES 2>&1; \
 	if [ $$? -ne 0 ]; then                                                \
@@ -1109,7 +1108,7 @@ ReferenceManualHTML:
 	     grep -e "--- warning ---" "LATEX_MESSAGES"; then         \
 	  echo "  For more information see doc/ReferenceManual/LATEX_MESSAGES."; \
 	fi;                                         \
-	mkdir -p $(CCTK_HOME)/doc/HTML/ReferenceManual;                \
+	mkdir -p "$(CCTK_HOME)/doc/HTML/ReferenceManual";              \
 	$(PERL) -ne 'chomp;m!^File: (.*/)?([^/]*)$$! and rename("$$1$$2", "$(CCTK_HOME)/doc/HTML/ReferenceManual/$$2");' ReferenceManual.lg
 	@echo "  HTML ReferenceManual created in doc/HTML/ReferenceManual directory."
 	@echo "  Done."
@@ -1135,7 +1134,7 @@ MaintGuide:
 	elif grep "^LaTeX Warning:" "LATEX_MESSAGES"; then                  \
 	  echo "  For more information see doc/MaintGuide/LATEX_MESSAGES."; \
 	fi;                                                                 \
-	mv MaintGuide.pdf $(CCTK_HOME)/doc/MaintGuide.pdf
+	mv MaintGuide.pdf "$(CCTK_HOME)/doc/MaintGuide.pdf"
 	@echo "  MaintGuide.pdf created in doc directory."
 	@echo "  Done."
 	$(NOTIFY_DIVIDER)
@@ -1145,7 +1144,7 @@ MaintGuideHTML:
 	$(NOTIFY_DIVIDER)
 	@echo "Creating maintainers documentation (HTML)"
 	cd doc/MaintGuide;                          \
-	$(CCTK_HOME)/lib/sbin/ConvertFigures;             \
+	"$(CCTK_HOME)/lib/sbin/ConvertFigures";     \
 	echo "  Running htlatex....";              \
 	$(HTLATEX) MaintGuide.tex $(HTLATEXFLAGS)  > LATEX_MESSAGES 2>&1; \
 	if [ $$? -ne 0 ]; then                                                \
@@ -1160,7 +1159,7 @@ MaintGuideHTML:
 	     grep -e "--- warning ---" "LATEX_MESSAGES"; then         \
 	  echo "  For more information see doc/MaintGuide/LATEX_MESSAGES."; \
 	fi;                                                                 \
-	mkdir -p $(CCTK_HOME)/doc/HTML/MaintGuide;                          \
+	mkdir -p "$(CCTK_HOME)/doc/HTML/MaintGuide";                        \
 	$(PERL) -ne 'chomp;m!^File: (.*/)?([^/]*)! and rename("$$1$$2", "$(CCTK_HOME)/doc/HTML/MaintGuide/$$2");' MaintGuide.lg
 	@echo "  Maintainers Guide (HTML) created in doc/HTML/MaintGuide directory."
 	@echo "  Done."
@@ -1175,14 +1174,14 @@ $(addsuffix -ThornGuide,$(CONFIGURATIONS)):
 	$(NOTIFY_DIVIDER)
 	@echo Creating ThornGuide for configuration $(@:%-ThornGuide=%)
 	GUIDENAME=ThornGuide-$(@:%-ThornGuide=%); \
-	cd $(CONFIGS_DIR)/$(@:%-ThornGuide=%) && \
+	cd "$(CONFIGS_DIR)/$(@:%-ThornGuide=%)" && \
 	mkdir -p doc && \
 	rm -rf doc/build && mkdir doc/build && \
 	if test -r ThornList ; then \
 	  cd doc/build && \
-	  $(MAKE) -f $(CCTK_HOME)/doc/ThornGuide/Makefile THORNLIST=$(CONFIGS_DIR)/$(@:%-ThornGuide=%)/ThornList MASTER_FILE=$${GUIDENAME}; \
+	  $(MAKE) -f "$(CCTK_HOME)/doc/ThornGuide/Makefile" THORNLIST="$(CONFIGS_DIR)/$(@:%-ThornGuide=%)/ThornList" MASTER_FILE=$${GUIDENAME}; \
 	  if test -e "$${GUIDENAME}.pdf"; then \
-	    mv "$${GUIDENAME}.pdf" $(CCTK_HOME)/doc/$${GUIDENAME}.pdf; \
+	    mv "$${GUIDENAME}.pdf" "$(CCTK_HOME)/doc/$${GUIDENAME}.pdf"; \
 	    echo "  $${GUIDENAME}.pdf created in doc directory."; \
 	    echo "  Done."; \
 	  fi \
@@ -1194,12 +1193,12 @@ $(addsuffix -ThornGuideHTML,$(CONFIGURATIONS)):
 	$(NOTIFY_DIVIDER)
 	@echo Creating ThornGuideHTML for configuration $(@:%-ThornGuideHTML=%)
 	GUIDENAME=ThornGuide-$(@:%-ThornGuideHTML=%); \
-	cd $(CONFIGS_DIR)/$(@:%-ThornGuideHTML=%) && \
+	cd "$(CONFIGS_DIR)/$(@:%-ThornGuideHTML=%)" && \
 	mkdir -p doc && \
 	rm -rf doc/build && mkdir doc/build && \
 	if test -r ThornList ; then \
 	  cd doc/build && \
-	  $(MAKE) -f $(CCTK_HOME)/doc/ThornGuide/Makefile THORNLIST=$(CONFIGS_DIR)/$(@:%-ThornGuideHTML=%)/ThornList MASTER_FILE=$${GUIDENAME} HTLATEX=$(HTLATEX) HTLATEXFLAGS='$(HTLATEXFLAGS)' HTML; \
+	  $(MAKE) -f "$(CCTK_HOME)/doc/ThornGuide/Makefile" THORNLIST="$(CONFIGS_DIR)/$(@:%-ThornGuideHTML=%)/ThornList" MASTER_FILE=$${GUIDENAME} HTLATEX=$(HTLATEX) HTLATEXFLAGS='$(HTLATEXFLAGS)' HTML; \
 	  if test -e "$${GUIDENAME}"; then \
 	    rm -rf "$(CCTK_HOME)/doc/HTML/$${GUIDENAME}" && mkdir -p "$(CCTK_HOME)/doc/HTML" && mv "$${GUIDENAME}" "$(CCTK_HOME)/doc/HTML/$${GUIDENAME}"; \
 	    echo "  $${GUIDENAME} created in doc/HTML directory."; \
@@ -1268,7 +1267,7 @@ ArrangementDocHTML: doc/UsersGuide/bincactus2.ps
 thorninfo:
 	$(NOTIFY_DIVIDER)
 	@echo Displaying info for all thorns in the arrangements directory
-	$(PERL) -s $(BUILD_ACTIVETHORNS) $(CCTK_HOME)/arrangements | cat;
+	$(PERL) -s $(BUILD_ACTIVETHORNS) "$(CCTK_HOME)/arrangements" | cat;
 	$(NOTIFY_DIVIDER)
 
 # Remove non-essential files
@@ -1335,11 +1334,11 @@ downsize:
 	  if test -n "$(THORNLIST)" ; \
 	  then \
 	    echo Using ThornList $(THORNLIST_DIR)/$(THORNLIST) ; \
-	    cp $(THORNLIST_DIR)/$(THORNLIST) $(CONFIGS_DIR)/$@/ThornList ; \
+	    cp "$(THORNLIST_DIR)/$(THORNLIST)" "$(CONFIGS_DIR)/$@/ThornList" ; \
 	  fi ; \
 	  if test -n "$(THORNS)" ; \
           then \
-            echo $(THORNS) >> $(CONFIGS_DIR)/$@/ThornList ; \
+            echo $(THORNS) >> "$(CONFIGS_DIR)/$@/ThornList" ; \
           fi ; \
 	  $(NOTIFY_DIVIDER) ;  \
 	  if test "x$(PROMPT)" = "xno" ; then \
