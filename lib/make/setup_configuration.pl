@@ -13,7 +13,7 @@
 
 chop ($top = `pwd`);
 
-$configure = "sh $top/lib/make/configure";
+$configure = qq(sh "$top/lib/make/configure");
 
 if($#ARGV > -1)
 {
