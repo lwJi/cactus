@@ -907,14 +907,6 @@ else
   BUILD_GETOPT=yes
 fi
 
-AC_SUBST(BUILD_REGEX)
-
-if test "x$cctk_cv_header_regex_h" = 'xyes' -o "x$ac_cv_lib_regex_h_regex_regfree" = 'xyes'; then
-  BUILD_REGEX=no
-else
-  BUILD_REGEX=yes
-fi
-
 AC_C_CONST
 #AC_C_INLINE
 CCTK_CHECK_C_INLINE
@@ -1080,6 +1072,12 @@ CCTK_CHECK_HEADERS(winsock2.h, [], [CCTK_CHECK_LIB_FUNC(ws2_32, gethostname)])
 
 dnl Do we have regex(3)
 CCTK_CHECK_FUNCS(regfree, [CCTK_HEADER_REGEX], [CCTK_CHECK_HEADER_LIB_FUNC(regex.h, regex, regfree, ((regex_t*)0))])
+AC_SUBST(BUILD_REGEX)
+if test "x$cctk_cv_header_regex_h" = 'xyes' -o "x$ac_cv_lib_regex_h_regex_regfree" = 'xyes'; then
+  BUILD_REGEX=no
+else
+  BUILD_REGEX=yes
+fi
 
 dnl Do we have certain math functions or macros?
 CCTK_CHECK_HEADER_LIB_FUNC(math.h, m, finite, (1.0))
