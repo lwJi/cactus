@@ -9083,6 +9083,49 @@ printf "%s\n" "no" >&6; }
 fi
 done
 
+for cctk_hdr in sys/resource.h
+do
+cctk_safe=`echo "$cctk_hdr" | sed 'y%./+-%__p_%'`
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $cctk_hdr" >&5
+printf %s "checking for $cctk_hdr... " >&6; }
+if eval test \${cctk_cv_header_$cctk_safe+y}
+then :
+  printf %s "(cached) " >&6
+else case e in #(
+  e) cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+#include <$cctk_hdr>
+int
+main (void)
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"
+then :
+  eval "cctk_cv_header_$cctk_safe=yes"
+else case e in #(
+  e) eval "cctk_cv_header_$cctk_safe=no" ;;
+esac
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext ;;
+esac
+fi
+if eval "test \"`echo '$cctk_cv_header_'$cctk_safe`\" = yes"; then
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
+    cctk_tr_hdr=HAVE_`echo $cctk_hdr | sed 'y%abcdefghijklmnopqrstuvwxyz./-%ABCDEFGHIJKLMNOPQRSTUVWXYZ___%'`
+  printf "%s\n" "#define $cctk_tr_hdr 1" >>confdefs.h
+
+else
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+fi
+done
+
 for cctk_hdr in sched.h
 do
 cctk_safe=`echo "$cctk_hdr" | sed 'y%./+-%__p_%'`
@@ -9901,7 +9944,7 @@ else case e in #(
   e) cctk_cv_c_static_inline=no
 for ac_kw in 'static inline' 'static __inline__' 'static __inline' static; do
   cat > conftest.$ac_ext <<EOF
-#line 9904 "configure"
+#line 9947 "configure"
 #include "confdefs.h"
 
 int main(void) {
@@ -9909,7 +9952,7 @@ int main(void) {
 ; return 0; }
 EOF
 cat > conftest2.$ac_ext <<EOF
-#line 9912 "configure"
+#line 9955 "configure"
 #include "confdefs.h"
 
 int main2() {
