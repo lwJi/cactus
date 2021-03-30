@@ -694,6 +694,7 @@ CCTK_CHECK_HEADERS(crypt.h,[#ifdef HAVE_UNISTD_H
 #endif])
 CCTK_CHECK_HEADERS(signal.h)
 CCTK_CHECK_HEADERS(malloc.h)
+CCTK_CHECK_HEADERS(sys/resource.h)
 CCTK_CHECK_HEADERS(sched.h)
 CCTK_CHECK_HEADERS(execinfo.h)
 
