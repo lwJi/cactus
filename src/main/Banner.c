@@ -26,6 +26,9 @@
 
 #include "cctk_Parameters.h"
 
+#ifdef HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -104,11 +107,17 @@ void CCTKi_CactusBanner (void)
   Util_CurrentTime (DATALENGTH, buffer);
   printf (" (%s)\n", buffer);
   Util_GetHostName (buffer, DATALENGTH);
+#ifdef HAVE_GETPID
   printf ("Run host:          %s (pid=%d)\n", buffer, (int) getpid());
+#else
+  printf ("Run host:          %s\n", buffer);
+#endif
+#ifdef HAVE_UNISTD_H
   if (getcwd (buffer, DATALENGTH))
   {
     printf ("Working directory: %s\n", buffer);
   }
+#endif
   CCTK_CommandLine (&commandargs);
   printf ("Executable:        %s\n", commandargs[0]);
   CCTK_ParameterFilename (DATALENGTH, buffer);
