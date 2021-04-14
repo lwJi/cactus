@@ -48,26 +48,10 @@ else
       MAC_CXX_COMP=unknown
   fi
 
-  # Find out which CPP we are using and its version
-
-  if test "`$FPP --version | grep -i gcc`"; then
-      FPP_VENDOR=GNU
-  elif test "`$FPP --version | grep -i clang`"; then
-      FPP_VENDOR=LLVM
-  elif test "`$FPP --version | grep -i Cactus`"; then
-      FPP_VENDOR=Cactus
-  fi
+  # Find out FPP's version
   FPP_VERSION="`$FPP --version 2>&1 | head -n 1`"
 
-  # Find out which CPP we are using and its version
-
-  if test "`$CPP --version | grep -i gcc`"; then 
-      CPP_VENDOR=GNU
-  elif test "`$CPP --version | grep -i clang`"; then 
-      CPP_VENDOR=LLVM
-  elif test "`$CPP --version | grep -i Cactus`"; then
-      CPP_VENDOR=Cactus
-  fi
+  # Find out which CPP's version
   CPP_VERSION="`$CPP --version 2>&1 | head -n 1`"
 
   if test "$MAC_C_COMP" = "gcc" -o "$MAC_C_COMP" = "clang" ; then
