@@ -16,20 +16,7 @@ if test "$CCTK_CONFIG_STAGE" = 'preferred-compilers' ; then
   # Try to work out which FPP we need to use 
   if test -z "$FPP" -a -z "$FPPFLAGS"; then
     FPP='/usr/bin/cpp'
-
-    FPP_VERSION="`$FPP --version | awk '{print $3; exit}'`"
-    FPP_VERSION_MAJOR="`echo $FPP_VERSION | sed 's:\([^. ]*\)\.\([^. ]*\).*:\1:'`"
-    FPP_VERSION_MINOR="`echo $FPP_VERSION | sed 's:\([^. ]*\)\.\([^. ]*\).*:\2:'`"
-
-    if test $FPP_VERSION_MAJOR -lt 3 ; then
-	FPP="$(PERL) $(CCTK_HOME)/lib/sbin/cpp.pl"
-	FPPFLAGS=
-	FPP_VERSION="`$FPP --version | awk '{print $3; exit}'`"
-	FPP_VERSION_MAJOR="`echo $FPP_VERSION | sed 's:\([^. ]*\)\.\([^. ]*\).*:\1:'`"
-	FPP_VERSION_MINOR="`echo $FPP_VERSION | sed 's:\([^. ]*\)\.\([^. ]*\).*:\2:'`"
-    else
-	FPPFLAGS='-traditional'
-    fi
+    FPPFLAGS='-traditional'
 
     echo Setting FPP to $FPP
     echo Setting FPPFLAGS to $FPPFLAGS
@@ -63,22 +50,25 @@ else
 
   # Find out which CPP we are using and its version
 
+  if test "`$FPP --version | grep -i gcc`"; then
+      FPP_VENDOR=GNU
+  elif test "`$FPP --version | grep -i clang`"; then
+      FPP_VENDOR=LLVM
+  elif test "`$FPP --version | grep -i Cactus`"; then
+      FPP_VENDOR=Cactus
+  fi
+  FPP_VERSION="`$FPP --version 2>&1 | head -n 1`"
+
+  # Find out which CPP we are using and its version
+
   if test "`$CPP --version | grep -i gcc`"; then 
       CPP_VENDOR=GNU
-      CPP_VERSION="`cpp --version | awk '{print $3; exit}'`"
-      CPP_VERSION_MAJOR="`echo $CPP_VERSION | sed 's:\([^. ]*\)\.\([^. ]*\).*:\1:'`"
-      CPP_VERSION_MINOR="`echo $CPP_VERSION | sed 's:\([^. ]*\)\.\([^. ]*\).*:\2:'`"
   elif test "`$CPP --version | grep -i clang`"; then 
       CPP_VENDOR=LLVM
-      CPP_VERSION="`cpp --version | awk '{print $3; exit}'`"
-      CPP_VERSION_MAJOR="`echo $CPP_VERSION | sed 's:\([^. ]*\)\.\([^. ]*\).*:\1:'`"
-      CPP_VERSION_MINOR="`echo $CPP_VERSION | sed 's:\([^. ]*\)\.\([^. ]*\).*:\2:'`"
   elif test "`$CPP --version | grep -i Cactus`"; then
       CPP_VENDOR=Cactus
-      CPP_VERSION="`cpp --version | awk '{print $3; exit}'`"
-      CPP_VERSION_MAJOR="`echo $CPP_VERSION | sed 's:\([^. ]*\)\.\([^. ]*\).*:\1:'`"
-      CPP_VERSION_MINOR="`echo $CPP_VERSION | sed 's:\([^. ]*\)\.\([^. ]*\).*:\2:'`"
   fi
+  CPP_VERSION="`$CPP --version 2>&1 | head -n 1`"
 
   if test "$MAC_C_COMP" = "gcc" -o "$MAC_C_COMP" = "clang" ; then
     : ${C_DEPEND='$(CC) -M -MP $(CPPFLAGS) $(CFLAGS)'}
