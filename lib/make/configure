@@ -6316,25 +6316,18 @@ printf "%s\n" "$ac_cv_path_EGREP" >&6; }
 
 
 # Check for C99
-
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for C99 features" >&5
-printf %s "checking for C99 features... " >&6; }
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for C99" >&5
+printf %s "checking for C99... " >&6; }
 if test ${cctk_cv_have_c99+y}
 then :
   printf %s "(cached) " >&6
 else case e in #(
-  e) cctk_cv_have_c99=no
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+  e) cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-
+int a[__STDC_VERSION__ >= 199900L ? 1 : -1];
 int
 main (void)
 {
-// Test C99 comments
-// Test variable declarations in the middle of blocks
-0;
-int x = 1;
-for (int i=0; i<10; ++i) x+=i;
 
   ;
   return 0;
@@ -6348,20 +6341,75 @@ else case e in #(
 esac
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
+if test "$cctk_cv_have_c99" = "yes"; then
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
+  :
+else
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+  as_fn_error $? "Cactus requires a C99 compiler -- check your C compiler and C compiler flags" "$LINENO" 5
+
+fi
  ;;
 esac
 fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $cctk_cv_have_c99" >&5
-printf "%s\n" "$cctk_cv_have_c99" >&6; }
-if test "$cctk_cv_have_c99" = "yes" ; then
-   printf "%s\n" "#define HAVE_CCTK_C99 1" >>confdefs.h
+
+
+# Check for C++11
+
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for C++11" >&5
+printf %s "checking for C++11... " >&6; }
+if test ${cctk_cv_have_cxx11+y}
+then :
+  printf %s "(cached) " >&6
+else case e in #(
+  e)
+ac_ext=cpp
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+int a[__cplusplus >= 201103L ? 1 : -1];
+int
+main (void)
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_cxx_try_compile "$LINENO"
+then :
+  cctk_cv_have_cxx11=yes
+else case e in #(
+  e) cctk_cv_have_cxx11=no ;;
+esac
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
+ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+if test "$cctk_cv_have_cxx11" = "yes"; then
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
+  :
+else
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+  as_fn_error $? "Cactus requires a C++11 compiler -- check your C++ compiler and C++ compiler flags" "$LINENO" 5
 
 fi
-
-if test "$cctk_cv_have_c99" = "no" ; then
-  echo >&2 "Cactus requires a C99 compiler -- check your C compiler and C compiler flags"
-  exit 1
+ ;;
+esac
 fi
+
 
 # Check for M_PI
 cctk_safe=`echo "M_PI" | sed 'y%./+-%__p_%'`
@@ -6453,7 +6501,6 @@ fi
 # This will most likely never trigger since libstdc++ required
 # _GNU_SOURCE to be set. See
 # https://gcc.gnu.org/onlinedocs/libstdc++/faq.html#faq.predefined
-
 
 ac_ext=cpp
 ac_cpp='$CXXCPP $CPPFLAGS'
@@ -9986,7 +10033,7 @@ else case e in #(
   e) cctk_cv_c_static_inline=no
 for ac_kw in 'static inline' 'static __inline__' 'static __inline' static; do
   cat > conftest.$ac_ext <<EOF
-#line 9989 "configure"
+#line 10036 "configure"
 #include "confdefs.h"
 
 int main(void) {
@@ -9994,7 +10041,7 @@ int main(void) {
 ; return 0; }
 EOF
 cat > conftest2.$ac_ext <<EOF
-#line 9997 "configure"
+#line 10044 "configure"
 #include "confdefs.h"
 
 int main2() {
@@ -12535,222 +12582,6 @@ if test "$cctk_cv_have_cxx_static_assert" = "yes" ; then
 
 fi
 
-
-# Find out whether the compiler supports C++11
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for C++ auto specifier" >&5
-printf %s "checking for C++ auto specifier... " >&6; }
-if test ${cctk_cv_have_cxx_auto_specifier+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) cctk_cv_have_cxx_auto_specifier=no
-
-ac_ext=cpp
-ac_cpp='$CXXCPP $CPPFLAGS'
-ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
-
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-int
-main (void)
-{
-int x; auto y = x
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_cxx_try_link "$LINENO"
-then :
-  cctk_cv_have_cxx_auto_specifier=yes
-else case e in #(
-  e) cctk_cv_have_cxx_auto_specifier=no ;;
-esac
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam \
-    conftest$ac_exeext conftest.$ac_ext
-ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_c_compiler_gnu
-
- ;;
-esac
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $cctk_cv_have_cxx_auto_specifier" >&5
-printf "%s\n" "$cctk_cv_have_cxx_auto_specifier" >&6; }
-if test "$cctk_cv_have_cxx_auto_specifier" = "yes" ; then
-   printf "%s\n" "#define HAVE_CCTK_CXX_AUTO_SPECIFIER 1" >>confdefs.h
-
-fi
-
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for C++ lambda expressions" >&5
-printf %s "checking for C++ lambda expressions... " >&6; }
-if test ${cctk_cv_have_cxx_lambda+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) cctk_cv_have_cxx_lambda=no
-
-ac_ext=cpp
-ac_cpp='$CXXCPP $CPPFLAGS'
-ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
-
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-int
-main (void)
-{
-int x; [x](int y) { return x+y; };
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_cxx_try_link "$LINENO"
-then :
-  cctk_cv_have_cxx_lambda=yes
-else case e in #(
-  e) cctk_cv_have_cxx_lambda=no ;;
-esac
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam \
-    conftest$ac_exeext conftest.$ac_ext
-ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_c_compiler_gnu
-
- ;;
-esac
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $cctk_cv_have_cxx_lambda" >&5
-printf "%s\n" "$cctk_cv_have_cxx_lambda" >&6; }
-if test "$cctk_cv_have_cxx_lambda" = "yes" ; then
-   printf "%s\n" "#define HAVE_CCTK_CXX_LAMBDA 1" >>confdefs.h
-
-fi
-
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for C++ range-based for statements" >&5
-printf %s "checking for C++ range-based for statements... " >&6; }
-if test ${cctk_cv_have_cxx_range_based_for+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) cctk_cv_have_cxx_range_based_for=no
-
-ac_ext=cpp
-ac_cpp='$CXXCPP $CPPFLAGS'
-ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
-
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-#include <vector>
-int
-main (void)
-{
-std::vector<int> xs(10);
-   for (int& x: xs) x = 42;
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_cxx_try_link "$LINENO"
-then :
-  cctk_cv_have_cxx_range_based_for=yes
-else case e in #(
-  e) cctk_cv_have_cxx_range_based_for=no ;;
-esac
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam \
-    conftest$ac_exeext conftest.$ac_ext
-ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_c_compiler_gnu
-
- ;;
-esac
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $cctk_cv_have_cxx_range_based_for" >&5
-printf "%s\n" "$cctk_cv_have_cxx_range_based_for" >&6; }
-if test "$cctk_cv_have_cxx_range_based_for" = "yes" ; then
-   printf "%s\n" "#define HAVE_CCTK_CXX_RANGE_BASED_FOR 1" >>confdefs.h
-
-fi
-
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for C++11 math support" >&5
-printf %s "checking for C++11 math support... " >&6; }
-if test ${cctk_cv_have_cxx_math+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) cctk_cv_have_cxx_math=no
-
-ac_ext=cpp
-ac_cpp='$CXXCPP $CPPFLAGS'
-ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
-
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-#include <cmath>
-int
-main (void)
-{
-
-  using namespace std;
-   float fzero = 0.f;
-   double dzero = 0.;
-   isnan(fzero);
-   isnan(dzero);
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_cxx_try_compile "$LINENO"
-then :
-    cctk_cv_have_cxx_math=yes
-else case e in #(
-  e)   cctk_cv_have_cxx_math=no ;;
-esac
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
-ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_c_compiler_gnu
-
- ;;
-esac
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $cctk_cv_have_cxx_math" >&5
-printf "%s\n" "$cctk_cv_have_cxx_math" >&6; }
-if test "$cctk_cv_have_cxx_matha" = "yes" ; then
-   printf "%s\n" "#define HAVE_CCTK_CXX_MATH 1" >>confdefs.h
-
-fi
-
-
-if test "$cctk_cv_have_cxx_auto_specifier" = no -o \
-        "$cctk_cv_have_cxx_lambda" = no -o \
-        "$cctk_cv_have_cxx_range_based_for" = no -o \
-        "$cctk_cv_have_cxx_math" = no ; then
-  echo >&2 "Cactus requires a C++11 compiler -- check your C++ compiler and C++ compiler flags"
-  echo >&2 "If using g++ at least version 6 is required, if using icpc use -gxx-name to use libstc++ from g++ at least version 6"
-  exit 1
-fi
 
 if test "x$REAL16_KIND" = 'x'; then
   REAL16_KIND=16
