@@ -1095,13 +1095,6 @@ AC_CHECK_FUNCS(crypt, , [CCTK_CHECK_LIB_FUNC(crypt, crypt)])
 
 dnl Do we have certain math functions or macros?
 CCTK_CHECK_HEADER_LIB_FUNC(math.h, m, finite, (1.0))
-CCTK_CHECK_HEADER_LIB_FUNC(math.h, m, copysign, (1.0, 1.0))
-CCTK_CHECK_HEADER_LIB_FUNC(math.h, m, fpclassify, (1.0))
-CCTK_CHECK_HEADER_LIB_FUNC(math.h, m, isfinite, (1.0))
-CCTK_CHECK_HEADER_LIB_FUNC(math.h, m, isinf, (1.0))
-CCTK_CHECK_HEADER_LIB_FUNC(math.h, m, isnan, (1.0))
-CCTK_CHECK_HEADER_LIB_FUNC(math.h, m, isnormal, (1.0))
-CCTK_CHECK_HEADER_LIB_FUNC(math.h, m, signbit, (1.0))
 
 dnl Do we have mkstemp(3)
 AC_CHECK_FUNCS(mkstemp, , [CCTK_CHECK_LIB_FUNC(c, mkstemp)])

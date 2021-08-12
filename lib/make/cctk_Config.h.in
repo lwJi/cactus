@@ -24,15 +24,17 @@
 #undef HAVE_BACKTRACE_SYMBOLS
 #undef HAVE_CRYPT
 #undef HAVE_FINITE
-#undef HAVE_COPYSIGN
-#undef HAVE_FPCLASSIFY
-#undef HAVE_ISFINITE
-#undef HAVE_ISINF
-#undef HAVE_ISNAN
-#undef HAVE_ISNORMAL
-#undef HAVE_SIGNBIT
+/* C99 features */
+#define HAVE_COPYSIGN 1
+#define HAVE_FPCLASSIFY 1
+#define HAVE_ISFINITE 1
+#define HAVE_ISINF 1
+#define HAVE_ISNAN 1
+#define HAVE_ISNORMAL 1
+#define HAVE_SIGNBIT 1
 #undef HAVE_MKSTEMP
-#undef HAVE_VA_COPY
+/* C99 features */
+#define HAVE_VA_COPY 1
 
 /* Do we have mode_t ? */
 #undef HAVE_MODE_T
