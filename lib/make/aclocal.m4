@@ -1400,89 +1400,40 @@ esac
 
 
 
-AC_DEFUN(CCTK_CXX_AUTO_SPECIFIER,
-[AC_CACHE_CHECK([for C++ auto specifier], cctk_cv_have_cxx_auto_specifier,
-[cctk_cv_have_cxx_auto_specifier=no
-AC_LANG_SAVE
-AC_LANG([C++])
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[]], [[int x; auto y = x]])],[cctk_cv_have_cxx_auto_specifier=yes],[cctk_cv_have_cxx_auto_specifier=no])
-AC_LANG_RESTORE
-])
-if test "$cctk_cv_have_cxx_auto_specifier" = "yes" ; then
-   AC_DEFINE(HAVE_CCTK_CXX_AUTO_SPECIFIER)
-fi
-])
-
-
-
-AC_DEFUN(CCTK_CXX_LAMBDA,
-[AC_CACHE_CHECK([for C++ lambda expressions], cctk_cv_have_cxx_lambda,
-[cctk_cv_have_cxx_lambda=no
-AC_LANG_SAVE
-AC_LANG([C++])
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[]], [[int x; [x](int y) { return x+y; };]])],[cctk_cv_have_cxx_lambda=yes],[cctk_cv_have_cxx_lambda=no])
-AC_LANG_RESTORE
-])
-if test "$cctk_cv_have_cxx_lambda" = "yes" ; then
-   AC_DEFINE(HAVE_CCTK_CXX_LAMBDA)
-fi
-])
-
-
-
-AC_DEFUN(CCTK_CXX_RANGE_BASED_FOR,
-[AC_CACHE_CHECK([for C++ range-based for statements], cctk_cv_have_cxx_range_based_for,
-[cctk_cv_have_cxx_range_based_for=no
-AC_LANG_SAVE
-AC_LANG([C++])
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <vector>]], [[std::vector<int> xs(10);
-   for (int& x: xs) x = 42;]])],[cctk_cv_have_cxx_range_based_for=yes],[cctk_cv_have_cxx_range_based_for=no])
-AC_LANG_RESTORE
-])
-if test "$cctk_cv_have_cxx_range_based_for" = "yes" ; then
-   AC_DEFINE(HAVE_CCTK_CXX_RANGE_BASED_FOR)
-fi
-])
-
-
-
-AC_DEFUN(CCTK_CXX_MATH,
-[AC_CACHE_CHECK([for C++11 math support], cctk_cv_have_cxx_math,
-[cctk_cv_have_cxx_math=no
-AC_LANG_SAVE
-AC_LANG([C++])
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <cmath>]], [[
-  using namespace std;
-   float fzero = 0.f;
-   double dzero = 0.;
-   isnan(fzero);
-   isnan(dzero);]])],[dnl
-  cctk_cv_have_cxx_math=yes],[dnl
-  cctk_cv_have_cxx_math=no])
-AC_LANG_RESTORE
-])
-if test "$cctk_cv_have_cxx_matha" = "yes" ; then
-   AC_DEFINE(HAVE_CCTK_CXX_MATH)
-fi
-])
-
-
-
+dnl CCTK_CHECK_C99([ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND])
 AC_DEFUN(CCTK_CHECK_C99,
-[AC_CACHE_CHECK([for C99 features], cctk_cv_have_c99,
-[cctk_cv_have_c99=no
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[// Test C99 comments
-// Test variable declarations in the middle of blocks
-0;
-int x = 1;
-for (int i=0; i<10; ++i) x+=i;
-]])],[cctk_cv_have_c99=yes],[cctk_cv_have_c99=no])
-])
-if test "$cctk_cv_have_c99" = "yes" ; then
-   AC_DEFINE(HAVE_CCTK_C99)
+[dnl
+AC_MSG_CHECKING([for C99])
+AC_CACHE_VAL(cctk_cv_have_c99,
+[AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[int a[__STDC_VERSION__ >= 199900L ? 1 : -1];]], [[]])],[cctk_cv_have_c99=yes],[cctk_cv_have_c99=no])
+if test "$cctk_cv_have_c99" = "yes"; then
+  AC_MSG_RESULT(yes)
+  ifelse([$1], , :, [$1])
+else
+  AC_MSG_RESULT(no)
+  ifelse([$2], , , [$2])
 fi
-])
+])])dnl
 
+
+dnl CCTK_CHECK_CXX11([ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND])
+AC_DEFUN(CCTK_CHECK_CXX11,
+[dnl
+AC_MSG_CHECKING([for C++11])
+AC_CACHE_VAL(cctk_cv_have_cxx11,
+[dnl
+AC_LANG_SAVE
+AC_LANG([C++])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[int a[__cplusplus >= 201103L ? 1 : -1];]], [[]])],[cctk_cv_have_cxx11=yes],[cctk_cv_have_cxx11=no])
+AC_LANG_RESTORE
+if test "$cctk_cv_have_cxx11" = "yes"; then
+  AC_MSG_RESULT(yes)
+  ifelse([$1], , :, [$1])
+else
+  AC_MSG_RESULT(no)
+  ifelse([$2], , , [$2])
+fi
+])])dnl
 
 
 dnl CCTK_CHECK_DEFINED(DEFINED, [[ADDITIONAL_CODE [, ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]]])

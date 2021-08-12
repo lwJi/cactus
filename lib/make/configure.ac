@@ -541,12 +541,14 @@ AC_PROG_EGREP
 
 
 # Check for C99
+CCTK_CHECK_C99([],
+AC_MSG_ERROR(Cactus requires a C99 compiler -- check your C compiler and C compiler flags)
+)
 
-CCTK_CHECK_C99
-if test "$cctk_cv_have_c99" = "no" ; then
-  echo >&2 "Cactus requires a C99 compiler -- check your C compiler and C compiler flags"
-  exit 1
-fi
+# Check for C++11
+CCTK_CHECK_CXX11([],
+AC_MSG_ERROR(Cactus requires a C++11 compiler -- check your C++ compiler and C++ compiler flags)
+)
 
 # Check for M_PI
 CCTK_CHECK_DEFINED(M_PI, [#include <math.h>], [],
@@ -1025,21 +1027,6 @@ CCTK_CXX_BUILTIN_ASSUME_ALIGNED
 
 # Find out whether the compiler supports static_assert
 CCTK_CXX_STATIC_ASSERT
-
-# Find out whether the compiler supports C++11
-CCTK_CXX_AUTO_SPECIFIER
-CCTK_CXX_LAMBDA
-CCTK_CXX_RANGE_BASED_FOR
-CCTK_CXX_MATH
-
-if test "$cctk_cv_have_cxx_auto_specifier" = no -o \
-        "$cctk_cv_have_cxx_lambda" = no -o \
-        "$cctk_cv_have_cxx_range_based_for" = no -o \
-        "$cctk_cv_have_cxx_math" = no ; then
-  echo >&2 "Cactus requires a C++11 compiler -- check your C++ compiler and C++ compiler flags"
-  echo >&2 "If using g++ at least version 6 is required, if using icpc use -gxx-name to use libstc++ from g++ at least version 6"
-  exit 1
-fi
 
 if test "x$REAL16_KIND" = 'x'; then
   REAL16_KIND=16

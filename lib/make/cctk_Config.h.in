@@ -682,10 +682,10 @@
 #  define static_assert(cond, msg) CCTK_STATIC_ASSERT(cond, msg)
 #endif
 
-/* Whether C++11 is supported. */
-#undef HAVE_CCTK_CXX_AUTO_SPECIFIER
-#undef HAVE_CCTK_CXX_LAMBDA
-#undef HAVE_CCTK_CXX_RANGE_BASED_FOR
+/* C++11 features. */
+#define HAVE_CCTK_CXX_AUTO_SPECIFIER 1
+#define HAVE_CCTK_CXX_LAMBDA 1
+#define HAVE_CCTK_CXX_RANGE_BASED_FOR 1
 
 /* Some C++ compilers recognise the restrict keyword */
 /* Define to empty if the keyword does not work. */
