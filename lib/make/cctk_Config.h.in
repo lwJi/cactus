@@ -209,9 +209,6 @@
 #undef CCTK_C_EXTERN_INLINE
 #define CCTK_EXTERN_INLINE CCTK_C_EXTERN_INLINE
 
-/* Define to empty if the 'const' keyword does not work. */
-#undef const
-
 /* Define to empty if the 'restrict' keyword does not work. */
 #if (defined CCTK_DISABLE_RESTRICT && !defined CCTK_INTEL_COMPILER_DONT_DISABLE_RESTRICT)
 #  define CCTK_C_RESTRICT
