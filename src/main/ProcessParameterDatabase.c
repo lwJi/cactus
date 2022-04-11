@@ -36,11 +36,6 @@ CCTK_FILEVERSION(main_ProcessParameterDatabase_c);
 /********************************************************************
  ********************* Other Routine Prototypes *********************
  ********************************************************************/
-int ParseFile (FILE *ifp, 
-               int (*set_function) (const char *, const char *, int),
-               tFleshConfig *ConfigData);
-void CCTKi_SetParameterSetMask (int mask);
-
 
 /********************************************************************
  *********************     External Routines   **********************
@@ -55,7 +50,7 @@ void CCTKi_SetParameterSetMask (int mask);
    @enddesc 
    @calls      CCTKi_SetParameterSetMask
                CCTKi_NumParameterFileErrors
-               ParseFile
+               CCTKi_ParseFile
  
    @var        ConfigData
    @vdesc      Flesh configuration data
@@ -155,7 +150,8 @@ int CCTKi_ProcessParameterDatabase (tFleshConfig *ConfigData)
 
   if (parameter_file)
   {
-    parse_errors = ParseFile (parameter_file, CCTKi_SetParameter, ConfigData);
+    parse_errors = CCTKi_ParseFile (parameter_file, CCTKi_SetParameter,
+                                    ConfigData);
 
     if (strcmp (ConfigData->parameter_file_name, "-"))
     {

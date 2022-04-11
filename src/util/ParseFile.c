@@ -39,20 +39,21 @@ CCTK_FILEVERSION(util_ParseFile_c);
 
 static char *ReadFile(FILE *file, long *filesize);
 
+
 /********************************************************************
  ********************* Other Routine Prototypes *********************
  ********************************************************************/
 
-int ParseFile(FILE *ifp,
-              int (*set_function)(const char *, const char *, int),
-              tFleshConfig *ConfigData);
+/********************************************************************
+ **********************     Local Data   *****************************
+ ********************************************************************/
 
 /********************************************************************
  *********************     External Routines   **********************
  ********************************************************************/
 
  /*@@
-   @routine ParseFile
+   @routine CCTKi_ParseFile
    @author Paul Walker, Frank Loeffler
    @desc
    This routine actually parses the parameter file. The
@@ -104,11 +105,9 @@ int ParseFile(FILE *ifp,
    @endreturndesc
 @@*/
 
-int cctk_PirahaParser(const char *buffer,unsigned long buffersize,int (*set_function)(const char *, const char *, int));
-
-int ParseFile(FILE *ifp,
-              int (*set_function)(const char *, const char *, int),
-              tFleshConfig *ConfigData)
+int CCTKi_ParseFile(FILE *ifp,
+                    int (*set_function)(const char *, const char *, int),
+                    tFleshConfig *ConfigData)
 {
   int retval=1;
   long buffersize;
@@ -119,7 +118,7 @@ int ParseFile(FILE *ifp,
     /* using Piraha only */
   buffersize = strlen(buffer);
 
-  retval = cctk_PirahaParser(buffer, buffersize, set_function);
+  retval = CCTKi_PirahaParser(buffer, buffersize, set_function);
   free(buffer);
   return retval;
 }
@@ -150,7 +149,7 @@ int main(int argc, char *argv[])
     parameter_file = fopen(argv[1], "r");
     if(parameter_file)
     {
-      ParseFile(parameter_file, parameter_printer);
+      CCTKi_ParseFile(parameter_file, parameter_printer);
       fclose(parameter_file);
       retval = 0;
     }

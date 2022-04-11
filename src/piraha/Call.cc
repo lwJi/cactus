@@ -1077,7 +1077,7 @@ int report_syntax(std::shared_ptr<Matcher> g) {
   return line;
 }
 
-extern "C" int cctk_PirahaParser(const char *buffer,unsigned long buffersize,int (*set_function)(const char *, const char *, int)) {
+extern "C" int CCTKi_PirahaParser(const char *buffer,unsigned long buffersize,int (*set_function)(const char *, const char *, int)) {
     std::string active;
     auto m2 = std::make_shared<Matcher>(par_file_grammar,"file",buffer,buffersize);
     //std::clock_t st = std::clock();

@@ -19,6 +19,14 @@ extern "C"
 int CCTKi_SetParameter (const char *parameter, const char *value, int lineno);
 int CCTKi_NumParameterFileErrors (int level);
 void CCTKi_ParameterActivateThornParameters(const char *thorn);
+void CCTKi_SetParameterSetMask (int mask);
+
+int CCTKi_ParseFile (FILE *ifp,
+                     int (*set_function)(const char *, const char *, int),
+                     tFleshConfig *ConfigData);
+int CCTKi_PirahaParser (const char *buffer, unsigned long buffersize,
+                        int (*set_function)(const char *, const char *, int));
+
 
 #ifdef __cplusplus
 }
