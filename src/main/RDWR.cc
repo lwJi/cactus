@@ -27,7 +27,7 @@ bool operator<(const RDWR_entry v1,const RDWR_entry v2){
     return false;
 }
 
-namespace cctki_RDWR {
+namespace {
 
 enum rdwr_t { reads_t, writes_t, invalidates_t };
 
@@ -289,6 +289,20 @@ void CCTKi_FreeRDWRData(cFunctionData *f)
     }
 }
 
+// internal lookup function that determines if a scheduled function has access
+// to a given variable on the given timelevel.
+bool hasAccess(cFunctionData const * const f, const int vi,
+               const int tl) {
+  if(f == nullptr) return true;
+  const RDWR_entry entry{vi,-1,tl};
+  // binary search for RDWR entry >= "entry"
+  RDWR_entry const * const it = std::lower_bound(f->RDWR, f->RDWR + f->n_RDWR, entry);
+  const ptrdiff_t n = it - f->RDWR;
+  return n < f->n_RDWR && (it->varindex == vi && it->timelevel == tl) &&
+         (it->where_wr != CCTK_VALID_NOWHERE ||
+          it->where_rd != CCTK_VALID_NOWHERE);
+}
+
  /*@@
    @routine    CCTK_HasAccess
    @date       Sat May  2 20:22:31 CDT 2020
@@ -308,14 +322,6 @@ void CCTKi_FreeRDWRData(cFunctionData *f)
    This function returns a non-zero value if the variable is accessible.
    @endreturndesc
 @@*/
-bool hasAccess(cFunctionData const * const f,
-               int const RDWR_entry::* const access, const int vi,
-               const int tl) {
-  if(f == nullptr) return true;
-  const RDWR_entry val{vi,-1,tl};
-  const auto it = std::lower_bound(f->RDWR, f->RDWR + f->n_RDWR, val);
-  return it-f->RDWR < f->n_RDWR and it->varindex == vi and it->timelevel == tl;
-}
 extern "C"
 int CCTK_HasAccess(const cGH *cctkGH, int var_index)
 {
@@ -358,9 +364,7 @@ int CCTK_HasAccess(const cGH *cctkGH, int var_index)
   }
 
   for (int vi = var0; vi < var0 + varn; vi += varstep) {
-    if(hasAccess(current_function,&RDWR_entry::where_rd,vi,0))
-      return true;
-    if(hasAccess(current_function,&RDWR_entry::where_wr,vi,0))
+    if(hasAccess(current_function,vi,0))
       return true;
   }
 
@@ -377,4 +381,4 @@ int CCTK_HasAccess(const cGH *cctkGH, int var_index)
   else
     return true;
 }
-}
+} // namespace
