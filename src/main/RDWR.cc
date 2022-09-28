@@ -289,20 +289,6 @@ void CCTKi_FreeRDWRData(cFunctionData *f)
     }
 }
 
-// internal lookup function that determines if a scheduled function has access
-// to a given variable on the given timelevel.
-bool hasAccess(cFunctionData const * const f, const int vi,
-               const int tl) {
-  if(f == nullptr) return true;
-  const RDWR_entry entry{vi,-1,tl};
-  // binary search for RDWR entry >= "entry"
-  RDWR_entry const * const it = std::lower_bound(f->RDWR, f->RDWR + f->n_RDWR, entry);
-  const ptrdiff_t n = it - f->RDWR;
-  return n < f->n_RDWR && (it->varindex == vi && it->timelevel == tl) &&
-         (it->where_wr != CCTK_VALID_NOWHERE ||
-          it->where_rd != CCTK_VALID_NOWHERE);
-}
-
  /*@@
    @routine    CCTK_HasAccess
    @date       Sat May  2 20:22:31 CDT 2020
@@ -364,8 +350,20 @@ int CCTK_HasAccess(const cGH *cctkGH, int var_index)
   }
 
   for (int vi = var0; vi < var0 + varn; vi += varstep) {
-    if(hasAccess(current_function,vi,0))
+    const int tl = 0;
+    const int rl = -1;
+    const RDWR_entry entry{vi, rl, tl};
+    // binary search for RDWR entry >= "entry"
+    RDWR_entry const *const it = std::lower_bound(
+        current_function->RDWR, current_function->RDWR + current_function->n_RDWR,
+        entry);
+    const ptrdiff_t n = it - current_function->RDWR;
+    if (n < current_function->n_RDWR &&
+        (it->varindex == vi && it->timelevel == tl) &&
+        (it->where_wr != CCTK_VALID_NOWHERE ||
+         it->where_rd != CCTK_VALID_NOWHERE)) {
       return true;
+    }
   }
 
 #ifdef CCTK_DEBUG
