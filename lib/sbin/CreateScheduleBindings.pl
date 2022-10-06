@@ -771,6 +771,25 @@ sub ScheduleStatement
   return ($buffer, $prototype);
 }
 
+sub get_gtype
+{
+    my $key = lc(shift);
+    my $thorn = lc(shift);
+    $key =~ s/\[\d+\]$//;
+    $key =~ s/(_p)+$//;
+    if($key !~ /::/) {
+        $key = $thorn . "::" . $key;
+    }
+    $key =~ /^[^:]*/;
+    my $keythorn = $&;
+    my $gtype = $main::global_type{$key};
+    if(!defined($gtype)) {
+        # This should never happen
+        croak("Failed to find gtype for $key");
+    }
+    return $gtype;
+}
+
 #/*@@
 #  @routine    ScheduleSelectRDWR
 #  @date       Fri May  1 19:40:53 CDT 2020
@@ -803,6 +822,11 @@ sub ScheduleSelectRDWR
     $vecnum = defined($3) ? $3 : "";
 
     $region = defined($4) ? $4 : $default_region;
+    my $gtype = get_gtype($group_or_var, $thorn);
+    croak("COULD NOT DETERMINE GTYPE FOR '$group_or_var'") unless(defined($gtype));
+    if($gtype eq "SCALAR") {
+        $region = "everywhere";
+    }
 
     if($group_or_var =~ m/^(.+)::(.+)$/)
     {

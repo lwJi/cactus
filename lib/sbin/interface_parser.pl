@@ -11,6 +11,24 @@ use Data::Dumper;
 use Piraha;
 use File::stat;
 
+%main::global_type = ();
+
+sub set_gtype
+{
+    my $name = lc(shift);
+    my $thorn = lc(shift);
+    my $gtype = uc(shift);
+    my $key = $thorn . "::" . $name;
+    my $previous_gtype = $main::global_type{$key};
+    if(!defined($previous_gtype)) {
+        $main::global_type{$key} = $gtype;
+    } else {
+        # This should never happen
+        croak("Multiple gtypes for $key: $previous_gtype, $gtype")
+            unless $previous_gtype eq $gtype;
+    }
+}
+
 # This function turns an expression to a string. It functions
 # similar to mkstring() documented at the top of Piraha.pm,
 # however, it needs some special code for parenthetical groups
@@ -785,7 +803,9 @@ sub parse_interface_ccl
   for my $fgroup (@{$group->{children}}) {
     my $fin =  $fgroup->{children}->[0];
     if($fin->is("IMPLEMENTS")) {
-      $interface_data_ref->{"\U$thorn\E IMPLEMENTS"} = $fin->group(0,"name")->substring();
+      $main::iface_name = $fin->group(0,"name")->substring();
+      $main::interface_name = $main::iface_name;
+      $interface_data_ref->{"\U$thorn\E IMPLEMENTS"} = $main::iface_name;
     } elsif($fin->is("INHERITS")) {
       for my $ch (@{$fin->{children}}) {
         $interface_data_ref->{"\U$thorn\E INHERITS"} .= $ch->substring()." ";
@@ -905,7 +925,11 @@ sub parse_interface_ccl
         } elsif($nm eq "VARS") {
           $interface_data_ref->{"\U$thorn GROUP $gname\E"} = "";
           for my $c (@{$ch->{children}}) {
-            $interface_data_ref->{"\U$thorn GROUP $gname\E"} .= " ".$c->substring();
+            my $name = $c->substring();
+            $interface_data_ref->{"\U$thorn GROUP $gname\E"} .= " ".$name;
+            $gtype = "SCALAR" if(!defined($gtype));
+            set_gtype($name, $thorn, $gtype);
+            set_gtype($name, $main::iface_name, $gtype);
           }
         } elsif($nm eq "ghostsize") {
           my $ghost = "";
@@ -942,6 +966,8 @@ sub parse_interface_ccl
       $dim = 3 if(!defined($dim) and $gtype eq "GF");
       $distrib = "DEFAULT" if(!defined($distrib) and ($gtype eq "GF" or $gtype eq "ARRAY"));
       $distrib = "CONSTANT" if(!defined($distrib));
+      set_gtype($gname, $thorn, $gtype);
+      set_gtype($gname, $main::iface_name, $gtype);
       # Note that Compact groups are only documented in the FAQ, and
       # are not supported by Carpet.
       $interface_data_ref->{"\U$thorn GROUP $gname COMPACT\E"} = 0;
