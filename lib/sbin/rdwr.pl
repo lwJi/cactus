@@ -338,6 +338,7 @@ sub do_schedules
     for my $ch (@{$gr->{children}}) {
       if($ch->is("reads") or $ch->is("writes")) {
         my $is_writes = $ch->is("writes");
+        my $region = "";
 
         # Process variable names in this definition.
         my $i = 0;
@@ -345,6 +346,17 @@ sub do_schedules
           # First we extract the thorn and variable name from the reads/writes clause
           my $qrname = $ch->has($i,"qrname");
           my $vname = $qrname->has(0,"vname");
+          if($qrname->has(1,"region")) {
+             $region = lc($qrname->has(1,"region")->substring());
+             if(!$is_writes and ($region eq "all" or $region eq "everywhere")) {
+                $region = "";
+             } elsif($is_writes and ($region eq "interior")) {
+                $region = "";
+             }
+          } elsif($region ne "") {
+             &CST_error(1, "Ambiguous default in ".$qrname->substring()."=".$region
+                ,"Fill in the region", $qrname->linenum, $ccl_file);
+          }
           my $thorn_or_var = $vname->has(0,"name")->substring();
           my $thorn = undef;
           my $var = undef;
