@@ -71,24 +71,59 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% htlatex (mathjax) needs to see def and newcommands to show them in math mode
+% however it only looks at code in math mode, and regular LaTeX still needs to
+% see the definitions. Since LaTeX makes it all but impossible to get at a 
+% command's definition, this environment repeats its contents for mathjax
+% collect@body is from amsmath, it calls its argument with the env content
+% the endgroup trickery makes us escape the group \begin{} starts and lets
+% the definitions be visible on the outer layer
+
+\ifx \HCode\Undef
+  \newenvironment{mathdefs}{%
+    \endgroup%
+  }{%
+    \begingroup\def\@currenvir{mathdefs}%
+  }%
+\else
+  \newenvironment{mathdefs}{%
+    \def\cctks@veBODY##1{\gdef\cctk@BODY{##1}}%
+    \collect@body\cctks@veBODY%
+  }{%
+    \endgroup%
+    \expandafter\(\cctk@BODY\)%
+    \cctk@BODY%
+    \begingroup\def\@currenvir{mathdefs}%
+  }%
+\fi
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % macros
+\begin{mathdefs}
 \def\text#1{{\rm #1}}
 \def\q{\bf QUERY: }
 \def\t{\tt \obeylines }
 \def\ie{\mbox{i.e.\mbox{}}}
+\end{mathdefs}
 
+\begin{mathdefs}
 \def\nhat{{\hat n}} 
 \def\vone{{v_{{}_{(1)}}}} 
 \def\vtwo{{v_{{}_{(2)}}}}
 \def\vthree{{v_{{}_{(3)}}}} 
 \def\eref#1{(\ref{#1})}
+\end{mathdefs}
 
 % nicely typeset "C++" (adapted from a comp.lang.C++ FAQ entry)
 \def\Cplusplus{\mbox{C\hspace{-.05em}\raisebox{.4ex}{\tiny\bf ++}}}
 
 % reference to code, i.e. routine or variable names
 % \mbox helps work around issues with tex4ht on Ubuntu 20.04
+\begin{mathdefs}
 \newcommand{\code}[1]{\mbox{\texttt{#1}}}
+\end{mathdefs}
 
 
 
@@ -297,6 +332,7 @@
 %   the start of items; I don't know how to get rid of these. :(
 %   
 \ifx \HCode\Undef
+% PDF output
 \newenvironment{FunctionDescription}[1]
 {
 \newpage
