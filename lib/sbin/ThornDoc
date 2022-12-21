@@ -49,7 +49,7 @@ for arr in `cd arrangements; echo *`; do
                                 pdflatex documentation < /dev/null > LATEX_MESSAGES 2>&1
                                 pdflatex documentation < /dev/null > LATEX_MESSAGES 2>&1
                             } ||
-                            echo "    ERROR: Could not create documentation (check for latex errors)"
+                            echo "    ERROR: Could not create documentation (check $PWD/LATEX_MESSAGES for LaTeX errors)"
                         )
                         
                     fi          # if thorn has documentation

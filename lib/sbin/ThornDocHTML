@@ -59,7 +59,7 @@ for arr in `cd arrangements; echo *`; do
                 mv documentation.html.tmp documentation.html &&
                 ${PERL} -ne 'chomp;m!^File: (/.*/)?([^/]*)$! and rename("$1$2", "./$2");' documentation.lg
               ) ||
-              echo "    ERROR: Could not create documentation (check for latex errors)"
+              echo "    ERROR: Could not create documentation (check $PWD/LATEX_MESSAGES for LaTeX errors)"
             )
                         
           fi          # if thorn has documentation
