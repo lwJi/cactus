@@ -197,6 +197,7 @@ sub cross_index_interface_data
   foreach $thorn (@$thorns_ref)
   {
     $thorn_implements = $interface_data_ref->{"\U$thorn\E IMPLEMENTS"};
+    next if(not defined $interface_data_ref->{"\U$thorn INHERITS\E"});
     foreach $ancestor_imp ( split(' ', $interface_data_ref->{"\U$thorn INHERITS\E"}))
     {
       next if($ancestor_imp eq '');
@@ -242,6 +243,7 @@ sub get_friends_of_me
 
     my $thorn = $1;
 
+    next if(not defined $interface_data_ref->{"\U$thorn FRIEND\E"});
     foreach my $friend (split(" ", $interface_data_ref->{"\U$thorn\E FRIEND"}))
     {
       push (@friends, $other_implementation) if ($friend =~ m:$implementation:i);
@@ -261,8 +263,11 @@ sub get_implementation_friends
   my $thorn = $1;
 
   # Recurse
-  foreach my $friend (split(" ", $interface_data_ref->{"\U$thorn\E FRIEND"}),
-                      split(" ", $interface_data_ref->{"IMPLEMENTATION \U$implementation\E FRIENDS"}))
+  my $friends = $interface_data_ref->{"\U$thorn\E FRIEND"};
+  $friends = "" unless defined($friends);
+  my $implementation_friends = $interface_data_ref->{"IMPLEMENTATION \U$implementation\E FRIENDS"};
+  $implementation_friends = "" unless defined($implementation_friends);
+  foreach my $friend (split(" ", $friends), split(" ", $implementation_friends))
   {
     if(! $friends_ref->{"\U$friend\E"})
     {
@@ -287,6 +292,8 @@ sub get_implementation_ancestors
   $interface_data_ref->{"IMPLEMENTATION \U$implementation\E THORNS"} =~ m:(\w+):;
 
   my $thorn = $1;
+
+  return unless defined($interface_data_ref->{"\U$thorn\E INHERITS"});
 
   # Recurse.
   foreach my $ancestor (split(" ", $interface_data_ref->{"\U$thorn\E INHERITS"}))
@@ -321,76 +328,90 @@ sub check_implementation_consistency
   my(%attributes);
 
   # Find out which thorns provide this implementation.
-  @thorns = split(" ", $interface_data_ref->{"IMPLEMENTATION \U$implementation\E THORNS"});
+  if(defined($interface_data_ref->{"IMPLEMENTATION \U$implementation\E THORNS"})) {
+    @thorns = split(" ", $interface_data_ref->{"IMPLEMENTATION \U$implementation\E THORNS"});
+  }
 
   if(scalar(@thorns) > 1)
   {
     foreach $thorn (@thorns)
     {
       # Record the inheritance
-      foreach $thing (split(" ", $interface_data_ref->{"\U$thorn\E INHERITS"}))
+      if(defined($interface_data_ref->{"\U$thorn\E INHERITS"}))
       {
-        if($thing =~ m:\w:)
+        foreach $thing (split(" ", $interface_data_ref->{"\U$thorn\E INHERITS"}))
         {
-          # Put if statement around this to prevent perl -w from complaining.
-          if($inherits{"\U$thing\E"})
+          if($thing =~ m:\w:)
           {
-            $inherits{"\U$thing\E"} .= "$thorn ";
-          }
-          else
-          {
-            $inherits{"\U$thing\E"} = "$thorn ";
+            # Put if statement around this to prevent perl -w from complaining.
+            if($inherits{"\U$thing\E"})
+            {
+              $inherits{"\U$thing\E"} .= "$thorn ";
+            }
+            else
+            {
+              $inherits{"\U$thing\E"} = "$thorn ";
+            }
           }
         }
       }
 
       # Record the friends
-      foreach $thing (split(" ", $interface_data_ref->{"\U$thorn\E FRIEND"}))
+      if(defined($interface_data_ref->{"\U$thorn\E FRIEND"}))
       {
-        if($thing =~ m:\w:)
+        foreach $thing (split(" ", $interface_data_ref->{"\U$thorn\E FRIEND"}))
         {
-          # Put if statement around this to prevent perl -w from complaining.
-          if($friend{"\U$thing\E"})
+          if($thing =~ m:\w:)
           {
-            $friend{"\U$thing\E"} .= "$thorn ";
-          }
-          else
-          {
-            $friend{"\U$thing\E"} = "$thorn ";
+            # Put if statement around this to prevent perl -w from complaining.
+            if($friend{"\U$thing\E"})
+            {
+              $friend{"\U$thing\E"} .= "$thorn ";
+            }
+            else
+            {
+              $friend{"\U$thing\E"} = "$thorn ";
+            }
           }
         }
       }
 
       # Record the public groups
-      foreach $thing (split(" ", $interface_data_ref->{"\U$thorn\E PUBLIC GROUPS"}))
+      if(defined($interface_data_ref->{"\U$thorn\E PUBLIC GROUPS"}))
       {
-        if($thing =~ m:\w:)
+        foreach $thing (split(" ", $interface_data_ref->{"\U$thorn\E PUBLIC GROUPS"}))
         {
-          # Put if statement around this to prevent perl -w from complaining.
-          if($public_groups{"\U$thing\E"})
+          if($thing =~ m:\w:)
           {
-            $public_groups{"\U$thing\E"} .= "$thorn ";
-          }
-          else
-          {
-            $public_groups{"\U$thing\E"} = "$thorn ";
+            # Put if statement around this to prevent perl -w from complaining.
+            if($public_groups{"\U$thing\E"})
+            {
+              $public_groups{"\U$thing\E"} .= "$thorn ";
+            }
+            else
+            {
+              $public_groups{"\U$thing\E"} = "$thorn ";
+            }
           }
         }
       }
 
       # Record the protected groups
-      foreach $thing (split(" ", $interface_data_ref->{"\U$thorn\E PROTECTED GROUPS"}))
+      if(defined($interface_data_ref->{"\U$thorn\E PROTECTED GROUPS"}))
       {
-        if($thing =~ m:\w:)
+        foreach $thing (split(" ", $interface_data_ref->{"\U$thorn\E PROTECTED GROUPS"}))
         {
-          # Put if statement around this to prevent perl -w from complaining.
-          if($protected_groups{"\U$thing\E"})
+          if($thing =~ m:\w:)
           {
-            $protected_groups{"\U$thing\E"} .= "$thorn ";
-          }
-          else
-          {
-            $protected_groups{"\U$thing\E"} = "$thorn ";
+            # Put if statement around this to prevent perl -w from complaining.
+            if($protected_groups{"\U$thing\E"})
+            {
+              $protected_groups{"\U$thing\E"} .= "$thorn ";
+            }
+            else
+            {
+              $protected_groups{"\U$thing\E"} = "$thorn ";
+            }
           }
         }
       }
