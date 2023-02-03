@@ -27,6 +27,8 @@ else
  if test -n "$F90" && test "$F90" != 'none' ; then
    if test "`$F90 -V 2>&1 | grep -i intel`" ; then
      LINUX_F90_COMP=Intel
+   elif test "`$F90 --version 2>&1 | grep -i flang`" ; then
+     LINUX_F90_COMP=flang
    elif test "`$F90 -V 2>&1 | grep -i f90 | grep -i vast`" ; then
      LINUX_F90_COMP=pacific
    elif test "`$F90 -V 2>&1 | grep -i f90 | grep -i absoft`" ; then
@@ -102,6 +104,21 @@ else
      : ${F90_DEBUG_FLAGS='-g'}
      : ${F90_WARN_FLAGS='-Wall'}
      F90_VERSION="`$F90 -v 2>&1 | grep -i version | head -n1`"
+     ;;
+   flang)
+     : ${F90_DEBUG_FLAGS='-g'}
+     : ${F90_WARN_FLAGS='-Wall'}
+     : ${F90_OPTIMISE_FLAGS='-O3 -funroll-loops'}
+     if test "$LD" != "$F90" ; then
+       flang_libdir="`$F90 -print-file-name=libflang.a`"
+       flang_libdir="`dirname $flang_libdir`"
+       : ${LIBS='flang'}
+       : ${LIBDIRS="$flang_libdir"}
+     fi
+     F90_VERSION="`$F90 -v 2>&1 | grep -i "flang" | grep -i " version " | head -n1`"
+     major_version=`echo $F90_VERSION | sed 's/.* version //' | cut -f1 -d'.'`
+     minor_version=`echo $F90_VERSION | sed 's/.* version //' | cut -f2 -d'.'`
+     : ${F90_OPENMP_FLAGS='-fopenmp'}
      ;;
    gnu95)
      : ${F90_DEBUG_FLAGS='-g'}
@@ -305,12 +322,12 @@ else
  LINUX_C_COMP=unknown
  if test "`$CC -V 2>&1 | grep -i intel`" ; then
    LINUX_C_COMP=Intel
+ if test "`$CC -V 2>&1 | grep -i clang`" ; then
+   LINUX_C_COMP=clang
  elif test "`$CC -V 2>&1 | grep -i cc | grep -i pgcc`" ; then
    LINUX_C_COMP=portland
  elif test "`$CC -V 2>&1 | grep pgcc`" ; then
    LINUX_C_COMP=portland
- elif test "`$CC -v 2>&1 | grep  gcc`" ; then
-   LINUX_C_COMP=gcc
  elif test "`$CC -v 2>&1 | grep -i SGICC`" ; then
    LINUX_C_COMP=SGI
  elif test "`$CC -v 2>&1 | grep PathScale`" ; then
@@ -319,9 +336,25 @@ else
    LINUX_C_COMP=gcc
  elif test "`$CC -qversion 2>&1 | grep IBM`" ; then
    LINUX_C_COMP=IBM
+ elif test "`$CC -v 2>&1 | grep  gcc`" ; then
+   # keep this late so that compilers that output more than just the version do
+   # not confuse things with things like /usr/lib64/gcc/x86_64-suse-linux/7
+   LINUX_C_COMP=gcc
  fi
 
  case $LINUX_C_COMP in
+   # CLANG
+   clang)
+     : ${CFLAGS='-pipe -std=gnu99'}
+     : ${C_OPTIMISE_FLAGS='-O3'}
+     CC_VERSION="`$CC -v 2>&1 | grep -i "clang version " | head -n1`"
+     major_version=`echo $CC_VERSION | sed 's/.*clang version //' | cut -f1 -d'.'`
+     minor_version=`echo $CC_VERSION | sed 's/.*clang version //' | cut -f2 -d'.'`
+     # only clang versions 3.7 and higher support OpenMP
+     if test ! \( $major_version -lt 3 -o \( $major_version -eq 3 -a $minor_version -lt 7 \) \) ; then
+       : ${C_OPENMP_FLAGS='-fopenmp'}
+     fi
+     ;;
    # GNU
    gcc)
      : ${CFLAGS='-pipe -std=gnu99'}
@@ -395,23 +428,39 @@ else
  LINUX_CXX_COMP=unknown
  if test "`$CC -V 2>&1 | grep -i intel`" ; then
    LINUX_CXX_COMP=Intel
+ elif test "`$CC -V 2>&1 | grep -i clang`" ; then
+   LINUX_CXX_COMP=clang++
  elif test "`$CC -V 2>&1 | grep -i cc | grep -i pgcc`" ; then
    LINUX_CXX_COMP=portland
  elif test "`$CC -V 2>&1 | grep pgcc`" ; then
    LINUX_CXX_COMP=portland
- elif test "`$CC -v 2>&1 | grep  gcc`" ; then
-   LINUX_CXX_COMP=g++
  elif test "`$CC -v 2>&1 | grep -i SGICC`" ; then
    LINUX_CXX_COMP=SGI
  elif test "`$CC -v 2>&1 | grep PathScale`" ; then
    LINUX_CXX_COMP=PathScale
- elif test "`$CC --version 2>&1 | grep 'g++'`" ; then
-   LINUX_CXX_COMP=g++
  elif test "`$CC -qversion 2>&1 | grep IBM`" ; then
    LINUX_CXX_COMP=IBM
+ elif test "`$CC -v 2>&1 | grep  gcc`" ; then
+   # keep this late so that compilers that output more than just the version do
+   # not confuse things with things like /usr/lib64/gcc/x86_64-suse-linux/7
+   LINUX_CXX_COMP=g++
+ elif test "`$CC --version 2>&1 | grep 'g++'`" ; then
+   LINUX_CXX_COMP=g++
  fi
 
  case $LINUX_CXX_COMP in
+   # clang
+   clang++)
+     : ${CXXFLAGS='-pipe -std=c++0x'}
+     : ${CXX_OPTIMISE_FLAGS='-O3'}
+     CXX_VERSION="`$CC -v 2>&1 | grep -i "clang version " | head -n1`"
+     major_version=`echo $CXX_VERSION | sed 's/.*clang version //' | cut -f1 -d'.'`
+     minor_version=`echo $CXX_VERSION | sed 's/.*clang version //' | cut -f2 -d'.'`
+     # only clang versions 3.7 and higher support OpenMP
+     if test ! \( $major_version -lt 3 -o \( $major_version -eq 3 -a $minor_version -lt 7 \) \) ; then
+       : ${CXX_OPENMP_FLAGS='-fopenmp'}
+     fi
+     ;;
    # GNU
    g++)
      : ${CXXFLAGS='-pipe -std=c++0x'}
