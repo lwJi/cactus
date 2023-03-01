@@ -1405,7 +1405,10 @@ AC_DEFUN(CCTK_CXX_AUTO_SPECIFIER,
 [cctk_cv_have_cxx_auto_specifier=no
 AC_LANG_SAVE
 AC_LANG([C++])
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[]], [[int x; auto y = x]])],[cctk_cv_have_cxx_auto_specifier=yes],[cctk_cv_have_cxx_auto_specifier=no])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[
+  int x; auto y = x]])],
+  cctk_cv_have_cxx_auto_specifier=yes,
+  cctk_cv_have_cxx_auto_specifier=no)
 AC_LANG_RESTORE
 ])
 if test "$cctk_cv_have_cxx_auto_specifier" = "yes" ; then
@@ -1420,7 +1423,10 @@ AC_DEFUN(CCTK_CXX_LAMBDA,
 [cctk_cv_have_cxx_lambda=no
 AC_LANG_SAVE
 AC_LANG([C++])
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[]], [[int x; [x](int y) { return x+y; };]])],[cctk_cv_have_cxx_lambda=yes],[cctk_cv_have_cxx_lambda=no])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[
+  [int x; [x](int y) { return x+y; };]]])],
+  cctk_cv_have_cxx_lambda=yes,
+  cctk_cv_have_cxx_lambda=no)
 AC_LANG_RESTORE
 ])
 if test "$cctk_cv_have_cxx_lambda" = "yes" ; then
@@ -1435,8 +1441,12 @@ AC_DEFUN(CCTK_CXX_RANGE_BASED_FOR,
 [cctk_cv_have_cxx_range_based_for=no
 AC_LANG_SAVE
 AC_LANG([C++])
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <vector>]], [[std::vector<int> xs(10);
-   for (int& x: xs) x = 42;]])],[cctk_cv_have_cxx_range_based_for=yes],[cctk_cv_have_cxx_range_based_for=no])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
+  [[#include <vector>]],
+  [[std::vector<int> xs(10);
+   for (int& x: xs) x = 42;]])],
+  cctk_cv_have_cxx_range_based_for=yes,
+  cctk_cv_have_cxx_range_based_for=no)
 AC_LANG_RESTORE
 ])
 if test "$cctk_cv_have_cxx_range_based_for" = "yes" ; then
