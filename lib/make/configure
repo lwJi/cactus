@@ -12517,20 +12517,20 @@ cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 int
 main (void)
 {
-int x; auto y = x
+
+  int x; auto y = x
   ;
   return 0;
 }
 _ACEOF
-if ac_fn_cxx_try_link "$LINENO"
+if ac_fn_cxx_try_compile "$LINENO"
 then :
   cctk_cv_have_cxx_auto_specifier=yes
 else case e in #(
   e) cctk_cv_have_cxx_auto_specifier=no ;;
 esac
 fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam \
-    conftest$ac_exeext conftest.$ac_ext
+rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -12567,20 +12567,20 @@ cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 int
 main (void)
 {
-int x; [x](int y) { return x+y; };
+
+  [int x; [x](int y) { return x+y; };]
   ;
   return 0;
 }
 _ACEOF
-if ac_fn_cxx_try_link "$LINENO"
+if ac_fn_cxx_try_compile "$LINENO"
 then :
   cctk_cv_have_cxx_lambda=yes
 else case e in #(
   e) cctk_cv_have_cxx_lambda=no ;;
 esac
 fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam \
-    conftest$ac_exeext conftest.$ac_ext
+rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -12623,15 +12623,14 @@ std::vector<int> xs(10);
   return 0;
 }
 _ACEOF
-if ac_fn_cxx_try_link "$LINENO"
+if ac_fn_cxx_try_compile "$LINENO"
 then :
   cctk_cv_have_cxx_range_based_for=yes
 else case e in #(
   e) cctk_cv_have_cxx_range_based_for=no ;;
 esac
 fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam \
-    conftest$ac_exeext conftest.$ac_ext
+rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
