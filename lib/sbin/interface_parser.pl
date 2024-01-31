@@ -139,17 +139,15 @@ sub cross_index_interface_data
   my($implementation);
   my(%ancestors);
   my(%friends);
-  my($thorn,$thorn_implements,$ancestor_imp,$thorn_ancestor,$message,$hint);
-  my(%thorn_ancestor);
 
-  foreach $thorn (@$thorns_ref)
+  foreach my $thorn (@$thorns_ref)
   {
     $implementation = $interface_data_ref->{"\U$thorn\E IMPLEMENTS"};
     next unless(defined($implementation));
     if($implementation =~ m:^\s*$:)
     {
-      $message = "Thorn $thorn doesn't specify an implementation";
-      $hint = "All compiled thorns must specify an implementation in their interface.ccl file with the format IMPLEMENTS: <implementation>";
+      my $message = "Thorn $thorn doesn't specify an implementation";
+      my $hint = "All compiled thorns must specify an implementation in their interface.ccl file with the format IMPLEMENTS: <implementation>";
       &CST_error(0,$message,$hint,__LINE__,__FILE__);
       next;
     }
@@ -193,11 +191,34 @@ sub cross_index_interface_data
 
   }
 
-  # Create Hash table with thorns as ancestors
-  foreach $thorn (@$thorns_ref)
+  foreach $implementation (sort keys %implementations)
   {
-    $thorn_implements = $interface_data_ref->{"\U$thorn\E IMPLEMENTS"};
-    foreach $ancestor_imp ( split(' ', $interface_data_ref->{"\U$thorn INHERITS\E"}))
+    my %friends = ();
+    &get_implementation_friends($implementation, $interface_data_ref, \%friends);
+    $interface_data_ref->{"IMPLEMENTATION \U$implementation\E FRIENDS"} = join(" ",(sort keys %friends));
+  }
+}
+
+#
+#/*@@
+#  @routine    check_interface_database_consistency
+#  @date       2024-01-31T16:14:50 CST
+#  @author     Roland Haas
+#  @desc
+#  Checks that constructed database is consistent, eg has no inheritance loop
+#  @enddesc
+#@@*/
+
+sub check_interface_database_consitency
+{
+  my($interface_data_ref) = @_;
+  my(%thorn_ancestor);
+
+  # Create Hash table with thorns as ancestors
+  foreach my $thorn ( split(' ', $interface_data_ref->{"THORNS"}) )
+  {
+    my $thorn_implements = $interface_data_ref->{"\U$thorn\E IMPLEMENTS"};
+    foreach my $ancestor_imp ( split(' ', $interface_data_ref->{"\U$thorn INHERITS\E"}))
     {
       next if($ancestor_imp eq '');
       next if(not defined $interface_data_ref->{"IMPLEMENTATION \U$ancestor_imp\E THORNS"});
@@ -206,26 +227,19 @@ sub cross_index_interface_data
   }
 
   # Call find_dep_cycles to find and report cycles
-  $message = &find_dep_cycles(%thorn_ancestor);
+  my $message = &find_dep_cycles(%thorn_ancestor);
   if ("" ne  $message)
   {
    $message  =~ s/^\s*//g;
    $message  =~ s/\s*$//g;
    $message =~ s/\s+/->/g;
    $message = "Found a cyclic dependency in implementation inheritance: ".$message."\n";
-   &CST_error(0,$message,$hint,__LINE__,__FILE__);
+   &CST_error(0,$message,'',__LINE__,__FILE__);
   }
 
-  foreach $thorn (@$thorns_ref)
+  foreach my $thorn ( split(' ', $interface_data_ref->{"THORNS"}) )
   {
     &check_interface_consistency($thorn, $interface_data_ref);
-  }
-
-  foreach $implementation (sort keys %implementations)
-  {
-    my %friends = ();
-    &get_implementation_friends($implementation, $interface_data_ref, \%friends);
-    $interface_data_ref->{"IMPLEMENTATION \U$implementation\E FRIENDS"} = join(" ",(sort keys %friends));
   }
 }
 

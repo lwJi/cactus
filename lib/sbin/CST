@@ -154,6 +154,8 @@ my (%source_thorns, %nosource_thorns);
 # Parse the interface.ccl files
 print "Parsing interface files...\n";
 my %interface_database = &create_interface_database(scalar(keys %system_database), %system_database, %source_thorns);
+# we read the full thornlist, so everything must be consistent
+&check_interface_database_consitency(\%interface_database);
 
 &print_database("interface", \%interface_database) if($debug_interface);
 &save_database("interface", \%interface_database) if($debug_interface);
