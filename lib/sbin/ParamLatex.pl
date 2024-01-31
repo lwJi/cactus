@@ -146,7 +146,7 @@ foreach my $arrangement (sort keys %arrangements)
       print "\n\t$thorn" if ($debug);
 
       # get the path for this individual thorn
-      %pathsToThorns = ThornUtils::GetThornPaths(["$arrangement/$thorn"], $arrangements_dir, "param.ccl");
+      %pathsToThorns = ThornUtils::GetThornPaths(["$arrangement/$thorn"], $arrangements_dir, "param.ccl", 0);
 
       # now we create a parameter database (for one thorn), using the function 
       # &create_parameter_database which is provided by 'parameter_parser.pl'

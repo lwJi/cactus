@@ -125,8 +125,8 @@ if (defined $thornlist) {
    @listOfThorns = ThornUtils::CreateThornlist($arrangements_dir);
 }
 
-# returns a hash with keys as Arrangment/Thorn and values of the location of the interface.ccl file
-%pathsToThorns         =  ThornUtils::GetThornPaths(\@listOfThorns, $arrangements_dir, "interface.ccl", 1);
+# returns a hash with keys as Thorn and values of the location of the interface.ccl file
+%pathsToThorns         =  ThornUtils::GetThornPaths(\@listOfThorns, $arrangements_dir, "interface.ccl", 0);
 
 # run the interface parser from 'interface_parser.pl'
 %interface_database    = &create_interface_database(scalar(keys %system_database), %system_database, %pathsToThorns);

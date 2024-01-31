@@ -137,7 +137,7 @@ foreach my $arrangement (sort keys %arrangements)
       print "\n\t$thorn" if ($debug);
 
       # get the path for this individual thorn
-      %pathsToThorns = ThornUtils::GetThornPaths(["$arrangement/$thorn"], $arrangements_dir, "schedule.ccl");
+      %pathsToThorns = ThornUtils::GetThornPaths(["$arrangement/$thorn"], $arrangements_dir, "schedule.ccl", 0);
 
       # we are selecting STDOUT so that any junk from the &create_schedule_database won't get in our output
       my $filehandle = select(STDOUT);
