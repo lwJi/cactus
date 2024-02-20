@@ -1,11 +1,11 @@
-\begin{cactuspart}{\code{Driver\_*} Functions Reference}{}{$Revision$}
+\begin{cactuspart}{\code{CCTK\_*} Functions Reference}{}{$Revision$}
 \label{part:DriverReference}
 \renewcommand{\thepage}{\Alph{part}\arabic{page}}
 
-In this chapter all \code{Driver\_*} Cactus functions are described.
+In this chapter all \code{CCTK\_*} Cactus functions are described.
 These functions are callable from C or Fortran thorns.
 
-In the functions below, \texttt{where} refers to an integer whose values are defined in \texttt{cctk\_Constants.h}. The basic values are \texttt{WH\_INTERIOR}, \texttt{WH\_BOUNDARY}, and \texttt{WH\_GHOSTS}. Other values are created by bitwise or: \texttt{WH\_EXTERIOR} = \texttt{WH\_INTERIOR} \textbar~\texttt{WH\_GHOSTS}, \texttt{WH\_EVERYWHERE} = \texttt{WH\_INTERIOR} \textbar~\texttt{WH\_EXTERIOR}.
+In the functions below, \texttt{where} refers to an integer whose values are defined in \texttt{cctk\_Constants.h}. The basic values are \texttt{CCTK\_VALID\_INTERIOR}, \texttt{CCTK\_VALID\_BOUNDARY}, and \texttt{CCTK\_VALID\_GHOSTS}. Other values are created by bitwise or: \texttt{CCTK\_VALID\_EXTERIOR} = \texttt{CCTK\_VALID\_INTERIOR} \textbar~\texttt{CCTK\_VALID\_GHOSTS}, \texttt{CCTK\_VALID\_EVERYWHERE} = \texttt{CCTK\_VALID\_INTERIOR} \textbar~\texttt{CCTK\_VALID\_EXTERIOR}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -15,28 +15,28 @@ In the functions below, \texttt{where} refers to an integer whose values are def
 
 \begin{Lentry}
 
-\item[\code{Driver\_GetValidRegion}] [\pageref{Driver-GetValidRegion}]
+\item[\code{CCTK\_GetValidRegion}] [\pageref{CCTK-gGetValidRegion}]
 Gets the region where a grid function is valid.
 
-\item[\code{Driver\_NotifyDataModified}] [\pageref{Driver-NotifyDataModified}]
+\item[\code{CCTK\_NotifyDataModified}] [\pageref{CCTK-gNotifyDataModified}]
 Notify the driver as to which region of which grid function you have updated.
 
-\item[\code{Driver\_RequireValidData}] [\pageref{Driver-RequireValidData}]
+\item[\code{CCTK\_RequireValidData}] [\pageref{CCTK-gRequireValidData}]
 Ask the driver to provide valid data in the region you specify.
 
-\item[\code{Driver\_SelectGroupForBC}] [\pageref{Driver-SelectGroupForBC}]
+\item[\code{CCTK\_SelectGroupForBC}] [\pageref{CCTK-gSelectGroupForBC}]
 Tell the driver how to update the boundary conditions for the grid functions in a group.
 
-\item[\code{Driver\_SelectVarForBC}] [\pageref{Driver-SelectVarForBC}]
+\item[\code{CCTK\_SelectVarForBC}] [\pageref{CCTK-gSelectVarForBC}]
 Tell the driver how to update the boundary conditions for a grid functions.
 
-\item[\code{Driver\_SetValidRegion}] [\pageref{Driver-SetValidRegion}]
+\item[\code{CCTK\_SetValidRegion}] [\pageref{CCTK-gSetValidRegion}]
 Sets the region where a grid function is valid.
 
 \end{Lentry}
 
-\begin{FunctionDescription}{Driver\_GetValidRegion}
-\label{Driver-GetValidRegion}
+\begin{FunctionDescription}{CCTK\_GetValidRegion}
+\label{CCTK-gGetValidRegion}
 % yyy
 Gets the region where a grid function is valid.
 \begin{SynopsisSection}
@@ -69,7 +69,7 @@ The time level of a grid function.
 \end{ParameterSection}
 
 \begin{SeeAlsoSection}
-\begin{SeeAlso2}{Driver\_SetValidRegion}{Driver-SetValidRegion}
+\begin{SeeAlso2}{CCTK\_SetValidRegion}{CCTK-gSetValidRegion}
 Sets the region where a grid function is valid.
 \end{SeeAlso2}
 \end{SeeAlsoSection}
@@ -82,8 +82,8 @@ Assertions may be triggered for invalid variables or time levels.
 % zzz
 \end{FunctionDescription}
 
-\begin{FunctionDescription}{Driver\_NotifyDataModified}
-\label{Driver-NotifyDataModified}
+\begin{FunctionDescription}{CCTK\_NotifyDataModified}
+\label{CCTK-gNotifyDataModified}
 Notify the driver as to which region of which grid function you have updated.
 % yyy
 \begin{SynopsisSection}
@@ -139,7 +139,7 @@ where valid data was modified for a given grid function and time level.
 \end{ParameterSection}
 
 \begin{SeeAlsoSection}
-\begin{SeeAlso2}{Driver\_RequireValidData}{Driver-RequireValidData}
+\begin{SeeAlso2}{CCTK\_RequireValidData}{CCTK-gRequireValidData}
 Ask the driver to provide valid data in the region you specify.
 \end{SeeAlso2}
 \end{SeeAlsoSection}
@@ -152,8 +152,8 @@ Assertions may be triggered for invalid variables or time levels.
 % zzz
 \end{FunctionDescription}
 
-\begin{FunctionDescription}{Driver\_RequireValidData}
-\label{Driver-RequireValidData}
+\begin{FunctionDescription}{CCTK\_RequireValidData}
+\label{CCTK-gRequireValidData}
 % yyy
 \begin{SynopsisSection}
 \begin{Synopsis}{C}
@@ -208,7 +208,7 @@ where valid data is needed for a given grid function and time level.
 \end{ParameterSection}
 
 \begin{SeeAlsoSection}
-\begin{SeeAlso2}{Driver\_NotifyDataModified}{Driver-NotifyDataModified}
+\begin{SeeAlso2}{CCTK\_NotifyDataModified}{CCTK-gNotifyDataModified}
 Notify the driver as to which region of which grid function you have updated.
 \end{SeeAlso2}
 \end{SeeAlsoSection}
@@ -221,8 +221,8 @@ Assertions may be triggered for invalid variables or time levels.
 % zzz
 \end{FunctionDescription}
 
-\begin{FunctionDescription}{Driver\_SelectGroupForBC}
-\label{Driver-SelectGroupForBC}
+\begin{FunctionDescription}{CCTK\_SelectGroupForBC}
+\label{CCTK-gSelectGroupForBC}
 Tell the driver how to update the boundary conditions for the grid functions in a group.
 % yyy
 \begin{SynopsisSection}
@@ -230,7 +230,7 @@ Tell the driver how to update the boundary conditions for the grid functions in 
 \begin{verbatim}
 #include "cctk.h"
 
-int err = Driver_SelectGroupForBC(
+int err = CCTK_SelectGroupForBC(
     const cGH *cctkGH,
     int faces,
     int width,
@@ -298,7 +298,7 @@ Boundary thorn.
 \end{ParameterSection}
 
 \begin{SeeAlsoSection}
-\begin{SeeAlso2}{Driver\_SelectVarForBC}{Driver-SelectVarForBC}
+\begin{SeeAlso2}{CCTK\_SelectVarForBC}{CCTK-gSelectVarForBC}
 Tell the driver how to update the boundary conditions for a grid functions.
 \end{SeeAlso2}
 \end{SeeAlsoSection}
@@ -311,15 +311,15 @@ Assertions may be triggered for invalid variables or time levels.
 % zzz
 \end{FunctionDescription}
 
-\begin{FunctionDescription}{Driver\_SelectVarForBC}
-\label{Driver-SelectVarForBC}
+\begin{FunctionDescription}{CCTK\_SelectVarForBC}
+\label{CCTK-gSelectVarForBC}
 % yyy
 \begin{SynopsisSection}
 \begin{Synopsis}{C}
 \begin{verbatim}
 #include "cctk.h"
 
-int err = Driver_SelectVarForBC(
+int err = CCTK_SelectVarForBC(
     const cGH *cctkGH,
     int faces,
     int width,
@@ -387,7 +387,7 @@ Boundary thorn.
 \end{ParameterSection}
 
 \begin{SeeAlsoSection}
-\begin{SeeAlso2}{Driver\_SelectVarForBC}{Driver-SelectGroupForBC}
+\begin{SeeAlso2}{CCTK\_SelectVarForBC}{CCTK-gSelectGroupForBC}
 Tell the driver how to update the boundary conditions for the grid functions in a group.
 \end{SeeAlso2}
 \end{SeeAlsoSection}
@@ -400,8 +400,8 @@ Assertions may be triggered for invalid variables or time levels.
 % zzz
 \end{FunctionDescription}
 
-\begin{FunctionDescription}{Driver\_SetValidRegion}
-\label{Driver-SetValidRegion}
+\begin{FunctionDescription}{CCTK\_SetValidRegion}
+\label{CCTK-gSetValidRegion}
 % yyy
 Gets the region where a grid function is valid.
 \begin{SynopsisSection}
@@ -440,7 +440,7 @@ The new where specification for the variable and time level.
 \end{ParameterSection}
 
 \begin{SeeAlsoSection}
-\begin{SeeAlso2}{Driver\_GetValidRegion}{Driver-GetValidRegion}
+\begin{SeeAlso2}{CCTK\_GetValidRegion}{CCTK-gGetValidRegion}
 Gets the region where a grid function is valid.
 \end{SeeAlso2}
 \end{SeeAlsoSection}
