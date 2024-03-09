@@ -12,6 +12,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -88,8 +89,28 @@ int CCTK_CreateDirectory (int mode, const char *pathname)
   const char *token;
   struct stat statbuf;
 
+  // We should create an empty dir
+  if(pathname == 0 || pathname[0] == '\0') {
+      CCTK_Warn(1,__LINE__,__FILE__,"Cactus",
+              "Attempt to create a directory with an empty string");
+      return -1;
+  }
 
+  #define MAX_DIR 1024
   maxlength_current = strlen (pathname);
+  if(maxlength_current > MAX_DIR) {
+      CCTK_VWarn(0,__LINE__,__FILE__,"Cactus",
+          "Attempt to create a directory with a file more than %d characters.", MAX_DIR);
+      return -1;
+  }
+  for(int i=0;i < maxlength_current; i++) {
+      if(!isprint(pathname[i])) {
+          CCTK_VWarn(1,__LINE__,__FILE__,"Cactus",
+              "Attempt to create a directory with an unprintable character.  "
+              "Dirname '%s'", pathname);
+          return -1;
+      }
+  }
   current = (char *) malloc (maxlength_current + 1);
   if (current)
   {
@@ -102,6 +123,13 @@ int CCTK_CreateDirectory (int mode, const char *pathname)
       /* Treat first token carefully. */
       if (*current)
       {
+        if (strlen(current) + 1 + strlen(token) > maxlength_current) {
+            CCTK_VWarn(0,__LINE__,__FILE__,"Cactus",
+              "Internal failure while creating a direcoty.\n"
+              "%ld + 1 + %ld > %ld\n"
+              "current=%s\n"
+              "token=%s\n", strlen(current), strlen(token), maxlength_current, current, token);
+        }
         assert (strlen(current) + 1 + strlen(token) <= maxlength_current);
         sprintf (current + strlen(current), "/%s", token);
       }
