@@ -44,21 +44,21 @@ void add_entry(int vi,int tl,rdwr_t rdwr,int where,cFunctionData* func,std::set<
         entry.where_inv = CCTK_VALID_NOWHERE;
     } else {
         if(!CCTK_Equals(presync_mode, "off")) {
-          if(rdwr == writes_t && iter->where_wr != CCTK_VALID_NOWHERE && iter->where_wr != where) {
+          if(rdwr == writes_t && iter->where_wr != CCTK_VALID_NOWHERE) {
               const int level = CCTK_Equals(presync_mode, "warn-only") ?
                                  CCTK_WARN_ALERT : CCTK_WARN_ABORT;
               CCTK_VWarn(level,__LINE__,__FILE__,"Cactus",
                           "Duplicate write specification for %s in function %s::%s",
                           CCTK_FullVarName(vi),func->thorn,func->routine);
           }
-          if(rdwr == reads_t && iter->where_rd != CCTK_VALID_NOWHERE && iter->where_rd != where) {
+          if(rdwr == reads_t && iter->where_rd != CCTK_VALID_NOWHERE) {
               const int level = CCTK_Equals(presync_mode, "warn-only") ?
                                  CCTK_WARN_ALERT : CCTK_WARN_ABORT;
               CCTK_VWarn(level,__LINE__,__FILE__,"Cactus",
                           "Duplicate reads specification for %s in function %s::%s",
                           CCTK_FullVarName(vi),func->thorn,func->routine);
           }
-          if(rdwr == invalidates_t && iter->where_inv != CCTK_VALID_NOWHERE && iter->where_inv != where) {
+          if(rdwr == invalidates_t && iter->where_inv != CCTK_VALID_NOWHERE) {
               const int level = CCTK_Equals(presync_mode, "warn-only") ?
                                  CCTK_WARN_ALERT : CCTK_WARN_ABORT;
               CCTK_VWarn(level,__LINE__,__FILE__,"Cactus",
@@ -162,7 +162,7 @@ void parse(const char *str,rdwr_t rdwr,cFunctionData* func,std::set<RDWR_entry>&
 
     if(vecnum < 0) {
         /* try if this is a single member of a group that is a vector of
-         * variables to be able to handle cases where the vector size is no
+         * variables to be able to handle cases where the vector size is not
          * known at compile time */
         char fullvarvect[sizeof(fullvar) + 12]; // room for 10 digits and [];
         size_t written = snprintf(fullvarvect, sizeof(fullvarvect), "%s[%d]", fullvar, 0);
@@ -179,11 +179,8 @@ void parse(const char *str,rdwr_t rdwr,cFunctionData* func,std::set<RDWR_entry>&
             assert(group.vectorgroup);
             const int firstvar = CCTK_FirstVarIndexI(gi);
             assert(firstvar >= 0);
-            const int varstride = group.numvars/group.vectorlength;
             assert(group.numvars % group.vectorlength == 0);
-            for(int var = 0 ; var < group.vectorlength ; var++) {
-                add_entry(firstvar+var*varstride,tl,rdwr,wh,func,s);
-            }
+            add_entry(vi,tl,rdwr,wh,func,s);
             return;
         }
     }
