@@ -44,21 +44,21 @@ void add_entry(int vi,int tl,rdwr_t rdwr,int where,cFunctionData* func,std::set<
         entry.where_inv = CCTK_VALID_NOWHERE;
     } else {
         if(!CCTK_Equals(presync_mode, "off")) {
-          if(rdwr == writes_t && iter->where_wr != CCTK_VALID_NOWHERE) {
+          if(rdwr == writes_t && iter->where_wr != CCTK_VALID_NOWHERE && iter->where_wr != where) {
               const int level = CCTK_Equals(presync_mode, "warn-only") ?
                                  CCTK_WARN_ALERT : CCTK_WARN_ABORT;
               CCTK_VWarn(level,__LINE__,__FILE__,"Cactus",
                           "Duplicate write specification for %s in function %s::%s",
                           CCTK_FullVarName(vi),func->thorn,func->routine);
           }
-          if(rdwr == reads_t && iter->where_rd != CCTK_VALID_NOWHERE) {
+          if(rdwr == reads_t && iter->where_rd != CCTK_VALID_NOWHERE && iter->where_rd != where) {
               const int level = CCTK_Equals(presync_mode, "warn-only") ?
                                  CCTK_WARN_ALERT : CCTK_WARN_ABORT;
               CCTK_VWarn(level,__LINE__,__FILE__,"Cactus",
                           "Duplicate reads specification for %s in function %s::%s",
                           CCTK_FullVarName(vi),func->thorn,func->routine);
           }
-          if(rdwr == invalidates_t && iter->where_inv != CCTK_VALID_NOWHERE) {
+          if(rdwr == invalidates_t && iter->where_inv != CCTK_VALID_NOWHERE && iter->where_inv != where) {
               const int level = CCTK_Equals(presync_mode, "warn-only") ?
                                  CCTK_WARN_ALERT : CCTK_WARN_ABORT;
               CCTK_VWarn(level,__LINE__,__FILE__,"Cactus",
