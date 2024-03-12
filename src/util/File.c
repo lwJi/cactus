@@ -86,7 +86,7 @@ int CCTK_CreateDirectory (int mode, const char *pathname)
   const char *path;
   size_t maxlength_current;
   char *current;
-  const char *token;
+  const char *token = NULL;
   struct stat statbuf;
 
   // We should create an empty dir
@@ -96,11 +96,11 @@ int CCTK_CreateDirectory (int mode, const char *pathname)
       return -1;
   }
 
-  #define MAX_DIR 1024
+  #define MAX_DIR 8192
   maxlength_current = strlen (pathname);
   if(maxlength_current > MAX_DIR) {
-      CCTK_VWarn(0,__LINE__,__FILE__,"Cactus",
-          "Attempt to create a directory with a file more than %d characters.", MAX_DIR);
+      CCTK_VWarn(1,__LINE__,__FILE__,"Cactus",
+          "Creating a directory with a file more than %d characters. Did you mean to do that?", MAX_DIR);
       return -1;
   }
   for(int i=0;i < maxlength_current; i++) {
@@ -193,6 +193,7 @@ int CCTK_CreateDirectory (int mode, const char *pathname)
     retval = -1;
   }
 
+  free(token);
   return (retval);
 }
 

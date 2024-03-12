@@ -92,7 +92,7 @@ static const char *rcsid = "$Header$";
 const char *Util_StrSep(const char **stringp, const char *delim)
 {
   int retlength = 0;
-  static char *retval = NULL;
+  char *retval = NULL;
   char *temp;
   const char *start;
   const char *end;

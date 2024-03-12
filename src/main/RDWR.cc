@@ -16,7 +16,6 @@
 #include <set>
 #include <sstream>
 #include <iostream>
-#include <mutex>
 
 // this cannot go into the anonymous namespace below or STL won't find it, but
 // I do not want to make the operator visible globally either
@@ -32,11 +31,8 @@ namespace cctki_RDWR {
 
 enum rdwr_t { reads_t, writes_t, invalidates_t };
 
-std::mutex m;
-
 void add_entry(int vi,int tl,rdwr_t rdwr,int where,cFunctionData* func,std::set<RDWR_entry>& s) {
     DECLARE_CCTK_PARAMETERS;
-    std::lock_guard<decltype(m)> mlock(m);
 
     RDWR_entry entry;
     entry.varindex = vi;
