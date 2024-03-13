@@ -180,7 +180,10 @@ void parse(const char *str,rdwr_t rdwr,cFunctionData* func,std::set<RDWR_entry>&
             const int firstvar = CCTK_FirstVarIndexI(gi);
             assert(firstvar >= 0);
             assert(group.numvars % group.vectorlength == 0);
-            add_entry(vi,tl,rdwr,wh,func,s);
+            for(int var = 0 ; var < group.vectorlength ; var++) {
+                int vind = vi + var;
+                add_entry(vind,tl,rdwr,wh,func,s);
+            }
             return;
         }
     }
