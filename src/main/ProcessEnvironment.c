@@ -22,6 +22,8 @@ static const char *rcsid = "$Header$";
 
 CCTK_FILEVERSION(main_ProcessEnvironment_c);
 
+char mpi_buf[512];
+
 /********************************************************************
  *********************     Local Data Types   ***********************
  ********************************************************************/
@@ -134,6 +136,18 @@ int CCTKi_ProcessEnvironment(int *argcp, char ***argvp,
       CACTUS_MPI_ERROR(MPI_Init_thread(argcp, argvp,
                                        MPI_THREAD_SERIALIZED, &provided));
     }
+    #ifdef HAVE_CAPABILITY_MPI
+    {
+        const char *env_var = getenv("CACTUS_CUDA_ROUND_ROBIN");
+        if(env_var != NULL) {
+            int round_robin = atoi(env_var);
+            int mpi_rank;
+            MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
+            sprintf(mpi_buf, "CUDA_VISIBLE_DEVICES=%d", mpi_rank % round_robin);
+            putenv(mpi_buf);
+        }
+    }
+    #endif
   }
 #endif
 

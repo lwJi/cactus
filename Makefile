@@ -27,7 +27,7 @@
 # Version number
 ################################################################################
 CCTK_VERSION_MAJOR = 4
-CCTK_VERSION_MINOR = 15
+CCTK_VERSION_MINOR = 16
 CCTK_VERSION_OTHER = 0
 ################################################################################
 CCTK_VERSION=$(CCTK_VERSION_MAJOR).$(CCTK_VERSION_MINOR).$(CCTK_VERSION_OTHER)
