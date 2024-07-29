@@ -123,6 +123,11 @@ INT cctk_itlast "Final iteration number" STEERABLE = ALWAYS
   : :: "Any integer"
 } 10
 
+INT default_dim "default dim" 
+{
+  1:3 :: "Only 1 to 3"
+} 3
+
 REAL max_runtime "Terminate evolution loop after a certain elapsed runtime (in minutes)" STEERABLE = ALWAYS
 {
   0.0: :: "Zero disables maximum runtime condition"

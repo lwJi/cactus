@@ -244,7 +244,8 @@ sub CreateVariableBindings
     push(@data, '  const CCTK_INT *allow_mixeddim_gfs;');
     push(@data, '');
     push(@data, '');
-    push(@data, '  allow_mixeddim_gfs = CCTK_ParameterGet ("allow_mixeddim_gfs", "Cactus", 0);');
+    push(@data, '  allow_mixeddim_gfs = (CCTK_INT *)CCTK_ParameterGet ("allow_mixeddim_gfs", "Cactus", 0);');
+    push(@data, '  const CCTK_INT default_dim = *(CCTK_INT *)CCTK_ParameterGet ("default_dim", "Cactus", 0);');
     push(@data, '');
 
     foreach my $block ("PUBLIC", "PROTECTED", "PRIVATE")
@@ -404,48 +405,54 @@ sub GetThornArguments
           $sep = '';
         }
 
-        for(my $dim =0; $dim < $rhinterface_db->{"\U$thorn GROUP $group DIM\E"}; $dim++)
+        if($rhinterface_db->{"\U$thorn GROUP $group DIM\E"} eq "default_dim") {
+            $type = "REAL"; # yyy
+        }
+        else
         {
-# FIXME: quick hack to shorten argument names
-#          $type .= "${sep}cctkv$dim$group";
-          if ($gtype ne 'GF')
-          {
-            $type .= "${sep}X$dim$group";
-          }
-          else
-          {
-            my $dim1=$dim+1;
-            if ($dim<3)
+            for(my $dim =0; $dim < $rhinterface_db->{"\U$thorn GROUP $group DIM\E"}; $dim++)
             {
-              $type .= "${sep}cctk_ash$dim1";
+    # FIXME: quick hack to shorten argument names
+    #          $type .= "${sep}cctkv$dim$group";
+              if ($gtype ne 'GF')
+              {
+                $type .= "${sep}X$dim$group";
+              }
+              else
+              {
+                my $dim1=$dim+1;
+                if ($dim<3)
+                {
+                  $type .= "${sep}cctk_ash$dim1";
+                }
+                else
+                {
+                  $type .= "${sep}cctk_ash($dim1)";
+                }
+              }
+              $sep = ',';
+              if ($gtype ne 'GF')
+              {
+                  if($block eq 'PRIVATE')
+                  {
+        # FIXME: quick hack to shorten argument names
+        #            $arguments{"cctkv$dim$group"} = "(STORAGESIZE($thorn\::$group, $dim))";
+                    $arguments{"X$dim$group"} = "(STORAGESIZE($thorn\::$group, $dim))";
+                  }
+                  else
+                  {
+        # FIXME: quick hack to shorten argument names
+        #            $arguments{"cctkv$dim$group"} = "(STORAGESIZE($imp\::$group, $dim))";
+                    $arguments{"X$dim$group"} = "(STORAGESIZE($imp\::$group, $dim))";
+                  }
+               }
             }
-            else
+            if(defined($vararraysize) && $compactgroup == 0)
             {
-              $type .= "${sep}cctk_ash($dim1)";
+              $type .= "$sep${group}_length";
             }
-          }
-          $sep = ',';
-          if ($gtype ne 'GF')
-          {
-          if($block eq 'PRIVATE')
-          {
-# FIXME: quick hack to shorten argument names
-#            $arguments{"cctkv$dim$group"} = "(STORAGESIZE($thorn\::$group, $dim))";
-            $arguments{"X$dim$group"} = "(STORAGESIZE($thorn\::$group, $dim))";
-          }
-          else
-          {
-# FIXME: quick hack to shorten argument names
-#            $arguments{"cctkv$dim$group"} = "(STORAGESIZE($imp\::$group, $dim))";
-            $arguments{"X$dim$group"} = "(STORAGESIZE($imp\::$group, $dim))";
-          }
+            $type .= ')';
         }
-        }
-        if(defined($vararraysize) && $compactgroup == 0)
-        {
-          $type .= "$sep${group}_length";
-        }
-        $type .= ')';
 
         if(defined($vararraysize))
         {
@@ -800,7 +807,7 @@ sub CreateCArgumentPrototype
 
       if($type !~ /^(CHAR|BYTE|INT|INT1|INT2|INT4|INT8|INT16|REAL|REAL4|REAL8|REAL16|COMPLEX|COMPLEX8|COMPLEX16|COMPLEX32)$/)
       {
-        CST_error(0,"Unknown argument type $type","",__LINE__,__FILE__);
+        CST_error(0,"Unknown argument type '$type'","",__LINE__,__FILE__);
       }
     }
   }
