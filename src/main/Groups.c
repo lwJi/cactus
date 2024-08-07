@@ -198,6 +198,9 @@ typedef struct
   const char *centering_string;
   int centering_table;
 
+  const char *tensortypealias_string;
+  int tensortypealias_table;
+
 } cGroupDefinition;
 
 
@@ -1147,6 +1150,7 @@ int CCTK_GroupData (int group, cGroup *gp)
       gp->numtimelevels  = groups[group].n_timelevels;
       gp->tagstable      = groups[group].tags_table;
       gp->centeringtable = groups[group].centering_table;
+      gp->tensortypealiastable = groups[group].tensortypealias_table;
 
       if(groups[group].vararraysize)
       {
@@ -1446,6 +1450,40 @@ int CCTK_GroupCenteringTableI(int group)
   if (0 <= group && group < n_groups)
   {
     retval = groups[group].centering_table;
+  }
+  else
+  {
+    retval = -1;
+  }
+
+  return retval;
+}
+
+/*@@
+   @routine    CCTK_GroupTensorTypeAliasTableI
+   @date       Thu 25 Jul 2024 05:46:00 PM BRT
+   @author     Lucas Timotheo Sanches
+   @desc
+   Returns the table handle of the TENSORTYPEALIAS table for a group.
+   @enddesc
+   @var     group
+   @vdesc   The group tensor type alias
+   @vtype   int
+   @vio     in
+   @endvar
+
+   @returntype int
+   @returndesc
+               -1 if group tensor type alias out of range
+   @endreturndesc
+ @@*/
+int CCTK_GroupTensorTypeAliasTableI(int group)
+{
+  int retval;
+
+  if (0 <= group && group < n_groups)
+  {
+    retval = groups[group].tensortypealias_table;
   }
   else
   {
@@ -2358,6 +2396,7 @@ int CCTKi_CreateGroup (const char *gname,
                        const char *ghostsize,
                        const char *tags,
                        const char *centering,
+                       const char *tensortypealias,
                        const char *vararraysize,
                        int         n_basevars,
                        ...
@@ -2429,6 +2468,7 @@ int CCTKi_CreateGroup (const char *gname,
     group->n_timelevels = ntimelevels;
     group->tags_string  = Util_Strdup(tags);
     group->centering_string  = Util_Strdup(centering);
+    group->tensortypealias_string = Util_Strdup(tensortypealias);
 
     group->tags_table   = Util_TableCreateFromString(tags);
     if(group->tags_table < 0)
@@ -2442,6 +2482,13 @@ int CCTKi_CreateGroup (const char *gname,
     {
       CCTK_VWarn (0, __LINE__, __FILE__, "Cactus",
                   "CCTKi_CreateGroup: Failed to create CENTERING table for group '%s' from thorn '%s'",
+                  gname, thorn);
+    }
+    group->tensortypealias_table   = Util_TableCreateFromString(tensortypealias);
+    if(group->tensortypealias_table < 0)
+    {
+      CCTK_VWarn (0, __LINE__, __FILE__, "Cactus",
+                  "CCTKi_CreateGroup: Failed to create TENSORTYPEALIAS table for group '%s' from thorn '%s'",
                   gname, thorn);
     }
 

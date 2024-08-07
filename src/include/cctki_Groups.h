@@ -19,8 +19,8 @@ extern "C" {
 
 void CCTKi_DumpGroupInfo(void); 
 
-int  CCTKi_CreateGroup(const char *gname, 
-                       const char *thorn,  
+int  CCTKi_CreateGroup(const char *gname,
+                       const char *thorn,
                        const char *imp,
                        const char *gtype,
                        const char *vtype,
@@ -32,6 +32,7 @@ int  CCTKi_CreateGroup(const char *gname,
                        const char *ghostsize,
                        const char *tags,
                        const char *centering,
+                       const char *tensortypealias,
                        const char *vararraysize,
                        int         n_basevars,
                        ...);

@@ -113,6 +113,7 @@ sub do_interfaces
     my $size = undef;
     my $gname;
     my $centering;
+    my $tensortypealias;
     my $gtype;
     my $cap_gname;
     for my $ch (@{$gr->{children}}) {
@@ -145,6 +146,11 @@ sub do_interfaces
         for my $ch2 (@{$ch->{children}}) {
             $centering .= uc $ch2->substring();
         }
+      } elsif($ch->is("tensortypealias")) {
+        $tensortypealias = "";
+        for my $ch2 (@{$ch->{children}}) {
+            $tensortypealias .= uc $ch2->substring();
+        }
       } elsif($ch->is("timelevels")) {
         $level = $ch->substring();
       }
@@ -165,6 +171,9 @@ sub do_interfaces
     }
     if($centering) {
         $hash->{$gname}->{centering} = $centering;
+    }
+    if($tensortypealias) {
+        $hash->{$gname}->{tensortypealias} = $tensortypealias;
     }
     $hash->{$gname}->{vtype} = uc $vtype;
     $hash->{$gname}->{vector} = $vecval;

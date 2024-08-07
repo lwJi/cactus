@@ -893,6 +893,7 @@ sub parse_interface_ccl
       };
       my $tags = undef;
       my $centering = undef;
+      my $tensortypealias = undef;
       my $timelevels = 1;
       my $size = undef;
       my $var_array_size = undef;
@@ -970,6 +971,12 @@ sub parse_interface_ccl
             $sp = " ";
           }
           $centering .= "}";
+        } elsif($nm eq "tensortypealias") {
+          $tensortypealias = "tensortypealias=\'";
+          for my $c (@{$ch->{children}}) {
+            $tensortypealias .= $c->substring()
+          }
+          $tensortypealias .= "\'";
         } elsif($nm eq "tags") {
           my $new_tags = trim_quotes($ch->substring());
           $new_tags =~ s/"/\\"/g;
@@ -999,6 +1006,9 @@ sub parse_interface_ccl
       }
       if(defined($centering)) {
         $interface_data_ref->{"\U$thorn GROUP $gname CENTERING\E"} = $centering;
+      }
+      if(defined($tensortypealias)) {
+        $interface_data_ref->{"\U$thorn GROUP $gname TENSORTYPEALIAS\E"} = $tensortypealias;
       }
       $interface_data_ref->{"\U$thorn GROUP $gname TIMELEVELS\E"} = $timelevels;
       $interface_data_ref->{"\U$thorn GROUP $gname VTYPE\E"} = $vtype;

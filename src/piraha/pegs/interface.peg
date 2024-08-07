@@ -63,13 +63,23 @@ stagger = (?i:[MCP](,[MCP])*)
 tags = {-quote}
 ind = [VCvc]
 centering = (?i:centering = \{ {ind}([ \t]*{ind})* \})
+
+# tensortypealias
+tensorind = \*?[UDud]
+fourtensor = 4
+scalar = [Ss]
+weyl = (?i:Weyl)
+symmtensorind = \({tensorind}{2,3}\)
+antisymtensorind = \[{tensorind}{2,3}\]
+tensortypealias = (?i:tensortypealias = ({scalar}|{weyl}|{fourtensor}?({tensorind}|{symmtensorind}|{antisymtensorind}){1,5}))
+
 gname = {name} (\[ {expr} \] )?
 group_comment = {dquote}?
 desc = {dquote}?
 
 GROUP_VARS = (?i:CCTK_|){vtype} {gname} (?i:TYPE = {gtype} |DIM = {dim}
              |TIMELEVELS = {timelevels} |SIZE = {size} |DISTRIB = {distrib}
-             |GHOSTSIZE = {ghostsize} |STAGGER = {stagger} |TAGS = {tags} |{centering} )*{desc} (
+             |GHOSTSIZE = {ghostsize} |STAGGER = {stagger} |TAGS = {tags} |{centering} |{tensortypealias} )*{desc} (
  \{
     {VARS}
  \} {group_comment}
