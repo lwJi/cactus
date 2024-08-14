@@ -1560,6 +1560,44 @@ int CCTK_GroupTensorTypeAliasString(int *tta_buff_len, char *tta_buff, int group
   return 0;
 }
 
+/*@@
+   @routine    CCTK_GroupTensorTypeAliasStringView
+   @date       Wed 14 Aug 2024 18:30:00 PM BRT
+   @author     Lucas Timotheo Sanches
+   @desc
+   Returns a view (read only) into the TENSORTYPEALIAS string for a group.
+   @enddesc
+   @var     tta_string_view
+   @vdesc   Pointer to the buffer that will recieve the TTA string.
+   @vtype   const char**
+   @vio     out
+   @endvar
+   @var     group
+   @vdesc   The group tensor type alias
+   @vtype   int
+   @vio     in
+   @endvar
+
+   @returntype int
+   @returndesc
+               0 if successful
+               -1 if group index out of range (invalid)
+   @endreturndesc
+ @@*/
+int CCTK_GroupTensorTypeAliasStringView(const char **tta_string_view, int group)
+{
+  // Check validity of group index
+  const int group_idx_valid = (0 <= group && group < n_groups);
+
+  if(!group_idx_valid) {
+    return -1; // Invalid group index
+  }
+
+  *tta_string_view = groups[group].tensortypealias_string;
+
+  return 0;
+}
+
 void CCTK_FCALL CCTK_FNAME (CCTK_GroupTagsTableI) (int *table, int *group)
 {
   *table = CCTK_GroupTagsTableI (*group);

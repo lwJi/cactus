@@ -105,6 +105,7 @@ int CCTK_GroupCenteringTableI(int group);
 
 int CCTK_GroupTensorTypeAliasTableI(int group);
 int CCTK_GroupTensorTypeAliasString(int *tta_buff_len, char *tta_buff, int group);
+int CCTK_GroupTensorTypeAliasStringView(const char **tta_string_view, int group);
 
 #ifdef __cplusplus 
 }
