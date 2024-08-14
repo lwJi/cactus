@@ -1474,7 +1474,7 @@ int CCTK_GroupCenteringTableI(int group)
 
    @returntype int
    @returndesc
-               -1 if group tensor type alias out of range
+               -1 if group index out of range (invalid)
    @endreturndesc
  @@*/
 int CCTK_GroupTensorTypeAliasTableI(int group)
@@ -1491,6 +1491,57 @@ int CCTK_GroupTensorTypeAliasTableI(int group)
   }
 
   return retval;
+}
+
+/*@@
+   @routine    CCTK_GroupTensorTypeAliasTableGI
+   @date       Wed 14 Aug 2024 03:50:00 PM BRT
+   @author     Lucas Timotheo Sanches
+   @desc
+   Returns the table handle of the TENSORTYPEALIAS table for a group.
+   @enddesc
+   @var     group
+   @vdesc   The group tensor type alias
+   @vtype   int
+   @vio     in
+   @endvar
+
+   @returntype int
+   @returndesc
+               -1 if group index out of range (invalid)
+   @endreturndesc
+ @@*/
+int CCTK_GroupTensorTypeAliasString(int *tta_buff_len, char *tta_buff, int group)
+{
+  // Check validity of group index
+  const int group_idx_valid = (0 <= group && group < n_groups);
+
+  if(!group_idx_valid) {
+    return -1; // Invalid group index
+  }
+
+  // Check if the tta string is non empty
+  const int tta_strlen = (int)strlen(groups[group].tensortypealias_string) + 1;
+  if(tta_strlen == 0) {
+    return -2; // Empty tta string
+  }
+
+  // If tta_buff is null, we return the tta string size in tta_buff_len
+  if(tta_buff == NULL) {
+    *tta_buff_len = tta_strlen;
+    return 0;
+  }
+
+  // Check if tta_buff_len is valid
+  const int buff_len_valid = *tta_buff_len >= tta_strlen;
+  if(!buff_len_valid) {
+    return -3; // Invalid buffer length
+  }
+
+  // At this point, it is probably safe to copy the string to the target
+  strncpy(tta_buff, groups[group].tensortypealias_string, (size_t)(*tta_buff_len));
+  
+  return 0;
 }
 
 void CCTK_FCALL CCTK_FNAME (CCTK_GroupTagsTableI) (int *table, int *group)
@@ -2487,7 +2538,7 @@ int CCTKi_CreateGroup (const char *gname,
     group->tensortypealias_table   = Util_TableCreateFromString(tensortypealias);
     if(group->tensortypealias_table < 0)
     {
-      CCTK_VWarn (0, __LINE__, __FILE__, "Cactus",
+      CCTK_VError (__LINE__, __FILE__, "Cactus",
                   "CCTKi_CreateGroup: Failed to create TENSORTYPEALIAS table for group '%s' from thorn '%s'",
                   gname, thorn);
     }

@@ -102,7 +102,9 @@ int CCTK_TraverseString (const char *parsestring,
 int CCTK_GroupTagsTable(const char *group);
 int CCTK_GroupTagsTableI(int group);
 int CCTK_GroupCenteringTableI(int group);
+
 int CCTK_GroupTensorTypeAliasTableI(int group);
+int CCTK_GroupTensorTypeAliasString(int *tta_buff_len, char *tta_buff, int group);
 
 #ifdef __cplusplus 
 }
