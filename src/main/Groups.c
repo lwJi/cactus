@@ -1520,7 +1520,11 @@ int CCTK_GroupTensorTypeAliasTableI(int group)
 
    @returntype int
    @returndesc
+               0 if successful
                -1 if group index out of range (invalid)
+               -2 if the TTA string for the group is empty (no TTA declared)
+               -3 the length of the destinantion buffer is invalid
+               (zero or smaller than the TTA string size)
    @endreturndesc
  @@*/
 int CCTK_GroupTensorTypeAliasString(int *tta_buff_len, char *tta_buff, int group)
@@ -1545,7 +1549,7 @@ int CCTK_GroupTensorTypeAliasString(int *tta_buff_len, char *tta_buff, int group
   }
 
   // Check if tta_buff_len is valid
-  const int buff_len_valid = *tta_buff_len >= tta_strlen;
+  const int buff_len_valid = (*tta_buff_len > 0) && (*tta_buff_len >= tta_strlen);
   if(!buff_len_valid) {
     return -3; // Invalid buffer length
   }
