@@ -1498,8 +1498,20 @@ int CCTK_GroupTensorTypeAliasTableI(int group)
    @date       Wed 14 Aug 2024 03:50:00 PM BRT
    @author     Lucas Timotheo Sanches
    @desc
-   Returns the table handle of the TENSORTYPEALIAS table for a group.
+   Returns the TENSORTYPEALIAS string for a group.
    @enddesc
+   @var     tta_buff_len
+   @vdesc   The length of the buffer that will contain the TTA string.
+   @vtype   pointer to int
+   @vio     in out
+   @endvar
+   @var     tta_buff
+   @vdesc   The buffer where the TTA string will be stored. If this is NULL,
+            tta_buff_len contains the size of the buffer required to store
+            the TTA string (including the null terminator)
+   @vtype   pointer to char
+   @vio     out
+   @endvar
    @var     group
    @vdesc   The group tensor type alias
    @vtype   int
