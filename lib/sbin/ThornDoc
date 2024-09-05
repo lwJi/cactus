@@ -27,14 +27,14 @@ for arr in `cd arrangements; echo *`; do
                             path=$abspath/arrangements/$arr/$th/doc
                             < $path/documentation.tex sed -e 's+\(\\includegraphics.*\){ *\(.*\) *}+\1{'"$path"'/\2}+g' |
                             sed -e 's+\(\\input *\){ *\(.*\) *}+\1'"$path"'/\2+g' |
-                            perl -p -e 's!\\bibliography *\{(.*)\}!"\\bibliography{".join ",", map {"'"$path"'/$_"} split ",",$1."}"!e' |
+                            $PERL -p -e 's!\\bibliography *\{(.*)\}!"\\bibliography{".join ",", map {"'"$path"'/$_"} split ",",$1."}"!e' |
                             sed -e 's+\\begin{document}+\\newlength{\\tableWidth} \\newlength{\\maxVarWidth} \\newlength{\\paraWidth} \\newlength{\\descWidth} \\begin{document}+g' |
                             sed -e 's+\\end{document}++g' > documentation.tex
 
                             echo "  Parsing ccl files..."
-                            perl -s $abspath/lib/sbin/ParamLatex.pl -cctk_home=$abspath -directory=$abspath/arrangements -thorn=$arr/$th -outdir=$PWD > LOG_PARAMLATEX_MSGS 2>&1
-                            perl -s $abspath/lib/sbin/InterLatex.pl -cctk_home=$abspath -directory=$abspath/arrangements -thorn=$arr/$th -outdir=$PWD > LOG_INTERLATEX_MSGS 2>&1
-                            perl -s $abspath/lib/sbin/SchedLatex.pl -cctk_home=$abspath -directory=$abspath/arrangements -thorn=$arr/$th -outdir=$PWD > LOG_SCHEDLATEX_MSGS 2>&1
+                            $PERL -s $abspath/lib/sbin/ParamLatex.pl -cctk_home=$abspath -directory=$abspath/arrangements -thorn=$arr/$th -outdir=$PWD > LOG_PARAMLATEX_MSGS 2>&1
+                            $PERL -s $abspath/lib/sbin/InterLatex.pl -cctk_home=$abspath -directory=$abspath/arrangements -thorn=$arr/$th -outdir=$PWD > LOG_INTERLATEX_MSGS 2>&1
+                            $PERL -s $abspath/lib/sbin/SchedLatex.pl -cctk_home=$abspath -directory=$abspath/arrangements -thorn=$arr/$th -outdir=$PWD > LOG_SCHEDLATEX_MSGS 2>&1
 
                             inter_file=`echo ${arr}_${th}_inter.tex | tr '[:upper:]' '[:lower:]'`
                             cat ${arr}_${th}_param.tex >> documentation.tex
