@@ -198,8 +198,7 @@ typedef struct
   const char *centering_string;
   int centering_table;
 
-  const char *tensortypealias_string;
-  int tensortypealias_table;
+  int tensordata_table;
 
 } cGroupDefinition;
 
@@ -1150,7 +1149,7 @@ int CCTK_GroupData (int group, cGroup *gp)
       gp->numtimelevels  = groups[group].n_timelevels;
       gp->tagstable      = groups[group].tags_table;
       gp->centeringtable = groups[group].centering_table;
-      gp->tensortypealiastable = groups[group].tensortypealias_table;
+      gp->tensordatatable = groups[group].tensordata_table;
 
       if(groups[group].vararraysize)
       {
@@ -1460,14 +1459,14 @@ int CCTK_GroupCenteringTableI(int group)
 }
 
 /*@@
-   @routine    CCTK_GroupTensorTypeAliasTableI
-   @date       Thu 25 Jul 2024 05:46:00 PM BRT
+   @routine    CCTK_GroupTensorDataTable
+   @date       Mon 30 Sep 2024 05:06:00 PM CT
    @author     Lucas Timotheo Sanches
    @desc
-   Returns the table handle of the TENSORTYPEALIAS table for a group.
+   Returns the table handle of the Tensor Data table for a group.
    @enddesc
    @var     group
-   @vdesc   The group tensor type alias
+   @vdesc   The group tensor data
    @vtype   int
    @vio     in
    @endvar
@@ -1477,13 +1476,13 @@ int CCTK_GroupCenteringTableI(int group)
                -1 if group index out of range (invalid)
    @endreturndesc
  @@*/
-int CCTK_GroupTensorTypeAliasTableI(int group)
+int CCTK_GroupTensorDataTable(int group)
 {
   int retval;
 
   if (0 <= group && group < n_groups)
   {
-    retval = groups[group].tensortypealias_table;
+    retval = groups[group].tensordata_table;
   }
   else
   {
@@ -1491,111 +1490,6 @@ int CCTK_GroupTensorTypeAliasTableI(int group)
   }
 
   return retval;
-}
-
-/*@@
-   @routine    CCTK_GroupTensorTypeAliasTableGI
-   @date       Wed 14 Aug 2024 03:50:00 PM BRT
-   @author     Lucas Timotheo Sanches
-   @desc
-   Returns the TENSORTYPEALIAS string for a group.
-   @enddesc
-   @var     tta_buff_len
-   @vdesc   The length of the buffer that will contain the TTA string.
-   @vtype   pointer to int
-   @vio     in out
-   @endvar
-   @var     tta_buff
-   @vdesc   The buffer where the TTA string will be stored. If this is NULL,
-            tta_buff_len contains the size of the buffer required to store
-            the TTA string (including the null terminator)
-   @vtype   pointer to char
-   @vio     out
-   @endvar
-   @var     group
-   @vdesc   The group tensor type alias
-   @vtype   int
-   @vio     in
-   @endvar
-
-   @returntype int
-   @returndesc
-               0 if successful
-               -1 if group index out of range (invalid)
-               -2 if the TTA string for the group is empty (no TTA declared)
-               -3 the length of the destinantion buffer is invalid
-               (zero or smaller than the TTA string size)
-   @endreturndesc
- @@*/
-int CCTK_GroupTensorTypeAliasString(int *tta_buff_len, char *tta_buff, int group)
-{
-  // Check validity of group index
-  const int group_idx_valid = (0 <= group && group < n_groups);
-
-  if(!group_idx_valid) {
-    return -1; // Invalid group index
-  }
-
-  // Check if the tta string is non empty
-  const int tta_strlen = (int)strlen(groups[group].tensortypealias_string) + 1;
-  if(tta_strlen == 0) {
-    return -2; // Empty tta string
-  }
-
-  // If tta_buff is null, we return the tta string size in tta_buff_len
-  if(tta_buff == NULL) {
-    *tta_buff_len = tta_strlen;
-    return 0;
-  }
-
-  // Check if tta_buff_len is valid
-  const int buff_len_valid = (*tta_buff_len > 0) && (*tta_buff_len >= tta_strlen);
-  if(!buff_len_valid) {
-    return -3; // Invalid buffer length
-  }
-
-  // At this point, it is probably safe to copy the string to the target
-  strncpy(tta_buff, groups[group].tensortypealias_string, (size_t)(*tta_buff_len));
-  
-  return 0;
-}
-
-/*@@
-   @routine    CCTK_GroupTensorTypeAliasStringView
-   @date       Wed 14 Aug 2024 18:30:00 PM BRT
-   @author     Lucas Timotheo Sanches
-   @desc
-   Returns a view (read only) into the TENSORTYPEALIAS string for a group.
-   @enddesc
-   @var     tta_string_view
-   @vdesc   Pointer to the buffer that will recieve the TTA string.
-   @vtype   const char**
-   @vio     out
-   @endvar
-   @var     group
-   @vdesc   The group tensor type alias
-   @vtype   int
-   @vio     in
-   @endvar
-
-   @returntype int
-   @returndesc
-               0 if successful
-               -1 if group index out of range (invalid)
-   @endreturndesc
- @@*/
-int CCTK_GroupTensorTypeAliasStringView(const char **tta_string_view, int group)
-{
-  // Check validity of group index
-  const int group_idx_valid = (0 <= group && group < n_groups);
-
-  if(!group_idx_valid) {
-    return -1; // Invalid group index
-  }
-
-  *tta_string_view = groups[group].tensortypealias_string;
-
-  return 0;
 }
 
 void CCTK_FCALL CCTK_FNAME (CCTK_GroupTagsTableI) (int *table, int *group)
@@ -2502,6 +2396,7 @@ int CCTKi_CreateGroup (const char *gname,
                        const char *tags,
                        const char *centering,
                        const char *tensortypealias,
+                       const char *parities,
                        const char *vararraysize,
                        int         n_basevars,
                        ...
@@ -2573,7 +2468,6 @@ int CCTKi_CreateGroup (const char *gname,
     group->n_timelevels = ntimelevels;
     group->tags_string  = Util_Strdup(tags);
     group->centering_string  = Util_Strdup(centering);
-    group->tensortypealias_string = Util_Strdup(tensortypealias);
 
     group->tags_table   = Util_TableCreateFromString(tags);
     if(group->tags_table < 0)
@@ -2589,12 +2483,15 @@ int CCTKi_CreateGroup (const char *gname,
                   "CCTKi_CreateGroup: Failed to create CENTERING table for group '%s' from thorn '%s'",
                   gname, thorn);
     }
-    group->tensortypealias_table   = Util_TableCreateFromString(tensortypealias);
-    if(group->tensortypealias_table < 0)
+    group->tensordata_table  = Util_TableCreate(UTIL_TABLE_FLAGS_DEFAULT);
+    if(group->tensordata_table < 0)
     {
       CCTK_VError (__LINE__, __FILE__, "Cactus",
-                  "CCTKi_CreateGroup: Failed to create TENSORTYPEALIAS table for group '%s' from thorn '%s'",
+                  "CCTKi_CreateGroup: Failed to create Tensor Data table for group '%s' from thorn '%s'",
                   gname, thorn);
+    } else {
+      Util_TableSetString(group->tensordata_table, tensortypealias, "tensortypealias");
+      Util_TableSetString(group->tensordata_table, parities, "parities");
     }
 
     /* Extract the variable names from the argument list. */

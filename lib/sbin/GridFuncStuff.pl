@@ -1167,6 +1167,14 @@ sub CreateThornGroupInitialisers
     $line .= '", /* tensortypealias */';
     push(@data, $line);
 
+    $line = '                         "';
+    if(defined($rhinterface_db->{"\U$thorn GROUP $group\E PARITIES"}))
+    {
+      $line .= $rhinterface_db->{"\U$thorn GROUP $group\E PARITIES"};
+    }
+    $line .= '", /* parities */';
+    push(@data, $line);
+
     # Is it a vector group ?
     my @variables = split(" ", $rhinterface_db->{"\U$thorn GROUP $group\E"});
     if(defined($rhinterface_db->{"\U$thorn GROUP $group\E VARARRAY_SIZE"}))

@@ -73,13 +73,19 @@ symmtensorind = \({tensorind}{2,3}\)
 antisymtensorind = \[{tensorind}{2,3}\]
 tensortypealias = (?i:tensortypealias = ({scalar}|{weyl}|{fourtensor}?({tensorind}|{symmtensorind}|{antisymtensorind}){1,5}))
 
+# parities
+parity_index = \([+-]1 [+-]1 [+-]1\)
+parity_index_group = {parity_index} |{parity_index}
+parities = (?i:parities = \{{parity_index_group}+\})
+
 gname = {name} (\[ {expr} \] )?
 group_comment = {dquote}?
 desc = {dquote}?
 
 GROUP_VARS = (?i:CCTK_|){vtype} {gname} (?i:TYPE = {gtype} |DIM = {dim}
              |TIMELEVELS = {timelevels} |SIZE = {size} |DISTRIB = {distrib}
-             |GHOSTSIZE = {ghostsize} |STAGGER = {stagger} |TAGS = {tags} |{centering} |{tensortypealias} )*{desc} (
+             |GHOSTSIZE = {ghostsize} |STAGGER = {stagger} |TAGS = {tags}
+             |{centering} |{tensortypealias} | {parities} )*{desc} (
  \{
     {VARS}
  \} {group_comment}

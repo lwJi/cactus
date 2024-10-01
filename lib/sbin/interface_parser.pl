@@ -894,6 +894,7 @@ sub parse_interface_ccl
       my $tags = undef;
       my $centering = undef;
       my $tensortypealias = undef;
+      my $parities = undef;
       my $timelevels = 1;
       my $size = undef;
       my $var_array_size = undef;
@@ -972,11 +973,16 @@ sub parse_interface_ccl
           }
           $centering .= "}";
         } elsif($nm eq "tensortypealias") {
-          $tensortypealias = "tensortypealias=\'";
           for my $c (@{$ch->{children}}) {
             $tensortypealias .= $c->substring()
           }
           $tensortypealias .= "\'";
+        } elsif($nm eq "parities") {
+          $parities = "parities=\'";
+          for my $c (@{$ch->{children}}) {
+            $parities .= $c->substring()
+          }
+          $parities .= "\'";
         } elsif($nm eq "tags") {
           my $new_tags = trim_quotes($ch->substring());
           $new_tags =~ s/"/\\"/g;
@@ -992,6 +998,12 @@ sub parse_interface_ccl
       $distrib = "CONSTANT" if(!defined($distrib));
       set_gtype($interface_data_ref, $gname, $thorn, $gdata);
       set_gtype($interface_data_ref, $gname, $iface_name, $gdata);
+      if(!defined($tensortypealias)) {
+        $tensortypealias = "scalar";
+      }
+      if(!defined($parities)) {
+        $parities = "(+1 +1 +1)";
+      }
       # Note that Compact groups are only documented in the FAQ, and
       # are not supported by Carpet.
       $interface_data_ref->{"\U$thorn GROUP $gname COMPACT\E"} = 0;
@@ -1009,6 +1021,9 @@ sub parse_interface_ccl
       }
       if(defined($tensortypealias)) {
         $interface_data_ref->{"\U$thorn GROUP $gname TENSORTYPEALIAS\E"} = $tensortypealias;
+      }
+      if(defined($parities)) {
+        $interface_data_ref->{"\U$thorn GROUP $gname PARITIES\E"} = $parities;
       }
       $interface_data_ref->{"\U$thorn GROUP $gname TIMELEVELS\E"} = $timelevels;
       $interface_data_ref->{"\U$thorn GROUP $gname VTYPE\E"} = $vtype;

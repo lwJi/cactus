@@ -33,6 +33,7 @@ int  CCTKi_CreateGroup(const char *gname,
                        const char *tags,
                        const char *centering,
                        const char *tensortypealias,
+                       const char *parities,
                        const char *vararraysize,
                        int         n_basevars,
                        ...);
