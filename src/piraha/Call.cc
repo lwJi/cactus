@@ -101,12 +101,13 @@ struct Value {
     CCTK_INT idata;
     std::string sdata;
     ValueType type;
-    Value(std::shared_ptr<Group> g) : hold(g), ddata(0), idata(0), sdata(), type(PIR_VOID) { std::shared_ptr<Group> foo(g); }
+    Value(std::shared_ptr<Group> g) : hold(g), ddata(0), idata(0), sdata(), type(PIR_VOID) {}
+    Value(const Value& v) = default;
     ~Value() {}
     /**
      * Create a string representation of the Value.
      */
-    std::string copy() {
+    std::string copy() const {
         assert(type != PIR_VOID);
         if(type == PIR_STRING) {
             return sdata;
@@ -304,7 +305,7 @@ std::shared_ptr<Value> find_val(std::shared_ptr<Group> gr,std::string thorn,std:
     return ret;
 }
 
-std::shared_ptr<Value> lookup_var(std::shared_ptr<Group> gr,bool in_active_thorns,int add_line) {
+std::shared_ptr<const Value> lookup_var(std::shared_ptr<Group> gr,bool in_active_thorns,int add_line) {
     std::shared_ptr<Value> ret;
     if(gr->group(0)->getPatternName() == "env") {
         const char *env = getenv(gr->group(0)->group(0)->substring().c_str());
@@ -352,7 +353,7 @@ std::string string_reparser(std::string s,bool in_active_thorns,int add_line) {
             } else if(pn == "stringcomment") {
                 ;
             } else if(pn == "var") {
-                std::shared_ptr<Value> val = lookup_var(m->group(i),in_active_thorns,add_line);
+                std::shared_ptr<const Value> val = lookup_var(m->group(i),in_active_thorns,add_line);
                 out += val->copy();
             } else {
                 CCTK_VError(__LINE__, __FILE__, "Cactus",
@@ -679,7 +680,7 @@ std::shared_ptr<Value> meval(std::shared_ptr<Group> gr,ExpressionEvaluationData 
         std::string par = get_parfile();
         CCTK_Error(gr->line(),par.c_str(),current_thorn.c_str(),msg.str().c_str());
     } else if(pn == "var") {
-        ret = lookup_var(gr,in_active_thorns,0);
+        ret = std::make_shared<Value>(*lookup_var(gr,in_active_thorns,0));
     } else if(pn == "value") {
         if(gr->groupCount()==2) {
             std::string unop = gr->group(0)->substring();
