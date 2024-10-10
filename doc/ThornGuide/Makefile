@@ -84,7 +84,7 @@ $(MASTER_FILE).html: $(MASTER_FILE).tex
 	   $(PERL) -e 'use File::Path qw{ mkpath };use File::Basename qw{ dirname }; while(<>){chomp;if(m!^File: $(CCTK_HOME)/arrangements/(.*)!){mkpath("$(MASTER_FILE)/".dirname($$1));rename("$(CCTK_HOME)/arrangements/$$1", "$(MASTER_FILE)/$$1");}}' $(MASTER_FILE).lg && \
 	   $(PERL) -ne 'chomp;m!^File: ([^/]*)! and rename($$1, "$(MASTER_FILE)/$$1")' $(MASTER_FILE).lg ; \
 	else                                                     \
-	   echo "  Cannot find $@, an error must have occured."; \
+	   echo "  Cannot find $@, an error must have occured. See $(DOCBUILDDIR)/LOG_LATEX_* ."; \
 	fi
 
 $(MASTER_FILE).tex:  $(foreach thorn, $(THORN_DEPENDENCIES), $(thorn)/param.ccl $(thorn)/interface.ccl $(thorn)/schedule.ccl) $(THORNLIST)
