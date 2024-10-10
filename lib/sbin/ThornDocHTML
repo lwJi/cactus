@@ -21,8 +21,9 @@ for arr in `cd arrangements; echo *`; do
           if test -e arrangements/$arr/$th/doc/documentation.tex; then
             echo "  Processing thorn $arr/$th..."
 
-            mkdir -p doc/HTML/ThornDoc/$arr/$th 2> /dev/null
             (
+              set -e
+              mkdir -p doc/HTML/ThornDoc/$arr/$th 2> /dev/null
               cd doc/HTML/ThornDoc/$arr/$th
               rm -f documentation.tex documentation.html documentation.css documentation*.png
               path=$abspath/arrangements/$arr/$th/doc
@@ -49,18 +50,18 @@ for arr in `cd arrangements; echo *`; do
               $abspath/lib/sbin/ConvertFigures $path
 
               echo "  Running htlatex..."
-              (
-                # the complicated expansion is needed to deal with quotes in
-                # HTLATEXFLAGS
-                eval set $HTLATEXFLAGS
-                $HTLATEX documentation "$@"> LATEX_MESSAGES 2>&1 &&
-                # use relative paths for figures and other files in HTML
-                sed -e "s+${path}/++g" <documentation.html > documentation.html.tmp &&
-                mv documentation.html.tmp documentation.html &&
-                ${PERL} -ne 'chomp;m!^File: (/.*/)?([^/]*)$! and rename("$1$2", "./$2");' documentation.lg
-              ) ||
-              echo "    ERROR: Could not create documentation (check for latex errors)"
+              # the complicated expansion is needed to deal with quotes in
+              # HTLATEXFLAGS
+              eval set $HTLATEXFLAGS
+              $HTLATEX documentation "$@"> LATEX_MESSAGES 2>&1 &&
+              # use relative paths for figures and other files in HTML
+              sed -e "s+${path}/++g" <documentation.html > documentation.html.tmp &&
+              mv documentation.html.tmp documentation.html &&
+              ${PERL} -ne 'chomp;m!^File: (/.*/)?([^/]*)$! and rename("$1$2", "./$2");' documentation.lg
             )
+            if [ $? ] ; then # cannot be || due to how bash handles || and -e
+              echo "    ERROR: Could not create documentation (check for latex errors in doc/HTML/ThornDoc/$arr/$th/LOG_*)"
+            fi
                         
           fi          # if thorn has documentation
         fi              # if thorn is enabled
