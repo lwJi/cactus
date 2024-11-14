@@ -23,6 +23,9 @@
 #elif defined HAVE_WINSOCK2_H
 #  include <winsock2.h>
 #endif /* HAVE_WINSOCK2_H */
+#ifdef HAVE_GETHOSTBYNAME
+#include <netdb.h>
+#endif
 
 static const char *rcsid = "$Header$";
 
