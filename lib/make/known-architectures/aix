@@ -146,6 +146,14 @@ else
     LIBS=xlf90
   fi
 
+  case $(basename "$LD") in
+    xlC|xlC_r)
+     : ${LD_OPENMP_FLAGS='-qsmp=omp'}
+     ;;
+    *)
+     ;;
+  esac
+
   # in 32-bit mode: allow each process to use up to 2 GB of virtual memory
   # (default is only 256 MB)
   if test "$LD" != 'g++' -a "$LD" != 'c++'; then

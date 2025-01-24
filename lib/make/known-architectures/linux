@@ -491,6 +491,60 @@ else
  : ${C_DEBUG_FLAGS='-g'}
  : ${CXX_DEBUG_FLAGS='-g'}
 
+ # Determine which linker is in use
+ LINUX_LINKER=unknown
+ if test "`$CC -V 2>&1 | grep -i intel`" ; then
+   LINUX_LINKER=Intel
+ elif test "`$CC -V 2>&1 | grep -i cc | grep -i pgcc`" ; then
+   LINUX_LINKER=portland
+ elif test "`$CC -V 2>&1 | grep pgcc`" ; then
+   LINUX_LINKER=portland
+ elif test "`$CC -v 2>&1 | grep  gcc`" ; then
+   LINUX_LINKER=g++
+ elif test "`$CC -v 2>&1 | grep -i SGICC`" ; then
+   LINUX_LINKER=SGI
+ elif test "`$CC -v 2>&1 | grep PathScale`" ; then
+   LINUX_LINKER=PathScale
+ elif test "`$CC --version 2>&1 | grep 'g++'`" ; then
+   LINUX_LINKER=g++
+ elif test "`$CC -qversion 2>&1 | grep IBM`" ; then
+   LINUX_LINKER=IBM
+ fi
+
+ case $LINUX_LINKER in
+   # GNU
+   g++)
+     LD_VERSION="`$LD -v 2>&1 | grep -i "gcc version" | head -n1`"
+     major_version=`echo $LD_VERSION | cut -f3 -d' ' | cut -f1 -d'.'`
+     minor_version=`echo $LD_VERSION | cut -f3 -d' ' | cut -f2 -d'.'`
+     # only GCC versions 4.1 and higher support OpenMP
+     if test ! \( $major_version -lt 4 -o \( $major_version = 4 -a $minor_version -lt 1 \) \) ; then
+       : ${LD_OPENMP_FLAGS='-fopenmp'}
+     fi
+     ;;
+   # Intel
+   Intel)
+     : ${LD_OPENMP_FLAGS='-openmp'}
+     ;;
+   SGI)
+     ;;
+   portland)
+     : ${LD_OPENMP_FLAGS='-mp'}
+     ;;
+   Pathscale)
+     : ${LD_OPENMP_FLAGS='-openmp'}
+     ;;
+   IBM)
+     : ${LD_OPENMP_FLAGS='-qsmp=omp'}
+     ;;
+   *)
+     if ! test "x$LINUX_LINKER" = "xunknown" ; then
+       echo "Internal error: did not expect Linux linker to be $LINUX_LINKER"
+       exit 2
+     fi
+     ;;
+ esac
+
  if test "x$cross_compiling" = 'xyes' ; then
    case "$host_cpu" in
      i?86)
