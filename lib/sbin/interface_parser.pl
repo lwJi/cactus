@@ -882,7 +882,8 @@ sub parse_interface_ccl
       $access = $fin->substring();
     } elsif($fin->is("GROUP_VARS")) {
       my $vtype = uc($fin->group(0,"vtype")->substring());
-      my $gname = $fin->group(1,"gname")->group(0,"name")->substring();
+      my $gname_group = $fin->group(1,"gname")->group(0,"name");
+      my $gname = $gname_group->substring();
       my $desc = undef;
       my $dim = undef;
       my $distrib = undef;
@@ -900,7 +901,13 @@ sub parse_interface_ccl
         $var_array_size = expr($fin->group(1)->group(1));
       }
       $interface_data_ref->{"\U$thorn $access GROUPS\E"} .= " ".$gname;
-      $interface_data_ref->{"\U$thorn GROUP $gname\E"} = $gname;
+      my $ikey = "\U$thorn GROUP $gname\E";
+      if(defined($interface_data_ref->{$ikey})) {
+        &CST_error(0,"Multiply defined interface group name '${gname}' in thorn '$thorn'",
+          "Are you defining the same group name twice with different cases?",
+          $gname_group->{file},$gname_group->{line});
+      }
+      $interface_data_ref->{$ikey} = $gname;
       my %items = ();
       for(my $i=2;$i<$fin->groupCount();$i++) {
         my $ch=$fin->group($i);
