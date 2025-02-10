@@ -10,15 +10,27 @@ use FileHandle;
 use Data::Dumper;
 use Piraha;
 use File::stat;
+use Clone qw(clone);
 
 sub set_gtype
 {
     my $db = shift;
-    my $name = lc(shift);
-    my $thorn = lc(shift);
-    my $gdata = shift;
+    my $var_or_group = lc(shift);
+    my $thorn_or_iface = lc(shift);
+    my $gdata = clone(shift);
+
+    # Is this a thorn or interface definition?
+    my $is_iface = shift;
+
+    # There is a complexity created by the possibility of declaring
+    # a group with one variable that is the same as a group. This
+    # variable helps to track that case.
+    my $is_var1 = shift;
+
+    $gdata->{is_var} = $is_var1;
+
     my $gtype = uc($gdata->{type});
-    my $key = $thorn . "::" . $name;
+    my $key = $thorn_or_iface . "::" . $var_or_group;
     die Dumper($gdata) unless defined($gdata->{type});
     die Dumper($gdata) unless defined($gdata->{file});
     die Dumper($gdata) unless defined($gdata->{line});
@@ -26,14 +38,26 @@ sub set_gtype
     $db->{global_type} = {}  unless(defined($db->{global_type}));
     my $previous_gtype = $db->{global_type}->{$key}->{type} if(defined($db->{global_type}->{$key}));
     if(!defined($previous_gtype)) {
-        $db->{global_type} = {} unless(defined($db->{global_type}));
         $db->{global_type}->{$key} = $gdata;
     } else {
-        # This should never happen
+        my $gdata2 = $db->{global_type}->{$key};
+        my $gname1 = $gdata->{gname};
+        my $gname2 = $gdata2->{gname};
+        my $is_var2 = $gdata2->{is_var};
+
         &CST_error(0,"Multiple gtypes for $key: $previous_gtype, $gtype",
           "Are you defining the same interface twice with contradictory gtypes?",
           $gdata->{file},$gdata->{line})
-            unless $previous_gtype eq $gtype;
+            if ($previous_gtype ne $gtype);
+
+        # Without the check to is_iface, we could get a similar error message twice for the same error.
+        if($is_var1 and $is_var2 and !$is_iface) {
+            my $message = "Variable $var_or_group in group $gname1 in thorn $thorn_or_iface has same name as a variable in group $gname2";
+            &CST_error(0,$message,
+              "Are you defining the same variable in two different interfaces with different cases?",
+              $gdata->{file},$gdata->{line})
+                unless $gname1 eq $gname2;
+        }
     }
 }
 
@@ -890,7 +914,8 @@ sub parse_interface_ccl
       my $gdata = {
         type => undef,
         file => $ccl_file,
-        line => "?"
+        line => "?",
+        gname => $gname
       };
       my $tags = undef;
       my $centering = undef;
@@ -903,12 +928,13 @@ sub parse_interface_ccl
       $interface_data_ref->{"\U$thorn $access GROUPS\E"} .= " ".$gname;
       my $ikey = "\U$thorn GROUP $gname\E";
       if(defined($interface_data_ref->{$ikey})) {
-        &CST_error(0,"Multiply defined interface group name '${gname}' in thorn '$thorn'",
+        &CST_error(0,"Group $gname in thorn $thorn is defined twice",
           "Are you defining the same group name twice with different cases?",
           $gname_group->{file},$gname_group->{line});
       }
       $interface_data_ref->{$ikey} = $gname;
       my %items = ();
+      my $has_VARS=0;
       for(my $i=2;$i<$fin->groupCount();$i++) {
         my $ch=$fin->group($i);
         my $nm = $ch->{name};
@@ -951,8 +977,9 @@ sub parse_interface_ccl
                 $gdata->{type} = "SCALAR";
                 $gdata->{line} = $c->linenum();
             }
-            set_gtype($interface_data_ref, $name, $thorn, $gdata);
-            set_gtype($interface_data_ref, $name, $iface_name, $gdata);
+            set_gtype($interface_data_ref, $name, $thorn, $gdata, 0, 1);
+            set_gtype($interface_data_ref, $name, $iface_name, $gdata, 1, 1);
+            $has_VARS=1;
           }
         } elsif($nm eq "ghostsize") {
           my $ghost = "";
@@ -990,8 +1017,8 @@ sub parse_interface_ccl
       $dim = 3 if(!defined($dim) and $gtype eq "GF");
       $distrib = "DEFAULT" if(!defined($distrib) and ($gtype eq "GF" or $gtype eq "ARRAY"));
       $distrib = "CONSTANT" if(!defined($distrib));
-      set_gtype($interface_data_ref, $gname, $thorn, $gdata);
-      set_gtype($interface_data_ref, $gname, $iface_name, $gdata);
+      set_gtype($interface_data_ref, $gname, $thorn, $gdata, 0, !$has_VARS);
+      set_gtype($interface_data_ref, $gname, $iface_name, $gdata, 1, !$has_VARS);
       # Note that Compact groups are only documented in the FAQ, and
       # are not supported by Carpet.
       $interface_data_ref->{"\U$thorn GROUP $gname COMPACT\E"} = 0;
