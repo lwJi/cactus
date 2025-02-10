@@ -10,14 +10,20 @@ use FileHandle;
 use Data::Dumper;
 use Piraha;
 use File::stat;
-use Clone qw(clone);
+
+sub copy_hash
+{
+    my $x = shift;
+    my %x = %$x;
+    return \%x;
+}
 
 sub set_gtype
 {
     my $db = shift;
     my $var_or_group = lc(shift);
     my $thorn_or_iface = lc(shift);
-    my $gdata = clone(shift);
+    my $gdata = copy_hash(shift);
 
     # Is this a thorn or interface definition?
     my $is_iface = shift;
