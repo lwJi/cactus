@@ -26,12 +26,12 @@ sub set_gtype
     my $gdata = copy_hash(shift);
 
     # Is this a thorn or interface definition?
-    my $is_iface = shift;
+    my $is_iface = shift eq "interface";
 
     # There is a complexity created by the possibility of declaring
     # a group with one variable that is the same as a group. This
     # variable helps to track that case.
-    my $is_var1 = shift;
+    my $is_var1 = shift eq "var";
 
     $gdata->{is_var} = $is_var1;
 
@@ -936,7 +936,7 @@ sub parse_interface_ccl
       if(defined($interface_data_ref->{$ikey})) {
         &CST_error(0,"Group $gname in thorn $thorn is defined twice",
           "Are you defining the same group name twice with different cases?",
-          $gname_group->{file},$gname_group->{line});
+          $ccl_file,$gname_group->linenum());
       }
       $interface_data_ref->{$ikey} = $gname;
       my %items = ();
@@ -983,8 +983,8 @@ sub parse_interface_ccl
                 $gdata->{type} = "SCALAR";
                 $gdata->{line} = $c->linenum();
             }
-            set_gtype($interface_data_ref, $name, $thorn, $gdata, 0, 1);
-            set_gtype($interface_data_ref, $name, $iface_name, $gdata, 1, 1);
+            set_gtype($interface_data_ref, $name, $thorn, $gdata, "thorn", "var");
+            set_gtype($interface_data_ref, $name, $iface_name, $gdata, "interface", "var");
             $has_VARS=1;
           }
         } elsif($nm eq "ghostsize") {
@@ -1023,8 +1023,8 @@ sub parse_interface_ccl
       $dim = 3 if(!defined($dim) and $gtype eq "GF");
       $distrib = "DEFAULT" if(!defined($distrib) and ($gtype eq "GF" or $gtype eq "ARRAY"));
       $distrib = "CONSTANT" if(!defined($distrib));
-      set_gtype($interface_data_ref, $gname, $thorn, $gdata, 0, !$has_VARS);
-      set_gtype($interface_data_ref, $gname, $iface_name, $gdata, 1, !$has_VARS);
+      set_gtype($interface_data_ref, $gname, $thorn, $gdata, "thorn", $has_VARS ? "group" : "var");
+      set_gtype($interface_data_ref, $gname, $iface_name, $gdata, "interface", $has_VARS ? "group" : "var");
       # Note that Compact groups are only documented in the FAQ, and
       # are not supported by Carpet.
       $interface_data_ref->{"\U$thorn GROUP $gname COMPACT\E"} = 0;
