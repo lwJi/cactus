@@ -1422,8 +1422,8 @@ AC_SUBST(LIBNAME_SUFFIX)
 # How to link in all object files from an archive
 AC_SUBST(BEGIN_WHOLE_ARCHIVE_FLAGS)
 AC_SUBST(END_WHOLE_ARCHIVE_FLAGS)
-if test  -z "$BEGIN_WHOLE_ARCHIVE_FLAGS" &&
-   test -z "$END_WHOLE_ARCHIVE_FLAGS" ; then
+if test -z "${BEGIN_WHOLE_ARCHIVE_FLAGS+set}" &&
+   test -z "${END_WHOLE_ARCHIVE_FLAGS+set}" ; then
   AC_MSG_CHECKING([whether linker supports --whole-archive])
   AC_CACHE_VAL(cctk_cv_have_whole_archive,
   [ac_save_LDFLAGS="$LDFLAGS"
