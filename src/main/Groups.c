@@ -2434,8 +2434,8 @@ int CCTKi_CreateGroup (const char *gname,
     if(group->tags_table < 0)
     {
       CCTK_VWarn (0, __LINE__, __FILE__, "Cactus",
-                  "CCTKi_CreateGroup: Failed to create TAGS table for group '%s' from thorn '%s'",
-                  gname, thorn);
+                  "CCTKi_CreateGroup: Failed to create TAGS table from '%s' for group '%s' from thorn '%s'",
+                  tags, gname, thorn);
     }
     group->centering_table   = Util_TableCreateFromString(centering);
     if(group->centering_table < 0)
