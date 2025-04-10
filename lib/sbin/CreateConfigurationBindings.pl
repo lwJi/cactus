@@ -198,8 +198,8 @@ sub CreateConfigurationBindings
   }
 
   # Sort the linker thorns
-  $linkerdirs = 'LIBDIRS +=';
-  $linkerlibs = 'LIBS +=';
+  my $linkerdirs = 'EXTERNAL_LIBDIRS +=';
+  my $linkerlibs = 'EXTERNAL_LIBS +=';
 
   $linker_list = &TopoSort(\%linker_thorns, undef, $cfg);
   foreach $thorn (split (' ', $linker_list))

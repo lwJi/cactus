@@ -1539,7 +1539,16 @@ AC_SUBST(SYS_INC_DIRS)
 #   is used, e.g. if a library exists both in a specific path and in
 #   /opt/local/lib.
 AC_SUBST(GENERAL_LIBRARIES)
-: ${GENERAL_LIBRARIES='$(patsubst $(LIBDIR_PREFIX)-%,-%,$(addprefix $(LIBDIR_PREFIX),$(filter-out /opt/local/%,$(LIBDIRS)) $(filter /opt/local/%,$(LIBDIRS)))) $(patsubst $(RUNDIR_PREFIX)-%,-%,$(addprefix $(RUNDIR_PREFIX),$(filter-out /opt/local/%,$(LIBDIRS)) $(filter /opt/local/%,$(LIBDIRS)))) $(patsubst $(LIBLINK_PREFIX)-%,-%,$(addprefix $(LIBLINK_PREFIX),$(LIBS)))'}
+if test "x${GENERAL_LIBRARIES+set}" != xset ; then
+  # add ExternalLabraries to -L, --rpath and -l
+  GENERAL_LIBRARIES='$(patsubst $(LIBDIR_PREFIX)-%,-%,$(addprefix $(LIBDIR_PREFIX),$(filter-out /opt/local/%,$(EXTERNAL_LIBDIRS)) $(filter /opt/local/%,$(EXTERNAL_LIBDIRS))))'
+  GENERAL_LIBRARIES=$GENERAL_LIBRARIES' $(patsubst $(RUNDIR_PREFIX)-%,-%,$(addprefix $(RUNDIR_PREFIX),$(filter-out /opt/local/%,$(EXTERNAL_LIBDIRS)) $(filter /opt/local/%,$(EXTERNAL_LIBDIRS))))'
+  GENERAL_LIBRARIES=$GENERAL_LIBRARIES' $(patsubst $(LIBLINK_PREFIX)-%,-%,$(addprefix $(LIBLINK_PREFIX),$(EXTERNAL_LIBS)))'
+  # add LIBDIRS and LIBS to -L and --rpath and -l
+  GENERAL_LIBRARIES=$GENERAL_LIBRARIES' $(patsubst $(LIBDIR_PREFIX)-%,-%,$(addprefix $(LIBDIR_PREFIX),$(filter-out /opt/local/%,$(LIBDIRS)) $(filter /opt/local/%,$(LIBDIRS))))'
+  GENERAL_LIBRARIES=$GENERAL_LIBRARIES' $(patsubst $(RUNDIR_PREFIX)-%,-%,$(addprefix $(RUNDIR_PREFIX),$(filter-out /opt/local/%,$(LIBDIRS)) $(filter /opt/local/%,$(LIBDIRS))))'
+  GENERAL_LIBRARIES=$GENERAL_LIBRARIES' $(patsubst $(LIBLINK_PREFIX)-%,-%,$(addprefix $(LIBLINK_PREFIX),$(LIBS)))'
+fi
 
 
 # Do we need to make sure Perl makes a backup when editting in place ?
