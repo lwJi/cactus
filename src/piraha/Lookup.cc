@@ -12,7 +12,7 @@ Lookup::Lookup(std::string name_,std::shared_ptr<Grammar> g) : gram(g), name(nam
 bool Lookup::match(std::shared_ptr<Matcher> m) {
     std::shared_ptr<Pattern> p = gram->patterns.get(name);
     if(!p) std::cout << "Lookup of pattern [" << name << "] failed. Jmap = " << gram->patterns << std::endl;
-    assert(p);
+    ASSERT(p);
     std::shared_ptr<std::vector<std::shared_ptr<Group> > > chSave = m->children;
     m->children = std::make_shared<std::vector<std::shared_ptr<Group> > >();
     int s = m->pos;

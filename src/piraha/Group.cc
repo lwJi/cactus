@@ -99,8 +99,19 @@ void Group::dumpPython(std::ostream &o,int indent) {
 		for(int i=0;i<indent;i++)
 			o << ' ';
 		o << "'text' : \"";
-		for(int i=start_;i<end_;i++)
-			insertc(o,input[i]);
+		for(int i=start_;i<end_;i++) {
+            if(input[i] == '"') {
+                o << "\\\"";
+            } else if(input[i] == '\n') {
+                o << "\\n";
+            } else if(input[i] == '\r') {
+                o << "\\r";
+            } else if(input[i] == '\\') {
+                o << "\\\\";
+            } else {
+                o << input[i];
+            }
+        }
 		o << "\"," << std::endl;
 	} else {
 		for(int i=0;i<indent;i++)

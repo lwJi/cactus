@@ -1,7 +1,7 @@
 #include "Piraha.hpp"
 #include <fstream>
 #include <stdlib.h>
-#include "ParFileGrammar.hh"
+#include "ParGrammar.hh"
 
 using namespace cctki_piraha;
 
@@ -55,6 +55,9 @@ int main(int argc,char **argv) {
 	bool oFlag = false;
     std::string outFile;
     int narg = 0;
+    if(argc == 0) {
+        usage();
+    }
     for(int n=1;n<argc;n++) {
     	std::string arg = argv[n];
     	if(arg == "--perl") {
@@ -95,10 +98,10 @@ int main(int argc,char **argv) {
     read_file(grammarArg.c_str(),grammar_file);
     read_file(inputArg.c_str(),input_file);
 
-    std::shared_ptr<Grammar> g = new Grammar();
+    std::shared_ptr<Grammar> g = std::make_shared<Grammar>();
     compileFile(g,grammar_file.c_str());
     std::shared_ptr<Matcher> mg =
-        new Matcher (g,g->default_rule.c_str(),input_file.c_str());
+        std::make_shared<Matcher>(g,g->default_rule.c_str(),input_file.c_str());
     if(mg->matches()) {
         //std::vector<char> vec(4096);
         std::ofstream o;
@@ -106,7 +109,7 @@ int main(int argc,char **argv) {
         o.open(outFile.c_str());
         std::cout << "writing file: " << outFile << std::endl;
         std::shared_ptr<Group> src_file =
-            new Group("annot:src_file",inputArg.c_str());
+            std::make_shared<Group>("annot:src_file",inputArg.c_str());
         mg->children->push_back(src_file);
     	if(perlFlag) {
     		mg->dumpPerl(o);

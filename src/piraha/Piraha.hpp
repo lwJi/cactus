@@ -1,7 +1,6 @@
 #ifndef PIRAHA_HPP
 #define PIRAHA_HPP
 
-#include <cassert>
 #include <climits>
 #include <cstring>
 #include <initializer_list>
@@ -10,7 +9,19 @@
 #include <memory>
 #include <string>
 #include <vector>
+
+#ifdef STANDALONE
+#define ERROR(LINE, FILE, MSG) {std::cerr << FILE << ":" << LINE << " " << MSG << std::endl; exit(2); }
+#else
 #include <cctk.h>
+#define ERROR(LINE, FILE, MSG) CCTK_ERROR(LINE, FILE, "Cactus", MSG)
+#endif
+
+#ifdef NDEBUG
+#define ASSERT(X) /**/
+#else
+#define ASSERT(X) if(!(X)) ERROR(__LINE__, __FILE__, #X)
+#endif
 
 namespace cctki_piraha {
 
@@ -108,11 +119,11 @@ public:
             return NULL;
         }
         std::shared_ptr<Pattern> res = m[key];
-        assert(res);
+        ASSERT(res);
         return res;
     }
     void put(std::string key,std::shared_ptr<Pattern> p) {
-        assert(p);
+        ASSERT(p);
         if(m.find(key) != m.end()) {
             std::cerr << "Duplicate key given to Grammar: '" << key << "'" << std::endl;
             abort();
@@ -332,7 +343,7 @@ public:
     std::shared_ptr<Pattern> pattern;
     LookAhead(std::shared_ptr<Pattern> p) : pattern(p) {}
     virtual ~LookAhead() {}
-    bool match(std::shared_ptr<Matcher> m) { CCTK_Error(__LINE__,__FILE__,"Cactus","Not implemented"); }//TODO: Fill in
+    bool match(std::shared_ptr<Matcher> m) { ERROR(__LINE__,__FILE__,"Not implemented"); }//TODO: Fill in
 };
 
 class Boundary : public Pattern {
@@ -340,7 +351,7 @@ class Boundary : public Pattern {
 };
 
 class Break : public Pattern {
-    virtual bool match(std::shared_ptr<Matcher> m) { CCTK_Error(__LINE__,__FILE__,"Cactus","Not implemented"); }//TODO: Fill in
+    virtual bool match(std::shared_ptr<Matcher> m) { ERROR(__LINE__,__FILE__,"Not implemented"); }//TODO: Fill in
 };
 
 class BackRef : public Pattern {
@@ -348,7 +359,7 @@ public:
     int index;
     bool ignCase;
     BackRef(int in,bool ign) : index(in), ignCase(ign) {}
-    virtual bool match(std::shared_ptr<Matcher> m) { CCTK_Error(__LINE__,__FILE__,"Cactus","Not implemented"); }//TODO: Fill in
+    virtual bool match(std::shared_ptr<Matcher> m) { ERROR(__LINE__,__FILE__,"Not implemented"); }//TODO: Fill in
 };
 
 class AutoGrammar {

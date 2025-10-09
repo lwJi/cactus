@@ -70,7 +70,7 @@ void compileFile(std::shared_ptr<Grammar> g,const char *buffer,signed long buffe
 	bool b = m->matches();
     if(!b) {
         m->showError();
-	    CCTK_Error(__LINE__,__FILE__,"Cactus","Error compiling grammar");
+	    ERROR(__LINE__,__FILE__,"Error compiling grammar");
     }
 
 	for(int i=0;i<m->groupCount();i++) {

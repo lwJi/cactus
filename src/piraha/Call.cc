@@ -108,7 +108,7 @@ struct Value {
      * Create a string representation of the Value.
      */
     std::string copy() const {
-        assert(type != PIR_VOID);
+        ASSERT(type != PIR_VOID);
         if(type == PIR_STRING) {
             return sdata;
         } else if(type == PIR_BOOL) {
@@ -381,7 +381,7 @@ struct ExpressionEvaluationData {
  * used recursively.
  **/
 std::shared_ptr<Value> meval(std::shared_ptr<Group> gr,ExpressionEvaluationData *eedata,bool in_active_thorns=false) {
-    assert(gr);
+    ASSERT(gr);
     std::string pn = gr->getPatternName();
     auto ret = std::make_shared<Value>(gr);
     if(pn == "num") {
@@ -800,7 +800,7 @@ std::shared_ptr<Value> meval(std::shared_ptr<Group> gr,ExpressionEvaluationData 
             ret = std::make_shared<Value>(gr);
             std::string addop = gr->group(i)->substring();
             std::shared_ptr<Value> v2 = meval(gr->group(i+1),eedata,in_active_thorns);
-            assert(v2);
+            ASSERT(v2);
             if(v1->type == PIR_INT && v2->type == PIR_INT) {
                 ret->type = PIR_INT;
                 if(addop == "+") {
@@ -1145,7 +1145,7 @@ extern "C" int cctk_PirahaParser(const char *buffer,unsigned long buffersize,int
                         current_thorn = thorn;
                         std::shared_ptr<Value> smv = meval(aexpr,0);
                         val = smv->copy();
-                        assert(smv);
+                        ASSERT(smv);
                         smv->integerize();
                         if(data != NULL) {
                             if(data->type == PARAMETER_REAL)

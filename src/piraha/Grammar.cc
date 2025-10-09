@@ -1,4 +1,5 @@
 #include "Piraha.hpp"
+#include <sstream>
 
 namespace cctki_piraha {
 
@@ -22,7 +23,7 @@ void compile(std::shared_ptr<Grammar> thisg,std::string name,std::string pattern
         std::ostringstream o;
         o << "Could not compile(" << name << "," << pattern << ")" << std::endl;;
         o << "pos = " << m->pos;
-        CCTK_Error(__LINE__,__FILE__,"Cactus",o.str().c_str());
+        ERROR(__LINE__,__FILE__,o.str().c_str());
     }
 }
 }

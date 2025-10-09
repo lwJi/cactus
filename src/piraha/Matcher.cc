@@ -26,7 +26,7 @@ bool Matcher::matchesTo(int match_to_) {
         std::cout << "Grammar does not contain \"" << pat << "\"" << std::endl;
         std::cout << g->patterns << std::endl;
     }
-    assert(p);
+    ASSERT(p);
     //packrat.clear();
     pos = 0;
     max_pos = -1;
