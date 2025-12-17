@@ -91,6 +91,28 @@ sub expr
   confess("EXPR: $nm");
 }
 
+sub alt_to_string
+{
+    my $arg = shift;
+    my $out = "";
+    my $p = $arg->getPatternName();
+    print(">>>$p<<<\n");
+    if($p eq "alt" or $p eq "altval") {
+        for my $ch (@{$arg->{children}}) {
+            $out .= alt_to_string($ch);
+        }
+    } elsif($p eq "dquote") {
+        my $inside = substr($arg->substring(), 1, -1);
+        $inside =~ s{[\\"]}{\\$1}g;
+        $out = '"'.$inside.'"';
+    } elsif($p eq "name") {
+        $out .= "'".$arg->substring()."'";
+    } else {
+        confess("Cannot handle pattern $p");
+    }
+    return $out;
+}
+
 #/*@@
 #  @file    interface_parser.pl
 #  @date    Wed Sep 16 15:07:11 1998
@@ -944,7 +966,7 @@ sub parse_interface_ccl
       for(my $i=2;$i<$fin->groupCount();$i++) {
         my $ch=$fin->group($i);
         my $nm = $ch->{name};
-        if(defined($items{$nm})) {
+        if($nm ne "alt" and defined($items{$nm})) {
           print "CST Error:\n";
           print "Repeated element 'tag' in $gname\n";
           print "Line: ",$ch->linenum(),"\n";
@@ -1010,6 +1032,11 @@ sub parse_interface_ccl
             $sp = " ";
           }
           $centering .= "}";
+        } elsif($nm eq "alt") {
+          $tags .= " " if(defined($tags));
+          my $alt = alt_to_string($ch);
+          $alt =~ s/(?<!\\)"/\\"/g;
+          $tags .= $alt;
         } elsif($nm eq "tags") {
           my $new_tags = trim_quotes($ch->substring());
           $new_tags =~ s/"/\\"/g;

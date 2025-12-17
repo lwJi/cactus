@@ -67,9 +67,15 @@ gname = {name} (\[ {expr} \] )?
 group_comment = {dquote}?
 desc = {dquote}?
 
+altint = [+-]?{num}
+altreal = [+-]?([0-9]+\.[0-9]*|\.[0-9]+)([eEdD][+-]?[0-9]+|)
+altval = {altreal}|{altint}|{name}|{altarr}|{dquote}|{squote}
+altarr = \{ (({altreal} )+|({altint} )*)\}
+alt = {name} = {altval}
+
 GROUP_VARS = (?i:CCTK_|){vtype} {gname} (?i:TYPE = {gtype} |DIM = {dim}
              |TIMELEVELS = {timelevels} |SIZE = {size} |DISTRIB = {distrib}
-             |GHOSTSIZE = {ghostsize} |STAGGER = {stagger} |TAGS = {tags} |{centering} )*{desc} (
+             |GHOSTSIZE = {ghostsize} |STAGGER = {stagger} |TAGS = {tags} |{centering} |{alt} )*{desc} (
  \{
     {VARS}
  \} {group_comment}
