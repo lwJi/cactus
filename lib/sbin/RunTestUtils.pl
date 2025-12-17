@@ -1843,13 +1843,22 @@ sub CompareTestFiles
       my $read_old;
       my $read_new;
       if(defined($prog)) {
-          my $postproc_file = "$thorndir/util/$prog";
-          print("Using '$postproc_file' for '$newfile'\n");
-          my $fail = 0;
-          unless(-x $postproc_file) {
+	  my $fail = 0;
+	  # check for the postproc executable in the util directory inside the thorn first
+	  my $postproc_file = "$thorndir/util/$prog";
+	  unless(-x $postproc_file) {
+	      # if the postproc executable doesn't exist within the util directory of the thorn
+	      # check the exe/<config-name> directory where compiled utilities are placed
+	      my $cctk_dir = $config_data->{'CCTK_DIR'};
+	      my $config = $config_data->{'CONFIG'};
+	      print "The postproc file '$postproc_file' does not exist or is not executable. Checking for $cctk_dir/exe/$config/$prog.\n";
+	      $postproc_file = "$cctk_dir/exe/$config/$prog";
+	  }
+	  unless(-x $postproc_file) {
               print "ERROR: The postproc file '$postproc_file' does not exist or is not executable.\n";
               $fail++;
           }
+	  print("Using '$postproc_file' for '$newfile'\n");
           unless(-r $oldfile) {
               print "ERROR: The file: '$oldfile' does not exist or is not readable.\n";
               $fail++;

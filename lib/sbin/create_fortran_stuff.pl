@@ -80,7 +80,7 @@ sub CreateFortranThornParameterBindings
 #    print "DEBUG friend is $friend\n";
 
     # Determine which thorn provides this friend implementation
-    $rhinterface_db->{"IMPLEMENTATION \U$friend\E THORNS"} =~ m:([^ ]*):;
+    $rhinterface_db->{"IMPLEMENTATION \U$friend\E THORNS"} =~ m:([\w/]+):;
 
     my $friend_thorn = $1;
 

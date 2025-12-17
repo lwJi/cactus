@@ -76,7 +76,7 @@ sub CreateParameterBindings
   # Generate all restricted parameters
   foreach $implementation (split(' ',$rhinterface_db->{'IMPLEMENTATIONS'}))
   {
-    $rhinterface_db->{"IMPLEMENTATION \U$implementation\E THORNS"} =~ m:([^ ]+):;
+    $rhinterface_db->{"IMPLEMENTATION \U$implementation\E THORNS"} =~ m:([\w/]+):;
 
     $thorn = $1;
 
@@ -214,7 +214,7 @@ sub CreateParameterBindings
     my @data2;
     foreach my $friend (split(' ',$rhparameter_db->{"\U$thorn\E SHARES implementations"}))
     {
-      $rhinterface_db->{"IMPLEMENTATION \U$friend\E THORNS"} =~ m:([^ ]*):;
+      $rhinterface_db->{"IMPLEMENTATION \U$friend\E THORNS"} =~ m:([\w/]+):;
       my $friend_thorn = $1;
 
       foreach my $parameter (split(' ',$rhparameter_db->{"\U$thorn SHARES $friend\E variables"}))

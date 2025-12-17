@@ -73,13 +73,13 @@ sub CreateVariableBindings
     push(@data, '#include "cGH.h"');
     push(@data, '#include "cctki_GroupsOnGH.h"');
 
-    push(@data, '#define PASS_GROUPSIZE(group, dir)  CCTKGROUPNUM_##group >= 0 ? \\');
-    push(@data, '                                    CCTK_ArrayGroupSizeI(GH, dir, CCTKGROUPNUM_##group) : &_cctk_zero');
+    push(@data, '#define PASS_GROUPSIZE(group, dir)  CCTK_JOIN_TOKENS(cctki_gi_, CCTK_THORN).group >= 0 ? \\');
+    push(@data, '                                    CCTK_ArrayGroupSizeI(GH, dir, CCTK_JOIN_TOKENS(cctki_gi_, CCTK_THORN).group) : &_cctk_zero');
     push(@data, '');
-    push(@data, '#define PASS_GROUPLEN(thorn, group) CCTKGROUPNUM_##group >= 0 ? \\');
-    push(@data, '                                    CCTKi_GroupLengthAsPointer(#thorn "::" #group) : &_cctk_zero');
+    push(@data, '#define PASS_GROUPLEN(thorn, group) CCTK_JOIN_TOKENS(cctki_gi_, CCTK_THORN).group >= 0 ? \\');
+    push(@data, '                                    CCTKi_GroupLengthAsPointerI(CCTK_JOIN_TOKENS(cctki_gi_, CCTK_THORN).group) : &_cctk_zero');
     push(@data, '');
-    push(@data, '#define PASS_REFERENCE(var, level)  CCTKi_VarDataPtrI(GH, level, CCTKARGNUM_##var)');
+    push(@data, '#define PASS_REFERENCE(var, level)  CCTKi_VarDataPtrI(GH, level, CCTK_JOIN_TOKENS(cctki_vi_, CCTK_THORN).var)');
     push(@data, '');
 
     push(@data, "#define CCTK_ARGUMENTS \U${thorn}_CARGUMENTS");
@@ -215,6 +215,7 @@ sub CreateVariableBindings
     push(@data, '');
 
     push(@data, 'struct CCTK_JOIN_TOKENS(CCTK_JOIN_TOKENS(cctki_vi_, CCTK_THORN), _struct) CCTK_JOIN_TOKENS(cctki_vi_, CCTK_THORN);');
+    push(@data, 'struct CCTK_JOIN_TOKENS(CCTK_JOIN_TOKENS(cctki_gi_, CCTK_THORN), _struct) CCTK_JOIN_TOKENS(cctki_gi_, CCTK_THORN);');
     push(@data, '');
 
     push(@data, "int CactusBindingsVariables_${thorn}_Initialise(void);");
@@ -226,8 +227,6 @@ sub CreateVariableBindings
     push(@data, '  cGH const *const GH = _GH;');
     push(@data, '  const int _cctk_zero = 0;');
     push(@data, "  void (*function)(\U$thorn\E_C2F_PROTO);");
-    push(@data, "  DECLARE_\U$thorn\E_C2F");
-    push(@data, "  INITIALISE_\U$thorn\E_C2F");
     push(@data, '  (void) (_cctk_zero + 0);');
     push(@data, '');
     push(@data, "  function = (void (*) (\U$thorn\E_C2F_PROTO)) fpointer;");
@@ -286,6 +285,7 @@ sub CreateVariableBindings
       # initialize variable indices
       my %arguments = GetThornArguments($thorn, $block, $rhinterface_db);
 
+      my %allgroups;
       foreach my $varname (sort keys %arguments)
       {
         next if ($arguments{$varname} =~ m:STORAGESIZE|GROUPLENGTH:);
@@ -293,10 +293,10 @@ sub CreateVariableBindings
         $arguments{$varname} =~ m\^([^! ]+) ?([^!]*)?!([^!]*)::([^!]*)!([^!]*)!([^!]*)\;
 
         my $type           = $1;
-        my $implementation = "\U\"$3\"";
+        my $implementation = $3;
         my $ntimelevels    = $5;
         my $var            = "\"$varname$6\"";
-        my $fullvar        = "\"$3::$varname$6\"";
+        my $fullvar        = "\"${implementation}::$varname$6\"";
 
         if(! $type =~ /^(BYTE|INT|INT1|INT2|INT4|INT8|INT16|REAL|REAL4|REAL8|REAL16|COMPLEX|COMPLEX8|COMPLEX16|COMPLEX32)$/)
         {
@@ -306,6 +306,15 @@ sub CreateVariableBindings
         my $varname0 = $varname;
 
         push(@data, "  CCTK_JOIN_TOKENS(cctki_vi_, CCTK_THORN).$varname0 = CCTK_VarIndex($fullvar);");
+
+        $arguments{$varname} =~ /\::([^!]+)/;
+        my $groupname = $1;
+        if (not defined $allgroups{$groupname})
+        {
+          $allgroups{$groupname} = 1;
+          my $fullgroup = "\"${implementation}::$groupname\"";
+          push(@data, "  CCTK_JOIN_TOKENS(cctki_gi_, CCTK_THORN).$groupname = CCTK_GroupIndex($fullgroup);");
+        }
       }
     }
     push(@data, '');
@@ -374,7 +383,7 @@ sub GetThornArguments
     }
     else
     {
-      $rhinterface_db->{"IMPLEMENTATION \U$imp\E THORNS"} =~ m:([^ ]*):;
+      $rhinterface_db->{"IMPLEMENTATION \U$imp\E THORNS"} =~ m:([\w/]+):;
 
       $thorn = $1;
     }
@@ -557,9 +566,9 @@ sub CreateCVarIndexStruct
   my(%arguments) = @_;
   my(@declaration) = ();
 
+  # Now deal with the rest of the arguments
 
   push (@declaration, "extern struct CCTK_JOIN_TOKENS(CCTK_JOIN_TOKENS(cctki_vi_, CCTK_THORN), _struct) {");
-  # Now deal with the rest of the arguments
   foreach my $varname (sort keys %arguments)
   {
     next if ($arguments{$varname} =~ m:STORAGESIZE|GROUPLENGTH:);
@@ -567,21 +576,40 @@ sub CreateCVarIndexStruct
     $arguments{$varname} =~ m\^([^! ]+) ?([^!]*)?!([^!]*)::([^!]*)!([^!]*)!([^!]*)\;
 
     my $type           = $1;
-    my $implementation = "\U\"$3\"";
-    my $ntimelevels    = $5;
-    my $var            = "\"$varname$6\"";
-    my $fullvar        = "\"$3::$varname$6\"";
-
     if(! $type =~ /^(BYTE|INT|INT1|INT2|INT4|INT8|INT16|REAL|REAL4|REAL8|REAL16|COMPLEX|COMPLEX8|COMPLEX16|COMPLEX32)$/)
     {
       CST_error(0,"Unknown argument type $type","",__LINE__,__FILE__);
     }
 
-    my $varname0 = $varname;
-
     push (@declaration, "  int $varname;");
   }
   push (@declaration, "} CCTK_JOIN_TOKENS(cctki_vi_, CCTK_THORN);");
+
+  push (@declaration, "");
+
+  push (@declaration, "extern struct CCTK_JOIN_TOKENS(CCTK_JOIN_TOKENS(cctki_gi_, CCTK_THORN), _struct) {");
+  my %allgroups;
+  foreach my $varname (sort keys %arguments)
+  {
+    next if ($arguments{$varname} =~ m:STORAGESIZE|GROUPLENGTH:);
+
+    $arguments{$varname} =~ m\^([^! ]+) ?([^!]*)?!([^!]*)::([^!]*)!([^!]*)!([^!]*)\;
+
+    my $type           = $1;
+    if(! $type =~ /^(BYTE|INT|INT1|INT2|INT4|INT8|INT16|REAL|REAL4|REAL8|REAL16|COMPLEX|COMPLEX8|COMPLEX16|COMPLEX32)$/)
+    {
+      CST_error(0,"Unknown argument type $type","",__LINE__,__FILE__);
+    }
+
+    $arguments{$varname} =~ /\::([^!]+)/;
+    my $groupname = $1;
+    if (not defined $allgroups{$groupname})
+    {
+      $allgroups{$groupname} = 1;
+      push (@declaration, "  int $groupname;");
+    }
+  }
+  push (@declaration, "} CCTK_JOIN_TOKENS(cctki_gi_, CCTK_THORN);");
 
   return @declaration;
 
@@ -685,76 +713,6 @@ sub CreateFortranArgumentList
   }
 
   return join(',', @argumentlist);
-}
-
-#/*@@
-#  @routine    CreateCArgumentStatics
-#  @date       Thu Jan 28 14:33:50 1999
-#  @author     Tom Goodale
-#  @desc
-#  Creates the declarations of static variables used to speed up
-#  construction of arguments to pass to Fortran.
-#  @enddesc
-#@@*/
-sub CreateCArgumentStatics
-{
-  my(%arguments) = @_;
-  my(@declarations) = ();
-
-  my $allgroups = '';
-  foreach my $argument (sort keys %arguments)
-  {
-    next if ($arguments{$argument} =~ m:STORAGESIZE|GROUPLENGTH:);
-
-    push(@declarations, "static int CCTKARGNUM_$argument = -1;");
-    $arguments{$argument} =~ /::([^!]+)![0-9]+/;
-    my $group = $1;
-
-    if ($allgroups !~ / $group /)
-    {
-      $allgroups .= " $group ";
-      push(@declarations, "static int CCTKGROUPNUM_$group = -1;");
-    }
-  }
-
-  return @declarations;
-}
-
-
-#/*@@
-#  @routine    CreateCArgumentInitialisers
-#  @date       Thu Jan 28 14:33:50 1999
-#  @author     Tom Goodale
-#  @desc
-#  Creates the code to initialise the statics.
-#  @enddesc
-#@@*/
-sub CreateCArgumentInitialisers
-{
-  my(%arguments) = @_;
-  my(@initialisers) = ();
-
-  my $allgroups = '';
-  foreach my $argument (sort keys %arguments)
-  {
-    next if ($arguments{$argument} =~ m:STORAGESIZE|GROUPLENGTH:);
-
-    $arguments{$argument} =~ m,^([^! ]+) ?([^!]*)?!([^!]*)\::([^!]*)!([^!]*)!([^!]*),;
-    my $qualifier = $3;
-    my $varsuffix = $6;
-
-    push(@initialisers, "if(CCTKARGNUM_$argument == -1) CCTKARGNUM_$argument = CCTK_VarIndex(\"$qualifier\::$argument$varsuffix\");");
-
-    $arguments{$argument} =~ /\::([^!]+)/;
-    my $group = $1;
-    if ($allgroups !~ / $group /)
-    {
-      $allgroups .= " $group ";
-      push(@initialisers, "if(CCTKGROUPNUM_$group == -1) CCTKGROUPNUM_$group = CCTK_GroupIndex(\"$qualifier\::$group\");");
-    }
-  }
-
-  return @initialisers;
 }
 
 #/*@@
@@ -958,18 +916,6 @@ sub CreateThornArgumentHeaderFile
     # Create the C argument declarations
     push(@returndata, "#define DECLARE_${thorn}_${block}_CARGUMENTS \\");
     @data = CreateCArgumentDeclarations($thorn, %data);
-    push(@returndata, join (" \\\n", @data));
-    push(@returndata, '');
-
-    # Create the C argument variable number statics
-    push(@returndata, "#define DECLARE_${thorn}_${block}_C2F \\");
-    @data = CreateCArgumentStatics(%data);
-    push(@returndata, join (" \\\n", @data));
-    push(@returndata, '');
-
-    # Create the C argument variable number statics initialisers
-    push(@returndata, "#define INITIALISE_${thorn}_${block}_C2F \\");
-    @data = CreateCArgumentInitialisers(%data);
     push(@returndata, join (" \\\n", @data));
     push(@returndata, '');
 

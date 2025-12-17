@@ -2815,6 +2815,41 @@ const int *CCTKi_GroupLengthAsPointer(const char *fullgroupname)
 }
 
  /*@@
+   @routine    CCTKi_GroupLengthAsPointerI
+   @date       Wed Aug 27 17:08:17 PDT 2025
+   @author     Roland Haas
+   @desc
+               Get the number of variables in a group,
+               or the number of elements in a vector group
+   @enddesc
+
+   @var     group
+   @vdesc   The group index of a GV group
+   @vtype   int
+   @vio     in
+   @endvar
+
+   @returntype const int *
+   @returndesc
+               pointer to an integer containing the number of variables in the group
+               NULL if group doesn't exist
+   @endreturndesc
+@@*/
+const int *CCTKi_GroupLengthAsPointerI(int group)
+{
+  if (group < 0 || group > n_groups)
+  {
+      CCTK_VWarn (6, __LINE__, __FILE__, "Cactus",
+                  "CCTKi_GroupLengthAsPointerI: invalid group index '%d' passed",
+                  group);
+      return NULL;
+  }
+
+  return groups[group].vectorlength ?
+         &groups[group].vectorlength : &groups[group].n_variables;
+}
+
+ /*@@
    @routine    IntParameterEvaluator
    @date       Fri Oct 12 10:01:32 2001
    @author     Tom Goodale

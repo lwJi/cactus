@@ -12429,7 +12429,7 @@ int CallFunction(void *fun, cFunctionData *fdata, void *data) {
 }
 
 int count = 0;
-int ierr = CCTK_ScheduleTraverse("MoL_PostStep", CallFunction, &count);
+int ierr = CCTK_ScheduleTraverse("MoL_PostStep", &count, CallFunction);
 printf("There were %d functions scheduled\n", count);
 \end{verbatim}
 \end{Example}
@@ -13507,6 +13507,11 @@ call CCTK_VarDataPtr(ptr, cctkGH, timelevel, varname)
 \end{verbatim}
 \end{Synopsis}
 \end{SynopsisSection}
+\begin{ResultSection}
+\begin{Result}{ptr}
+Pointer to the required data, should be cast to required type.
+\end{Result}
+\end{ResultSection}
 \begin{ParameterSection}
 \begin{Parameter}{ptr}
 a void pointer to the grid variable data
@@ -13524,6 +13529,11 @@ The full name of the variable
 \begin{Discussion}
 The variable name should be in the form \code{<implementation>::<variable>}.
 \end{Discussion}
+\begin{ErrorSection}
+\begin{Error}{\code{NULL}}
+The variable does not exist or timelevel has no storage.
+\end{Error}
+\end{ErrorSection}
 \begin{ExampleSection}
 \begin{Example}{C}
 \begin{verbatim}
@@ -13548,6 +13558,11 @@ call CCTK_VarDataPtr(myVar,GH,0,"imp::realvar")
 \begin{verbatim}void * ptr = CCTK_VarDataPtrB( const cGH * cctkGH, int timelevel, int index, char * name)\end{verbatim}
 \end{Synopsis}
 \end{SynopsisSection}
+\begin{ResultSection}
+\begin{Result}{ptr}
+Pointer to the required data, should be cast to required type.
+\end{Result}
+\end{ResultSection}
 \begin{ParameterSection}
 \begin{Parameter}{ptr}
 a void pointer to the grid variable data
@@ -13568,6 +13583,11 @@ The full name of the variable
 \begin{Discussion}
 If the name is \code{NULL} the index will be used, if the index is negative the name will be used.
 \end{Discussion}
+\begin{ErrorSection}
+\begin{Error}{\code{NULL}}
+The variable does not exist or timelevel has no storage.
+\end{Error}
+\end{ErrorSection}
 \begin{ExampleSection}
 \begin{Example}{C}
 \begin{verbatim}
@@ -13594,6 +13614,11 @@ call CCTK_VarDataPtrI(ptr, cctkGH, timelevel, index)
 \end{verbatim}
 \end{Synopsis}
 \end{SynopsisSection}
+\begin{ResultSection}
+\begin{Result}{ptr}
+Pointer to the required data, should be cast to required type.
+\end{Result}
+\end{ResultSection}
 \begin{ParameterSection}
 \begin{Parameter}{cctkGH}
 pointer to CCTK grid hierarchy
@@ -13605,6 +13630,11 @@ The timelevel of the grid variable
 The index of the variable
 \end{Parameter}
 \end{ParameterSection}
+\begin{ErrorSection}
+\begin{Error}{\code{NULL}}
+The variable does not exist or timelevel has no storage.
+\end{Error}
+\end{ErrorSection}
 
 \begin{ExampleSection}
 \begin{Example}{C}

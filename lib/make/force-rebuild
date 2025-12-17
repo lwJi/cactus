@@ -45,3 +45,4 @@
 01 May 2020: qualify RDWR elements in schedule creator
 02 May 2020: use CCTKi_VarDataPtrI in Fortran Wrappers
 03 May 2020: correct creating schedule binding for inherited variables
+27 Aug 2025: use only group index based functions in Fortran wrappers
