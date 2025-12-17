@@ -129,21 +129,20 @@ $(addsuffix /make.identity, $(SUBDIRS) $(THORNBINDINGS)):
 # be used via xargs.
 
 OBJS-words = $(words $(OBJS))
+OBJS-words-max = 100
 
-ifeq ($(shell uname),AIX)
-# Be conservative about the maximum number of objects that can be
-# handled at once.  AIX has a command line length limit of about
-# 32000.  Each object's path name may be about 100 characters long.
-OBJS-words-max = 200
-else ifneq ($(findstring CYGWIN_NT,$(shell uname)),)
-# Ditto
-OBJS-words-max = 200
+# OBJS can often be long enough to exceed the maximum number of bytes `sh` will accept.
+# Here, we attempt to feed OBJS to the shell. If this explodes, we know it is too long and must be split up.
+# A harmless "Argument list too long" error will be printed in that case. 
+$(shell : &>/dev/null $(OBJS))
+ifeq ($(.SHELLSTATUS),0)
+    OBJS-too-long := 0
 else
-# Assume that the system has no limit to speak of
-OBJS-words-max = 10000
+    OBJS-too-long := 1
+    $(info NOTE: The string of object names is too long for your shell to handle, necessitating a slower procedure. The build may appear to hang while this is underway, but all is well.)
 endif
 
-ifeq ($(shell test $(OBJS-words) -le $(OBJS-words-max) && echo 1), 1)
+ifeq ($(OBJS-too-long), 0)
 
 # The list is short.  Create the file directly, which is faster.
 
