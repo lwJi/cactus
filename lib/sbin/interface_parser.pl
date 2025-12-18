@@ -96,17 +96,27 @@ sub alt_to_string
     my $arg = shift;
     my $out = "";
     my $p = $arg->getPatternName();
-    print(">>>$p<<<\n");
-    if($p eq "alt" or $p eq "altval") {
-        for my $ch (@{$arg->{children}}) {
-            $out .= alt_to_string($ch);
-        }
+    if($p eq "alt") {
+        $out .= $arg->{children}->[0]->substring();
+        $out .= "=";
+        $out .= alt_to_string($arg->{children}->[1]);
+    } elsif($p eq "altval") {
+        $out .= alt_to_string($arg->{children}->[0]);
     } elsif($p eq "dquote") {
         my $inside = substr($arg->substring(), 1, -1);
-        $inside =~ s{[\\"]}{\\$1}g;
-        $out = '"'.$inside.'"';
+        $inside =~ s{([\\"])}{\\$1}g;
+        $out = '\"'.$inside.'\"';
+    } elsif($p eq "squote") {
+        my $inside = substr($arg->substring(), 1, -1);
+        $out = "'".$inside."'";
     } elsif($p eq "name") {
         $out .= "'".$arg->substring()."'";
+    } elsif($p eq "altarr") {
+        $out .= "{";
+        for my $ch (@{$arg->{children}}) {
+            $out .= " " . $ch->substring();
+        }
+        $out .= " }";
     } else {
         confess("Cannot handle pattern $p");
     }
@@ -1034,9 +1044,7 @@ sub parse_interface_ccl
           $centering .= "}";
         } elsif($nm eq "alt") {
           $tags .= " " if(defined($tags));
-          my $alt = alt_to_string($ch);
-          $alt =~ s/(?<!\\)"/\\"/g;
-          $tags .= $alt;
+          $tags .= alt_to_string($ch);
         } elsif($nm eq "tags") {
           my $new_tags = trim_quotes($ch->substring());
           $new_tags =~ s/"/\\"/g;
