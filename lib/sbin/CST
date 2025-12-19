@@ -154,6 +154,7 @@ my (%source_thorns, %nosource_thorns);
 # Parse the interface.ccl files
 print "Parsing interface files...\n";
 my %interface_database = &create_interface_database(scalar(keys %system_database), %system_database, %source_thorns);
+&validate_alt_tags();
 
 &print_database("interface", \%interface_database) if($debug_interface);
 &save_database("interface", \%interface_database) if($debug_interface);

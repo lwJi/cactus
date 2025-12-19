@@ -69,9 +69,15 @@ desc = {dquote}?
 
 altint = [+-]?{num}
 altreal = [+-]?([0-9]+\.[0-9]*|\.[0-9]+)([eEdD][+-]?[0-9]+|)
-altval = {altreal}|{altint}|{name}|{altarr}|{dquote}|{squote}
-altarr = \{ (({altreal} )+|({altint} )*)\}
+altval = {altreal}|{altint}|{name}|{altint_array}|{altreal_array}|{dquote}|{squote}
+altint_array = \{ ({altint} )*\}
+altreal_array = \{ ({altreal} )*\}
 alt = {name} = {altval}
+
+alt_type = (?i:STR|INT_ARRAY|REAL_ARRAY|INT|REAL)
+
+tag_decl = {name} = {alt_type}
+DECLARE_TAGS = declare tags: {tag_decl}(, {tag_decl} )*
 
 GROUP_VARS = (?i:CCTK_|){vtype} {gname} (?i:TYPE = {gtype} |DIM = {dim}
              |TIMELEVELS = {timelevels} |SIZE = {size} |DISTRIB = {distrib}
@@ -82,7 +88,7 @@ GROUP_VARS = (?i:CCTK_|){vtype} {gname} (?i:TYPE = {gtype} |DIM = {dim}
  )?
  
 
-FUNC_GROUP = ({FUNCTION} |{access}: |{GROUP_VARS} |{INCLUDE} |{IMPLEMENTS} |{INHERITS} |{FRIEND} )
+FUNC_GROUP = ({FUNCTION} |{access}: |{GROUP_VARS} |{INCLUDE} |{IMPLEMENTS} |{INHERITS} |{FRIEND} |{DECLARE_TAGS} )
 
 # double-quoted string
 dquote = "(\\{-any}|[^"])*"

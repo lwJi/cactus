@@ -1,1 +1,5 @@
 IMPLEMENTS: Cactus
+
+declare tags: parities=INT_ARRAY, rhs=STR, checkpoint=STR, depends=STR, prolongation=STR
+declare tags: ProlongationParameter=STR, InterpNumTimelevels=INT, tensortypealias=STR
+declare tags: convergence_power=INT, dependents=STR

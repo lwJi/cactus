@@ -97,11 +97,11 @@ sub alt_to_string
     my $out = "";
     my $p = $arg->getPatternName();
     if($p eq "alt") {
-        $out .= $arg->{children}->[0]->substring();
+        $out .= $arg->group(0,"name")->substring();
         $out .= "=";
-        $out .= alt_to_string($arg->{children}->[1]);
+        $out .= alt_to_string($arg->group(1,"altval"));
     } elsif($p eq "altval") {
-        $out .= alt_to_string($arg->{children}->[0]);
+        $out .= alt_to_string($arg->group(0));
     } elsif($p eq "dquote") {
         my $inside = substr($arg->substring(), 1, -1);
         $inside =~ s{([\\"])}{\\$1}g;
@@ -111,7 +111,7 @@ sub alt_to_string
         $out = "'".$inside."'";
     } elsif($p eq "name") {
         $out .= "'".$arg->substring()."'";
-    } elsif($p eq "altarr") {
+    } elsif($p eq "altint_array" or $p eq "altreal_array") {
         $out .= "{";
         for my $ch (@{$arg->{children}}) {
             $out .= " " . $ch->substring();
@@ -897,6 +897,19 @@ sub parse_interface_ccl
       } else {
         confess $fin->dump();
       }
+    } elsif($fin->is("DECLARE_TAGS")) {
+      for my $ch (@{$fin->{children}}) {
+          my $key = uc $ch->{children}->[0]->substring();
+          my $val_type = uc $ch->{children}->[1]->substring();
+          my $data = $main::alt_tag_declare{$key};
+          if(defined($data) and $data->[0] ne $val_type) {
+            my $linenum = $ch->linenum();
+            &CST_error(0,"Conflicting declarations for tag '$key': '$val_type' and '$data->[0]'\n",
+               "Compare $data->[1]:$data->[2] and $ccl_file:$linenum",
+                $ccl_file,$linenum);
+          }
+          $main::alt_tag_declare{$key} = [$val_type, $ccl_file, $ch->linenum()];
+      }
     } elsif($fin->is("FUNCTION")) {
       my $func = $fin->group(0);
       if($func->is("FUNCTION_ALIAS")) {
@@ -1045,6 +1058,7 @@ sub parse_interface_ccl
         } elsif($nm eq "alt") {
           $tags .= " " if(defined($tags));
           $tags .= alt_to_string($ch);
+          push(@main::alt_tag_table, [$ch, $ccl_file]);
         } elsif($nm eq "tags") {
           my $new_tags = trim_quotes($ch->substring());
           $new_tags =~ s/"/\\"/g;
@@ -1086,6 +1100,39 @@ sub parse_interface_ccl
     }
   }
 
+}
+
+sub validate_alt_tags
+{
+    my %str_groups = (
+        "name" => "STR",
+        "squote" => "STR",
+        "dquote" => "STR",
+        "altint" => "INT",
+        "altreal" => "REAL",
+        "altint_array" => "INT_ARRAY",
+        "altreal_array" => "REAL_ARRAY"
+    );
+    for my $ch_and_file (@main::alt_tag_table) {
+        my $ch = $ch_and_file->[0];
+        my $fname = $ch_and_file->[1];
+        my $k = uc $ch->group(0,"name")->substring(); 
+        my $v = $ch->group(1,"altval"); 
+        my $vtype = $v->group(0)->getPatternName();
+        my $expected_vtype = $main::alt_tag_declare{$k}->[0];
+        if(!defined($expected_vtype)) {
+            &CST_error(0,"Tag '$k' was not declared.",
+                "Do you have a typo in the name?",
+                $fname,$ch->linenum());
+        } else {
+          my $found_vtype = $str_groups{$vtype};
+          if($str_groups{$vtype} ne $expected_vtype) {
+            &CST_error(0,"The value for tag '$k' is not of the declared type.",
+                "The tag should be of type '$expected_vtype', not '$found_vtype'.",
+                $fname,$ch->linenum());
+          }
+        }
+    }
 }
 
 #/*@@
