@@ -899,16 +899,23 @@ sub parse_interface_ccl
       }
     } elsif($fin->is("DECLARE_TAGS")) {
       for my $ch (@{$fin->{children}}) {
-          my $key = uc $ch->{children}->[0]->substring();
+          my $key = $ch->{children}->[0]->substring();
+          my $ukey = uc $key;
           my $val_type = uc $ch->{children}->[1]->substring();
-          my $data = $main::alt_tag_declare{$key};
+          my $data = $main::alt_tag_declare{$ukey};
           if(defined($data) and $data->[0] ne $val_type) {
             my $linenum = $ch->linenum();
             &CST_error(0,"Conflicting declarations for tag '$key': '$val_type' and '$data->[0]'\n",
                "Compare $data->[1]:$data->[2] and $ccl_file:$linenum",
                 $ccl_file,$linenum);
           }
-          $main::alt_tag_declare{$key} = [$val_type, $ccl_file, $ch->linenum()];
+          if(defined($data) and $data->[3] ne $key) {
+            my $linenum = $ch->linenum();
+            &CST_error(0,"Conflicting capitalizations for tag '$key': '$key' and '$data->[3]'\n",
+               "Compare $data->[1]:$data->[2] and $ccl_file:$linenum",
+                $ccl_file,$linenum);
+          }
+          $main::alt_tag_declare{$ukey} = [$val_type, $ccl_file, $ch->linenum(), $key];
       }
     } elsif($fin->is("FUNCTION")) {
       my $func = $fin->group(0);
@@ -1116,19 +1123,27 @@ sub validate_alt_tags
     for my $ch_and_file (@main::alt_tag_table) {
         my $ch = $ch_and_file->[0];
         my $fname = $ch_and_file->[1];
-        my $k = uc $ch->group(0,"name")->substring(); 
+        my $k = $ch->group(0,"name")->substring(); 
+        my $uk = uc $k;
         my $v = $ch->group(1,"altval"); 
         my $vtype = $v->group(0)->getPatternName();
-        my $expected_vtype = $main::alt_tag_declare{$k}->[0];
-        if(!defined($expected_vtype)) {
+        my $expected_data = $main::alt_tag_declare{$uk};
+        if(!defined($expected_data)) {
             &CST_error(0,"Tag '$k' was not declared.",
                 "Do you have a typo in the name?",
                 $fname,$ch->linenum());
         } else {
+            my $expected_vtype = $main::alt_tag_declare{$uk}->[0];
           my $found_vtype = $str_groups{$vtype};
           if($str_groups{$vtype} ne $expected_vtype) {
             &CST_error(0,"The value for tag '$k' is not of the declared type.",
                 "The tag should be of type '$expected_vtype', not '$found_vtype'.",
+                $fname,$ch->linenum());
+          }
+          my $expected_cap = $main::alt_tag_declare{$uk}->[3];
+          if($k ne $expected_cap) {
+            &CST_error(0,"The correct capitalization of the tag is '$expected_cap', not '$k'.",
+                "The capitalization of the tag should match the declaration.",
                 $fname,$ch->linenum());
           }
         }
