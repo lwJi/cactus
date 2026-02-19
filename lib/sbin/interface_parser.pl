@@ -898,24 +898,46 @@ sub parse_interface_ccl
         confess $fin->dump();
       }
     } elsif($fin->is("DECLARE_TAGS")) {
+      my $tag_use = undef;
       for my $ch (@{$fin->{children}}) {
-          my $key = $ch->{children}->[0]->substring();
-          my $ukey = uc $key;
-          my $val_type = uc $ch->{children}->[1]->substring();
-          my $data = $main::alt_tag_declare{$ukey};
-          if(defined($data) and $data->[0] ne $val_type) {
-            my $linenum = $ch->linenum();
-            &CST_error(0,"Conflicting declarations for tag '$key': '$val_type' and '$data->[0]'\n",
-               "Compare $data->[1]:$data->[2] and $ccl_file:$linenum",
-                $ccl_file,$linenum);
+          if($ch->is("tag_use")) {
+            $tag_use = $ch->substring();
+          } elsif($ch->is("tag_decl")) {
+             my $key = $ch->group(0, "name")->substring();
+             my $ukey = uc $key;
+             my $val_type = uc $ch->group(1, "alt_type")->substring();
+             my $data = $main::alt_tag_declare{$ukey};
+             if(defined($data) and $data->{val_type} ne $val_type) {
+               my $linenum = $ch->linenum();
+               &CST_error(0,"Conflicting declarations for tag '$key': '$val_type' and '$data->{val_type}'\n",
+                  "Compare $data->{ccl_file}:$data->{linenum} and $ccl_file:$linenum",
+                   $ccl_file,$linenum);
+             }
+             if(defined($data) and $data->{key} ne $key) {
+               my $linenum = $ch->linenum();
+               &CST_error(0,"Conflicting capitalizations for tag '$key': '$key' and '$data->{key}'\n",
+                  "Compare $data->{ccl_file}:$data->{linenum} and $ccl_file:$linenum",
+                   $ccl_file,$linenum);
+             }
+             my $info = {
+                val_type => $val_type,
+                ccl_file => $ccl_file,
+                linenum  => $ch->linenum(),
+                key      => $key, # Original capitalization
+                thorn    => $thorn
+            };
+            $main::alt_tag_declare{$ukey} = $info;
+            if(!defined($main::alt_tag_use{$ukey})) {
+                $main::alt_tag_use{$ukey} = {};
+            }
+            if($tag_use eq "uses") {
+                $main::alt_tag_use{$ukey}->{uses}->{$thorn} = 1;
+            } else {
+                $main::alt_tag_use{$ukey}->{provides} = $thorn;
+            }
+          } else {
+            croak "Should Not Happen";
           }
-          if(defined($data) and $data->[3] ne $key) {
-            my $linenum = $ch->linenum();
-            &CST_error(0,"Conflicting capitalizations for tag '$key': '$key' and '$data->[3]'\n",
-               "Compare $data->[1]:$data->[2] and $ccl_file:$linenum",
-                $ccl_file,$linenum);
-          }
-          $main::alt_tag_declare{$ukey} = [$val_type, $ccl_file, $ch->linenum(), $key];
       }
     } elsif($fin->is("FUNCTION")) {
       my $func = $fin->group(0);
@@ -1065,7 +1087,11 @@ sub parse_interface_ccl
         } elsif($nm eq "alt") {
           $tags .= " " if(defined($tags));
           $tags .= alt_to_string($ch);
-          push(@main::alt_tag_table, [$ch, $ccl_file]);
+          push(@main::alt_tag_table, {
+            group    => $ch,
+            ccl_file => $ccl_file,
+            thorn    => $thorn
+          });
         } elsif($nm eq "tags") {
           my $new_tags = trim_quotes($ch->substring());
           $new_tags =~ s/"/\\"/g;
@@ -1121,26 +1147,43 @@ sub validate_alt_tags
         "altreal_array" => "REAL_ARRAY"
     );
     for my $ch_and_file (@main::alt_tag_table) {
-        my $ch = $ch_and_file->[0];
-        my $fname = $ch_and_file->[1];
+        my $ch = $ch_and_file->{group};
+        my $fname = $ch_and_file->{ccl_file};
+        my $thorn = $ch_and_file->{thorn};
+
         my $k = $ch->group(0,"name")->substring(); 
         my $uk = uc $k;
         my $v = $ch->group(1,"altval"); 
+
         my $vtype = $v->group(0)->getPatternName();
+
         my $expected_data = $main::alt_tag_declare{$uk};
-        if(!defined($expected_data)) {
+        my $is_declared = 0;
+        if(defined($expected_data)) {
+
+            # Does a thorn provide this tag?
+            if(defined($main::alt_tag_use{$uk}->{provides})) {
+               $is_declared = 1;
+            }
+
+            # Does the current thorn declare that it uses this tag?
+            if(defined($main::alt_tag_use{$uk}->{uses}->{$thorn})) {
+               $is_declared = 1;
+            }
+        }
+        if(!$is_declared) {
             &CST_error(0,"Tag '$k' was not declared.",
                 "Do you have a typo in the name?",
                 $fname,$ch->linenum());
         } else {
-            my $expected_vtype = $main::alt_tag_declare{$uk}->[0];
+          my $expected_vtype = $main::alt_tag_declare{$uk}->{val_type};
           my $found_vtype = $str_groups{$vtype};
           if($str_groups{$vtype} ne $expected_vtype) {
             &CST_error(0,"The value for tag '$k' is not of the declared type.",
                 "The tag should be of type '$expected_vtype', not '$found_vtype'.",
                 $fname,$ch->linenum());
           }
-          my $expected_cap = $main::alt_tag_declare{$uk}->[3];
+          my $expected_cap = $main::alt_tag_declare{$uk}->{key};
           if($k ne $expected_cap) {
             &CST_error(0,"The correct capitalization of the tag is '$expected_cap', not '$k'.",
                 "The capitalization of the tag should match the declaration.",

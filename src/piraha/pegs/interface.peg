@@ -77,7 +77,8 @@ alt = {name} = {altval}
 alt_type = (?i:STR|INT_ARRAY|REAL_ARRAY|INT|REAL)
 
 tag_decl = {name} = {alt_type}
-DECLARE_TAGS = declare tags: {tag_decl}(, {tag_decl} )*
+tag_use = (uses|provides)
+DECLARE_TAGS = (?i:{tag_use} tags?:) {tag_decl}(, {tag_decl} )*
 
 GROUP_VARS = (?i:CCTK_|){vtype} {gname} (?i:TYPE = {gtype} |DIM = {dim}
              |TIMELEVELS = {timelevels} |SIZE = {size} |DISTRIB = {distrib}
