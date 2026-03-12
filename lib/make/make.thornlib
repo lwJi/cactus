@@ -79,12 +79,6 @@ SUBDIRS = $(LOCAL_SUBDIRS)
 # Turn source file names into object file names
 OBJS = $(SRCS:%=%.o)
 
-# Since the list may be too long to be passed to a shell, it is split
-# into a set of rules which add lines to a file.  This file can later
-# be used via xargs.
-
-OBJS-words-max = 100
-
 $(NAME): $(addsuffix /make.checked, $(SUBDIRS) $(THORNBINDINGS))
 	if [ -r $(NAME) ] ; then echo Updating $(NAME) ; else echo Creating $(NAME) ; fi
 	rm -f $@
@@ -94,11 +88,10 @@ $(NAME): $(addsuffix /make.checked, $(SUBDIRS) $(THORNBINDINGS))
 ##	when there are too many object files to be passed on the command line.
 #	$(AR) $(ARFLAGS) $@ $(OBJS)
 #
-##	This creates a list of all object files and incrementally archives them
-##	in batches not larger than $(OBJS-words-max) files at a time.
+##	This creates a list of all object files and incrementally archives them.
 	$(file >$(NAME).objectlist, $(OBJS))
 	$(MAKE) -f $(MAKE_DIR)/make.thornlib $(NAME).objectlist
-	xargs -n $(OBJS-words-max) $(AR) $(ARFLAGS) $@ < $(NAME).objectlist
+	xargs $(AR) $(ARFLAGS) $@ < $(NAME).objectlist
 ##	Alternatively, we could create a single object file from the object
 ##	files and put it into an archive.
 #	ld -r -o $@.o $(OBJS)
