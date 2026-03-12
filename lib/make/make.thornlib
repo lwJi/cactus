@@ -79,6 +79,12 @@ SUBDIRS = $(LOCAL_SUBDIRS)
 # Turn source file names into object file names
 OBJS = $(SRCS:%=%.o)
 
+# Since the list may be too long to be passed to a shell, it is split
+# into a set of rules which add lines to a file.  This file can later
+# be used via xargs.
+
+OBJS-words-max = 100
+
 $(NAME): $(addsuffix /make.checked, $(SUBDIRS) $(THORNBINDINGS))
 	if [ -r $(NAME) ] ; then echo Updating $(NAME) ; else echo Creating $(NAME) ; fi
 	rm -f $@
@@ -90,6 +96,7 @@ $(NAME): $(addsuffix /make.checked, $(SUBDIRS) $(THORNBINDINGS))
 #
 ##	This creates a list of all object files and incrementally archives them
 ##	in batches not larger than $(OBJS-words-max) files at a time.
+	$(file >$(NAME).objectlist, $(OBJS))
 	$(MAKE) -f $(MAKE_DIR)/make.thornlib $(NAME).objectlist
 	xargs -n $(OBJS-words-max) $(AR) $(ARFLAGS) $@ < $(NAME).objectlist
 ##	Alternatively, we could create a single object file from the object
@@ -119,45 +126,3 @@ cctk_Bindings/make.checked: FORCE
 $(addsuffix /make.identity, $(SUBDIRS) $(THORNBINDINGS)):
 	if [ ! -d $(dir $@) ] ; then $(MKDIR) $(MKDIRFLAGS) $(dir $@) ; fi
 	echo CCTK_THIS_SUBDIR := $(dir $@) > $@
-
-
-
-# Create a file containing the names of all object files.
-
-# Since the list may be too long to be passed to a shell, it is split
-# into a set of rules which add lines to a file.  This file can later
-# be used via xargs.
-
-OBJS-words = $(words $(OBJS))
-OBJS-words-max = 100
-
-# OBJS can often be long enough to exceed the maximum number of bytes `sh` will accept.
-# Here, we attempt to feed OBJS to the shell. If this explodes, we know it is too long and must be split up.
-# A harmless "Argument list too long" error will be printed in that case. 
-$(shell : &>/dev/null $(OBJS))
-ifeq ($(.SHELLSTATUS),0)
-    OBJS-too-long := 0
-else
-    OBJS-too-long := 1
-    $(info NOTE: The string of object names is too long for your shell to handle, necessitating a slower procedure. The build may appear to hang while this is underway, but all is well.)
-endif
-
-ifeq ($(OBJS-too-long), 0)
-
-# The list is short.  Create the file directly, which is faster.
-
-.PHONY: $(NAME).objectlist
-$(NAME).objectlist:
-	echo $(OBJS) > $@
-
-else
-
-# The list is long.  Create it one object file a time.
-
-.PHONY: $(NAME).objectlist
-$(NAME).objectlist:
-	$(shell : > $@.tmp)
-	$(foreach obj, $(OBJS), $(shell echo $(obj) >> $@.tmp))
-	mv $@.tmp $@
-
-endif
