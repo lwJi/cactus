@@ -79,15 +79,11 @@
 #include <ctype.h>
 #include <math.h>
 #include <limits.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
-
-/* FIXME: C99 defines <stdbool.h>, we should include that or a fake version */
-typedef int bool;
-#define true    1
-#define false   0
 
 #ifndef CCODE
   #define CCODE       /* signal Cactus header files that we're C, not Fortran */
