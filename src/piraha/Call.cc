@@ -375,6 +375,55 @@ struct ExpressionEvaluationData {
 };
 
 /**
+ * Give the caller-supplied evaluator (if any) a chance to resolve a
+ * variable before falling back to any Cactus-specific interpretation
+ * of its name. Util_ExpressionEvaluate() must not make any assumption
+ * about what names a custom evaluator considers valid -- in particular
+ * a name containing "::" is not necessarily a thorn parameter -- so
+ * this must be consulted for *every* kind of variable reference,
+ * including the "thorn::parameter" ones handled by the "par" grammar
+ * rule, and not just for bare names.
+ *
+ * Returns true and fills in *ret if the variable was resolved by the
+ * evaluator (or was already cached in eedata->values), false
+ * otherwise -- in which case *ret is left untouched.
+ */
+static bool eval_var(const std::string &vname_string,ExpressionEvaluationData *eedata,std::shared_ptr<Value> ret) {
+  if(eedata == 0 || eedata->eval == 0) {
+    return false;
+  }
+  const char *vname = vname_string.c_str();
+  uExpressionValue uval;
+  bool evaluated;
+  std::map<std::string,uExpressionValue>::iterator iter = eedata->values.find(vname_string);
+  if(iter != eedata->values.end()) {
+    evaluated = true;
+    uval = iter->second;
+  } else {
+    evaluated = (eedata->eval(1,&vname,&uval,eedata->data) == 0);
+  }
+  if(evaluated) {
+    if(uval.type == uExpressionValue::ival) {
+      ret->type = PIR_INT;
+      ret->idata = uval.value.ival;
+    } else if(uval.type == uExpressionValue::rval) {
+      ret->type = PIR_REAL;
+      ret->ddata = uval.value.rval;
+    } else if(uval.type == uExpressionValue::sval) {
+      ret->type = PIR_STRING;
+      ret->sdata = uval.value.sval;
+      // the evaluator hands back a string allocated with strdup(3) (see
+      // e.g. the sval branch of Util_ExpressionEvaluate() below), so it
+      // must be released with free(3), not with C++'s delete -- mixing
+      // allocators here is undefined behaviour and was corrupting the
+      // heap whenever a custom evaluator returned a string value.
+      free(const_cast<char *>(uval.value.sval));
+    }
+  }
+  return evaluated;
+}
+
+/**
  * The meval() function takes any node within
  * the parse tree and creates a Value object
  * from it. It is, therefore, designed to be
@@ -627,34 +676,10 @@ std::shared_ptr<Value> meval(std::shared_ptr<Group> gr,ExpressionEvaluationData 
         } else {
           ret->type = PIR_STRING;
           ret->sdata = gr->substring();
-          bool evaluated = false;
-          // vname_string needs to be an actual variable and not just a
-          // temporary so that c_str() stays valid
-          const std::string vname_string = gr->substring();
-          const char *vname = vname_string.c_str();
-          if(eedata != 0) {
-            uExpressionValue uval;
-            std::map<std::string,uExpressionValue>::iterator iter = eedata->values.find(vname);
-            if(iter != eedata->values.end()) {
-              evaluated = true;
-              uval = iter->second;
-            } else if(eedata->eval(1,&vname,&uval,eedata->data) == 0) {
-              evaluated = true;
-            }
-            if(evaluated) {
-              if(uval.type == uExpressionValue::ival) {
-                ret->type = PIR_INT;
-                ret->idata = uval.value.ival;
-              } else if(uval.type == uExpressionValue::rval) {
-                ret->type = PIR_REAL;
-                ret->ddata = uval.value.rval;
-              } else if(uval.type == uExpressionValue::sval) {
-                ret->type = PIR_STRING;
-                ret->sdata = uval.value.sval;
-                delete uval.value.sval;
-              }
-            }
-          }
+          // Give a caller-supplied evaluator a chance to override the
+          // literal-string interpretation of this bare name (e.g. it may
+          // want it treated as a grid scalar or other custom variable).
+          eval_var(gr->substring(),eedata,ret);
         }
         return ret;
     } else if(pn == "par") {
@@ -668,10 +693,21 @@ std::shared_ptr<Value> meval(std::shared_ptr<Group> gr,ExpressionEvaluationData 
                 o << name << "[" << index->idata << "]";
                 o << std::flush;
                 std::string keyi = o.str();
+                // Let a custom evaluator resolve "thorn::name[index]" itself
+                // before assuming it must be a Cactus parameter: a "::" in
+                // the name is not, by itself, evidence that this is a
+                // parameter and Util_ExpressionEvaluate must not make any
+                // assumption about what names a custom evaluator accepts.
+                if(eval_var(thorn+"::"+keyi,eedata,ret)) {
+                    return ret;
+                }
                 ret = find_val(gr,thorn,keyi);
                 return ret;
             }
         } else {
+            if(eval_var(thorn+"::"+name,eedata,ret)) {
+                return ret;
+            }
             ret = find_val(gr,thorn,name);
             return ret;
         }
