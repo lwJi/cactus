@@ -292,6 +292,71 @@ sub lookup_thorn
 }
 
 #/*@@
+#  @routine accumulate_rdwr
+#  @date    2026-09-03
+#  @desc
+#           Record the variables named in one reads/writes clause (a
+#           "reads" or "writes" parse-tree node) into $reads_writes, keyed
+#           by function name $nm. Factored out of do_schedules so it can be
+#           called both for a schedule block's direct reads/writes clauses
+#           and for the ones nested inside a schedule-body if/else
+#           (rdwrif/rdwrblock, requirement #16 / if.txt) - in both cases
+#           accumulation into the same $nm key is exactly what's wanted,
+#           since DECLARE_CCTK_ARGUMENTS_CHECKED(func) is one static macro
+#           per function name and must list every variable that routine
+#           might touch under any of its schedule-time RDWR declarations.
+#  @enddesc
+#@@*/
+sub accumulate_rdwr
+{
+  my ($ch, $is_writes, $reads_writes, $nm, $parsing_thorn, $hash, $ccl_file) = @_;
+  my $i = 0;
+  while($ch->has($i,"qrname")) {
+    # First we extract the thorn and variable name from the reads/writes clause
+    my $qrname = $ch->has($i,"qrname");
+    my $vname = $qrname->has(0,"vname");
+    my $thorn_or_var = $vname->has(0,"name")->substring();
+    my $thorn = undef;
+    my $var = undef;
+    my $cap_thorn = undef;
+    my $cap_var = undef;
+    if($vname->has(1,"name")) {
+        $cap_thorn = $thorn_or_var;
+        $cap_var = $vname->has(1,"name")->substring();
+        $thorn = uc $cap_thorn;
+        $var = lc $cap_var;
+    } else {
+        $cap_thorn = lookup_thorn($hash, $parsing_thorn, $thorn_or_var);
+        $thorn = uc $cap_thorn;
+        $cap_var = $thorn_or_var;
+        $var = lc $cap_var;
+    }
+
+    # Vectors of scalar variables may trigger errors if
+    # used directly in the schedule. Use the group name instead.
+    if(defined($hash->{$thorn}->{variable_list}->{$var})) {
+      my $gname = $hash->{$thorn}->{variable_list}->{$var};
+      if($gname ne $var) {
+        my $vector = $hash->{$thorn}->{$gname}->{vector};
+        my $linenum = $ch->linenum();
+        if($vector !~ /^\d+$/) {
+          my $hint = "Try using the group name instead: ${thorn}::$gname";
+          &CST_error(1, "Variable ${thorn}::${var}[0] may not exist at runtime."
+              ,$hint, $linenum, $ccl_file);
+        }
+      }
+    }
+
+    # update informational data structures
+    $reads_writes->{$nm}->{$thorn}->{$var}->{rdwr} += $is_writes;
+    $reads_writes->{$nm}->{$thorn}->{$var}->{line} = $vname->linenum();
+    $reads_writes->{$nm}->{$thorn}->{$var}->{cap} = "${cap_thorn}::${cap_var}";
+
+    $i++;
+  }
+}
+
+#/*@@
 #  @routine do_schedule
 #  @date    Mon Feb 24 16:10:38 EST 2020
 #  @author  Steven R. Brandt and Samuel D. Cupp
@@ -336,58 +401,34 @@ sub do_schedules
     }
     for my $ch (@{$gr->{children}}) {
       if($ch->is("reads") or $ch->is("writes")) {
-        my $is_writes = $ch->is("writes");
-
-        # Process variable names in this definition.
-        my $i = 0;
-        while($ch->has($i,"qrname")) {
-          # First we extract the thorn and variable name from the reads/writes clause
-          my $qrname = $ch->has($i,"qrname");
-          my $vname = $qrname->has(0,"vname");
-          my $thorn_or_var = $vname->has(0,"name")->substring();
-          my $thorn = undef;
-          my $var = undef;
-          my $cap_thorn = undef;
-          my $cap_var = undef;
-          if($vname->has(1,"name")) {
-              $cap_thorn = $thorn_or_var;
-              $cap_var = $vname->has(1,"name")->substring();
-              $thorn = uc $cap_thorn;
-              $var = lc $cap_var;
-          } else {
-              $cap_thorn = lookup_thorn($hash, $parsing_thorn, $thorn_or_var);
-              $thorn = uc $cap_thorn;
-              $cap_var = $thorn_or_var;
-              $var = lc $cap_var;
-          }
-
-          # Vectors of scalar variables may trigger errors if
-          # used directly in the schedule. Use the group name instead.
-          if(defined($hash->{$thorn}->{variable_list}->{$var})) {
-            my $gname = $hash->{$thorn}->{variable_list}->{$var};
-            if($gname ne $var) {
-              my $vector = $hash->{$thorn}->{$gname}->{vector};
-              my $linenum = $ch->linenum();
-              if($vector !~ /^\d+$/) {
-                my $hint = "Try using the group name instead: ${thorn}::$gname";
-                &CST_error(1, "Variable ${thorn}::${var}[0] may not exist at runtime."
-                    ,$hint, $linenum, $ccl_file);
-              }
+        accumulate_rdwr($ch, $ch->is("writes"), $reads_writes, $nm,
+                         $parsing_thorn, $hash, $ccl_file);
+      } elsif($ch->is("rdwrif")) {
+        # A schedule-body if/else (requirement #16 / if.txt): the reads/
+        # writes/invalidates clauses live two levels deeper (schedule ->
+        # rdwrif -> rdwrblock -> reads/writes), not as direct children of
+        # the schedule node, so the loop above never sees them. Since
+        # DECLARE_CCTK_ARGUMENTS_CHECKED(func) is one static, compile-time
+        # macro shared by both branches (there is only one underlying C
+        # function, whichever branch's CCTK_ScheduleFunction call actually
+        # ran), it must declare the *union* of both branches' variables -
+        # the accumulation below already unions correctly (same $reads_writes
+        # entry, and "rdwr" is OR'd via +=) because both branches funnel
+        # into the same $nm key, exactly like a routine scheduled twice
+        # with different clauses at two different bins already does.
+        for my $rdwrblock (@{$ch->{children}}) {
+          next unless($rdwrblock->is("rdwrblock"));
+          for my $gch (@{$rdwrblock->{children}}) {
+            if($gch->is("reads") or $gch->is("writes")) {
+              accumulate_rdwr($gch, $gch->is("writes"), $reads_writes, $nm,
+                               $parsing_thorn, $hash, $ccl_file);
             }
           }
-
-          # update informational data structures
-          $reads_writes->{$nm}->{$thorn}->{$var}->{rdwr} += $is_writes;
-          $reads_writes->{$nm}->{$thorn}->{$var}->{line} = $vname->linenum();
-          $reads_writes->{$nm}->{$thorn}->{$var}->{cap} = "${cap_thorn}::${cap_var}";
-
-          $i++;
-        }
-
-        if(defined($reads_writes->{$nm}->{$nm}->{$nm})) {
-            delete $reads_writes->{$nm}->{$nm}->{$nm};
         }
       }
+    }
+    if(defined($reads_writes->{$nm}->{$nm}->{$nm})) {
+        delete $reads_writes->{$nm}->{$nm}->{$nm};
     }
     if(!defined($reads_writes->{$nm})) {
       # In the event that a function has no declarations,

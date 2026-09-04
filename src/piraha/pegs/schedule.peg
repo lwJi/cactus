@@ -48,6 +48,27 @@ invalidates = (?i:invalidates) : {qrname}( , {qrname}|{-spacing}{qrname})*
 qrname = {vname}( \( {region} \)|)
 region = (?i:everywhere|interiorwithboundary|interior|all|in|boundary|scalar)
 tags = (?i:tags) : {assign}( , {assign}|{-spacing}{assign})*
+# A conditional READS:/WRITES:/INVALIDATES: clause, usable inside a
+# SCHEDULE block body so those clauses can vary by parameter without
+# duplicating the whole SCHEDULE statement. First pass: a single
+# if/else, no chaining ("else if") and no nesting - see notes.md.
+# NOTE: the spaces around each `|` below are load-bearing, not style. In
+# this .peg format, a skip is compiled in wherever whitespace appears in
+# the rule's own source text between elements - it is not auto-inserted
+# based on which alternative comes first. Writing this compactly as
+# `({reads}|{writes}|{invalidates})*` (no spaces around `|`) gives only
+# `reads` a leading skip and leaves `writes`/`invalidates` with none,
+# because only `reads` sits right after the group's own opening
+# `( ` (a real space in the source); matching `reads` then `writes`
+# then loses the intervening whitespace and misparses as a syntax
+# error at the second clause. Every existing multi-alternative OR in
+# this file (`boolterm`, `schedule`'s own body, ...) already writes a
+# space after each `|`, which is what actually makes them work - this
+# rule just needs to follow the same convention. See notes.md.
+rdwrblock = \{ ( {reads} | {writes} | {invalidates} )* \}
+rdwrif = (?i:
+  if \( {boolexpr} \) {rdwrblock} ( {else} {rdwrblock}| )
+  )
 schedule = (?i:
   schedule ({group}|{nogroup}) {name} {prepositions} \{
     ( {storage}
@@ -59,6 +80,7 @@ schedule = (?i:
         | {writes}
         | {invalidates}
         | {tags}
+        | {rdwrif}
     )*
  \} {quote}
  )

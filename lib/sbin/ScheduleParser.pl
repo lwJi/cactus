@@ -150,6 +150,86 @@ sub qrname
   return $out;
 }
 
+# Join two comma-separated lists (either may be undef), used to merge a
+# schedule block's shared READS/WRITES/INVALIDATES with the lists
+# contributed by one branch of a schedule-body rdwrif.
+sub merge_lists
+{
+  my ($a, $b) = @_;
+  return $a unless(defined($b));
+  return $b unless(defined($a));
+  return "$a,$b";
+}
+
+# Process a parse tree element named "rdwrblock" (the body of one branch
+# of a schedule-body if/else) into (reads_list, writes_list,
+# invalidates_list) comma-joined strings, same format as the schedule-body
+# reads/writes/invalidates handling in parse_schedule_statement.
+sub parse_rdwrblock
+{
+  my $rdwrblock = shift;
+  my ($reads_list, $writes_list, $invalidates_list);
+  for my $rdwr (@{$rdwrblock->{children}}) {
+    if($rdwr->is("reads")) {
+      for my $qrname (@{$rdwr->{children}}) {
+        if($qrname->is("qrname")) {
+          $reads_list .= "," if(defined($reads_list));
+          $reads_list .= qrname($qrname);
+        }
+      }
+    } elsif($rdwr->is("writes")) {
+      for my $qrname (@{$rdwr->{children}}) {
+        if($qrname->is("qrname")) {
+          $writes_list .= "," if(defined($writes_list));
+          $writes_list .= qrname($qrname);
+        }
+      }
+    } elsif($rdwr->is("invalidates")) {
+      for my $qrname (@{$rdwr->{children}}) {
+        if($qrname->is("qrname")) {
+          $invalidates_list .= "," if(defined($invalidates_list));
+          $invalidates_list .= qrname($qrname);
+        }
+      }
+    } else {
+      confess("rdwrblock child error: ".$rdwr->{name});
+    }
+  }
+  return ($reads_list, $writes_list, $invalidates_list);
+}
+
+# Write one BLOCK_<n> entry into the schedule database. Factored out of
+# parse_schedule_statement so a schedule body containing an rdwrif can
+# call it twice (once per branch) instead of once.
+sub write_schedule_block_entry
+{
+  my ($schedule_db, $block_num, $thorn, $name, $as, $type, $description,
+      $where, $language, $mem_groups, $comm_groups, $trigger_groups,
+      $sync_groups, $options, $tags, $before_list, $after_list,
+      $writes_list, $reads_list, $invalidates_list, $while_list,
+      $if_list) = @_;
+  $schedule_db->{"\U$thorn\E BLOCK_$block_num NAME"}        = $name;
+  $schedule_db->{"\U$thorn\E BLOCK_$block_num AS"}          = $as;
+  $schedule_db->{"\U$thorn\E BLOCK_$block_num TYPE"}        = $type;
+  $schedule_db->{"\U$thorn\E BLOCK_$block_num DESCRIPTION"} = $description;
+  $schedule_db->{"\U$thorn\E BLOCK_$block_num WHERE"}       = $where;
+  $schedule_db->{"\U$thorn\E BLOCK_$block_num LANG"}        = $language
+    if(defined($language));
+  $schedule_db->{"\U$thorn\E BLOCK_$block_num STOR"}        = $mem_groups;
+  $schedule_db->{"\U$thorn\E BLOCK_$block_num COMM"}        = $comm_groups;
+  $schedule_db->{"\U$thorn\E BLOCK_$block_num TRIG"}        = $trigger_groups;
+  $schedule_db->{"\U$thorn\E BLOCK_$block_num SYNC"}        = $sync_groups;
+  $schedule_db->{"\U$thorn\E BLOCK_$block_num OPTIONS"}     = $options;
+  $schedule_db->{"\U$thorn\E BLOCK_$block_num TAGS"}        = $tags;
+  $schedule_db->{"\U$thorn\E BLOCK_$block_num BEFORE"}      = $before_list;
+  $schedule_db->{"\U$thorn\E BLOCK_$block_num AFTER"}       = $after_list;
+  $schedule_db->{"\U$thorn\E BLOCK_$block_num WRITES"}      = $writes_list;
+  $schedule_db->{"\U$thorn\E BLOCK_$block_num READS"}       = $reads_list;
+  $schedule_db->{"\U$thorn\E BLOCK_$block_num INVALIDATES"} = $invalidates_list;
+  $schedule_db->{"\U$thorn\E BLOCK_$block_num WHILE"}       = $while_list;
+  $schedule_db->{"\U$thorn\E BLOCK_$block_num IF"}          = $if_list;
+}
+
 sub parse_schedule_statement
 {
   my $group = shift;
@@ -164,6 +244,13 @@ sub parse_schedule_statement
        $mem_groups, $comm_groups, $trigger_groups, $sync_groups,
        $options, $tags, $before_list, $after_list,
        $writes_list, $reads_list, $invalidates_list, $while_list, $if_list,$qthorn);
+      # A single schedule-body READS:/WRITES:/INVALIDATES: if/else (rdwrif),
+      # if one is present in this schedule's body. rdwr_if_cond is the
+      # literal C boolean-expression text; the _true_/_false_ lists are the
+      # branch-specific additions to merge onto the shared lists above.
+      my ($rdwr_if_seen, $rdwr_if_cond,
+          $rdwr_if_true_reads, $rdwr_if_true_writes, $rdwr_if_true_invalidates,
+          $rdwr_if_false_reads, $rdwr_if_false_writes, $rdwr_if_false_invalidates);
       for my $schedule (@{$statement->{children}}) {
         my $nm = $schedule->{name};
         if($nm eq "schedule") {
@@ -294,6 +381,36 @@ sub parse_schedule_statement
                   $trigger_groups .= vname($vname);
                 }
               }
+            } elsif($child->is("rdwrif")) {
+              if($rdwr_if_seen) {
+                CST_error(0,
+                  "Only one if/else READS/WRITES/INVALIDATES conditional is ".
+                  "currently supported per SCHEDULE block",
+                  "Split into separate SCHEDULE blocks, or wrap the whole ".
+                  "SCHEDULE statement in a top-level if/else instead",
+                  $child->linenum(),$ccl_file);
+                next;
+              }
+              $rdwr_if_seen = 1;
+              my $branch = 0;
+              for my $part (@{$child->{children}}) {
+                if($part->is("boolexpr")) {
+                  $rdwr_if_cond = $part->substring();
+                } elsif($part->is("rdwrblock")) {
+                  if($branch == 0) {
+                    ($rdwr_if_true_reads, $rdwr_if_true_writes,
+                     $rdwr_if_true_invalidates) = parse_rdwrblock($part);
+                  } else {
+                    ($rdwr_if_false_reads, $rdwr_if_false_writes,
+                     $rdwr_if_false_invalidates) = parse_rdwrblock($part);
+                  }
+                  $branch++;
+                } elsif($part->is("else")) {
+                  # Just a marker between the two rdwrblocks; nothing to do.
+                } else {
+                  confess("rdwrif child error: ".$part->{name});
+                }
+              }
             } else {
               confess("child error: ".$child->{name});
             }
@@ -324,28 +441,45 @@ sub parse_schedule_statement
         } else {
           confess("NOT FOUND: [".$schedule->{name}."]");
         }
-        $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks NAME"}        = $name;
-        $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks AS"}          = $as;
-        $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks TYPE"}        = $type;
-        $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks DESCRIPTION"} = $description;
-        $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks WHERE"}       = $where;
-        $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks LANG"}        = $language
-          if(defined($language));
-        $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks STOR"}        = $mem_groups;
-        $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks COMM"}        = $comm_groups;
-        $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks TRIG"}        = $trigger_groups;
-        $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks SYNC"}        = $sync_groups;
-        $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks OPTIONS"}     = $options;
-        $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks TAGS"}        = $tags;
-        $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks BEFORE"}      = $before_list;
-        $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks AFTER"}       = $after_list;
-        $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks WRITES"}      = $writes_list;
-        $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks READS"}       = $reads_list;
-        $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks INVALIDATES"} = $invalidates_list;
-        $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks WHILE"}       = $while_list;
-        $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks IF"}          = $if_list;
-        $$buffer .= "\@BLOCK\@$$n_blocks\n";
-        $$n_blocks++;
+        if($rdwr_if_seen) {
+          # This schedule body had a READS:/WRITES:/INVALIDATES: if/else.
+          # CCTK_ScheduleFunction takes one fixed reads/writes list, so
+          # register the *same* routine twice - once per branch, each with
+          # the shared lists merged with that branch's additions - and wrap
+          # the two placeholders in a real C if/else (mirroring how a
+          # top-level if/else around two duplicated SCHEDULE blocks already
+          # works: only one branch's registration call ever executes).
+          my $true_block = $$n_blocks;
+          write_schedule_block_entry($schedule_db, $true_block, $thorn,
+            $name, $as, $type, $description, $where, $language, $mem_groups,
+            $comm_groups, $trigger_groups, $sync_groups, $options, $tags,
+            $before_list, $after_list,
+            merge_lists($writes_list, $rdwr_if_true_writes),
+            merge_lists($reads_list, $rdwr_if_true_reads),
+            merge_lists($invalidates_list, $rdwr_if_true_invalidates),
+            $while_list, $if_list);
+          $$n_blocks++;
+          my $false_block = $$n_blocks;
+          write_schedule_block_entry($schedule_db, $false_block, $thorn,
+            $name, $as, $type, $description, $where, $language, $mem_groups,
+            $comm_groups, $trigger_groups, $sync_groups, $options, $tags,
+            $before_list, $after_list,
+            merge_lists($writes_list, $rdwr_if_false_writes),
+            merge_lists($reads_list, $rdwr_if_false_reads),
+            merge_lists($invalidates_list, $rdwr_if_false_invalidates),
+            $while_list, $if_list);
+          $$n_blocks++;
+          $$buffer .= "if ($rdwr_if_cond)\n{\n\@BLOCK\@$true_block\n}\n".
+                      "else\n{\n\@BLOCK\@$false_block\n}\n";
+        } else {
+          write_schedule_block_entry($schedule_db, $$n_blocks, $thorn,
+            $name, $as, $type, $description, $where, $language, $mem_groups,
+            $comm_groups, $trigger_groups, $sync_groups, $options, $tags,
+            $before_list, $after_list, $writes_list, $reads_list,
+            $invalidates_list, $while_list, $if_list);
+          $$buffer .= "\@BLOCK\@$$n_blocks\n";
+          $$n_blocks++;
+        }
       }
     } elsif($statement->is("block")) {
       $$buffer .= "{\n";
