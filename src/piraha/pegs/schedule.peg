@@ -66,8 +66,13 @@ tags = (?i:tags) : {assign}( , {assign}|{-spacing}{assign})*
 # space after each `|`, which is what actually makes them work - this
 # rule just needs to follow the same convention. See notes.md.
 rdwrblock = \{ ( {reads} | {writes} | {invalidates} )* \}
+# Chained "else if" is supported by making rdwrif directly recursive in
+# its else position, exactly like the top-level ifbody rule does. A
+# SCHEDULE body may also contain several independent rdwrifs (the
+# schedule body alternation below is a repetition), which ScheduleParser.pl
+# expands as the cartesian product of their branches.
 rdwrif = (?i:
-  if \( {boolexpr} \) {rdwrblock} ( {else} {rdwrblock}| )
+  if \( {boolexpr} \) {rdwrblock} ( {else} {rdwrif} | {else} {rdwrblock} | )
   )
 schedule = (?i:
   schedule ({group}|{nogroup}) {name} {prepositions} \{

@@ -56,6 +56,13 @@ for my $s (@schedule_bins) {
 
 my $ccl_file = undef;
 
+# Upper bound on the number of block registrations one SCHEDULE block's
+# schedule-body if/else conditionals may expand to (the product of their
+# branch counts). Generous enough for any sane schedule.ccl; exists only so
+# that a pathological pile of conditionals fails with a clear CST error
+# instead of silently generating thousands of registrations.
+my $max_rdwrif_variants = 64;
+
 use FindBin;
 use Carp;
 use FileHandle;
@@ -198,9 +205,104 @@ sub parse_rdwrblock
   return ($reads_list, $writes_list, $invalidates_list);
 }
 
+# Process a parse tree element named "rdwrif" (one schedule-body
+# if / else if / ... / else conditional) into a flat description:
+#   { arms => [ { cond => <boolexpr text>, reads/writes/invalidates },
+#               ... one per if / else if arm ... ],
+#     else => { reads/writes/invalidates } or undef }
+# A chained "else if" is a nested rdwrif in the else position (see
+# schedule.peg); the chain is flattened here so the caller sees one
+# conditional with N arms plus at most one final else. An absent else is
+# undef, which behaves as an arm contributing no clauses at all.
+sub parse_rdwrif
+{
+  my $node = shift;
+  my $cond;
+  my @arms;
+  my $else_clauses;
+  my $seen_arm_block = 0;
+  for my $part (@{$node->{children}}) {
+    if($part->is("boolexpr")) {
+      $cond = $part->substring();
+    } elsif($part->is("rdwrblock")) {
+      my ($r, $w, $i) = parse_rdwrblock($part);
+      if(!$seen_arm_block) {
+        # The block belonging to this arm's own condition.
+        push @arms, {cond => $cond, reads => $r, writes => $w,
+                     invalidates => $i};
+        $seen_arm_block = 1;
+      } else {
+        # A second rdwrblock at this level is the trailing "else { ... }".
+        $else_clauses = {reads => $r, writes => $w, invalidates => $i};
+      }
+    } elsif($part->is("rdwrif")) {
+      # "else if ..." - flatten the nested conditional into this one.
+      my $nested = parse_rdwrif($part);
+      push @arms, @{$nested->{arms}};
+      $else_clauses = $nested->{else};
+    } elsif($part->is("else")) {
+      # Just a marker; nothing to do.
+    } else {
+      confess("rdwrif child error: ".$part->{name});
+    }
+  }
+  return {arms => \@arms, else => $else_clauses};
+}
+
+# The clause set of one leaf of a conditional: arm $idx for
+# $idx < @arms, otherwise the (possibly absent) final else.
+sub rdwrif_leaf
+{
+  my ($cond, $idx) = @_;
+  return $cond->{arms}->[$idx] if($idx <= $#{$cond->{arms}});
+  return $cond->{else} if(defined($cond->{else}));
+  return {};
+}
+
+# Number of leaves of one conditional: one per arm, plus the else leaf
+# (explicit or implicit-empty).
+sub rdwrif_nleaves
+{
+  my $cond = shift;
+  return scalar(@{$cond->{arms}}) + 1;
+}
+
+# Emit the nested C if / else if / else scaffold for a list of independent
+# schedule-body conditionals, recursing one conditional per level so that
+# k conditionals produce the cartesian product of their leaves. At each
+# leaf $leaf_cb is called with the chosen leaf index per conditional and
+# must return the block number it registered; its @BLOCK@<n> placeholder
+# is written at that point in $buffer.
+sub emit_rdwrif_tree
+{
+  my ($conds, $level, $chosen, $leaf_cb, $buffer) = @_;
+  if($level > $#$conds) {
+    my $block = $leaf_cb->($chosen);
+    $$buffer .= "\@BLOCK\@$block\n";
+    return;
+  }
+  my $cond = $conds->[$level];
+  my $narms = scalar(@{$cond->{arms}});
+  for(my $arm = 0; $arm < $narms; $arm++) {
+    $$buffer .= ($arm == 0 ? "if (" : "else if (").
+                $cond->{arms}->[$arm]->{cond}.")\n{\n";
+    push @$chosen, $arm;
+    &emit_rdwrif_tree($conds, $level+1, $chosen, $leaf_cb, $buffer);
+    pop @$chosen;
+    $$buffer .= "}\n";
+  }
+  # The else leaf always exists as a registration: with no explicit else
+  # it simply contributes no extra clauses.
+  $$buffer .= "else\n{\n";
+  push @$chosen, $narms;
+  &emit_rdwrif_tree($conds, $level+1, $chosen, $leaf_cb, $buffer);
+  pop @$chosen;
+  $$buffer .= "}\n";
+}
+
 # Write one BLOCK_<n> entry into the schedule database. Factored out of
-# parse_schedule_statement so a schedule body containing an rdwrif can
-# call it twice (once per branch) instead of once.
+# parse_schedule_statement so a schedule body containing rdwrifs can call
+# it once per branch combination instead of once.
 sub write_schedule_block_entry
 {
   my ($schedule_db, $block_num, $thorn, $name, $as, $type, $description,
@@ -244,13 +346,12 @@ sub parse_schedule_statement
        $mem_groups, $comm_groups, $trigger_groups, $sync_groups,
        $options, $tags, $before_list, $after_list,
        $writes_list, $reads_list, $invalidates_list, $while_list, $if_list,$qthorn);
-      # A single schedule-body READS:/WRITES:/INVALIDATES: if/else (rdwrif),
-      # if one is present in this schedule's body. rdwr_if_cond is the
-      # literal C boolean-expression text; the _true_/_false_ lists are the
-      # branch-specific additions to merge onto the shared lists above.
-      my ($rdwr_if_seen, $rdwr_if_cond,
-          $rdwr_if_true_reads, $rdwr_if_true_writes, $rdwr_if_true_invalidates,
-          $rdwr_if_false_reads, $rdwr_if_false_writes, $rdwr_if_false_invalidates);
+      # Every schedule-body READS:/WRITES:/INVALIDATES: conditional
+      # (rdwrif) in this block, in source order, as returned by
+      # parse_rdwrif: each has a list of arms (if / else if ...) plus an
+      # optional final else. Independent conditionals expand to the
+      # cartesian product of their leaves; see the registration code below.
+      my @rdwr_ifs;
       for my $schedule (@{$statement->{children}}) {
         my $nm = $schedule->{name};
         if($nm eq "schedule") {
@@ -382,35 +483,7 @@ sub parse_schedule_statement
                 }
               }
             } elsif($child->is("rdwrif")) {
-              if($rdwr_if_seen) {
-                CST_error(0,
-                  "Only one if/else READS/WRITES/INVALIDATES conditional is ".
-                  "currently supported per SCHEDULE block",
-                  "Split into separate SCHEDULE blocks, or wrap the whole ".
-                  "SCHEDULE statement in a top-level if/else instead",
-                  $child->linenum(),$ccl_file);
-                next;
-              }
-              $rdwr_if_seen = 1;
-              my $branch = 0;
-              for my $part (@{$child->{children}}) {
-                if($part->is("boolexpr")) {
-                  $rdwr_if_cond = $part->substring();
-                } elsif($part->is("rdwrblock")) {
-                  if($branch == 0) {
-                    ($rdwr_if_true_reads, $rdwr_if_true_writes,
-                     $rdwr_if_true_invalidates) = parse_rdwrblock($part);
-                  } else {
-                    ($rdwr_if_false_reads, $rdwr_if_false_writes,
-                     $rdwr_if_false_invalidates) = parse_rdwrblock($part);
-                  }
-                  $branch++;
-                } elsif($part->is("else")) {
-                  # Just a marker between the two rdwrblocks; nothing to do.
-                } else {
-                  confess("rdwrif child error: ".$part->{name});
-                }
-              }
+              push @rdwr_ifs, parse_rdwrif($child);
             } else {
               confess("child error: ".$child->{name});
             }
@@ -441,36 +514,50 @@ sub parse_schedule_statement
         } else {
           confess("NOT FOUND: [".$schedule->{name}."]");
         }
-        if($rdwr_if_seen) {
-          # This schedule body had a READS:/WRITES:/INVALIDATES: if/else.
-          # CCTK_ScheduleFunction takes one fixed reads/writes list, so
-          # register the *same* routine twice - once per branch, each with
-          # the shared lists merged with that branch's additions - and wrap
-          # the two placeholders in a real C if/else (mirroring how a
-          # top-level if/else around two duplicated SCHEDULE blocks already
-          # works: only one branch's registration call ever executes).
-          my $true_block = $$n_blocks;
-          write_schedule_block_entry($schedule_db, $true_block, $thorn,
-            $name, $as, $type, $description, $where, $language, $mem_groups,
-            $comm_groups, $trigger_groups, $sync_groups, $options, $tags,
-            $before_list, $after_list,
-            merge_lists($writes_list, $rdwr_if_true_writes),
-            merge_lists($reads_list, $rdwr_if_true_reads),
-            merge_lists($invalidates_list, $rdwr_if_true_invalidates),
-            $while_list, $if_list);
-          $$n_blocks++;
-          my $false_block = $$n_blocks;
-          write_schedule_block_entry($schedule_db, $false_block, $thorn,
-            $name, $as, $type, $description, $where, $language, $mem_groups,
-            $comm_groups, $trigger_groups, $sync_groups, $options, $tags,
-            $before_list, $after_list,
-            merge_lists($writes_list, $rdwr_if_false_writes),
-            merge_lists($reads_list, $rdwr_if_false_reads),
-            merge_lists($invalidates_list, $rdwr_if_false_invalidates),
-            $while_list, $if_list);
-          $$n_blocks++;
-          $$buffer .= "if ($rdwr_if_cond)\n{\n\@BLOCK\@$true_block\n}\n".
-                      "else\n{\n\@BLOCK\@$false_block\n}\n";
+        if(@rdwr_ifs) {
+          # This schedule body had one or more READS:/WRITES:/INVALIDATES:
+          # conditionals. CCTK_ScheduleFunction takes one fixed
+          # reads/writes list, so register the *same* routine once per
+          # combination of branches - each with the shared lists merged
+          # with that combination's additions - inside a real C
+          # if/else-if/else scaffold (mirroring how a top-level if/else
+          # around duplicated SCHEDULE blocks already works: only one
+          # combination's registration call ever executes).
+          #
+          # k independent conditionals with n_i leaves each give
+          # prod(n_i) registrations, so guard against a pathological
+          # blow-up rather than silently generating thousands of them.
+          my $nvariants = 1;
+          $nvariants *= rdwrif_nleaves($_) for(@rdwr_ifs);
+          if($nvariants > $max_rdwrif_variants) {
+            CST_error(0,
+              "The if/else conditionals in the schedule block for '$name' ".
+              "expand to $nvariants registrations, more than the limit of ".
+              "$max_rdwrif_variants",
+              "Each independent if/else multiplies the number of ".
+              "registrations. Use fewer conditionals per SCHEDULE block, ".
+              "or split the routine into several SCHEDULE blocks",
+              $schedule->linenum(),$ccl_file);
+            next;
+          }
+          my $leaf_cb = sub {
+            my $chosen = shift;
+            my ($r, $w, $i) = ($reads_list, $writes_list, $invalidates_list);
+            for(my $k = 0; $k <= $#rdwr_ifs; $k++) {
+              my $leaf = rdwrif_leaf($rdwr_ifs[$k], $chosen->[$k]);
+              $r = merge_lists($r, $leaf->{reads});
+              $w = merge_lists($w, $leaf->{writes});
+              $i = merge_lists($i, $leaf->{invalidates});
+            }
+            my $block = $$n_blocks;
+            write_schedule_block_entry($schedule_db, $block, $thorn,
+              $name, $as, $type, $description, $where, $language, $mem_groups,
+              $comm_groups, $trigger_groups, $sync_groups, $options, $tags,
+              $before_list, $after_list, $w, $r, $i, $while_list, $if_list);
+            $$n_blocks++;
+            return $block;
+          };
+          emit_rdwrif_tree(\@rdwr_ifs, 0, [], $leaf_cb, $buffer);
         } else {
           write_schedule_block_entry($schedule_db, $$n_blocks, $thorn,
             $name, $as, $type, $description, $where, $language, $mem_groups,

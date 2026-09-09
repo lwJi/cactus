@@ -357,6 +357,40 @@ sub accumulate_rdwr
 }
 
 #/*@@
+#  @routine accumulate_rdwrif
+#  @date    2026-09-09
+#  @desc
+#           Record every reads/writes clause anywhere inside one
+#           schedule-body conditional (an "rdwrif" parse-tree node) into
+#           $reads_writes under function name $nm. Recurses through chained
+#           "else if" arms, which the grammar represents as an rdwrif
+#           nested in the else position of its predecessor. Only the union
+#           over all arms matters here: DECLARE_CCTK_ARGUMENTS[X]_<func> is
+#           one static macro for the routine, whichever arm's registration
+#           actually runs (which arm may access what is enforced separately
+#           at runtime - see CCTK_HasAccess in src/main/RDWR.cc).
+#  @enddesc
+#@@*/
+sub accumulate_rdwrif
+{
+  my ($node, $reads_writes, $nm, $parsing_thorn, $hash, $ccl_file) = @_;
+  for my $part (@{$node->{children}}) {
+    if($part->is("rdwrblock")) {
+      for my $clause (@{$part->{children}}) {
+        if($clause->is("reads") or $clause->is("writes")) {
+          accumulate_rdwr($clause, $clause->is("writes"), $reads_writes, $nm,
+                           $parsing_thorn, $hash, $ccl_file);
+        }
+      }
+    } elsif($part->is("rdwrif")) {
+      # "else if ..." - keep descending the chain.
+      &accumulate_rdwrif($part, $reads_writes, $nm, $parsing_thorn, $hash,
+                         $ccl_file);
+    }
+  }
+}
+
+#/*@@
 #  @routine do_schedule
 #  @date    Mon Feb 24 16:10:38 EST 2020
 #  @author  Steven R. Brandt and Samuel D. Cupp
@@ -416,15 +450,14 @@ sub do_schedules
         # entry, and "rdwr" is OR'd via +=) because both branches funnel
         # into the same $nm key, exactly like a routine scheduled twice
         # with different clauses at two different bins already does.
-        for my $rdwrblock (@{$ch->{children}}) {
-          next unless($rdwrblock->is("rdwrblock"));
-          for my $gch (@{$rdwrblock->{children}}) {
-            if($gch->is("reads") or $gch->is("writes")) {
-              accumulate_rdwr($gch, $gch->is("writes"), $reads_writes, $nm,
-                               $parsing_thorn, $hash, $ccl_file);
-            }
-          }
-        }
+        # Chained "else if" nests another rdwrif in the else position, so
+        # this descent has to recurse (accumulate_rdwrif), and a schedule
+        # body may hold several independent rdwrifs - each is a separate
+        # child of the schedule node and so hits this arm in turn. All of
+        # them union into the same $nm key, which is what the single
+        # static macro needs.
+        accumulate_rdwrif($ch, $reads_writes, $nm, $parsing_thorn, $hash,
+                          $ccl_file);
       }
     }
     if(defined($reads_writes->{$nm}->{$nm}->{$nm})) {
