@@ -490,7 +490,7 @@ sub ScheduleBlock
   my($thorn, $implementation, $block, $rhinterface_db, $rhschedule_db) = @_;
 
   my($buffer, $prototype);
-  my($indent, $language, $function);
+  my($indent, $header);
   my($mem_groups);
   my($tlist);
   my($comm_groups);
@@ -506,6 +506,13 @@ sub ScheduleBlock
   my(@invalidates_list);
   my(@while_list);
   my(@if_list);
+
+  # Blocks with conditional clauses are handled separately
+  if(defined($rhschedule_db->{"\U$thorn\E BLOCK_$block BODY"}))
+  {
+    return &ScheduleBlockConditional($thorn, $implementation, $block,
+                                     $rhinterface_db, $rhschedule_db);
+  }
 
   # Extract group and routine information from the databases
   ($mem_groups, $tlist) = &ScheduleSelectGroups($thorn, $implementation,
@@ -596,66 +603,11 @@ sub ScheduleBlock
   }
 
   # Start writing out the data
-  if($rhschedule_db->{"\U$thorn\E BLOCK_$block TYPE"} eq "GROUP")
-  {
-    $prototype = '';
-    $buffer .= '    CCTKi_ScheduleGroup("' . $rhschedule_db->{"\U$thorn\E BLOCK_$block NAME"} . "\",\n";
-    $indent  = '                        ';
-    $language = '';
-  }
-  elsif($rhschedule_db->{"\U$thorn\E BLOCK_$block TYPE"} eq "FUNCTION")
-  {
-    if($rhschedule_db->{"\U$thorn\E BLOCK_$block LANG"} =~ m:^\s*C\s*$:i )
-    {
-      $language = 'C';
-      $function = $rhschedule_db->{"\U$thorn\E BLOCK_$block NAME"};
-    }
-    elsif($rhschedule_db->{"\U$thorn\E BLOCK_$block LANG"} =~ m:^\s*(F|F77|FORTRAN|F90)\s*$:i )
-    {
-      $language = 'Fortran';
-      $function = "CCTK_FNAME(".$rhschedule_db->{"\U$thorn\E BLOCK_$block NAME"} .")";
-    }
-    else
-    {
-      if (!$rhschedule_db->{"\U$thorn\E BLOCK_$block LANG"})
-      {
-        my $mess = "Language not specified in schedule block: " .$rhschedule_db->{"\U$thorn\E BLOCK_$block NAME"} ." in thorn: $thorn";
-        &CST_error(0,$mess,'',__LINE__,__FILE__);
-        return ('', '');
-      }
-      else
-      { 
-        my $mess = 'Unknown language ' .$rhschedule_db->{"\U$thorn\E BLOCK_$block LANG"} ." in schedule block: ".$rhschedule_db->{"\U$thorn\E BLOCK_$block NAME"} ." in thorn: $thorn";
-        &CST_error(0,$mess,'',__LINE__,__FILE__);
-        return ('', '');
-      }
-    }
-    $prototype = "extern int $function(void);\n";
-    $buffer .= "    CCTKi_ScheduleFunction((void *)$function,\n";
-    $indent  = '                           ';
-    $buffer .= $indent;
-  }
-  else
-  {
-    my $mess = 'Internal error: Unknown schedule block type ' . $rhschedule_db->{"\U$thorn\E BLOCK_$block TYPE"};
-    &CST_error(0,$mess,'',__LINE__,__FILE__);
-    return ('', '');
-  }
-
-  $buffer .= '"' . $rhschedule_db->{"\U$thorn\E BLOCK_$block AS"} . "\",\n";
-  $buffer .= "$indent\"$thorn\",\n";
-  $buffer .= "$indent\"$implementation\",\n";
-  $buffer .= "$indent\"" . $rhschedule_db->{"\U$thorn\E BLOCK_$block DESCRIPTION"} . "\",\n";
-  $buffer .= "$indent\"";
-  if(defined($rhschedule_db->{"\U$thorn\E BLOCK_$block WHERE"}))
-  {
-    $buffer .= $rhschedule_db->{"\U$thorn\E BLOCK_$block WHERE"};
-  }
-  $buffer .= "\",\n";
-  if($language ne '')
-  {
-    $buffer .= "$indent\"$language\",\n";
-  }
+  ($header, $prototype, $indent) =
+    &ScheduleBlockHeader($thorn, $implementation, $block, $rhschedule_db,
+                         "CCTKi_ScheduleGroup", "CCTKi_ScheduleFunction");
+  return ('', '') if(!defined($header));
+  $buffer .= $header;
 
   $buffer .= $indent . scalar(@$mem_groups) . ",  /* Number of STORAGE  groups   */\n";
   $buffer .= $indent . scalar(@$comm_groups) . ",  /* Number of COMM     groups   */\n";
@@ -702,6 +654,266 @@ sub ScheduleBlock
   }
 
   $buffer .= ");\n\n";
+
+  # Close this block.
+  $buffer .= "  }\n";
+
+  return ($buffer, $prototype);
+}
+
+#/*@@
+#  @routine    ScheduleBlockHeader
+#  @desc
+#  Creates the beginning of the call that registers a schedule block,
+#  up to and including its language. Returns the code, the prototype
+#  of the scheduled function, and the indentation for the remaining
+#  arguments, or undef on error.
+#  @enddesc
+#@@*/
+sub ScheduleBlockHeader
+{
+  my($thorn, $implementation, $block, $rhschedule_db,
+     $group_call, $function_call) = @_;
+
+  my($buffer, $prototype, $indent, $language, $function);
+
+  if($rhschedule_db->{"\U$thorn\E BLOCK_$block TYPE"} eq "GROUP")
+  {
+    $prototype = '';
+    $buffer = "    $group_call(\"" . $rhschedule_db->{"\U$thorn\E BLOCK_$block NAME"} . "\",\n";
+    $indent  = ' ' x (length($group_call) + 5);
+    $language = '';
+  }
+  elsif($rhschedule_db->{"\U$thorn\E BLOCK_$block TYPE"} eq "FUNCTION")
+  {
+    if($rhschedule_db->{"\U$thorn\E BLOCK_$block LANG"} =~ m:^\s*C\s*$:i )
+    {
+      $language = 'C';
+      $function = $rhschedule_db->{"\U$thorn\E BLOCK_$block NAME"};
+    }
+    elsif($rhschedule_db->{"\U$thorn\E BLOCK_$block LANG"} =~ m:^\s*(F|F77|FORTRAN|F90)\s*$:i )
+    {
+      $language = 'Fortran';
+      $function = "CCTK_FNAME(".$rhschedule_db->{"\U$thorn\E BLOCK_$block NAME"} .")";
+    }
+    else
+    {
+      if (!$rhschedule_db->{"\U$thorn\E BLOCK_$block LANG"})
+      {
+        my $mess = "Language not specified in schedule block: " .$rhschedule_db->{"\U$thorn\E BLOCK_$block NAME"} ." in thorn: $thorn";
+        &CST_error(0,$mess,'',__LINE__,__FILE__);
+        return (undef, '', '');
+      }
+      else
+      { 
+        my $mess = 'Unknown language ' .$rhschedule_db->{"\U$thorn\E BLOCK_$block LANG"} ." in schedule block: ".$rhschedule_db->{"\U$thorn\E BLOCK_$block NAME"} ." in thorn: $thorn";
+        &CST_error(0,$mess,'',__LINE__,__FILE__);
+        return (undef, '', '');
+      }
+    }
+    $prototype = "extern int $function(void);\n";
+    $buffer = "    $function_call((void *)$function,\n";
+    $indent  = ' ' x (length($function_call) + 5);
+    $buffer .= $indent;
+  }
+  else
+  {
+    my $mess = 'Internal error: Unknown schedule block type ' . $rhschedule_db->{"\U$thorn\E BLOCK_$block TYPE"};
+    &CST_error(0,$mess,'',__LINE__,__FILE__);
+    return (undef, '', '');
+  }
+
+  $buffer .= '"' . $rhschedule_db->{"\U$thorn\E BLOCK_$block AS"} . "\",\n";
+  $buffer .= "$indent\"$thorn\",\n";
+  $buffer .= "$indent\"$implementation\",\n";
+  $buffer .= "$indent\"" . $rhschedule_db->{"\U$thorn\E BLOCK_$block DESCRIPTION"} . "\",\n";
+  $buffer .= "$indent\"";
+  if(defined($rhschedule_db->{"\U$thorn\E BLOCK_$block WHERE"}))
+  {
+    $buffer .= $rhschedule_db->{"\U$thorn\E BLOCK_$block WHERE"};
+  }
+  $buffer .= "\",\n";
+  if($language ne '')
+  {
+    $buffer .= "$indent\"$language\",\n";
+  }
+
+  return ($buffer, $prototype, $indent);
+}
+
+#/*@@
+#  @routine    ScheduleBlockConditional
+#  @desc
+#  Creates the code for a given schedule block that contains
+#  conditional clauses. The clause lists are assembled at run time in
+#  local arrays, and are then passed to CCTKi_ScheduleFunctionArrays
+#  or CCTKi_ScheduleGroupArrays.
+#  @enddesc
+#@@*/
+sub ScheduleBlockConditional
+{
+  my($thorn, $implementation, $block, $rhinterface_db, $rhschedule_db) = @_;
+
+  my $body = $rhschedule_db->{"\U$thorn\E BLOCK_$block BODY"};
+
+  # The local array holding each kind of clause item, and the number
+  # of items that might be added to it
+  my %array = (STOR        => 'cctkschedulei_mem_groups',
+               TRIG        => 'cctkschedulei_trigger_groups',
+               SYNC        => 'cctkschedulei_sync_groups',
+               WRITES      => 'cctkschedulei_writes',
+               READS       => 'cctkschedulei_reads',
+               INVALIDATES => 'cctkschedulei_invalidates');
+  my %max_items = map { $_ => 0 } keys %array;
+
+  # Code filling the arrays, following the structure of the block
+  my $code = '';
+  my $cindent = '    ';
+  for my $elem (@$body)
+  {
+    my ($kind, $item) = @$elem;
+    if($kind eq 'IF')
+    {
+      $code .= "${cindent}if ($item)\n$cindent\{\n";
+      $cindent .= '  ';
+    }
+    elsif($kind eq 'ELSE')
+    {
+      $cindent = substr($cindent, 2);
+      $code .= "$cindent}\n${cindent}else\n$cindent\{\n";
+      $cindent .= '  ';
+    }
+    elsif($kind eq 'ENDIF')
+    {
+      $cindent = substr($cindent, 2);
+      $code .= "$cindent}\n";
+    }
+    elsif($kind eq 'STOR')
+    {
+      my ($groups, $tlist) = &ScheduleSelectGroups($thorn, $implementation,
+                                                   $item, $rhinterface_db);
+      &ScheduleValidateTimeLevels($thorn, $implementation, $groups, $tlist,
+                                  $rhinterface_db);
+      for(my $i=0; $i < @$groups; $i++)
+      {
+        my ($group, $tl) = ($$groups[$i], $$tlist[$i]);
+        $code .= "${cindent}if(!($tl >= 0 && $tl <= CCTK_DeclaredTimeLevels(\"$group\")))\n";
+        $code .= "${cindent}    CCTK_VWarn(0, __LINE__, __FILE__, CCTK_THORNSTRING,\n";
+        $code .= "${cindent}               \"Tried to schedule %ld timelevels for group '%s' in schedule.ccl.\\n\"\n";
+        $code .= "${cindent}               \"Value must be between 0 and %d (inclusive)\",\n";
+        $code .= "${cindent}               (long)$tl, \"$group\", CCTK_DeclaredTimeLevels(\"$group\"));\n";
+        $code .= "${cindent}cctkschedulei_tlevelarray[cctkschedulei_n_mem_groups] = $tl;\n";
+        $code .= "${cindent}cctkschedulei_mem_groups[cctkschedulei_n_mem_groups++] = \"$group\";\n";
+        $max_items{STOR}++;
+      }
+    }
+    else
+    {
+      my @items;
+      if($kind eq 'TRIG' or $kind eq 'SYNC')
+      {
+        my ($groups) = &ScheduleSelectGroups($thorn, $implementation,
+                                             $item, $rhinterface_db);
+        @items = @$groups;
+      }
+      elsif($kind eq 'WRITES' or $kind eq 'READS' or $kind eq 'INVALIDATES')
+      {
+        @items = &ScheduleSelectRDWR($thorn, $implementation,
+                                     $kind eq 'WRITES' ? "Interior" : "Everywhere",
+                                     $item, $rhinterface_db);
+      }
+      else
+      {
+        &CST_error(0,"Internal error: Unknown schedule clause kind $kind",'',__LINE__,__FILE__);
+        next;
+      }
+      my $n = "cctkschedulei_n_" . substr($array{$kind}, length('cctkschedulei_'));
+      foreach my $i (@items)
+      {
+        $code .= "$cindent$array{$kind}\[$n++] = \"$i\";\n";
+        $max_items{$kind}++;
+      }
+    }
+  }
+
+  # The unconditional parts
+  my @options = ();
+  my $options = $rhschedule_db->{"\U$thorn\E BLOCK_$block OPTIONS"};
+  @options = split(/,/, $options) if $options;
+  my $tags = $rhschedule_db->{"\U$thorn\E BLOCK_$block TAGS"};
+  $tags = '' if ! defined $tags;
+  my %static = (options => \@options);
+  $static{before} = [&ScheduleSelectRoutines($thorn, $implementation,
+                                             $rhschedule_db->{"\U$thorn\E BLOCK_$block BEFORE"},
+                                             $rhschedule_db)];
+  $static{after}  = [&ScheduleSelectRoutines($thorn, $implementation,
+                                             $rhschedule_db->{"\U$thorn\E BLOCK_$block AFTER"},
+                                             $rhschedule_db)];
+  $static{while}  = [&ScheduleSelectVars($thorn, $implementation,
+                                         $rhschedule_db->{"\U$thorn\E BLOCK_$block WHILE"},
+                                         $rhinterface_db)];
+  $static{if}     = [&ScheduleSelectVars($thorn, $implementation,
+                                         $rhschedule_db->{"\U$thorn\E BLOCK_$block IF"},
+                                         $rhinterface_db)];
+
+  my ($header, $prototype, $indent) =
+    &ScheduleBlockHeader($thorn, $implementation, $block, $rhschedule_db,
+                         "CCTKi_ScheduleGroupArrays", "CCTKi_ScheduleFunctionArrays");
+  return ('', '') if(!defined($header));
+
+  # Create a block so that we can have local variables.
+  my $buffer = "  {\n";
+
+  # Declare the arrays. Each has at least one element so that it is
+  # never empty.
+  $buffer .= "    int cctkschedulei_tlevelarray[" . ($max_items{STOR}+1) . "] = {0};\n";
+  foreach my $kind ('STOR', 'TRIG', 'SYNC', 'WRITES', 'READS', 'INVALIDATES')
+  {
+    my $n = "cctkschedulei_n_" . substr($array{$kind}, length('cctkschedulei_'));
+    $buffer .= "    const char *$array{$kind}\[" . ($max_items{$kind}+1) . "] = {NULL};\n";
+    $buffer .= "    int $n = 0;\n";
+  }
+  foreach my $kind ('options', 'before', 'after', 'while', 'if')
+  {
+    $buffer .= "    const char *cctkschedulei_$kind\[] = {";
+    foreach my $item (@{$static{$kind}})
+    {
+      $buffer .= "\"$item\", ";
+    }
+    $buffer .= "NULL};\n";
+  }
+  $buffer .= "\n";
+
+  $buffer .= $code;
+  $buffer .= "\n";
+
+  $buffer .= $header;
+  $buffer .= "${indent}cctkschedulei_n_mem_groups,     /* Number of STORAGE  groups   */\n";
+  $buffer .= "${indent}0,                              /* Number of COMM     groups   */\n";
+  $buffer .= "${indent}cctkschedulei_n_trigger_groups, /* Number of TRIGGERS groups   */\n";
+  $buffer .= "${indent}cctkschedulei_n_sync_groups,    /* Number of SYNC     groups   */\n";
+  $buffer .= "${indent}cctkschedulei_n_writes,         /* Number of WRITES clauses    */\n";
+  $buffer .= "${indent}cctkschedulei_n_reads,          /* Number of READS clauses     */\n";
+  $buffer .= "${indent}cctkschedulei_n_invalidates,    /* Number of INVALIDATES clauses */\n";
+  $buffer .= $indent . scalar(@{$static{options}}) . ", /* Number of Options            */\n";
+  $buffer .= $indent . scalar(@{$static{before}})  . ", /* Number of BEFORE   routines  */\n";
+  $buffer .= $indent . scalar(@{$static{after}})   . ", /* Number of AFTER    routines  */\n";
+  $buffer .= $indent . scalar(@{$static{while}})   . ", /* Number of WHILE    variables */\n";
+  $buffer .= $indent . scalar(@{$static{if}})      . ", /* Number of IF       variables */\n";
+  $buffer .= "${indent}cctkschedulei_tlevelarray,\n";
+  $buffer .= "${indent}cctkschedulei_mem_groups,\n";
+  $buffer .= "${indent}NULL,                           /* COMM groups */\n";
+  $buffer .= "${indent}cctkschedulei_trigger_groups,\n";
+  $buffer .= "${indent}cctkschedulei_sync_groups,\n";
+  $buffer .= "${indent}cctkschedulei_writes,\n";
+  $buffer .= "${indent}cctkschedulei_reads,\n";
+  $buffer .= "${indent}cctkschedulei_invalidates,\n";
+  $buffer .= "${indent}cctkschedulei_options,\n";
+  $buffer .= "${indent}\"$tags\",\n";
+  $buffer .= "${indent}cctkschedulei_before,\n";
+  $buffer .= "${indent}cctkschedulei_after,\n";
+  $buffer .= "${indent}cctkschedulei_while,\n";
+  $buffer .= "${indent}cctkschedulei_if);\n\n";
 
   # Close this block.
   $buffer .= "  }\n";

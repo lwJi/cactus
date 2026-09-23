@@ -150,6 +150,103 @@ sub qrname
   return $out;
 }
 
+# Append the items of a clause (READS, STORAGE, etc.) to the
+# comma-separated list $lists->{$kind}, and to the block body @$body
+sub add_schedule_clause_items
+{
+  my ($kind, $clause, $item_type, $conv, $lists, $body) = @_;
+  for my $item (@{$clause->{children}}) {
+    next unless($item->is($item_type));
+    my $str = $conv->($item);
+    $lists->{$kind} .= "," if(defined($lists->{$kind}));
+    $lists->{$kind} .= $str;
+    push(@$body, [$kind, $str]);
+  }
+}
+
+# Parse the clauses in the body of a schedule block, recursing into
+# conditional clauses.
+#
+# All clause items are collected in the comma-separated lists
+# $lists->{KIND}, independent of the conditions under which they
+# apply. This way, all items are checked at build time.
+#
+# @$body records the READS, WRITES, INVALIDATES, SYNC, STORAGE, and
+# TRIG items in source order, together with the conditions. Each
+# element is one of
+#     [KIND, item]
+#     ['IF', condition]
+#     ['ELSE']
+#     ['ENDIF']
+# $lists->{conditional} is set if there is at least one condition.
+sub parse_schedule_clauses
+{
+  my ($children, $depth, $lists, $body, $name) = @_;
+  for my $child (@$children) {
+    if($child->is("clauseif")) {
+      $lists->{conditional} = 1;
+      push(@$body, ['IF', $child->group(0,"boolexpr")->substring()]);
+      &parse_schedule_clauses($child->group(1,"clauseblock")->{children},
+                              $depth+1, $lists, $body, $name);
+      if($child->has(2,"else")) {
+        # This is either an "else if" or an "else"
+        my $else = $child->group(3);
+        push(@$body, ['ELSE']);
+        &parse_schedule_clauses($else->is("clauseif") ? [$else] : $else->{children},
+                                $depth+1, $lists, $body, $name);
+      }
+      push(@$body, ['ENDIF']);
+    } elsif($child->is("schedule")) {
+      CST_error(0,
+        "Schedule blocks cannot be nested: found schedule block " .
+          $child->group(1,"name")->substring() .
+          " inside schedule block $name",
+        undef,
+        $child->linenum(),$ccl_file);
+    } elsif($depth > 0 and
+            ($child->is("lang") or $child->is("options") or $child->is("tags"))) {
+      CST_error(0,
+        uc($child->{name}) .
+          " may not appear inside a conditional in schedule block $name",
+        "Only READS, WRITES, INVALIDATES, SYNC, STORAGE, and TRIGGERS " .
+          "clauses may be conditional",
+        $child->linenum(),$ccl_file);
+    } elsif($child->is("lang")) {
+      $lists->{lang} = $child->group(0,"name")->substring();
+      if(lc($lists->{lang}) ne "c" and lc($lists->{lang}) ne "fortran") {
+        CST_error(0,
+        "Invalid language: '$lists->{lang}'. Must be C or Fortran.",
+        undef,
+        $child->linenum(),$ccl_file);
+      }
+    } elsif($child->is("options")) {
+      for my $opt (@{$child->{children}}) {
+        $lists->{options} .= "," if(defined($lists->{options}));
+        $lists->{options} .= $opt->substring();
+      }
+    } elsif($child->is("tags")) {
+      for my $tag (@{$child->{children}}) {
+        $lists->{tags} .= "," if(defined($lists->{tags}));
+        $lists->{tags} .= $tag->substring();
+      }
+    } elsif($child->is("storage")) {
+      &add_schedule_clause_items("STOR", $child, "vname", \&vname, $lists, $body);
+    } elsif($child->is("writes")) {
+      &add_schedule_clause_items("WRITES", $child, "qrname", \&qrname, $lists, $body);
+    } elsif($child->is("invalidates")) {
+      &add_schedule_clause_items("INVALIDATES", $child, "qrname", \&qrname, $lists, $body);
+    } elsif($child->is("reads")) {
+      &add_schedule_clause_items("READS", $child, "qrname", \&qrname, $lists, $body);
+    } elsif($child->is("sync")) {
+      &add_schedule_clause_items("SYNC", $child, "uname", \&vname, $lists, $body);
+    } elsif($child->is("triggers")) {
+      &add_schedule_clause_items("TRIG", $child, "vname", \&vname, $lists, $body);
+    } else {
+      confess("child error: ".$child->{name});
+    }
+  }
+}
+
 sub parse_schedule_statement
 {
   my $group = shift;
@@ -163,7 +260,8 @@ sub parse_schedule_statement
       my ($name, $as, $type, $description, $where, $language,
        $mem_groups, $comm_groups, $trigger_groups, $sync_groups,
        $options, $tags, $before_list, $after_list,
-       $writes_list, $reads_list, $invalidates_list, $while_list, $if_list,$qthorn);
+       $writes_list, $reads_list, $invalidates_list, $while_list, $if_list,$qthorn,
+       $body);
       for my $schedule (@{$statement->{children}}) {
         my $nm = $schedule->{name};
         if($nm eq "schedule") {
@@ -233,71 +331,20 @@ sub parse_schedule_statement
             }
           }
           $as = $name unless(defined($as));
-          for my $child (@children[3..$#children-1]) {
-            if($child->is("lang")) {
-              $language = $child->group(0,"name")->substring();
-              if(lc($language) ne "c" and lc($language) ne "fortran") {
-                CST_error(0,
-                "Invalid language: '$language'. Must be C or Fortran.",
-                undef,
-                $child->linenum(),$ccl_file);
-              }
-            } elsif($child->is("options")) {
-              for my $opt (@{$child->{children}}) {
-                $options .= "," if(defined($options));
-                $options .= $opt->substring();
-              }
-            } elsif($child->is("tags")) {
-              for my $tag (@{$child->{children}}) {
-                $tags .= "," if(defined($tags));
-                $tags .= $tag->substring();
-              }
-            } elsif($child->is("storage")) {
-              for my $vname (@{$child->{children}}) {
-                if($vname->is('vname')) {
-                  $mem_groups .= "," if(defined($mem_groups));
-                  $mem_groups .= vname($vname);
-                }
-              }
-            } elsif($child->is("writes")) {
-              for my $qrname (@{$child->{children}}) {
-                if($qrname->is("qrname")) {
-                  $writes_list .= "," if(defined($writes_list));
-                  $writes_list .= qrname($qrname);
-                }
-              }
-            } elsif($child->is("invalidates")) {
-              for my $qrname (@{$child->{children}}) {
-                if($qrname->is("qrname")) {
-                  $invalidates_list .= "," if(defined($invalidates_list));
-                  $invalidates_list .= qrname($qrname);
-                }
-              }
-            } elsif($child->is("reads")) {
-              for my $qrname (@{$child->{children}}) {
-                if($qrname->is("qrname")) {
-                  $reads_list .= "," if(defined($reads_list));
-                  $reads_list .= qrname($qrname);
-                }
-              }
-            } elsif($child->is("sync")) {
-              for my $vname (@{$child->{children}}) {
-                if($vname->is('uname')) {
-                  $sync_groups .= "," if(defined($sync_groups));
-                  $sync_groups .= vname($vname);
-                }
-              }
-            } elsif($child->is("triggers")) {
-              for my $vname (@{$child->{children}}) {
-                if($vname->is('vname')) {
-                  $trigger_groups .= "," if(defined($trigger_groups));
-                  $trigger_groups .= vname($vname);
-                }
-              }
-            } else {
-              confess("child error: ".$child->{name});
-            }
-          }
+          my %lists = ();
+          my @body = ();
+          &parse_schedule_clauses([@children[3..$#children-1]], 0,
+                                  \%lists, \@body, $name);
+          $language         = $lists{lang};
+          $options          = $lists{options};
+          $tags             = $lists{tags};
+          $mem_groups       = $lists{STOR};
+          $writes_list      = $lists{WRITES};
+          $invalidates_list = $lists{INVALIDATES};
+          $reads_list       = $lists{READS};
+          $sync_groups      = $lists{SYNC};
+          $trigger_groups   = $lists{TRIG};
+          $body = \@body if($lists{conditional});
           $description = $children[$#children]->substring();
           # Trim off quote characters
           $description = substr($description,1,length($description)-2);
@@ -344,6 +391,9 @@ sub parse_schedule_statement
         $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks INVALIDATES"} = $invalidates_list;
         $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks WHILE"}       = $while_list;
         $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks IF"}          = $if_list;
+        # Only present if the block contains conditional clauses
+        $schedule_db->{"\U$thorn\E BLOCK_$$n_blocks BODY"}        = $body
+          if(defined($body));
         $$buffer .= "\@BLOCK\@$$n_blocks\n";
         $$n_blocks++;
       }

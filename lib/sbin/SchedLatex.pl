@@ -198,7 +198,8 @@ sub ReadScheduleDatabase
      if (/^(.*?)\s(.*?)\s(.*)$/) 
      {
         ($name, $block, $var) = ($1, $2, $3); 
-        chomp($schedule_database{$_});
+        # BODY (the structure of conditional clauses) is an array reference
+        chomp($schedule_database{$_}) unless (ref($schedule_database{$_}));
 
         $thorn{$block}->{$var} = $schedule_database{$_};
 
@@ -226,6 +227,34 @@ sub ReadScheduleDatabase
          }
       }
    }   
+
+   # conditional clauses inside blocks: annotate each item with its condition
+   foreach my $key (sort keys %thorn)
+   {
+      next if (not defined $thorn{$key}->{"BODY"});
+
+      my %items = ();
+      my @conditions = ();
+      foreach my $elem (@{$thorn{$key}->{"BODY"}})
+      {
+         my ($kind, $item) = @$elem;
+         if ($kind eq "IF") {
+            push @conditions, "($item)";
+         } elsif ($kind eq "ELSE") {
+            $conditions[-1] = "!$conditions[-1]";
+         } elsif ($kind eq "ENDIF") {
+            pop @conditions;
+         } else {
+            $item .= " [if " . join(" && ", @conditions) . "]" if (@conditions);
+            push @{$items{$kind}}, $item;
+         }
+      }
+      foreach my $kind (keys %items)
+      {
+         $thorn{$key}->{$kind} = join(",", @{$items{$kind}});
+      }
+      delete $thorn{$key}->{"BODY"};
+   }
 
    return \%thorn;
 }
@@ -400,7 +429,8 @@ sub OutputVar
 
    # go through and print out the values, split them onto new lines if their
    # are multiple entries separated by comas
-   if (my @temp = split/,/, $value)  
+   # do not split at commas inside the [if ...] condition of a conditional clause
+   if (my @temp = split/,(?![^\[\]]*\])/, $value)  
    {
       print "~ & ${description}:  & "; 
  

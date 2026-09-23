@@ -850,6 +850,7 @@ schedule [GROUP] <\var{function name}|\var{group name}> AT|IN <\var{time}> \verb
   [TRIGGER:       <\var{group}>,<\var{group}>...]
   [SYNCHRONISE:   <\var{group}>,<\var{group}>...]
   [OPTIONS:       <\var{option}>,<\var{option}>...]
+  [if (<\var{conditional-expression}>) \{ <\var{clauses}> \} [else ...]]
 \} "\var{Description of function}"
 \end{alltt}
 
@@ -886,7 +887,10 @@ schedule [GROUP] <\var{function name}|\var{group name}> AT|IN <\var{time}> \verb
 
   \item[{\tt IF}] Executes a function or schedule group only if the given
     variable (which must be a fully qualified integer grid scalar) has
-    a non-zero value.
+    a non-zero value. This is checked every time the function or schedule
+    group would be executed. It is unrelated to the {\tt if} statements
+    described in Section~\ref{sec:Appendix.schedule.conditional-clauses},
+    which are evaluated only once, at startup.
 
   \item[{\tt BEFORE/AFTER}] Takes a function name, a function alias,
   a schedule group name, or a parentheses-enclosed whitespace-separated
@@ -1104,7 +1108,76 @@ Such conditionals are evaluated only at program startup, and are used
 to pick between different static schedule options.  For dynamic
 scheduling, the {\tt SCHEDULE WHILE} construction should be used.
 
-Conditional constructs cannot be used inside a schedule block.
+Conditional statements can also be used inside a schedule block; see
+Section~\ref{sec:Appendix.schedule.conditional-clauses}.
+
+\subsection{Conditional Clauses}
+\label{sec:Appendix.schedule.conditional-clauses}
+
+Inside a schedule block, the {\tt STORAGE}, {\tt READS}, {\tt WRITES},
+{\tt INVALIDATES}, {\tt SYNCHRONISE}, and {\tt TRIGGERS} clauses can be
+surrounded by conditional {\tt if-elseif-else} constructs. These can be
+nested, and branches can be empty:
+
+\begin{alltt}
+if (<\var{conditional-expression}>)
+\{
+  [<\var{clauses}>]
+\}
+else if (<\var{conditional-expression}>)
+\{
+  [<\var{clauses}>]
+\}
+else
+\{
+  [<\var{clauses}>]
+\}
+\end{alltt}
+
+The conditional expressions are the same as for conditional statements
+outside of schedule blocks, and they are evaluated at the same time, i.e.\
+only once at program startup. Changing a steerable parameter later on
+does not change which clauses apply.
+
+A schedule block with conditional clauses behaves exactly like the
+schedule block that contains all its unconditional clauses and the
+clauses of all branches that are taken, in the order in which they
+appear. Clauses of the same kind are combined. All clauses are checked
+when the thorn is built, whether or not their branch is taken at run
+time. The {\tt LANG}, {\tt OPTIONS}, and {\tt TAGS} clauses cannot be
+conditional, and neither can the schedule block's name, the
+{\tt AT}, {\tt IN}, {\tt AS}, {\tt WHILE}, {\tt IF}, {\tt BEFORE}, and
+{\tt AFTER} specifications, and the description. (To make those
+conditional, surround the whole schedule block by a conditional
+statement.)
+
+For example, the following routine writes the grid functions {\tt x},
+{\tt y}, and {\tt z} only if the respective boolean parameter is set:
+
+\begin{verbatim}
+schedule MyThorn_SetXYZ in MyThorn_Group
+{
+  LANG: C
+  READS: ADMBaseX::metric(everywhere)
+  if (set_x) {
+    WRITES: x(interior)
+    SYNC: x
+  }
+  if (set_y) {
+    WRITES: y(interior)
+    SYNC: y
+  }
+  if (set_z) {
+    WRITES: z(interior)
+    SYNC: z
+  }
+} "Set x, y, and/or z"
+\end{verbatim}
+
+Without conditional clauses, this would require eight separate
+schedule blocks, one for each combination of the three parameters. If
+all three parameters are false, the routine is still scheduled, with
+only its {\tt READS} clause.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

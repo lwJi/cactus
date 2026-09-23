@@ -59,9 +59,29 @@ schedule = (?i:
         | {writes}
         | {invalidates}
         | {tags}
+        | {clauseif}
     )*
  \} {quote}
  )
+# Conditional clauses inside a schedule block. LANG, OPTIONS, TAGS, and
+# SCHEDULE are accepted here only so that ScheduleParser.pl can report
+# a specific error for them.
+clauseblock = \{ (
+    ( {storage}
+        | {lang}
+        | {sync}
+        | {options}
+        | {triggers}
+        | {reads}
+        | {writes}
+        | {invalidates}
+        | {tags}
+        | {clauseif}
+        | {schedule}
+    ) )* \}
+clauseif = (?i:
+  if \( {boolexpr} \) {clauseblock} ( {else} ({clauseif}|{clauseblock}) |)
+  )
 else = else
 ifbody = {block} ({else} {if}|{else} {block}|)
 if = (?i:
