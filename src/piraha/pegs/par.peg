@@ -43,7 +43,7 @@ active = (?i:ActiveThorns)
 # If the fallback pattern named "syntax" is reached and it matches,
 # it is actually a syntax error.
 syntax = [^\n()]*
-set = ({active} =[ \t]*({quot}|{name})|{par}( {index}|) =[ \t]*({array}|\+?{expr}|{syntax}))
-set_var = \${name} =[ \t]*(\+?{expr}|{syntax})
+set = ({active}[ \t]*=[ \t]*({quot}|{name})|{par}( {index}|) =[ \t]*({array}|\+?{expr}|{syntax}))
+set_var = \${name}[ \t]*=[ \t]*(\+?{expr}|{syntax})
 desc = !DESC {quot}
 file = ^ ({desc} |{set_var} |{set} |{active} |{syntax})*$
