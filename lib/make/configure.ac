@@ -1478,6 +1478,15 @@ AC_SUBST(CUCC_DEPEND)
 AC_SUBST(CUCC_DEPEND_OUT)
 : ${CUCC_DEPEND_OUT=' > $@'}
 
+# Flags which make the C, C++, or CUDA compiler write dependency
+# information while compiling, e.g. '-MD -MP' for compilers that also
+# understand '-MF <file>' and '-MT <target>' (GCC, Clang, Intel, NVCC).
+# If set, the separate dependency generation step above is skipped for
+# that language.
+AC_SUBST(C_DEPEND_COMPILE_FLAGS)
+AC_SUBST(CXX_DEPEND_COMPILE_FLAGS)
+AC_SUBST(CUCC_DEPEND_COMPILE_FLAGS)
+
 AC_SUBST(F_DEPEND)
 : ${F_DEPEND='$(FPP) -M $(FPPFLAGS)'}
 AC_SUBST(F_DEPEND_OUT)

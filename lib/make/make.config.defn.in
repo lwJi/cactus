@@ -170,6 +170,11 @@ export F77_DEPEND_OUT       = @F77_DEPEND_OUT@
 export F_DEPEND_OUT         = @F_DEPEND_OUT@
 export F_DEPEND_MODULES_OUT = @F_DEPEND_MODULES_OUT@
 
+# Flags to generate dependency information while compiling
+export C_DEPEND_COMPILE_FLAGS    = @C_DEPEND_COMPILE_FLAGS@
+export CXX_DEPEND_COMPILE_FLAGS  = @CXX_DEPEND_COMPILE_FLAGS@
+export CUCC_DEPEND_COMPILE_FLAGS = @CUCC_DEPEND_COMPILE_FLAGS@
+
 # Some compilers are very picky about the names of C++ files
 export CXX_WORKING_NAME = @CXX_WORKING_NAME@
 

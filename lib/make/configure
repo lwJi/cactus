@@ -648,6 +648,9 @@ F77_DEPEND_OUT
 F77_DEPEND
 F_DEPEND_OUT
 F_DEPEND
+CUCC_DEPEND_COMPILE_FLAGS
+CXX_DEPEND_COMPILE_FLAGS
+C_DEPEND_COMPILE_FLAGS
 CUCC_DEPEND_OUT
 CUCC_DEPEND
 CXX_DEPEND_OUT
@@ -3273,7 +3276,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 rm -fr conftest*
 cat > conftest.$ac_ext << EOF
 
-#line 3276 "configure"
+#line 3279 "configure"
 #include "confdefs.h"
 
 int main(void){return(0);} int PilotMain(void){return(0);}
@@ -4459,7 +4462,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 rm -fr conftest*
 cat > conftest.$ac_ext << EOF
 
-#line 4462 "configure"
+#line 4465 "configure"
 #include "confdefs.h"
 
 int main(){return(0);} extern "C" int PilotMain(){return(0);}
@@ -9832,7 +9835,7 @@ else case e in #(
   e) cctk_cv_c_static_inline=no
 for ac_kw in 'static inline' 'static __inline__' 'static __inline' static; do
   cat > conftest.$ac_ext <<EOF
-#line 9835 "configure"
+#line 9838 "configure"
 #include "confdefs.h"
 
 int main(void) {
@@ -9840,7 +9843,7 @@ int main(void) {
 ; return 0; }
 EOF
 cat > conftest2.$ac_ext <<EOF
-#line 9843 "configure"
+#line 9846 "configure"
 #include "confdefs.h"
 
 int main2() {
@@ -14403,6 +14406,15 @@ fi
 : ${CUCC_DEPEND='$(CUCC) -M $(CUCCFLAGS)'}
 
 : ${CUCC_DEPEND_OUT=' > $@'}
+
+# Flags which make the C, C++, or CUDA compiler write dependency
+# information while compiling, e.g. '-MD -MP' for compilers that also
+# understand '-MF <file>' and '-MT <target>' (GCC, Clang, Intel, NVCC).
+# If set, the separate dependency generation step above is skipped for
+# that language.
+
+
+
 
 
 : ${F_DEPEND='$(FPP) -M $(FPPFLAGS)'}

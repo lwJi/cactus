@@ -84,6 +84,24 @@ define DEPENDENCY_FIXER
 endef
 endif
 
+# Correct a dependency file written by the compiler while compiling (see
+# C_DEPEND_COMPILE_FLAGS etc.).  The compiler lists the copy of the source
+# file in the build directory as first prerequisite (possibly on the next
+# line); list the source file itself instead.  Also remove excluded files
+# as above.
+ifeq ($(strip $(PERL_BACKUP_NECESSARY)),)
+define DEPEND_COMPILE_FIXER
+	CCTK_DEPEND_SOURCE='$<' $(PERL) -0777 -pi -e 's{^(\Q$@\E:[\s\\]*)\S+}{$$1$$ENV{CCTK_DEPEND_SOURCE}};\
+                              s{[ \t]+\S*[/\\]($(DEP_EXCLUDE_FILES))\b}{}g' $(basename $@).d
+endef
+else
+define DEPEND_COMPILE_FIXER
+	CCTK_DEPEND_SOURCE='$<' $(PERL) -0777 -pi.bak -e 's{^(\Q$@\E:[\s\\]*)\S+}{$$1$$ENV{CCTK_DEPEND_SOURCE}};\
+                                  s{[ \t]+\S*[/\\]($(DEP_EXCLUDE_FILES))\b}{}g' $(basename $@).d
+	rm $(basename $@).d.bak
+endef
+endif
+
 define C_DEPENDENCIES
 	$(C_DEPEND) $< $(INCLUDE_LINE) $(EXTRA_DEFINES:%=-D%) -DCCODE $(C_DEPEND_OUT)
 	$(DEPENDENCY_FIXER)
@@ -148,11 +166,12 @@ define PREPROCESS_C
 endef
 
 define COMPILE_C
-current_wd=`$(GET_WD)` ; cd $(SCRATCH_BUILD) ; $(CC) $(CPPFLAGS) $(CFLAGS) $(CCOMPILEONLY)$(OPTIONSEP)$$current_wd$(DIRSEP)$@ $$current_wd$(DIRSEP)$(notdir $<) $(INCLUDE_LINE) $(EXTRA_DEFINES:%=-D%) -DCCODE
+current_wd=`$(GET_WD)` ; cd $(SCRATCH_BUILD) ; $(CC) $(CPPFLAGS) $(CFLAGS) $(if $(strip $(C_DEPEND_COMPILE_FLAGS)),$(C_DEPEND_COMPILE_FLAGS) -MF $$current_wd$(DIRSEP)$(basename $@).d -MT $@) $(CCOMPILEONLY)$(OPTIONSEP)$$current_wd$(DIRSEP)$@ $$current_wd$(DIRSEP)$(notdir $<) $(INCLUDE_LINE) $(EXTRA_DEFINES:%=-D%) -DCCODE
 endef
 
 define POSTPROCESS_C
 $(C_POSTPROCESSING)
+$(if $(strip $(C_DEPEND_COMPILE_FLAGS)),$(DEPEND_COMPILE_FIXER))
 endef
 
 # Define how to do a C++ compilation
@@ -161,11 +180,12 @@ define PREPROCESS_CXX
 endef
 
 define COMPILE_CXX
-current_wd=`$(GET_WD)` ; cd $(SCRATCH_BUILD) ; $(CXX) $(CPPFLAGS) $(CXXFLAGS) $(CCOMPILEONLY)$(OPTIONSEP)$$current_wd$(DIRSEP)$@ $$current_wd$(DIRSEP)$(CXX_WORKING_NAME) $(INCLUDE_LINE) $(EXTRA_DEFINES:%=-D%) -DCCODE
+current_wd=`$(GET_WD)` ; cd $(SCRATCH_BUILD) ; $(CXX) $(CPPFLAGS) $(CXXFLAGS) $(if $(strip $(CXX_DEPEND_COMPILE_FLAGS)),$(CXX_DEPEND_COMPILE_FLAGS) -MF $$current_wd$(DIRSEP)$(basename $@).d -MT $@) $(CCOMPILEONLY)$(OPTIONSEP)$$current_wd$(DIRSEP)$@ $$current_wd$(DIRSEP)$(CXX_WORKING_NAME) $(INCLUDE_LINE) $(EXTRA_DEFINES:%=-D%) -DCCODE
 endef
 
 define POSTPROCESS_CXX
 $(CXX_POSTPROCESSING)
+$(if $(strip $(CXX_DEPEND_COMPILE_FLAGS)),$(DEPEND_COMPILE_FIXER))
 endef
 
 # Define how to do an OpenCL compilation
@@ -194,11 +214,12 @@ define PREPROCESS_CU
 endef
 
 define COMPILE_CU
-current_wd=`$(GET_WD)` ; cd $(SCRATCH_BUILD) ; $(CUCC) $(CUCCFLAGS) $(CCOMPILEONLY)$(OPTIONSEP)$$current_wd$(DIRSEP)$@ $$current_wd$(DIRSEP)$(notdir $<) $(INCLUDE_LINE) $(EXTRA_DEFINES:%=-D%) -DCCODE 
+current_wd=`$(GET_WD)` ; cd $(SCRATCH_BUILD) ; $(CUCC) $(CUCCFLAGS) $(if $(strip $(CUCC_DEPEND_COMPILE_FLAGS)),$(CUCC_DEPEND_COMPILE_FLAGS) -MF $$current_wd$(DIRSEP)$(basename $@).d -MT $@) $(CCOMPILEONLY)$(OPTIONSEP)$$current_wd$(DIRSEP)$@ $$current_wd$(DIRSEP)$(notdir $<) $(INCLUDE_LINE) $(EXTRA_DEFINES:%=-D%) -DCCODE 
 endef
 
 define POSTPROCESS_CU
 $(CUCC_POSTPROCESSING)
+$(if $(strip $(CUCC_DEPEND_COMPILE_FLAGS)),$(DEPEND_COMPILE_FIXER))
 endef
 
 # Define how to do a F77 compilation
@@ -269,8 +290,10 @@ endef
 	$(POSTPROCESS_C)
 	$(NOTIFY_DIVIDER)
 
+ifeq ($(strip $(C_DEPEND_COMPILE_FLAGS)),)
 %.c.d: $(SRCDIR)/%.c
 	$(C_DEPENDENCIES)
+endif
 
 # Build rules for C++
 
@@ -283,8 +306,10 @@ endef
 	$(POSTPROCESS_CXX)
 	$(NOTIFY_DIVIDER)
 
+ifeq ($(strip $(CXX_DEPEND_COMPILE_FLAGS)),)
 %.cc.d: $(SRCDIR)/%.cc
 	$(CXX_DEPENDENCIES)
+endif
 
 %.C.o: $(SRCDIR)/%.C
 	$(NOTIFY_PREPROCESSING)
@@ -295,8 +320,10 @@ endef
 	$(POSTPROCESS_CXX)
 	$(NOTIFY_DIVIDER)
 
+ifeq ($(strip $(CXX_DEPEND_COMPILE_FLAGS)),)
 %.C.d: $(SRCDIR)/%.C
 	$(CXX_DEPENDENCIES)
+endif
 
 %.cpp.o: $(SRCDIR)/%.cpp
 	$(NOTIFY_PREPROCESSING)
@@ -308,8 +335,10 @@ endef
 	$(NOTIFY_DIVIDER)
 
 
+ifeq ($(strip $(CXX_DEPEND_COMPILE_FLAGS)),)
 %.cpp.d: $(SRCDIR)/%.cpp
 	$(CXX_DEPENDENCIES)
+endif
 
 %.cxx.o: $(SRCDIR)/%.cxx
 	$(NOTIFY_PREPROCESSING)
@@ -320,8 +349,10 @@ endef
 	$(POSTPROCESS_CXX)
 	$(NOTIFY_DIVIDER)
 
+ifeq ($(strip $(CXX_DEPEND_COMPILE_FLAGS)),)
 %.cxx.d: $(SRCDIR)/%.cxx
 	$(CXX_DEPENDENCIES)
+endif
 
 # Build rules for OpenCL
 
@@ -348,8 +379,10 @@ endef
 	$(POSTPROCESS_CU)
 	$(NOTIFY_DIVIDER)
 
+ifeq ($(strip $(CUCC_DEPEND_COMPILE_FLAGS)),)
 %.cu.d: $(SRCDIR)/%.cu
 	$(CUCC_DEPENDENCIES)
+endif
 
 # Build rules for F77
 

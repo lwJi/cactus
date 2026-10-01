@@ -382,6 +382,18 @@ created by Cactus.  The only options available are \texttt{yes} and
 \texttt{no}, the default is \texttt{yes}.  Set this to \texttt{no} if your
 compiler reports error messages about unrecognised \verb|#| directives.
 
+\item [\texttt{C\_DEPEND\_COMPILE\_FLAGS}, \texttt{CXX\_DEPEND\_COMPILE\_FLAGS},
+  \texttt{CUCC\_DEPEND\_COMPILE\_FLAGS}]
+Flags that make the C, C++, or CUDA compiler write the dependency
+information of a source file while compiling it, e.g.\ \texttt{-MD -MP}
+for GCC, Clang, Intel, or NVCC.  The compiler must also understand
+\texttt{-MF <\var{file}>} and \texttt{-MT <\var{target}>}.  If set, the
+separate step that generates dependency information before compiling
+is skipped for that language, and (with \texttt{-MP}) removing a header
+file does not require \texttt{gmake <\var{configuration}>-cleandeps}.
+By default these are empty and dependencies are generated in a
+separate step.
+
 \item [\texttt{CROSS\_COMPILE}] Enables cross compilation.
   Available options are \texttt{yes} and \texttt{no}, the default is
   \texttt{no}. To create a cross-compiled configuration one must explicitly
