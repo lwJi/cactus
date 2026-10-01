@@ -454,6 +454,12 @@ sub CreateThornDependencyList
 {
   my (@varlist, @deplist);
 
+  my %uses;
+  foreach my $thorn (keys %thorns) {
+    $uses{$thorn} = [grep { $_ ne $thorn }
+                     split (' ', $configuration_database->{"\U$thorn\E USES THORNS"})];
+  }
+
   # Find list of all thorns
   foreach my $thorn (sort keys %thorns) {
     next if $configuration_database->{"\U$thorn OPTIONS\E"} eq 'NO_SOURCE';
@@ -463,15 +469,110 @@ sub CreateThornDependencyList
     # because the Makefile cannot convert its library names to upper case)
 
     my $line = "USESTHORNS_$thorn =";
-    foreach my $dep (sort (split (' ', $configuration_database->{"\U$thorn\E USES THORNS"})))
+    foreach my $dep (sort @{$uses{$thorn}})
     {
-      $line .= " $dep" if ($dep ne $thorn);
+      $line .= " $dep";
     }
     push (@varlist, $line);
-    push (@deplist, "\$(CCTK_LIBDIR)/\$(LIBNAME_PREFIX)\$(CCTK_LIBNAME_PREFIX)$thorn\$(LIBNAME_SUFFIX): \$(USESTHORNS_$thorn:%=\$(CCTK_LIBDIR)/\$(LIBNAME_PREFIX)\$(CCTK_LIBNAME_PREFIX)%\$(LIBNAME_SUFFIX))");
+
+    # A thorn's objects only need to wait for those (direct or
+    # indirect) dependencies whose build can produce files that the
+    # thorn's compilation reads: dependencies with their own make rules
+    # (e.g. external libraries that are built from source) and, if
+    # both the dependency and the dependent thorn contain Fortran code,
+    # dependencies that may provide Fortran modules.  Waiting for all
+    # dependencies is selected with STRICT_THORN_ORDER=yes.
+    my @order;
+    my %seen = ($thorn => 1);
+    my @todo = @{$uses{$thorn}};
+    while (@todo)
+    {
+      my $dep = shift (@todo);
+      next if $seen{$dep}++;
+      push (@todo, @{$uses{$dep} || []});
+      next if $configuration_database->{"\U$dep OPTIONS\E"} eq 'NO_SOURCE';
+      if (&ThornHasMakeRules($dep) ||
+          (&ThornHasFortran($thorn) && &ThornHasFortran($dep)))
+      {
+        push (@order, $dep);
+      }
+    }
+    push (@varlist, "ORDERTHORNS_$thorn = " . join (' ', sort @order));
+
+    push (@deplist, "\$(CCTK_LIBDIR)/\$(LIBNAME_PREFIX)\$(CCTK_LIBNAME_PREFIX)$thorn\$(LIBNAME_SUFFIX): \$(patsubst %,\$(CCTK_LIBDIR)/\$(LIBNAME_PREFIX)\$(CCTK_LIBNAME_PREFIX)%\$(LIBNAME_SUFFIX),\$(if \$(filter yes,\$(STRICT_THORN_ORDER)),\$(USESTHORNS_$thorn),\$(ORDERTHORNS_$thorn)))");
   }
 
   return (@varlist, @deplist);
+}
+
+
+#/*@@
+#  @routine    ThornSourceFiles
+#  @desc
+#  Returns the names of all files below a thorn's src directory
+#  (cached)
+#  @enddesc
+#@@*/
+our %thorn_source_files;
+sub ThornSourceFiles
+{
+  my ($thorn) = @_;
+
+  if (! exists $thorn_source_files{$thorn})
+  {
+    my @files;
+    my @dirs = ("$thorns{$thorn}/src");
+    while (@dirs)
+    {
+      my $dir = shift (@dirs);
+      opendir (my $dh, $dir) or next;
+      foreach my $entry (readdir ($dh))
+      {
+        next if $entry eq '.' || $entry eq '..';
+        if (-d "$dir/$entry")
+        {
+          push (@dirs, "$dir/$entry");
+        }
+        else
+        {
+          push (@files, $entry);
+        }
+      }
+      closedir ($dh);
+    }
+    $thorn_source_files{$thorn} = \@files;
+  }
+
+  return @{$thorn_source_files{$thorn}};
+}
+
+
+#/*@@
+#  @routine    ThornHasMakeRules
+#  @desc
+#  Does the thorn add its own make rules to its build?
+#  @enddesc
+#@@*/
+sub ThornHasMakeRules
+{
+  my ($thorn) = @_;
+
+  return scalar (grep { /^(make\.code\.deps|make\.configuration\.deps|Makefile)$/ }
+                 &ThornSourceFiles($thorn));
+}
+
+
+#/*@@
+#  @routine    ThornHasFortran
+#  @desc
+#  Does the thorn contain Fortran source files?
+#  @enddesc
+#@@*/
+sub ThornHasFortran
+{
+  my ($thorn) = @_;
+
+  return scalar (grep { /\.(F|f|F77|f77|F90|f90)$/ } &ThornSourceFiles($thorn));
 }
 
 

@@ -985,6 +985,12 @@ compilation.
 across files within each thorn.
 \item [\texttt{gmake <\var{target}> TJOBS=<\var{number}>}] compiles in parallel,
 across thorns.
+\item [\texttt{gmake <\var{target}> STRICT\_THORN\_ORDER=yes}] waits
+until all thorns that a thorn requires have been built before building
+the thorn.  By default, a thorn waits only for required thorns that
+may create files used to compile it, i.e.\ thorns with their own make
+rules (such as external libraries built from source) and, if both
+contain Fortran code, thorns that may provide Fortran modules.
 
 \end{Lentry}
 
