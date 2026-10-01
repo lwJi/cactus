@@ -139,6 +139,9 @@ our $piraha_cache_dir = "$top/piraha";
 print "Reading ThornList...\n";
 my %thorns = &CreateThornList($cctk_home, $thornlist);
 
+# Parse the ccl files in parallel if make runs several jobs
+&PrefillCCLCache(\%thorns);
+
 # Parse the configuration.ccl files
 print "Parsing configuration files...\n";
 my $configuration_database = &CreateConfigurationDatabase($config_dir, %thorns);

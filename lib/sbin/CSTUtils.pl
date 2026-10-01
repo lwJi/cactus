@@ -13,6 +13,7 @@ use warnings;
 use Carp;
 use File::stat;
 use File::Path qw{ mkpath };
+use POSIX ();
 
 #############################################################################
 ###### Package variables ####################################################
@@ -989,5 +990,90 @@ sub parse_ccl
   return $gr;
 }
 
+#/*@@
+#  @routine PrefillCCLCache
+#  @desc
+#           Parses the ccl files of all thorns whose parse trees are not
+#           in the cache yet, using as many processes as make may run
+#           jobs (make -j<N>), so that the (sequential) parsers find all
+#           parse trees in the cache.  Does nothing without -j<N>.
+#  @enddesc
+#@@*/
+sub PrefillCCLCache
+{
+  my ($thorns) = @_;
+
+  return if !defined $main::piraha_cache_dir;
+  my $jobs = 1;
+  if (defined $ENV{MAKEFLAGS} && $ENV{MAKEFLAGS} =~ /(?:^|\s)-j\s*(\d+)/)
+  {
+    $jobs = $1;
+  }
+  return if $jobs < 2;
+
+  my $peg_dir = "$FindBin::Bin/../../src/piraha/pegs";
+  my %peg_files = ('configuration' => "$peg_dir/config.peg",
+                   'interface'     => "$peg_dir/interface.peg",
+                   'param'         => "$peg_dir/param.peg",
+                   'schedule'      => "$peg_dir/schedule.peg");
+
+  # Collect the ccl files with outdated or missing parse trees, per thorn
+  my @work;
+  foreach my $thorn (sort keys %$thorns)
+  {
+    my @files;
+    foreach my $ccl (sort keys %peg_files)
+    {
+      my $ccl_file = "$thorns->{$thorn}/$ccl.ccl";
+      $ccl_file =~ s{//+}{/}g;
+      next if ! -r $ccl_file;
+      next if $ccl_file !~ m{([^/]+)/([^/]+)/(\w+)\.ccl$};
+      my $ccl_dir = "$main::piraha_cache_dir/$1/$2";
+      my $ccl_cache = "$ccl_dir/$3.cache";
+      my $peg_file = $peg_files{$ccl};
+      my $ccl_tm = stat($ccl_file)->mtime;
+      my $peg_tm = stat($peg_file)->mtime;
+      my $tm = $ccl_tm < $peg_tm ? $peg_tm : $ccl_tm;
+      next if -r $ccl_cache and stat($ccl_cache)->mtime > $tm;
+      mkpath($ccl_dir);
+      push (@files, [$ccl_file, $peg_file]);
+    }
+    push (@work, \@files) if @files;
+  }
+  return if @work < 2;
+
+  # Distribute the thorns over the processes
+  my $nprocs = $jobs < @work ? $jobs : scalar(@work);
+  my @buckets;
+  for (my $i = 0; $i < @work; $i++)
+  {
+    push (@{$buckets[$i % $nprocs]}, @{$work[$i]});
+  }
+
+  STDOUT->flush();
+  STDERR->flush();
+  my @pids;
+  foreach my $bucket (@buckets)
+  {
+    my $pid = fork();
+    last if !defined $pid;      # the parsers parse the remaining files
+    if ($pid == 0)
+    {
+      # Syntax errors are reported by the parsers later
+      open(STDOUT, '>', '/dev/null');
+      open(STDERR, '>', '/dev/null');
+      my %grammars;
+      foreach my $file (@$bucket)
+      {
+        my ($ccl_file, $peg_file) = @$file;
+        $grammars{$peg_file} ||= [piraha::parse_peg_file($peg_file)];
+        eval { parse_ccl(@{$grammars{$peg_file}}, $ccl_file, $peg_file); };
+      }
+      POSIX::_exit(0);
+    }
+    push (@pids, $pid);
+  }
+  waitpid($_, 0) foreach @pids;
+}
 
 1;
