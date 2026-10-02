@@ -1386,6 +1386,70 @@ C_FILE_PROCESSOR='$(CCTK_HOME)/lib/sbin/c_file_processor.pl'
 LIBS="$LIBS $KNOWN_LIBS"
 LDFLAGS="$LDFLAGS $KNOWN_LDFLAGS"
 
+# Choose the linker used by $LD:
+#   LINKER=default (or unset): the compiler's default linker
+#   LINKER=auto: mold or lld if they work, otherwise the default linker
+#   LINKER=<name> (e.g. mold, lld, gold): this linker, or fail
+# LINKER_DIR optionally names a directory in which the compiler looks
+# for the linker (-B<dir>).  If LDFLAGS already contain -fuse-ld=, they
+# are used as they are.
+cctk_try_linker()
+{
+  echo 'int main(void) { return 0; }' > conftest_linker.c
+  rm -f conftest_linker.$ac_objext conftest_linker$ac_exeext
+  echo "trying to link with $LD $LDFLAGS $1" >&AS_MESSAGE_LOG_FD
+  $CC $CFLAGS -c conftest_linker.c -o conftest_linker.$ac_objext >&AS_MESSAGE_LOG_FD 2>&1 &&
+  $LD $LDFLAGS $1 conftest_linker.$ac_objext -o conftest_linker$ac_exeext >&AS_MESSAGE_LOG_FD 2>&1 &&
+  test -s conftest_linker$ac_exeext
+  cctk_try_linker_status=$?
+  rm -f conftest_linker.c conftest_linker.$ac_objext conftest_linker$ac_exeext
+  return $cctk_try_linker_status
+}
+
+# Find flags that make $LD use linker $1, trying first the flags
+# themselves and then the form that nvcc passes on to the host compiler.
+# Sets cctk_linker_flags; returns non-zero if neither form works.
+cctk_find_linker_flags()
+{
+  cctk_linker_flags="-fuse-ld=$1"
+  cctk_linker_xflags="-Xcompiler -fuse-ld=$1"
+  if test -n "$LINKER_DIR" ; then
+    cctk_linker_flags="-B$LINKER_DIR $cctk_linker_flags"
+    cctk_linker_xflags="-Xcompiler -B$LINKER_DIR $cctk_linker_xflags"
+  fi
+  cctk_try_linker "$cctk_linker_flags" && return 0
+  cctk_linker_flags="$cctk_linker_xflags"
+  cctk_try_linker "$cctk_linker_flags"
+}
+
+AC_MSG_CHECKING([which linker to use])
+case " $LDFLAGS " in
+  *" -fuse-ld="*) cctk_linker='as given in LDFLAGS' ;;
+  *) cctk_linker="${LINKER:-default}" ;;
+esac
+case "$cctk_linker" in
+  'as given in LDFLAGS'|default)
+    ;;
+  auto)
+    cctk_linker=default
+    for cctk_linker_name in mold lld ; do
+      if cctk_find_linker_flags $cctk_linker_name ; then
+        LDFLAGS="$LDFLAGS $cctk_linker_flags"
+        cctk_linker=$cctk_linker_name
+        break
+      fi
+    done
+    ;;
+  *)
+    if cctk_find_linker_flags "$cctk_linker" ; then
+      LDFLAGS="$LDFLAGS $cctk_linker_flags"
+    else
+      AC_MSG_ERROR([cannot link with LINKER=$cctk_linker (using $LD $LDFLAGS -fuse-ld=$cctk_linker)])
+    fi
+    ;;
+esac
+AC_MSG_RESULT([$cctk_linker])
+
 #Set the compileonly flags if they've not been set by now
 AC_SUBST(CCOMPILEONLY)
 AC_SUBST(FCOMPILEONLY)

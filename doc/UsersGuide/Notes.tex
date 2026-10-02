@@ -356,6 +356,28 @@ while the compilers and linkers are autodetected.  This can lead to
 strange errors while configuring.  You can pass the linker flags in
 the variable \texttt{LD} instead.
 
+\item [\texttt{LINKER}]
+The linker the compiler driver in \texttt{LD} should use.  This does
+not replace \texttt{LD}; configure adds \texttt{-fuse-ld=<\var{name}>}
+to \texttt{LDFLAGS} (or \texttt{-Xcompiler -fuse-ld=<\var{name}>} if
+\texttt{LD} is \texttt{nvcc} without
+\texttt{--forward-unknown-to-host-compiler}) after checking that
+\texttt{LD} can link a test program with it.  With
+\texttt{default} (or if unset) it uses its default linker.  With
+\texttt{auto}, configure uses \texttt{mold} or else \texttt{lld} if
+they work, and the default linker otherwise.  Any other value, such as
+\texttt{mold}, \texttt{lld} or \texttt{gold}, selects that linker
+(via \texttt{-fuse-ld=}), and configure fails if it does not work.  The
+choice is ignored if \texttt{LDFLAGS} already contains
+\texttt{-fuse-ld=}.  Faster linkers mostly shorten rebuilds after small
+changes: e.g.\ linking an Einstein Toolkit executable takes about
+10\,s with GNU ld and less than 1\,s with mold.
+
+\item [\texttt{LINKER\_DIR}]
+Optional directory in which the compiler driver looks for the linker
+selected by \texttt{LINKER} (passed as \texttt{-B<\var{dir}>}), e.g.\ if
+mold is installed outside of the standard search path.
+
 \item [\texttt{BEGIN\_WHOLE\_ARCHIVE\_FLAGS},
   \texttt{END\_WHOLE\_ARCHIVE\_FLAGS}]
 Optional set of flags for the linker that change the behaviour how
