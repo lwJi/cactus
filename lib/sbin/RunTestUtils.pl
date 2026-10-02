@@ -1768,7 +1768,10 @@ sub CompareTestFiles
   # Compare each file in the archived test directory
   foreach my $file (split(" ",$testdata->{"$thorn $test DATAFILES"}))
   {
-    my (@maxabsdiff, @absdiff, @valmax) = ();
+    # @valmax holds the magnitudes of the current line (used for the
+    # per-line tolerance), @maxval the maximum over all differing lines
+    # (used to report the relative difference)
+    my (@maxabsdiff, @absdiff, @valmax, @maxval) = ();
     my ($filereltol, $fileabstol);
     my ($nline, $nold, $nnew, $ncommon) = (0,0,0,0);
 
@@ -1955,6 +1958,10 @@ sub CompareTestFiles
             my $absnewval = $count < $nnew ? abs ($newvals[$count]) : 0.;
             $valmax[$count] = $absoldval > $absnewval ?
                               $absoldval : $absnewval;
+            if (not defined $maxval[$count] or
+                $maxval[$count] < $valmax[$count]) {
+              $maxval[$count] = $valmax[$count];
+            }
           }
 
           for (my $count = 0; $count < $ncommon; $count++)
@@ -2073,15 +2080,15 @@ sub CompareTestFiles
     {
       next unless ($maxreldiff[$count]);
       $havediffs = 1;
-      if ($valmax[$count] > 0)
+      if ($maxval[$count] > 0)
       {
-        $maxreldiff[$count] /= $valmax[$count];
+        $maxreldiff[$count] /= $maxval[$count];
       }
       else
       {
-        # Note: You got here because the number of columns in the old
-        # and new file differ
-        print "ERROR: How did I get here, maximum difference is $maxabsdiff[$count] and maximum value is $valmax[$count] for $file\n";
+        # A nonzero difference implies a nonzero value on the same
+        # line, so this should be unreachable
+        print "ERROR: How did I get here, maximum difference is $maxabsdiff[$count] and maximum value is $maxval[$count] for $file\n";
       }
     }
     if ($havediffs)
