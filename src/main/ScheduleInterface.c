@@ -131,14 +131,22 @@ static t_attribute *CreateAttribute(const char *where,
                                     int n_invalidates,
                                     int n_options,
                                     const int *timelevels,
-                                    va_list *ap);
+                                    const char *const *mem_groups,
+                                    const char *const *comm_groups,
+                                    const char *const *trigger_groups,
+                                    const char *const *sync_groups,
+                                    const char *const *writes,
+                                    const char *const *reads,
+                                    const char *const *invalidates,
+                                    const char *const *options,
+                                    const char *tags);
 
 static int ParseOptionList(int n_items,
                            t_attribute *attribute,
-                           va_list *ap);
+                           const char *const *items);
 
 static int ParseTagsTable(t_attribute *attribute,
-                          va_list *ap);
+                          const char *tags);
 
 static int InitialiseOptionList(t_attribute *attribute);
 
@@ -146,19 +154,25 @@ static int ParseOption(t_attribute *attribute,
                        const char *option);
 
 static t_sched_modifier *CreateModifiers(int n_before,
+                                         const char *const *before,
                                          int n_after,
+                                         const char *const *after,
                                          int n_while,
+                                         const char *const *whiles,
                                          int n_if,
-                                         va_list *ap);
+                                         const char *const *ifs);
 
 int ValidateModifiers(t_sched_modifier *modifier);
 
-static int CreateGroupIndexList(int n_items, int *array, va_list *ap);
-static int CreateStringList(int n_items, const char **array, va_list *ap);
+static const char **CollectArguments(int n_items, va_list *ap);
+static int CreateGroupIndexList(int n_items, int *array,
+                                const char *const *items);
+static int CreateStringList(int n_items, const char **array,
+                            const char *const *items);
 static t_sched_modifier *CreateTypedModifier(t_sched_modifier *modifier,
                                              const char *type,
                                              int n_items,
-                                             va_list *ap);
+                                             const char *const *items);
 static cFunctionType TranslateFunctionType(const char *where);
 
 static int SchedulePrint(const char *where);
@@ -515,19 +529,154 @@ int CCTKi_ScheduleFunction(void *function,
                            )
 {
   int retcode;
-  t_attribute *attribute;
-  t_sched_modifier *modifier=0;
+  const char **items, *const *p;
+  const char *const *mem_groups, *const *comm_groups, *const *trigger_groups;
+  const char *const *sync_groups, *const *writes, *const *reads;
+  const char *const *invalidates, *const *options, *tags;
+  const char *const *before, *const *after, *const *whiles, *const *ifs;
   va_list ap;
 
+  /* Collect the variable arguments (including the tags) into an array */
   va_start(ap, timelevels);
+  items = CollectArguments(n_mem_groups + n_comm_groups + n_trigger_groups +
+                           n_sync_groups + n_writes + n_reads + n_invalidates +
+                           n_options + 1 + n_before + n_after + n_while + n_if,
+                           &ap);
+  va_end(ap);
+  if(!items)
+  {
+    fprintf(stderr, "Internal error: Failed to schedule %s at %s!!!\n", name, where);
+    exit(2);
+  }
+
+  p = items;
+  mem_groups     = p; p += n_mem_groups;
+  comm_groups    = p; p += n_comm_groups;
+  trigger_groups = p; p += n_trigger_groups;
+  sync_groups    = p; p += n_sync_groups;
+  writes         = p; p += n_writes;
+  reads          = p; p += n_reads;
+  invalidates    = p; p += n_invalidates;
+  options        = p; p += n_options;
+  tags           = *p++;
+  before         = p; p += n_before;
+  after          = p; p += n_after;
+  whiles         = p; p += n_while;
+  ifs            = p;
+
+  retcode = CCTKi_ScheduleFunctionArrays(function, name, thorn, implementation,
+                                         description, where, language,
+                                         n_mem_groups, n_comm_groups,
+                                         n_trigger_groups, n_sync_groups,
+                                         n_writes, n_reads, n_invalidates,
+                                         n_options, n_before, n_after,
+                                         n_while, n_if, timelevels,
+                                         mem_groups, comm_groups,
+                                         trigger_groups, sync_groups,
+                                         writes, reads, invalidates,
+                                         options, tags,
+                                         before, after, whiles, ifs);
+
+  free(items);
+
+  return retcode;
+}
+
+/*@@
+   @routine    CCTKi_ScheduleFunctionArrays
+   @date       2026-09-22
+   @author     Erik Schnetter
+   @desc
+   Schedules a function. This is the same as CCTKi_ScheduleFunction,
+   except that the groups, clauses, options, and modifiers are passed
+   as arrays instead of variable arguments. This is used for schedule
+   blocks with conditional clauses, where the number of clauses is
+   only known at run time.
+   @enddesc
+   @calls
+
+   @var     mem_groups, comm_groups, trigger_groups, sync_groups
+   @vdesc   names of the STORAGE, COMM, TRIGGERS, and SYNC groups
+   @vtype   const char *const *
+   @vio     in
+   @endvar
+   @var     writes, reads, invalidates
+   @vdesc   WRITES, READS, and INVALIDATES clauses
+   @vtype   const char *const *
+   @vio     in
+   @endvar
+   @var     options
+   @vdesc   options
+   @vtype   const char *const *
+   @vio     in
+   @endvar
+   @var     tags
+   @vdesc   tags table, as a string
+   @vtype   const char *
+   @vio     in
+   @endvar
+   @var     before, after, whiles, ifs
+   @vdesc   BEFORE, AFTER, WHILE, and IF modifiers
+   @vtype   const char *const *
+   @vio     in
+   @endvar
+
+   The other arguments are the same as for CCTKi_ScheduleFunction.
+   Each array holds as many elements as the respective n_* argument.
+
+   @returntype int
+   @returndesc
+   Return val of DoScheduleFunction or
+   -1 - memory failure
+   @endreturndesc
+@@*/
+int CCTKi_ScheduleFunctionArrays(void *function,
+                                 const char *name,
+                                 const char *thorn,
+                                 const char *implementation,
+                                 const char *description,
+                                 const char *where,
+                                 const char *language,
+                                 int n_mem_groups,
+                                 int n_comm_groups,
+                                 int n_trigger_groups,
+                                 int n_sync_groups,
+                                 int n_writes,
+                                 int n_reads,
+                                 int n_invalidates,
+                                 int n_options,
+                                 int n_before,
+                                 int n_after,
+                                 int n_while,
+                                 int n_if,
+                                 const int *timelevels,
+                                 const char *const *mem_groups,
+                                 const char *const *comm_groups,
+                                 const char *const *trigger_groups,
+                                 const char *const *sync_groups,
+                                 const char *const *writes,
+                                 const char *const *reads,
+                                 const char *const *invalidates,
+                                 const char *const *options,
+                                 const char *tags,
+                                 const char *const *before,
+                                 const char *const *after,
+                                 const char *const *whiles,
+                                 const char *const *ifs)
+{
+  int retcode;
+  t_attribute *attribute;
+  t_sched_modifier *modifier=0;
 
   attribute = CreateAttribute(where,name,description, language, thorn, implementation,
                               n_mem_groups, n_comm_groups, n_trigger_groups,
                               n_sync_groups, n_writes, n_reads, n_invalidates,
-                              n_options, timelevels, &ap);
-  modifier  = CreateModifiers(n_before, n_after, n_while, n_if, &ap);
-
-  va_end(ap);
+                              n_options, timelevels,
+                              mem_groups, comm_groups, trigger_groups,
+                              sync_groups, writes, reads, invalidates,
+                              options, tags);
+  modifier  = CreateModifiers(n_before, before, n_after, after,
+                              n_while, whiles, n_if, ifs);
 
   ValidateModifiers(modifier);
 
@@ -695,25 +844,132 @@ int CCTKi_ScheduleGroup(const char *realname,
                         )
 {
   int retcode;
-  t_attribute *attribute;
-  t_sched_modifier *modifier;
+  const char **items, *const *p;
+  const char *const *mem_groups, *const *comm_groups, *const *trigger_groups;
+  const char *const *sync_groups, *const *writes, *const *reads;
+  const char *const *invalidates, *const *options, *tags;
+  const char *const *before, *const *after, *const *whiles, *const *ifs;
   va_list ap;
 
+  /* Collect the variable arguments (including the tags) into an array */
   va_start(ap, timelevels);
+  items = CollectArguments(n_mem_groups + n_comm_groups + n_trigger_groups +
+                           n_sync_groups + n_writes + n_reads + n_invalidates +
+                           n_options + 1 + n_before + n_after + n_while + n_if,
+                           &ap);
+  va_end(ap);
+  if(!items)
+  {
+#ifdef DEBUG
+    fprintf(stderr, "Failed to schedule %s at %s!!!\n", name, where);
+#endif
+    return -1;
+  }
+
+  p = items;
+  mem_groups     = p; p += n_mem_groups;
+  comm_groups    = p; p += n_comm_groups;
+  trigger_groups = p; p += n_trigger_groups;
+  sync_groups    = p; p += n_sync_groups;
+  writes         = p; p += n_writes;
+  reads          = p; p += n_reads;
+  invalidates    = p; p += n_invalidates;
+  options        = p; p += n_options;
+  tags           = *p++;
+  before         = p; p += n_before;
+  after          = p; p += n_after;
+  whiles         = p; p += n_while;
+  ifs            = p;
+
+  retcode = CCTKi_ScheduleGroupArrays(realname, name, thorn, implementation,
+                                      description, where,
+                                      n_mem_groups, n_comm_groups,
+                                      n_trigger_groups, n_sync_groups,
+                                      n_writes, n_reads, n_invalidates,
+                                      n_options, n_before, n_after,
+                                      n_while, n_if, timelevels,
+                                      mem_groups, comm_groups,
+                                      trigger_groups, sync_groups,
+                                      writes, reads, invalidates,
+                                      options, tags,
+                                      before, after, whiles, ifs);
+
+  free(items);
+
+  return retcode;
+}
+
+/*@@
+   @routine    CCTKi_ScheduleGroupArrays
+   @date       2026-09-22
+   @author     Erik Schnetter
+   @desc
+   Schedules a group. This is the same as CCTKi_ScheduleGroup,
+   except that the groups, clauses, options, and modifiers are passed
+   as arrays instead of variable arguments, as for
+   CCTKi_ScheduleFunctionArrays.
+   @enddesc
+   @calls
+
+   The arguments are the same as for CCTKi_ScheduleGroup and
+   CCTKi_ScheduleFunctionArrays.
+
+   @returntype int
+   @returndesc
+   Return val of DoScheduleGroup or
+   -1 - memory failure
+   @endreturndesc
+@@*/
+int CCTKi_ScheduleGroupArrays(const char *realname,
+                              const char *name,
+                              const char *thorn,
+                              const char *implementation,
+                              const char *description,
+                              const char *where,
+                              int n_mem_groups,
+                              int n_comm_groups,
+                              int n_trigger_groups,
+                              int n_sync_groups,
+                              int n_writes,
+                              int n_reads,
+                              int n_invalidates,
+                              int n_options,
+                              int n_before,
+                              int n_after,
+                              int n_while,
+                              int n_if,
+                              const int *timelevels,
+                              const char *const *mem_groups,
+                              const char *const *comm_groups,
+                              const char *const *trigger_groups,
+                              const char *const *sync_groups,
+                              const char *const *writes,
+                              const char *const *reads,
+                              const char *const *invalidates,
+                              const char *const *options,
+                              const char *tags,
+                              const char *const *before,
+                              const char *const *after,
+                              const char *const *whiles,
+                              const char *const *ifs)
+{
+  int retcode;
+  t_attribute *attribute;
+  t_sched_modifier *modifier;
 
   attribute = CreateAttribute(where,name,description, NULL, thorn, implementation,
                               n_mem_groups, n_comm_groups, n_trigger_groups,
                               n_sync_groups, n_writes, n_reads, n_invalidates,
-                              n_options, timelevels, &ap);
-  modifier  = CreateModifiers(n_before, n_after, n_while, n_if, &ap);
-
-  va_end(ap);
+                              n_options, timelevels,
+                              mem_groups, comm_groups, trigger_groups,
+                              sync_groups, writes, reads, invalidates,
+                              options, tags);
+  modifier  = CreateModifiers(n_before, before, n_after, after,
+                              n_while, whiles, n_if, ifs);
 
   ValidateModifiers(modifier);
 
   if(attribute && (modifier || (n_before == 0 && n_after == 0 &&
-                                n_writes == 0 && n_reads == 0 &&
-                                n_invalidates == 0 &&
                                 n_while == 0 && n_if == 0)))
   {
     retcode = CCTKi_DoScheduleGroup(where, name, realname, modifier, (void *)attribute);
@@ -732,9 +988,9 @@ int CCTKi_ScheduleGroup(const char *realname,
   }
   else
   {
-#ifdef DEBUG
-    fprintf(stderr, "Failed to schedule %s at %s!!!\n", name, where);
-#endif
+    CCTK_VWarn (0, __LINE__, __FILE__, "Cactus",
+                "Internal error: Failed to schedule group '%s' from thorn '%s' "
+                "in '%s'", name, thorn, where);
     retcode = -1;
   }
 
@@ -1484,12 +1740,20 @@ static int ScheduleTraverse(const char *where,
    @var     timelevels
    @vdesc   The number of timelevels of the storage groups to enable.
    @vtype   const int *
-   @var     ap
-   @vdesc   options
-   @vtype   va_list of multiple const char *
-   @vio     inout
-   @vcomment
-   This should have as many items as the sum of the above n_* options
+   @var     mem_groups, comm_groups, trigger_groups, sync_groups
+   @vdesc   group names, with as many items as the respective n_* argument
+   @vtype   const char *const *
+   @vio     in
+   @endvar
+   @var     writes, reads, invalidates, options
+   @vdesc   clauses and options, with as many items as the respective n_* argument
+   @vtype   const char *const *
+   @vio     in
+   @endvar
+   @var     tags
+   @vdesc   tags table, as a string
+   @vtype   const char *
+   @vio     in
    @endvar
 
    @returntype t_attribute
@@ -1512,7 +1776,15 @@ static t_attribute *CreateAttribute(const char *where,
                                     int n_invalidates,
                                     int n_options,
                                     const int *timelevels,
-                                    va_list *ap)
+                                    const char *const *mem_groups,
+                                    const char *const *comm_groups,
+                                    const char *const *trigger_groups,
+                                    const char *const *sync_groups,
+                                    const char *const *writes,
+                                    const char *const *reads,
+                                    const char *const *invalidates,
+                                    const char *const *options,
+                                    const char *tags)
 {
   t_attribute *this;
   int i;
@@ -1592,13 +1864,13 @@ static t_attribute *CreateAttribute(const char *where,
       }
 
       /* Create the lists of indices of groups we're interested in. */
-      CreateGroupIndexList(n_mem_groups,     this->mem_groups, ap);
-      CreateGroupIndexList(n_comm_groups,    this->comm_groups, ap);
-      CreateGroupIndexList(n_trigger_groups, this->FunctionData.TriggerGroups, ap);
-      CreateGroupIndexList(n_sync_groups,    this->FunctionData.SyncGroups, ap);
-      CreateStringList    (n_writes,       this->FunctionData.WritesClauses, ap);
-      CreateStringList    (n_reads,       this->FunctionData.ReadsClauses, ap);
-      CreateStringList    (n_invalidates, this->FunctionData.InvalidatesClauses, ap);
+      CreateGroupIndexList(n_mem_groups,     this->mem_groups, mem_groups);
+      CreateGroupIndexList(n_comm_groups,    this->comm_groups, comm_groups);
+      CreateGroupIndexList(n_trigger_groups, this->FunctionData.TriggerGroups, trigger_groups);
+      CreateGroupIndexList(n_sync_groups,    this->FunctionData.SyncGroups, sync_groups);
+      CreateStringList    (n_writes,       this->FunctionData.WritesClauses, writes);
+      CreateStringList    (n_reads,       this->FunctionData.ReadsClauses, reads);
+      CreateStringList    (n_invalidates, this->FunctionData.InvalidatesClauses, invalidates);
 
       for(i=0; i< n_mem_groups; i++)
       {
@@ -1608,10 +1880,10 @@ static t_attribute *CreateAttribute(const char *where,
       /* Check the miscellaneous options */
 
       InitialiseOptionList(this);
-      ParseOptionList(n_options, this, ap);
+      ParseOptionList(n_options, this, options);
 
       /* Check the tags */
-      ParseTagsTable(this, ap);
+      ParseTagsTable(this, tags);
 
       this->n_mem_groups     = n_mem_groups;
       this->n_comm_groups    = n_comm_groups;
@@ -1652,32 +1924,25 @@ static t_attribute *CreateAttribute(const char *where,
    @enddesc
    @calls
 
-   @var     n_before
-   @vdesc   Number of functions/groups to schedule before
-   @vtype   int
+   @var     n_before, before
+   @vdesc   Number and names of functions/groups to schedule before
+   @vtype   int, const char *const *
    @vio     in
    @endvar
-   @var     n_after
-   @vdesc   Number of functions/groups to schedule after
-   @vtype   int
+   @var     n_after, after
+   @vdesc   Number and names of functions/groups to schedule after
+   @vtype   int, const char *const *
    @vio     in
    @endvar
-   @var     n_while
-   @vdesc   Number of vars to schedule while
-   @vtype   int
+   @var     n_while, whiles
+   @vdesc   Number and names of vars to schedule while
+   @vtype   int, const char *const *
    @vio     in
    @endvar
-   @var     n_if
-   @vdesc   Number of vars to schedule if
-   @vtype   int
+   @var     n_if, ifs
+   @vdesc   Number and names of vars to schedule if
+   @vtype   int, const char *const *
    @vio     in
-   @endvar
-   @var     ap
-   @vdesc   options
-   @vtype   va_list of multiple const char *
-   @vio     inout
-   @vcomment
-   This should have as many items as the sum of the above n_* options
    @endvar
 
    @returntype t_sched_modifier *
@@ -1686,17 +1951,20 @@ static t_attribute *CreateAttribute(const char *where,
    @endreturndesc
 @@*/
 static t_sched_modifier *CreateModifiers(int n_before,
+                                         const char *const *before,
                                          int n_after,
+                                         const char *const *after,
                                          int n_while,
+                                         const char *const *whiles,
                                          int n_if,
-                                         va_list *ap)
+                                         const char *const *ifs)
 {
   t_sched_modifier *modifier;
 
-  modifier = CreateTypedModifier(NULL, "before", n_before, ap);
-  modifier = CreateTypedModifier(modifier, "after", n_after, ap);
-  modifier = CreateTypedModifier(modifier, "while", n_while, ap);
-  modifier = CreateTypedModifier(modifier, "if", n_if, ap);
+  modifier = CreateTypedModifier(NULL, "before", n_before, before);
+  modifier = CreateTypedModifier(modifier, "after", n_after, after);
+  modifier = CreateTypedModifier(modifier, "while", n_while, whiles);
+  modifier = CreateTypedModifier(modifier, "if", n_if, ifs);
 
   return modifier;
 }
@@ -1769,12 +2037,54 @@ int ValidateModifiers(t_sched_modifier *modifier)
 }
 
 /*@@
+   @routine    CollectArguments
+   @date       2026-09-22
+   @author     Erik Schnetter
+   @desc
+   Gets the next n_items strings from the variable argument list
+   and stores them in a newly allocated array.
+   @enddesc
+   @calls
+
+   @var     n_items
+   @vdesc   number of items on the list
+   @vtype   int
+   @vio     in
+   @endvar
+   @var     ap
+   @vdesc   argument list
+   @vtype   va_list of const char *
+   @vio     inout
+   @endvar
+
+   @returntype const char **
+   @returndesc
+   the array, which must be freed by the caller, or NULL on memory failure
+   @endreturndesc
+@@*/
+static const char **CollectArguments(int n_items, va_list *ap)
+{
+  int i;
+  const char **items;
+
+  items = malloc((n_items > 0 ? n_items : 1) * sizeof *items);
+  if(items)
+  {
+    for(i=0; i < n_items; i++)
+    {
+      items[i] = va_arg(*ap, const char *);
+    }
+  }
+
+  return items;
+}
+
+/*@@
    @routine    CreateGroupIndexList
    @date       Fri Sep 17 21:51:51 1999
    @author     Tom Goodale
    @desc
-   Gets the next n_items group names from the variable argument list
-   and converts them to indices.
+   Converts n_items group names to indices.
    @enddesc
    @calls
 
@@ -1788,10 +2098,10 @@ int ValidateModifiers(t_sched_modifier *modifier)
    @vtype   int *
    @vio     out
    @endvar
-   @var     ap
-   @vdesc   argument list
-   @vtype   va_list of const char *
-   @vio     inout
+   @var     items
+   @vdesc   group names
+   @vtype   const char *const *
+   @vio     in
    @endvar
 
    @returntype int
@@ -1799,16 +2109,14 @@ int ValidateModifiers(t_sched_modifier *modifier)
    0 - success
    @endreturndesc
 @@*/
-static int CreateGroupIndexList(int n_items, int *array, va_list *ap)
+static int CreateGroupIndexList(int n_items, int *array,
+                                const char *const *items)
 {
   int i;
-  const char *item;
 
   for(i=0; i < n_items; i++)
   {
-    item = va_arg(*ap, const char *);
-
-    array[i] = CCTK_GroupIndex(item);
+    array[i] = CCTK_GroupIndex(items[i]);
   }
 
   return 0;
@@ -1820,8 +2128,7 @@ static int CreateGroupIndexList(int n_items, int *array, va_list *ap)
    @date       2007-05-24
    @author     Erik Schnetter
    @desc
-   Gets the next n_items group names from the variable argument list
-   and converts them to strings.
+   Copies n_items strings.
    @enddesc
    @calls
 
@@ -1835,10 +2142,10 @@ static int CreateGroupIndexList(int n_items, int *array, va_list *ap)
    @vtype   char **
    @vio     out
    @endvar
-   @var     ap
-   @vdesc   argument list
-   @vtype   va_list of const char *
-   @vio     inout
+   @var     items
+   @vdesc   strings to copy
+   @vtype   const char *const *
+   @vio     in
    @endvar
 
    @returntype int
@@ -1846,16 +2153,14 @@ static int CreateGroupIndexList(int n_items, int *array, va_list *ap)
    0 - success
    @endreturndesc
 @@*/
-static int CreateStringList(int n_items, const char **array, va_list *ap)
+static int CreateStringList(int n_items, const char **array,
+                            const char *const *items)
 {
   int i;
-  const char *item;
 
   for(i=0; i < n_items; i++)
   {
-    item = va_arg(*ap, const char *);
-
-    array[i] = strdup(item);
+    array[i] = strdup(items[i]);
   }
 
   return 0;
@@ -1882,10 +2187,10 @@ static int CreateStringList(int n_items, const char **array, va_list *ap)
    @vtype   t_attribute *
    @vio     inout
    @endvar
-   @var     ap
-   @vdesc   argument list
-   @vtype   va_list of const char *
-   @vio     inout
+   @var     items
+   @vdesc   options
+   @vtype   const char *const *
+   @vio     in
    @endvar
 
    @returntype int
@@ -1895,16 +2200,13 @@ static int CreateStringList(int n_items, const char **array, va_list *ap)
 @@*/
 static int ParseOptionList(int n_items,
                            t_attribute *attribute,
-                           va_list *ap)
+                           const char *const *items)
 {
   int i;
-  const char *item;
 
   for(i=0; i < n_items; i++)
   {
-    item = va_arg(*ap, const char *);
-
-    ParseOption(attribute, item);
+    ParseOption(attribute, items[i]);
   }
 
   return 0;
@@ -2062,10 +2364,10 @@ static int ParseOption(t_attribute *attribute,
    @vtype   t_attribute *
    @vio     inout
    @endvar
-   @var     ap
-   @vdesc   argument list
-   @vtype   va_list of const char *
-   @vio     inout
+   @var     tags
+   @vdesc   tags table, as a string
+   @vtype   const char *
+   @vio     in
    @endvar
 
    @returntype int
@@ -2074,13 +2376,11 @@ static int ParseOption(t_attribute *attribute,
    @endreturndesc
 @@*/
 static int ParseTagsTable(t_attribute *attribute,
-                          va_list *ap)
+                          const char *tags)
 {
-  const char *item;
   int table;
 
-  item = va_arg(*ap, const char *);
-  table = Util_TableCreateFromString (item);
+  table = Util_TableCreateFromString (tags);
   if (table < 0)
   {
     return table;
@@ -2096,8 +2396,7 @@ static int ParseTagsTable(t_attribute *attribute,
    @date       Fri Sep 17 21:50:59 1999
    @author     Tom Goodale
    @desc
-   Adds the next n_items items from the variable argument list
-   onto the modifer.
+   Adds n_items items onto the modifer.
    @enddesc
    @calls
 
@@ -2120,10 +2419,10 @@ static int ParseTagsTable(t_attribute *attribute,
    @vtype   int
    @vio     in
    @endvar
-   @var     ap
-   @vdesc   argument list
-   @vtype   va_list of const char *
-   @vio     inout
+   @var     items
+   @vdesc   items to add
+   @vtype   const char *const *
+   @vio     in
    @endvar
 
    @returntype t_sched_modifier *
@@ -2135,16 +2434,13 @@ static int ParseTagsTable(t_attribute *attribute,
 static t_sched_modifier *CreateTypedModifier(t_sched_modifier *modifier,
                                              const char *type,
                                              int n_items,
-                                             va_list *ap)
+                                             const char *const *items)
 {
   int i;
-  const char *item;
 
   for(i=0; i < n_items; i++)
   {
-    item = va_arg(*ap, const char *);
-
-    modifier = CCTKi_ScheduleAddModifier(modifier, type, item);
+    modifier = CCTKi_ScheduleAddModifier(modifier, type, items[i]);
   }
 
   return modifier;

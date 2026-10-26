@@ -301,6 +301,33 @@ sub lookup_thorn
 #  @enddesc
 #@@*/
 
+# Collect the reads/writes clauses of a schedule block, including any nested
+# inside schedule-body conditionals (clauseif/clauseblock).
+#
+# The macro has to declare the *union* of all branches: which branch is taken is
+# decided at startup, in CCTKi_BindingsSchedule_<thorn>(), long after these
+# macros are generated. That is not a loss of precision - the registration
+# already carries the taken branch's clauses, so CCTK_HasAccess still denies a
+# variable belonging to an untaken branch and CCTKi_VarDataPtrI hands back NULL
+# for it at run time.
+#
+# A nested "schedule" is reachable in the grammar only so that ScheduleParser.pl
+# can report it as an error; it is not descended into here, so its clauses are
+# never attributed to the enclosing routine.
+sub collect_rdwr_clauses
+{
+  my ($node) = @_;
+  my @clauses = ();
+  for my $ch (@{$node->{children}}) {
+    if($ch->is("reads") or $ch->is("writes")) {
+      push @clauses, $ch;
+    } elsif($ch->is("clauseif") or $ch->is("clauseblock")) {
+      push @clauses, collect_rdwr_clauses($ch);
+    }
+  }
+  return @clauses;
+}
+
 sub do_schedules
 {
   my $gr = shift;
@@ -334,7 +361,7 @@ sub do_schedules
         last;
       }
     }
-    for my $ch (@{$gr->{children}}) {
+    for my $ch (collect_rdwr_clauses($gr)) {
       if($ch->is("reads") or $ch->is("writes")) {
         my $is_writes = $ch->is("writes");
 
